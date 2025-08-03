@@ -72,6 +72,76 @@ export class ElectionController {
     return this.electionService.deactivateElection(id);
   }
 
+  // ===== COMPREHENSIVE BALLOT LIFECYCLE MANAGEMENT =====
+
+  @Put(':id/start-ballot')
+  @ApiOperation({ summary: 'Start ballot - Begin voting process' })
+  @ApiResponse({ status: 200, description: 'Ballot started successfully' })
+  @ApiResponse({ status: 404, description: 'Election not found' })
+  @ApiResponse({ status: 409, description: 'Cannot start ballot - validation failed' })
+  async startBallot(@Param('id') id: string) {
+    return this.electionService.startBallot(id);
+  }
+
+  @Put(':id/pause-ballot')
+  @ApiOperation({ summary: 'Pause ballot - Temporarily stop voting' })
+  @ApiResponse({ status: 200, description: 'Ballot paused successfully' })
+  @ApiResponse({ status: 404, description: 'Election not found' })
+  @ApiResponse({ status: 409, description: 'Cannot pause ballot - not active' })
+  async pauseBallot(@Param('id') id: string) {
+    return this.electionService.pauseBallot(id);
+  }
+
+  @Put(':id/resume-ballot')
+  @ApiOperation({ summary: 'Resume ballot - Continue paused voting' })
+  @ApiResponse({ status: 200, description: 'Ballot resumed successfully' })
+  @ApiResponse({ status: 404, description: 'Election not found' })
+  @ApiResponse({ status: 409, description: 'Cannot resume ballot - not paused' })
+  async resumeBallot(@Param('id') id: string) {
+    return this.electionService.resumeBallot(id);
+  }
+
+  @Put(':id/end-ballot')
+  @ApiOperation({ summary: 'End ballot - Finalize and save results' })
+  @ApiResponse({ status: 200, description: 'Ballot ended successfully with final results' })
+  @ApiResponse({ status: 404, description: 'Election not found' })
+  @ApiResponse({ status: 409, description: 'Cannot end ballot - validation failed' })
+  async endBallot(@Param('id') id: string) {
+    return this.electionService.endBallot(id);
+  }
+
+  @Get(':id/ballot-status')
+  @ApiOperation({ summary: 'Get ballot status and lifecycle information' })
+  @ApiResponse({ status: 200, description: 'Ballot status retrieved successfully' })
+  @ApiResponse({ status: 404, description: 'Election not found' })
+  async getBallotStatus(@Param('id') id: string) {
+    return this.electionService.getBallotStatus(id);
+  }
+
+  // ===== AUTOMATIC VOTE LOCKOUT ENDPOINTS =====
+
+  @Post('auto-end-check')
+  @ApiOperation({ summary: 'Check and auto-end expired elections' })
+  @ApiResponse({ status: 200, description: 'Auto-end check completed successfully' })
+  async checkAndAutoEndElections() {
+    return this.electionService.checkAndAutoEndElections();
+  }
+
+  @Get(':id/time-status')
+  @ApiOperation({ summary: 'Get election time status and voting window information' })
+  @ApiResponse({ status: 200, description: 'Time status retrieved successfully' })
+  @ApiResponse({ status: 404, description: 'Election not found' })
+  async getElectionTimeStatus(@Param('id') id: string) {
+    return this.electionService.getElectionTimeStatus(id);
+  }
+
+  @Post('schedule-auto-end')
+  @ApiOperation({ summary: 'Schedule automatic end check (for cron jobs)' })
+  @ApiResponse({ status: 200, description: 'Auto-end check scheduled successfully' })
+  async scheduleAutoEndCheck() {
+    return this.electionService.scheduleAutoEndCheck();
+  }
+
   @Post(':id/positions')
   @ApiOperation({ summary: 'Add position to election' })
   @ApiResponse({ status: 201, description: 'Position added to election successfully' })
@@ -104,5 +174,12 @@ export class ElectionController {
   @ApiResponse({ status: 404, description: 'Candidate not found in election' })
   async removeCandidateFromElection(@Param('id') id: string, @Param('candidateId') candidateId: string) {
     return this.electionService.removeCandidateFromElection(id, candidateId);
+  }
+
+  @Get('history')
+  @ApiOperation({ summary: 'Get election history - comprehensive data for ended elections' })
+  @ApiResponse({ status: 200, description: 'Election history retrieved successfully' })
+  async getElectionHistory() {
+    return this.electionService.getElectionHistory();
   }
 } 

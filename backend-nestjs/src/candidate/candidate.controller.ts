@@ -26,6 +26,13 @@ export class CandidateController {
     @Body() createCandidateDto: CreateCandidateDto,
     @UploadedFile() photo?: any
   ) {
+    // Check if photo URL is provided in the form data
+    const photoUrl = (createCandidateDto as any).photo;
+    if (photoUrl && typeof photoUrl === 'string' && photoUrl.startsWith('/uploads/')) {
+      // Pass the URL string to the service
+      return this.candidateService.createCandidate(createCandidateDto, photoUrl);
+    }
+    // Pass the uploaded file to the service
     return this.candidateService.createCandidate(createCandidateDto, photo);
   }
 
@@ -48,6 +55,13 @@ export class CandidateController {
     @Body() updateCandidateDto: UpdateCandidateDto,
     @UploadedFile() photo?: any
   ) {
+    // Check if photo URL is provided in the form data
+    const photoUrl = (updateCandidateDto as any).photo;
+    if (photoUrl && typeof photoUrl === 'string' && photoUrl.startsWith('/uploads/')) {
+      // Pass the URL string to the service
+      return this.candidateService.updateCandidate(id, updateCandidateDto, photoUrl);
+    }
+    // Pass the uploaded file to the service
     return this.candidateService.updateCandidate(id, updateCandidateDto, photo);
   }
 

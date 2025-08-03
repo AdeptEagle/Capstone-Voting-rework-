@@ -273,4 +273,112 @@ export class AdminService {
       where: { email },
     });
   }
+
+  async createSuperAdmin(createAdminDto: CreateAdminDto) {
+    const { username, email, password } = createAdminDto;
+
+    // Check if admin already exists
+    const existingAdmin = await this.prisma.admin.findFirst({
+      where: {
+        OR: [
+          { username },
+          { email },
+        ],
+      },
+    });
+
+    if (existingAdmin) {
+      throw new ConflictException('Super Admin with this username or email already exists');
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Generate custom ID with configurable format
+    const customId = await this.idGenerator.generateAdminId('simple');
+
+    const admin = await this.prisma.admin.create({
+      data: {
+        id: customId,
+        username,
+        email,
+        password: hashedPassword,
+        role: 'SUPERADMIN',
+      },
+    });
+
+    return {
+      message: 'Super Admin created successfully!',
+      admin: {
+        id: admin.id,
+        username: admin.username,
+        email: admin.email,
+        role: admin.role,
+        createdAt: admin.createdAt,
+        updatedAt: admin.updatedAt,
+      },
+    };
+  }
+
+  async getAdminStats() {
+    // Get total counts
+    const totalAdmins = await this.prisma.admin.count();
+    const superAdmins = await this.prisma.admin.count({
+      where: { role: 'SUPERADMIN' }
+    });
+    const regularAdmins = await this.prisma.admin.count({
+      where: { role: 'ADMIN' }
+    });
+
+    // Get recent activity
+    const recentAdmins = await this.prisma.admin.findMany({
+      where: {
+        createdAt: {
+          gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) // Last 30 days
+        }
+      },
+      select: {
+        id: true,
+        username: true,
+        role: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 10
+    });
+
+    // Get admin activity stats
+    const adminActivity = await this.prisma.admin.findMany({
+      select: {
+        id: true,
+        username: true,
+        role: true,
+        createdAt: true,
+        updatedAt: true,
+        _count: {
+          select: {
+            elections: true,
+            departments: true,
+            courses: true,
+          }
+        }
+      },
+      orderBy: { updatedAt: 'desc' }
+    });
+
+    return {
+      overview: {
+        totalAdmins,
+        superAdmins,
+        regularAdmins,
+        superAdminPercentage: totalAdmins > 0 ? (superAdmins / totalAdmins * 100).toFixed(2) : '0',
+        regularAdminPercentage: totalAdmins > 0 ? (regularAdmins / totalAdmins * 100).toFixed(2) : '0',
+      },
+      recentActivity: {
+        newAdmins: recentAdmins.length,
+        recentAdmins,
+      },
+      adminActivity,
+    };
+  }
 } 

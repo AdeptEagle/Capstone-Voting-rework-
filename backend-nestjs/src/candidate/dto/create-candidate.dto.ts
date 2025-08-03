@@ -34,4 +34,9 @@ export class CreateCandidateDto {
   @IsString()
   @IsOptional()
   manifesto?: string;
+
+  @ApiProperty({ description: 'Candidate photo URL', example: '/uploads/images/candidate-photo.jpg', required: false })
+  @IsString()
+  @IsOptional()
+  photo?: string;
 } 

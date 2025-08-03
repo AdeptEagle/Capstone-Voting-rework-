@@ -129,6 +129,7 @@ model Election {
   startDate DateTime
   endDate   DateTime
   isActive  Boolean  @default(false)
+  status    String   @default("draft") @db.VarChar(50) // draft, active, paused, ended
   createdBy String
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -190,7 +191,7 @@ model ElectionCandidate {
 
 model PasswordResetToken {
   id        String   @id @db.VarChar(50)
-  email     String   @db.VarChar(255)
+  email     String   @unique @db.VarChar(255)
   token     String   @unique @db.VarChar(255)
   expiresAt DateTime
   createdAt DateTime @default(now()) @map("created_at")

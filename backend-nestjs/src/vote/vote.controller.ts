@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Delete, Body, Param } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Body, Param, Put } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { VoteService } from './vote.service';
 import { CreateVoteDto } from './dto';
@@ -90,5 +90,34 @@ export class VoteController {
   @ApiResponse({ status: 200, description: 'Department-based voting results' })
   async getDepartmentVotingResults(@Param('electionId') electionId: string) {
     return this.voteService.getDepartmentVotingResults(electionId);
+  }
+
+  @Get('real-time-stats')
+  @ApiOperation({ summary: 'Get real-time voting statistics' })
+  @ApiResponse({ status: 200, description: 'Real-time voting statistics' })
+  async getRealTimeStats() {
+    return this.voteService.getRealTimeStats();
+  }
+
+  @Get('vote-timeline')
+  @ApiOperation({ summary: 'Get vote timeline for the last 24 hours' })
+  @ApiResponse({ status: 200, description: 'Vote timeline data' })
+  async getVoteTimeline() {
+    return this.voteService.getVoteTimeline();
+  }
+
+  @Get('active-results')
+  @ApiOperation({ summary: 'Get results for currently active elections' })
+  @ApiResponse({ status: 200, description: 'Active election results' })
+  async getActiveElectionResults() {
+    return this.voteService.getActiveElectionResults();
+  }
+
+  @Put('reset-voter/:voterId')
+  @ApiOperation({ summary: 'Reset voter voting status' })
+  @ApiResponse({ status: 200, description: 'Voter status reset successfully' })
+  @ApiResponse({ status: 404, description: 'Voter not found' })
+  async resetVoterStatus(@Param('voterId') voterId: string) {
+    return this.voteService.resetVoterStatus(voterId);
   }
 } 

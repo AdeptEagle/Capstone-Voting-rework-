@@ -1,15 +1,14 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
-import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { AuthController } from './auth.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
-import { PrismaModule } from '../prisma/prisma.module';
 import { IdGeneratorService } from '../utils/id-generator.service';
+import { EmailService } from '../services/email.service';
 
 @Module({
   imports: [
-    PrismaModule,
     PassportModule,
     JwtModule.register({
       secret: process.env.JWT_SECRET || 'your-secret-key',
@@ -17,7 +16,7 @@ import { IdGeneratorService } from '../utils/id-generator.service';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, IdGeneratorService],
-  exports: [AuthService, JwtStrategy],
+  providers: [AuthService, JwtStrategy, IdGeneratorService, EmailService],
+  exports: [AuthService],
 })
 export class AuthModule {} 

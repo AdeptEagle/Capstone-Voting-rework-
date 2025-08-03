@@ -1,22 +1,38 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
+import { Request } from 'express';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor() {
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest: ExtractJwt.fromExtractors([
+        // Extract from HTTP-only cookie
+        (request: Request) => {
+          const token = request?.cookies?.access_token;
+          return token;
+        },
+        // Fallback to Authorization header (for API testing)
+        ExtractJwt.fromAuthHeaderAsBearerToken(),
+      ]),
       ignoreExpiration: false,
-      secretOrKey: process.env.JWT_SECRET || 'your-secret-key',
+      secretOrKey: process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this-in-production',
     });
   }
 
   async validate(payload: any) {
-    return { 
-      id: payload.sub, 
-      username: payload.username, 
-      role: payload.role 
+    // Validate the payload
+    if (!payload.sub) {
+      throw new UnauthorizedException('Invalid token payload');
+    }
+
+    return {
+      userId: payload.sub,
+      studentId: payload.studentId,
+      username: payload.username,
+      role: payload.role,
+      type: payload.type,
     };
   }
 } 

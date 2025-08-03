@@ -2,12 +2,16 @@ import { Injectable, ConflictException, NotFoundException, BadRequestException }
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateVoteDto } from './dto';
 import { IdGeneratorService } from '../utils/id-generator.service';
+import { TimezoneService } from '../services/timezone.service';
+import { VotingGateway } from '../websocket/voting.gateway';
 
 @Injectable()
 export class VoteService {
   constructor(
     private prisma: PrismaService,
-    private idGenerator: IdGeneratorService
+    private idGenerator: IdGeneratorService,
+    private readonly timezoneService: TimezoneService,
+    private readonly votingGateway: VotingGateway,
   ) {}
 
   async getAllVotes() {
@@ -184,38 +188,38 @@ export class VoteService {
     return await this.prisma.$transaction(async (prisma) => {
       // Create the vote
       const vote = await prisma.vote.create({
-        data: {
-          id: customId,
-          voterId,
-          candidateId,
-          electionId,
-          positionId,
+      data: {
+        id: customId,
+        voterId,
+        candidateId,
+        electionId,
+        positionId,
+      },
+      include: {
+        voter: {
+          select: {
+            id: true,
+            name: true,
+            studentId: true,
+          },
         },
-        include: {
-          voter: {
-            select: {
-              id: true,
-              name: true,
-              studentId: true,
-            },
+        candidate: {
+          select: {
+            id: true,
+            name: true,
+            studentId: true,
           },
-          candidate: {
-            select: {
-              id: true,
-              name: true,
-              studentId: true,
-            },
+        },
+        election: {
+          select: {
+            id: true,
+            title: true,
           },
-          election: {
-            select: {
-              id: true,
-              title: true,
-            },
-          },
-          position: {
-            select: {
-              id: true,
-              title: true,
+        },
+        position: {
+          select: {
+            id: true,
+            title: true,
               voteLimit: true,
             },
           },
@@ -247,8 +251,8 @@ export class VoteService {
             voterId,
             electionId,
             positionId: electionPosition.positionId,
-          },
-        });
+      },
+    });
 
         const position = await prisma.position.findUnique({
           where: { id: electionPosition.positionId },
@@ -265,10 +269,66 @@ export class VoteService {
       // Mark voter as locked out if they've completed voting for all positions
       if (allPositionsCompleted) {
         await prisma.voter.update({
-          where: { id: voterId },
-          data: { hasVoted: true },
-        });
+      where: { id: voterId },
+      data: { hasVoted: true },
+    });
       }
+
+    return {
+        message: `Vote cast successfully! (${updatedVoteCount}/${voteLimit} votes for this position)`,
+      vote: {
+        id: vote.id,
+        voter: vote.voter,
+        candidate: vote.candidate,
+        election: vote.election,
+        position: vote.position,
+        createdAt: vote.createdAt,
+      },
+        voteCount: updatedVoteCount,
+        voteLimit: voteLimit,
+        isFinalVoteForPosition,
+        isLockedOut: allPositionsCompleted,
+        confirmation: {
+          voterName: vote.voter.name,
+          candidateName: vote.candidate.name,
+          positionTitle: vote.position.title,
+          electionTitle: vote.election.title,
+          votedAt: vote.createdAt,
+          voteId: vote.id,
+          remainingVotes: voteLimit - updatedVoteCount,
+          lockoutMessage: allPositionsCompleted ? 'Voter has completed all voting and is now locked out' : null,
+        },
+      };
+
+      // Create confirmation object
+      const confirmation = {
+        voterName: vote.voter.name,
+        candidateName: vote.candidate.name,
+        positionTitle: vote.position.title,
+        electionTitle: vote.election.title,
+        votedAt: vote.createdAt,
+        voteId: vote.id,
+        remainingVotes: voteLimit - updatedVoteCount,
+        lockoutMessage: allPositionsCompleted ? 'Voter has completed all voting and is now locked out' : null,
+      };
+
+      // Emit real-time vote update
+      this.votingGateway.emitVoteUpdate(electionId, {
+        voteId: vote.id,
+        voterId,
+        candidateId,
+        positionId,
+        electionId,
+        voteCount: updatedVoteCount,
+        voteLimit,
+        isFinalVoteForPosition,
+        isLockedOut: allPositionsCompleted,
+        confirmation
+      });
+
+      // Emit results update
+      const updatedResults = await this.getVoteResults(electionId);
+      this.votingGateway.emitResultsUpdate(electionId, updatedResults);
 
       return {
         message: `Vote cast successfully! (${updatedVoteCount}/${voteLimit} votes for this position)`,
@@ -462,18 +522,18 @@ export class VoteService {
     return await this.prisma.$transaction(async (prisma) => {
       // Delete the vote
       await prisma.vote.delete({
-        where: { id },
-      });
+      where: { id },
+    });
 
-      // Reset voter's hasVoted status
+    // Reset voter's hasVoted status
       await prisma.voter.update({
-        where: { id: vote.voterId },
-        data: { hasVoted: false },
-      });
+      where: { id: vote.voterId },
+      data: { hasVoted: false },
+    });
 
-      return {
-        message: 'Vote deleted successfully!',
-      };
+    return {
+      message: 'Vote deleted successfully!',
+    };
     }, {
       // ACID Transaction Options
       maxWait: 5000,
@@ -1194,5 +1254,162 @@ export class VoteService {
       canVote: !isLockedOut && election.isActive,
       lockoutMessage: isLockedOut ? 'Voter has completed all voting and is locked out' : null,
     };
+  }
+
+  async getRealTimeStats() {
+    try {
+      // Get all votes for active elections
+      const activeVotes = await this.prisma.vote.findMany({
+        where: {
+          election: {
+            status: 'active'
+          }
+        },
+        select: {
+          id: true,
+          voterId: true,
+          candidateId: true,
+          electionId: true
+        }
+      });
+
+      // Get total voters count
+      const totalVoters = await this.prisma.voter.count();
+
+      // Calculate real-time statistics
+      const totalVotes = activeVotes.length;
+      const uniqueVoters = new Set(activeVotes.map(vote => vote.voterId)).size;
+      const candidatesWithVotes = new Set(activeVotes.map(vote => vote.candidateId)).size;
+
+      // Get positions count for active elections
+      const totalPositions = await this.prisma.electionPosition.count({
+        where: {
+          election: {
+            status: 'active'
+          }
+        }
+      });
+
+      // Calculate voter turnout
+      const votersWhoVoted = uniqueVoters;
+      const voterTurnout = totalVoters > 0 ? Math.round((votersWhoVoted / totalVoters) * 100) : 0;
+
+      return {
+        totalVotes,
+        uniqueVoters: votersWhoVoted,
+        candidatesWithVotes,
+        totalPositions,
+        votersWhoVoted,
+        totalVoters,
+        voterTurnout
+      };
+    } catch (error) {
+      console.error('Error getting real-time stats:', error);
+      throw new Error('Failed to get real-time statistics');
+    }
+  }
+
+  async getVoteTimeline() {
+    try {
+      // Get votes from the last 24 hours for active elections
+      const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+      const timelineData = await this.prisma.$queryRaw`
+        SELECT 
+          TO_CHAR(v.created_at, 'HH24:00') as hour,
+          COUNT(*) as voteCount
+        FROM votes v
+        INNER JOIN elections e ON v.election_id = e.id
+        WHERE e.status = 'active'
+        AND v.created_at >= ${twentyFourHoursAgo}
+        GROUP BY TO_CHAR(v.created_at, 'HH24:00')
+        ORDER BY hour
+      `;
+
+      return timelineData;
+    } catch (error) {
+      console.error('Error getting vote timeline:', error);
+      throw new Error('Failed to get vote timeline');
+    }
+  }
+
+  async getActiveElectionResults() {
+    try {
+      // Get results for currently active elections only
+      const activeElectionResults = await this.prisma.vote.groupBy({
+        by: ['electionId', 'positionId', 'candidateId'],
+        where: {
+          election: {
+            status: 'active'
+          }
+        },
+        _count: {
+          id: true
+        }
+      });
+
+      // Get position and candidate details
+      const results = [];
+      for (const result of activeElectionResults) {
+        const position = await this.prisma.position.findUnique({
+          where: { id: result.positionId },
+          select: { title: true, voteLimit: true }
+        });
+
+        const candidate = await this.prisma.candidate.findUnique({
+          where: { id: result.candidateId },
+          select: { name: true, photo: true }
+        });
+
+        if (position && candidate) {
+          results.push({
+            positionId: result.positionId,
+            positionName: position.title,
+            voteLimit: position.voteLimit,
+            candidateId: result.candidateId,
+            candidateName: candidate.name,
+            photoUrl: candidate.photo,
+            voteCount: result._count.id
+          });
+        }
+      }
+
+      return results;
+    } catch (error) {
+      console.error('Error getting active election results:', error);
+      throw new Error('Failed to get active election results');
+    }
+  }
+
+  async resetVoterStatus(voterId: string) {
+    try {
+      // Check if voter exists
+      const voter = await this.prisma.voter.findUnique({
+        where: { id: voterId }
+      });
+
+      if (!voter) {
+        throw new NotFoundException('Voter not found');
+      }
+
+      // Reset voter's hasVoted status
+      await this.prisma.voter.update({
+        where: { id: voterId },
+        data: { hasVoted: false }
+      });
+
+      return {
+        message: 'Voter status reset successfully',
+        voter: {
+          id: voter.id,
+          name: voter.name,
+          studentId: voter.studentId,
+          hasVoted: false
+        }
+      };
+    } catch (error) {
+      console.error('Error resetting voter status:', error);
+      throw new Error('Failed to reset voter status');
+    }
   }
 } 

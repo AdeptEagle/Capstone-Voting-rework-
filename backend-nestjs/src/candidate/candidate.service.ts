@@ -2,14 +2,14 @@ import { Injectable, NotFoundException, ConflictException } from '@nestjs/common
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateCandidateDto, UpdateCandidateDto } from './dto';
 import { IdGeneratorService } from '../utils/id-generator.service';
-import * as fs from 'fs';
-import * as path from 'path';
+import { FileUploadService } from '../services/file-upload.service';
 
 @Injectable()
 export class CandidateService {
   constructor(
     private prisma: PrismaService,
-    private idGenerator: IdGeneratorService
+    private idGenerator: IdGeneratorService,
+    private fileUploadService: FileUploadService
   ) {}
 
   async getAllCandidates(showAll: boolean = false) {
@@ -87,19 +87,22 @@ export class CandidateService {
       throw new ConflictException('Candidate with this student ID already exists');
     }
 
-    // Handle photo upload
+    // Handle photo upload using FileUploadService
     let photoUrl = null;
     if (photo) {
-      const uploadsDir = path.join(process.cwd(), 'uploads');
-      if (!fs.existsSync(uploadsDir)) {
-        fs.mkdirSync(uploadsDir, { recursive: true });
+      try {
+        // Check if photo is a file upload or a URL string
+        if (photo.buffer || photo.originalname) {
+          // It's a file upload
+          const fileInfo = await this.fileUploadService.processUploadedFile(photo, 'image');
+          photoUrl = fileInfo.url;
+        } else if (typeof photo === 'string' && photo.startsWith('/uploads/')) {
+          // It's a URL string from file upload service
+          photoUrl = photo;
+        }
+      } catch (error) {
+        throw new ConflictException(`Photo upload failed: ${error.message}`);
       }
-
-      const fileName = `${Date.now()}-${photo.originalname}`;
-      const filePath = path.join(uploadsDir, fileName);
-      
-      fs.writeFileSync(filePath, photo.buffer);
-      photoUrl = fileName;
     }
 
     // Generate custom ID
@@ -244,27 +247,31 @@ export class CandidateService {
       }
     }
 
-    // Handle photo upload
+    // Handle photo upload using FileUploadService
     let photoUrl = existingCandidate.photo;
     if (photo) {
-      const uploadsDir = path.join(process.cwd(), 'uploads');
-      if (!fs.existsSync(uploadsDir)) {
-        fs.mkdirSync(uploadsDir, { recursive: true });
-      }
+      try {
+        // Check if photo is a file upload or a URL string
+        if (photo.buffer || photo.originalname) {
+          // It's a file upload
+          // Delete old photo if exists
+          if (existingCandidate.photo) {
+            const oldPhotoFilename = existingCandidate.photo.split('/').pop();
+            if (oldPhotoFilename) {
+              await this.fileUploadService.deleteFile(oldPhotoFilename, 'image');
+            }
+          }
 
-      // Delete old photo if exists
-      if (existingCandidate.photo) {
-        const oldPhotoPath = path.join(uploadsDir, existingCandidate.photo);
-        if (fs.existsSync(oldPhotoPath)) {
-          fs.unlinkSync(oldPhotoPath);
+          // Upload new photo
+          const fileInfo = await this.fileUploadService.processUploadedFile(photo, 'image');
+          photoUrl = fileInfo.url;
+        } else if (typeof photo === 'string' && photo.startsWith('/uploads/')) {
+          // It's a URL string from file upload service
+          photoUrl = photo;
         }
+      } catch (error) {
+        throw new ConflictException(`Photo upload failed: ${error.message}`);
       }
-
-      const fileName = `${Date.now()}-${photo.originalname}`;
-      const filePath = path.join(uploadsDir, fileName);
-      
-      fs.writeFileSync(filePath, photo.buffer);
-      photoUrl = fileName;
     }
 
     const candidate = await this.prisma.candidate.update({
@@ -332,10 +339,9 @@ export class CandidateService {
 
     // Delete photo file if exists
     if (candidate.photo) {
-      const uploadsDir = path.join(process.cwd(), 'uploads');
-      const photoPath = path.join(uploadsDir, candidate.photo);
-      if (fs.existsSync(photoPath)) {
-        fs.unlinkSync(photoPath);
+      const photoFilename = candidate.photo.split('/').pop();
+      if (photoFilename) {
+        await this.fileUploadService.deleteFile(photoFilename, 'image');
       }
     }
 

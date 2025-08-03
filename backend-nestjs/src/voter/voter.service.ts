@@ -3,12 +3,14 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateVoterDto, UpdateVoterDto } from './dto';
 import * as bcrypt from 'bcryptjs';
 import { IdGeneratorService } from '../utils/id-generator.service';
+import { VotingGateway } from '../websocket/voting.gateway';
 
 @Injectable()
 export class VoterService {
   constructor(
-    private prisma: PrismaService,
-    private idGenerator: IdGeneratorService
+    private readonly prisma: PrismaService,
+    private readonly idGenerator: IdGeneratorService,
+    private readonly votingGateway: VotingGateway,
   ) {}
 
   async getAllVoters() {
@@ -141,6 +143,18 @@ export class VoterService {
           },
         },
       },
+    });
+
+    // Emit real-time voter registration
+    this.votingGateway.emitVoterRegistered({
+      id: voter.id,
+      studentId: voter.studentId,
+      name: voter.name,
+      email: voter.email,
+      hasVoted: voter.hasVoted,
+      department: voter.department,
+      course: voter.course,
+      createdAt: voter.createdAt,
     });
 
     return {
