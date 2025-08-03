@@ -1,0 +1,204 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Admin {
+  id        String   @id @db.VarChar(50)
+  username  String   @unique @db.VarChar(255)
+  email     String?  @unique @db.VarChar(255)
+  password  String   @db.VarChar(255)
+  role      Role     @default(ADMIN)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  elections   Election[]
+  departments Department[]
+  courses     Course[]
+
+  @@map("admins")
+}
+
+model Department {
+  id          String   @id @db.VarChar(50)
+  name        String   @db.VarChar(255)
+  description String?  @db.Text
+  createdBy   String
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  admin   Admin     @relation(fields: [createdBy], references: [id])
+  courses Course[]
+  voters  Voter[]
+  candidates Candidate[]
+
+  @@map("departments")
+}
+
+model Course {
+  id           String   @id @db.VarChar(50)
+  name         String   @db.VarChar(255)
+  code         String   @unique @db.VarChar(50)
+  description  String?  @db.Text
+  departmentId String
+  createdBy    String
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  department Department @relation(fields: [departmentId], references: [id])
+  admin      Admin     @relation(fields: [createdBy], references: [id])
+  voters     Voter[]
+  candidates Candidate[]
+
+  @@map("courses")
+}
+
+model Position {
+  id          String   @id @db.VarChar(50)
+  title       String   @db.VarChar(255)
+  description String?  @db.Text
+  voteLimit   Int      @default(1) @db.Integer
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  candidates Candidate[]
+  votes      Vote[]
+  electionPositions ElectionPosition[]
+
+  @@map("positions")
+}
+
+model Candidate {
+  id          String   @id @db.VarChar(50)
+  name        String   @db.VarChar(255)
+  email       String   @db.VarChar(255)
+  studentId   String   @unique @db.VarChar(50)
+  photo       String?  @db.VarChar(255)
+  manifesto   String?  @db.Text
+  positionId  String
+  departmentId String?
+  courseId    String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  position   Position   @relation(fields: [positionId], references: [id])
+  department Department? @relation(fields: [departmentId], references: [id])
+  course     Course?    @relation(fields: [courseId], references: [id])
+  votes      Vote[]
+  electionCandidates ElectionCandidate[]
+
+  @@map("candidates")
+}
+
+model Voter {
+  id           String   @id @db.VarChar(50)
+  name         String   @db.VarChar(255)
+  email        String   @unique @db.VarChar(255)
+  studentId    String   @unique @db.VarChar(50)
+  password     String?  @db.VarChar(255)
+  departmentId String?
+  courseId     String?
+  hasVoted     Boolean  @default(false)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  department Department? @relation(fields: [departmentId], references: [id])
+  course     Course?    @relation(fields: [courseId], references: [id])
+  votes      Vote[]
+
+  @@map("voters")
+}
+
+model Election {
+  id        String   @id @db.VarChar(50)
+  title     String   @db.VarChar(255)
+  description String? @db.Text
+  startDate DateTime
+  endDate   DateTime
+  isActive  Boolean  @default(false)
+  createdBy String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  admin   Admin @relation(fields: [createdBy], references: [id])
+  votes   Vote[]
+  electionPositions ElectionPosition[]
+  electionCandidates ElectionCandidate[]
+
+  @@map("elections")
+}
+
+model Vote {
+  id          String   @id @db.VarChar(50)
+  voterId     String
+  candidateId String
+  electionId  String
+  positionId  String
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  // Relations
+  voter     Voter     @relation(fields: [voterId], references: [id])
+  candidate Candidate @relation(fields: [candidateId], references: [id])
+  election  Election  @relation(fields: [electionId], references: [id])
+  position  Position  @relation(fields: [positionId], references: [id])
+
+  @@unique([voterId, electionId, positionId, candidateId])
+  @@map("votes")
+}
+
+model ElectionPosition {
+  id         String   @id @db.VarChar(50)
+  electionId String
+  positionId String
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  // Relations
+  election Election @relation(fields: [electionId], references: [id])
+  position Position @relation(fields: [positionId], references: [id])
+
+  @@unique([electionId, positionId])
+  @@map("election_positions")
+}
+
+model ElectionCandidate {
+  id          String   @id @db.VarChar(50)
+  electionId  String
+  candidateId String
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  // Relations
+  election  Election  @relation(fields: [electionId], references: [id])
+  candidate Candidate @relation(fields: [candidateId], references: [id])
+
+  @@unique([electionId, candidateId])
+  @@map("election_candidates")
+}
+
+model PasswordResetToken {
+  id        String   @id @db.VarChar(50)
+  email     String   @db.VarChar(255)
+  token     String   @unique @db.VarChar(255)
+  expiresAt DateTime
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("password_reset_tokens")
+}
+
+enum Role {
+  SUPERADMIN
+  ADMIN
+} 

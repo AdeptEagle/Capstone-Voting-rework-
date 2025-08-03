@@ -1,0 +1,66 @@
+{
+  "name": "voting-system-backend",
+  "version": "1.0.0",
+  "description": "Backend API server for voting system",
+  "license": "ISC",
+  "author": "",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "setup-db": "node scripts/setup-database.js",
+    "setup-superadmin": "node scripts/setup-superadmin.js",
+    "seed": "node scripts/seed-data.js",
+    "seed:reset": "npm run seed && echo 'Database seeded with comprehensive default data'",
+    "troubleshoot": "node scripts/troubleshoot-db.js",
+    "fix-db": "node scripts/fix-db-config.js",
+    "reset-db": "node scripts/reset-database.js",
+    "migrate:sequelize": "node scripts/migrate-to-sequelize.js",
+    "test:sequelize": "node -e \"import('./config/sequelize.js').then(m => m.testConnection())\"",
+    "test:sequelize:models": "node scripts/test-sequelize-models.js",
+    "test:sequelize:auth": "node scripts/test-sequelize-auth.js",
+    "test:sequelize:auth:api": "node scripts/test-sequelize-auth-api.js",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "clean": "rm -rf node_modules package-lock.json",
+    "install:clean": "npm run clean && npm install",
+    "health": "curl http://localhost:3000/health",
+    "status": "curl http://localhost:3000/"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.1",
+    "express": "^5.1.0",
+    "install": "^0.13.0",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^1.4.5-lts.1",
+    "mysql": "^2.18.1",
+    "mysql2": "^3.14.3",
+    "sequelize": "^6.37.7",
+    "sequelize-cli": "^6.6.3",
+    "uuid": "^11.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.1.0",
+    "eslint": "^8.57.0",
+    "node-fetch": "^3.3.2",
+    "nodemon": "^3.1.10",
+    "prisma": "^6.13.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.2"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "keywords": [
+    "voting",
+    "election",
+    "api",
+    "express",
+    "mysql",
+    "nodejs"
+  ]
+}

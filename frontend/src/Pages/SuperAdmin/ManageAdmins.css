@@ -1,0 +1,33 @@
+/* Standardized Container and Card Spacing */
+.manage-admins-container {
+  padding: 0 0 2rem 0;
+  background-color: #f8f9fa;
+  min-height: 100vh;
+}
+
+.manage-admins-container .card {
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  border: 1px solid #e2e8f0;
+  margin-bottom: 1.5rem;
+}
+
+.manage-admins-container .card-header {
+  background: #f8f9fa;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 1rem 1.5rem;
+  border-radius: 8px 8px 0 0;
+}
+
+.manage-admins-container .card-body {
+  padding: 1.5rem;
+}
+
+.manage-admins-container .table {
+  margin-bottom: 0;
+}
+
+.manage-admins-container .table th,
+.manage-admins-container .table td {
+  padding: 0.75rem 1rem;
+} 
