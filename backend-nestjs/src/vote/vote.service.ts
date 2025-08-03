@@ -180,118 +180,127 @@ export class VoteService {
     // Generate custom ID
     const customId = await this.idGenerator.generateVoteId();
 
-    const vote = await this.prisma.vote.create({
-      data: {
-        id: customId,
-        voterId,
-        candidateId,
-        electionId,
-        positionId,
-      },
-      include: {
-        voter: {
-          select: {
-            id: true,
-            name: true,
-            studentId: true,
+    // BEGIN TRANSACTION - ACID Atomicity
+    return await this.prisma.$transaction(async (prisma) => {
+      // Create the vote
+      const vote = await prisma.vote.create({
+        data: {
+          id: customId,
+          voterId,
+          candidateId,
+          electionId,
+          positionId,
+        },
+        include: {
+          voter: {
+            select: {
+              id: true,
+              name: true,
+              studentId: true,
+            },
+          },
+          candidate: {
+            select: {
+              id: true,
+              name: true,
+              studentId: true,
+            },
+          },
+          election: {
+            select: {
+              id: true,
+              title: true,
+            },
+          },
+          position: {
+            select: {
+              id: true,
+              title: true,
+              voteLimit: true,
+            },
           },
         },
-        candidate: {
-          select: {
-            id: true,
-            name: true,
-            studentId: true,
-          },
-        },
-        election: {
-          select: {
-            id: true,
-            title: true,
-          },
-        },
-        position: {
-          select: {
-            id: true,
-            title: true,
-            voteLimit: true,
-          },
-        },
-      },
-    });
+      });
 
-    // Check if this was the last vote for this position (vote limit reached)
-    const updatedVoteCount = await this.prisma.vote.count({
-      where: {
-        voterId,
-        electionId,
-        positionId,
-      },
-    });
-
-    // Check if this was the final vote for this position
-    const isFinalVoteForPosition = updatedVoteCount >= voteLimit;
-
-    // Get all positions in this election
-    const electionPositions = await this.prisma.electionPosition.findMany({
-      where: { electionId },
-    });
-
-    // Check if voter has completed voting for all positions
-    let allPositionsCompleted = true;
-    for (const electionPosition of electionPositions) {
-      const positionVoteCount = await this.prisma.vote.count({
+      // Check if this was the last vote for this position (vote limit reached)
+      const updatedVoteCount = await prisma.vote.count({
         where: {
           voterId,
           electionId,
-          positionId: electionPosition.positionId,
+          positionId,
         },
       });
 
-      const position = await this.prisma.position.findUnique({
-        where: { id: electionPosition.positionId },
+      // Check if this was the final vote for this position
+      const isFinalVoteForPosition = updatedVoteCount >= voteLimit;
+
+      // Get all positions in this election
+      const electionPositions = await prisma.electionPosition.findMany({
+        where: { electionId },
       });
 
-      const positionVoteLimit = position?.voteLimit || 1;
+      // Check if voter has completed voting for all positions
+      let allPositionsCompleted = true;
+      for (const electionPosition of electionPositions) {
+        const positionVoteCount = await prisma.vote.count({
+          where: {
+            voterId,
+            electionId,
+            positionId: electionPosition.positionId,
+          },
+        });
 
-      if (positionVoteCount < positionVoteLimit) {
-        allPositionsCompleted = false;
-        break;
+        const position = await prisma.position.findUnique({
+          where: { id: electionPosition.positionId },
+        });
+
+        const positionVoteLimit = position?.voteLimit || 1;
+
+        if (positionVoteCount < positionVoteLimit) {
+          allPositionsCompleted = false;
+          break;
+        }
       }
-    }
 
-    // Mark voter as locked out if they've completed voting for all positions
-    if (allPositionsCompleted) {
-    await this.prisma.voter.update({
-      where: { id: voterId },
-      data: { hasVoted: true },
+      // Mark voter as locked out if they've completed voting for all positions
+      if (allPositionsCompleted) {
+        await prisma.voter.update({
+          where: { id: voterId },
+          data: { hasVoted: true },
+        });
+      }
+
+      return {
+        message: `Vote cast successfully! (${updatedVoteCount}/${voteLimit} votes for this position)`,
+        vote: {
+          id: vote.id,
+          voter: vote.voter,
+          candidate: vote.candidate,
+          election: vote.election,
+          position: vote.position,
+          createdAt: vote.createdAt,
+        },
+        voteCount: updatedVoteCount,
+        voteLimit: voteLimit,
+        isFinalVoteForPosition,
+        isLockedOut: allPositionsCompleted,
+        confirmation: {
+          voterName: vote.voter.name,
+          candidateName: vote.candidate.name,
+          positionTitle: vote.position.title,
+          electionTitle: vote.election.title,
+          votedAt: vote.createdAt,
+          voteId: vote.id,
+          remainingVotes: voteLimit - updatedVoteCount,
+          lockoutMessage: allPositionsCompleted ? 'Voter has completed all voting and is now locked out' : null,
+        },
+      };
+    }, {
+      // ACID Transaction Options
+      maxWait: 5000, // Maximum time to wait for transaction
+      timeout: 10000, // Transaction timeout
+      isolationLevel: 'Serializable', // Highest isolation level for vote integrity
     });
-    }
-
-    return {
-      message: `Vote cast successfully! (${updatedVoteCount}/${voteLimit} votes for this position)`,
-      vote: {
-        id: vote.id,
-        voter: vote.voter,
-        candidate: vote.candidate,
-        election: vote.election,
-        position: vote.position,
-        createdAt: vote.createdAt,
-      },
-      voteCount: updatedVoteCount,
-      voteLimit: voteLimit,
-      isFinalVoteForPosition,
-      isLockedOut: allPositionsCompleted,
-      confirmation: {
-        voterName: vote.voter.name,
-        candidateName: vote.candidate.name,
-        positionTitle: vote.position.title,
-        electionTitle: vote.election.title,
-        votedAt: vote.createdAt,
-        voteId: vote.id,
-        remainingVotes: voteLimit - updatedVoteCount,
-        lockoutMessage: allPositionsCompleted ? 'Voter has completed all voting and is now locked out' : null,
-      },
-    };
   }
 
   async confirmVote(createVoteDto: CreateVoteDto) {
@@ -449,19 +458,28 @@ export class VoteService {
       throw new NotFoundException('Vote not found');
     }
 
-    await this.prisma.vote.delete({
-      where: { id },
-    });
+    // BEGIN TRANSACTION - ACID Atomicity
+    return await this.prisma.$transaction(async (prisma) => {
+      // Delete the vote
+      await prisma.vote.delete({
+        where: { id },
+      });
 
-    // Reset voter's hasVoted status
-    await this.prisma.voter.update({
-      where: { id: vote.voterId },
-      data: { hasVoted: false },
-    });
+      // Reset voter's hasVoted status
+      await prisma.voter.update({
+        where: { id: vote.voterId },
+        data: { hasVoted: false },
+      });
 
-    return {
-      message: 'Vote deleted successfully!',
-    };
+      return {
+        message: 'Vote deleted successfully!',
+      };
+    }, {
+      // ACID Transaction Options
+      maxWait: 5000,
+      timeout: 10000,
+      isolationLevel: 'Serializable',
+    });
   }
 
   async getVotesByElection(electionId: string) {
