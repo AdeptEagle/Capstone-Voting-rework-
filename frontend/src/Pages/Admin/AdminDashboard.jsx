@@ -212,7 +212,7 @@ const AdminDashboard = () => {
                 {recentData.positions.length > 0 ? (
                   recentData.positions.map((position, index) => (
                     <div key={position.id} className="data-item">
-                      <span className="data-label">{position.name}</span>
+                                              <span className="data-label">{position.title}</span>
                       <span className="data-value">Vote Limit: {position.voteLimit}</span>
                     </div>
                   ))

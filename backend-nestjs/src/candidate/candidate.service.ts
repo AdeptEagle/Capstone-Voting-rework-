@@ -45,6 +45,8 @@ export class CandidateService {
   }
 
   async createCandidate(createCandidateDto: CreateCandidateDto, photo?: any) {
+    console.log('createCandidate called with photo:', photo);
+    console.log('createCandidateDto:', createCandidateDto);
     const { name, email, studentId, positionId, departmentId, courseId, manifesto } = createCandidateDto;
 
     // Check if position exists
@@ -90,19 +92,43 @@ export class CandidateService {
     // Handle photo upload using FileUploadService
     let photoUrl = null;
     if (photo) {
+      console.log('Photo object received:', photo);
+      console.log('Photo type:', typeof photo);
+      console.log('Photo properties:', Object.keys(photo));
+      
       try {
         // Check if photo is a file upload or a URL string
         if (photo.buffer || photo.originalname) {
+          console.log('Processing as file upload');
           // It's a file upload
           const fileInfo = await this.fileUploadService.processUploadedFile(photo, 'image');
-          photoUrl = fileInfo.url;
-        } else if (typeof photo === 'string' && photo.startsWith('/uploads/')) {
+          console.log('FileInfo received:', fileInfo);
+          
+          if (fileInfo && fileInfo.url && fileInfo.url !== '/uploads/images/undefined') {
+            photoUrl = fileInfo.url;
+            console.log('Photo URL set to:', photoUrl);
+          } else {
+            console.error('Invalid fileInfo or fileInfo.url:', fileInfo);
+            // Don't throw error, just set to null
+            console.log('Setting photo to null due to invalid fileInfo');
+            photoUrl = null;
+          }
+        } else if (typeof photo === 'string' && photo.startsWith('/uploads/') && photo !== '/uploads/images/undefined') {
+          console.log('Processing as URL string:', photo);
           // It's a URL string from file upload service
           photoUrl = photo;
+        } else {
+          console.log('Photo is neither file upload nor valid URL string, setting to null');
+          photoUrl = null;
         }
       } catch (error) {
-        throw new ConflictException(`Photo upload failed: ${error.message}`);
+        console.error('Photo upload error:', error);
+        // Don't throw error, just set to null
+        console.log('Setting photo to null due to upload error');
+        photoUrl = null;
       }
+    } else {
+      console.log('No photo provided, setting to null');
     }
 
     // Generate custom ID
@@ -250,12 +276,17 @@ export class CandidateService {
     // Handle photo upload using FileUploadService
     let photoUrl = existingCandidate.photo;
     if (photo) {
+      console.log('Photo object received:', photo);
+      console.log('Photo type:', typeof photo);
+      console.log('Photo properties:', Object.keys(photo));
+      
       try {
         // Check if photo is a file upload or a URL string
         if (photo.buffer || photo.originalname) {
+          console.log('Processing as file upload');
           // It's a file upload
           // Delete old photo if exists
-          if (existingCandidate.photo) {
+          if (existingCandidate.photo && existingCandidate.photo !== '/uploads/images/undefined') {
             const oldPhotoFilename = existingCandidate.photo.split('/').pop();
             if (oldPhotoFilename) {
               await this.fileUploadService.deleteFile(oldPhotoFilename, 'image');
@@ -264,14 +295,30 @@ export class CandidateService {
 
           // Upload new photo
           const fileInfo = await this.fileUploadService.processUploadedFile(photo, 'image');
-          photoUrl = fileInfo.url;
-        } else if (typeof photo === 'string' && photo.startsWith('/uploads/')) {
+          console.log('FileInfo received:', fileInfo);
+          
+          if (fileInfo && fileInfo.url && fileInfo.url !== '/uploads/images/undefined') {
+            photoUrl = fileInfo.url;
+            console.log('Photo URL set to:', photoUrl);
+          } else {
+            console.error('Invalid fileInfo or fileInfo.url:', fileInfo);
+            // Don't throw error, just keep existing photo
+            console.log('Keeping existing photo due to invalid fileInfo');
+          }
+        } else if (typeof photo === 'string' && photo.startsWith('/uploads/') && photo !== '/uploads/images/undefined') {
+          console.log('Processing as URL string:', photo);
           // It's a URL string from file upload service
           photoUrl = photo;
+        } else {
+          console.log('Photo is neither file upload nor valid URL string, keeping existing photo');
         }
       } catch (error) {
-        throw new ConflictException(`Photo upload failed: ${error.message}`);
+        console.error('Photo upload error:', error);
+        // Don't throw error, just keep existing photo
+        console.log('Keeping existing photo due to upload error');
       }
+    } else {
+      console.log('No photo provided, keeping existing photo');
     }
 
     const candidate = await this.prisma.candidate.update({

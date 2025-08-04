@@ -19,11 +19,13 @@ const Candidates = () => {
   const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     name: '',
+    email: '',
+    studentId: '',
     positionId: '',
     departmentId: '',
     courseId: '',
-    photoUrl: '',
-    description: ''
+    photo: null,
+    manifesto: ''
   });
   const [viewCandidate, setViewCandidate] = useState(null);
   const [photoFile, setPhotoFile] = useState(null);
@@ -58,9 +60,10 @@ const Candidates = () => {
       candidatesData.forEach(candidate => {
         console.log(`Candidate ${candidate.name}:`, {
           departmentId: candidate.departmentId,
-          departmentName: candidate.departmentName,
+          departmentName: candidate.department?.name,
           courseId: candidate.courseId,
-          courseName: candidate.courseName
+          courseName: candidate.course?.id,
+          positionName: candidate.position?.title
         });
       });
       
@@ -102,13 +105,15 @@ const Candidates = () => {
       setEditingCandidate(candidate);
       setFormData({
         name: candidate.name,
+        email: candidate.email || '',
+        studentId: candidate.studentId || '',
         positionId: candidate.positionId,
         departmentId: candidate.departmentId || '',
         courseId: candidate.courseId || '',
-        photoUrl: candidate.photoUrl || '',
-        description: candidate.description || ''
+        photo: candidate.photo || null,
+        manifesto: candidate.manifesto || ''
       });
-      setPhotoPreview(candidate.photoUrl || '');
+      setPhotoPreview(candidate.photo || '');
       setPhotoFile(null);
       
       // Fetch courses if department is selected
@@ -119,11 +124,13 @@ const Candidates = () => {
       setEditingCandidate(null);
       setFormData({
         name: '',
+        email: '',
+        studentId: '',
         positionId: '',
         departmentId: '',
         courseId: '',
-        photoUrl: '',
-        description: ''
+        photo: null,
+        manifesto: ''
       });
       setPhotoPreview('');
       setPhotoFile(null);
@@ -137,11 +144,13 @@ const Candidates = () => {
     setEditingCandidate(null);
     setFormData({
       name: '',
+      email: '',
+      studentId: '',
       positionId: '',
       departmentId: '',
       courseId: '',
-      photoUrl: '',
-      description: ''
+      photo: null,
+      manifesto: ''
     });
     setPhotoPreview('');
     setPhotoFile(null);
@@ -180,15 +189,17 @@ const Candidates = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Validate required fields
-    if (!formData.departmentId) {
-      setError('Please select a department');
-      return;
-    }
-    
-    if (!formData.courseId) {
-      setError('Please select a course');
-      return;
+    // Validate required fields - Department and Course are required for non-admin users
+    if (role !== 'ADMIN' && role !== 'SUPERADMIN') {
+      if (!formData.departmentId) {
+        setError('Please select a department');
+        return;
+      }
+      
+      if (!formData.courseId) {
+        setError('Please select a course');
+        return;
+      }
     }
     
     try {
@@ -196,27 +207,55 @@ const Candidates = () => {
       if (photoFile) {
         dataToSend = new FormData();
         dataToSend.append('name', formData.name);
+        dataToSend.append('email', formData.email);
+        dataToSend.append('studentId', formData.studentId);
         dataToSend.append('positionId', formData.positionId);
         dataToSend.append('departmentId', formData.departmentId);
         dataToSend.append('courseId', formData.courseId);
-        dataToSend.append('description', formData.description);
+        dataToSend.append('manifesto', formData.manifesto);
         dataToSend.append('photo', photoFile);
       } else {
         dataToSend = { ...formData };
+        // Remove photo field if no photo is selected (don't send undefined)
+        delete dataToSend.photo;
         // If editing and no new photo selected, preserve the existing photo URL
-        if (editingCandidate && !photoFile) {
-          dataToSend.photoUrl = editingCandidate.photoUrl;
+        if (editingCandidate && !photoFile && editingCandidate.photo) {
+          dataToSend.photo = editingCandidate.photo;
         }
       }
       
       console.log('Submitting candidate data:', dataToSend);
+      console.log('Photo file:', photoFile);
+      if (photoFile) {
+        console.log('Photo file details:', {
+          name: photoFile.name,
+          size: photoFile.size,
+          type: photoFile.type
+        });
+      }
+      
+      // Debug: Check what's being sent
+      if (dataToSend instanceof FormData) {
+        console.log('FormData contents:');
+        for (let [key, value] of dataToSend.entries()) {
+          console.log(`${key}:`, value);
+        }
+      } else {
+        console.log('JSON data:', dataToSend);
+      }
+      
+      // Debug: Check if photo field exists in formData
+      console.log('formData.photo:', formData.photo);
+      console.log('photoFile:', photoFile);
       
       if (editingCandidate) {
         console.log('Updating candidate:', editingCandidate.id);
-        await updateCandidate(editingCandidate.id, dataToSend, photoFile ? { headers: { 'Content-Type': 'multipart/form-data' } } : undefined);
+        const result = await updateCandidate(editingCandidate.id, dataToSend, photoFile ? { headers: { 'Content-Type': 'multipart/form-data' } } : undefined);
+        console.log('Update result:', result);
       } else {
         console.log('Creating new candidate');
-        await createCandidate(dataToSend, photoFile ? { headers: { 'Content-Type': 'multipart/form-data' } } : undefined);
+        const result = await createCandidate(dataToSend, photoFile ? { headers: { 'Content-Type': 'multipart/form-data' } } : undefined);
+        console.log('Create result:', result);
       }
       
       console.log('Candidate saved successfully, refreshing data...');
@@ -242,14 +281,14 @@ const Candidates = () => {
 
   // Helper to get correct candidate photo URL
   const getCandidatePhotoUrl = (photoUrl) => {
-    if (!photoUrl) return null;
+    if (!photoUrl || photoUrl === 'undefined' || photoUrl === 'null') return null;
     if (photoUrl.startsWith('http://') || photoUrl.startsWith('https://')) {
       return photoUrl;
     }
     if (photoUrl.startsWith('/uploads/')) {
-      return `http://localhost:3000${photoUrl}`;
+      return `http://localhost:3001${photoUrl}`;
     }
-    return `http://localhost:3000/uploads/${photoUrl}`;
+    return `http://localhost:3001/uploads/${photoUrl}`;
   };
 
   // Filter and sort candidates
@@ -258,20 +297,32 @@ const Candidates = () => {
       const term = searchTerm.toLowerCase();
       return (
         candidate.name?.toLowerCase().includes(term) ||
-        candidate.positionName?.toLowerCase().includes(term) ||
-        candidate.departmentName?.toLowerCase().includes(term) ||
-        candidate.courseName?.toLowerCase().includes(term)
+        candidate.position?.title?.toLowerCase().includes(term) ||
+        candidate.department?.name?.toLowerCase().includes(term) ||
+        candidate.course?.id?.toLowerCase().includes(term)
       );
     })
     .sort((a, b) => {
       if (sortField === 'positionName') {
-        // Sort by position displayOrder (or ID if no displayOrder)
-        const aPos = positions.find(p => p.id === a.positionId);
-        const bPos = positions.find(p => p.id === b.positionId);
-        const aOrder = aPos?.displayOrder ?? aPos?.id ?? '';
-        const bOrder = bPos?.displayOrder ?? bPos?.id ?? '';
-        if (aOrder < bOrder) return sortOrder === 'asc' ? -1 : 1;
-        if (aOrder > bOrder) return sortOrder === 'asc' ? 1 : -1;
+        // Sort by position title
+        const aValue = a.position?.title || '';
+        const bValue = b.position?.title || '';
+        if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1;
+        if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1;
+        return 0;
+      } else if (sortField === 'departmentName') {
+        // Sort by department name
+        const aValue = a.department?.name || '';
+        const bValue = b.department?.name || '';
+        if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1;
+        if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1;
+        return 0;
+      } else if (sortField === 'courseName') {
+        // Sort by course ID
+        const aValue = a.course?.id || '';
+        const bValue = b.course?.id || '';
+        if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1;
+        if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1;
         return 0;
       } else {
         let aValue = a[sortField] || '';
@@ -338,8 +389,8 @@ const Candidates = () => {
                         <span className="rank-number">{index + 1}</span>
                       </div>
                       <div className="candidate-photo-container">
-                        {candidate.photoUrl ? (
-                          <img src={getCandidatePhotoUrl(candidate.photoUrl)} alt={candidate.name} className="candidate-photo" />
+                        {candidate.photo && candidate.photo !== 'undefined' ? (
+                          <img src={getCandidatePhotoUrl(candidate.photo)} alt={candidate.name} className="candidate-photo" />
                         ) : (
                           <div className="candidate-photo-placeholder">
                             <i className="fas fa-user"></i>
@@ -353,15 +404,15 @@ const Candidates = () => {
                           {candidate.name}
                           <span className="verified"><i className="fas fa-check-circle"></i></span>
                         </h3>
-                        <p className="candidate-position">{candidate.positionName}</p>
-                        {(candidate.departmentName || candidate.courseName) && (
+                        <p className="candidate-position">{candidate.position?.title}</p>
+                        {(candidate.department?.name || candidate.course?.id) && (
                           <p className="candidate-department">
                             <i className="fas fa-university me-1"></i>
-                            {candidate.departmentName}
-                            {candidate.courseName && (
+                            {candidate.department?.name}
+                            {candidate.course?.id && (
                               <span className="candidate-course">
                                 <i className="fas fa-graduation-cap me-1"></i>
-                                {candidate.courseName}
+                                {candidate.course?.id}
                               </span>
                             )}
                           </p>
@@ -369,8 +420,8 @@ const Candidates = () => {
                       </div>
                       <div className="candidate-brief">
                         <p>
-                          {candidate.description ? 
-                            candidate.description.substring(0, 120) + (candidate.description.length > 120 ? '...' : '') :
+                          {candidate.manifesto ? 
+                            candidate.manifesto.substring(0, 120) + (candidate.manifesto.length > 120 ? '...' : '') :
                             'Learn more about this candidate and their vision for the position.'
                           }
                         </p>
@@ -417,7 +468,7 @@ const Candidates = () => {
                     </div>
                     <div className="modal-candidate-details">
                       <h4 className="modal-candidate-name">{viewCandidate?.name}</h4>
-                      <p className="modal-position">{viewCandidate?.positionName}</p>
+                      <p className="modal-position">{viewCandidate?.position?.title}</p>
                       <div className="candidate-status">
                         <span className="badge bg-success">
                           <i className="fas fa-check-circle me-1"></i>
@@ -691,14 +742,16 @@ const Candidates = () => {
                 <tr key={candidate.id}>
                   <td>{index + 1}</td>
                   <td>
-                    {candidate.photoUrl ? (
+                    {candidate.photo && candidate.photo !== 'undefined' ? (
                       <img 
-                        src={getCandidatePhotoUrl(candidate.photoUrl)} 
+                        src={getCandidatePhotoUrl(candidate.photo)} 
                         alt={candidate.name}
                         className="candidate-table-photo"
                         onError={(e) => {
                           e.target.style.display = 'none';
-                          e.target.nextSibling.style.display = 'flex';
+                          if (e.target.nextSibling) {
+                            e.target.nextSibling.style.display = 'flex';
+                          }
                         }}
                       />
                     ) : (
@@ -708,10 +761,10 @@ const Candidates = () => {
                     )}
                   </td>
                   <td>{candidate.name}</td>
-                  <td>{candidate.positionName}</td>
-                  <td>{candidate.departmentName || '-'}</td>
-                  <td>{candidate.courseName || '-'}</td>
-                  <td>{candidate.description || '-'}</td>
+                  <td>{candidate.position?.title || '-'}</td>
+                  <td>{candidate.department?.name || '-'}</td>
+                  <td>{candidate.course?.id || '-'}</td>
+                  <td>{candidate.manifesto || '-'}</td>
                   <td>
                     <button 
                       className="btn btn-sm btn-outline-primary me-2"
@@ -750,15 +803,15 @@ const Candidates = () => {
             <div className="modal-content">
               <div className="modal-header">
                 <div className="modal-candidate-info">
-                  <div className="modal-candidate-photo-container">
-                    {viewCandidate?.photoUrl ? (
-                      <img src={getCandidatePhotoUrl(viewCandidate.photoUrl)} alt={viewCandidate.name} className="modal-candidate-photo" />
-                    ) : (
-                      <div className="modal-candidate-photo-placeholder">
-                        <i className="fas fa-user"></i>
-                      </div>
-                    )}
-                  </div>
+                                      <div className="modal-candidate-photo-container">
+                      {viewCandidate?.photo && viewCandidate.photo !== 'undefined' ? (
+                        <img src={getCandidatePhotoUrl(viewCandidate.photo)} alt={viewCandidate.name} className="modal-candidate-photo" />
+                      ) : (
+                        <div className="modal-candidate-photo-placeholder">
+                          <i className="fas fa-user"></i>
+                        </div>
+                      )}
+                    </div>
                   <div className="modal-candidate-details">
                     <h4 className="modal-candidate-name">{viewCandidate?.name}</h4>
                     <p className="modal-position">{viewCandidate?.positionName}</p>
@@ -960,6 +1013,28 @@ const Candidates = () => {
                     />
                   </div>
                   <div className="mb-3">
+                    <label className="form-label">Email</label>
+                    <input
+                      type="email"
+                      className="form-control"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Student ID</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      name="studentId"
+                      value={formData.studentId}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
+                  <div className="mb-3">
                     <label className="form-label">Position</label>
                     <select
                       className="form-select"
@@ -971,13 +1046,15 @@ const Candidates = () => {
                       <option value="">Select a position</option>
                       {positions.map(position => (
                         <option key={position.id} value={position.id}>
-                          {position.name}
+                          {position.title}
                         </option>
                       ))}
                     </select>
                   </div>
                   <div className="mb-3">
-                    <label className="form-label">Department *</label>
+                    <label className="form-label">
+                      Department {role !== 'ADMIN' && role !== 'SUPERADMIN' ? '*' : ''}
+                    </label>
                     <select
                       className="form-select"
                       name="departmentId"
@@ -986,7 +1063,7 @@ const Candidates = () => {
                         handleChange(e);
                         fetchCourses(e.target.value);
                       }}
-                      required
+                      required={role !== 'ADMIN' && role !== 'SUPERADMIN'}
                     >
                       <option value="">Select a department</option>
                       {departments.map(department => (
@@ -995,17 +1072,23 @@ const Candidates = () => {
                         </option>
                       ))}
                     </select>
-                    <small className="text-muted">Choose the department this candidate represents (required)</small>
+                    <small className="text-muted">
+                      {role !== 'ADMIN' && role !== 'SUPERADMIN' 
+                        ? 'Choose the department this candidate represents (required)' 
+                        : 'Choose the department this candidate represents (optional for admins)'}
+                    </small>
                   </div>
                   <div className="mb-3">
-                    <label className="form-label">Course *</label>
+                    <label className="form-label">
+                      Course {role !== 'ADMIN' && role !== 'SUPERADMIN' ? '*' : ''}
+                    </label>
                     <select
                       className="form-select"
                       name="courseId"
                       value={formData.courseId}
                       onChange={handleChange}
                       disabled={!formData.departmentId || loadingCourses}
-                      required
+                      required={role !== 'ADMIN' && role !== 'SUPERADMIN'}
                     >
                       <option value="">Select a course</option>
                       {courses.map(course => (
@@ -1016,8 +1099,11 @@ const Candidates = () => {
                     </select>
                     <small className="text-muted">
                       {loadingCourses ? 'Loading courses...' : 
-                       formData.departmentId ? 'Choose the course this candidate represents (required)' : 
-                       'Select a department first to choose a course'}
+                       formData.departmentId 
+                         ? (role !== 'ADMIN' && role !== 'SUPERADMIN' 
+                             ? 'Choose the course this candidate represents (required)' 
+                             : 'Choose the course this candidate represents (optional for admins)')
+                         : 'Select a department first to choose a course'}
                     </small>
                   </div>
                   <div className="mb-3">
@@ -1039,14 +1125,14 @@ const Candidates = () => {
                     )}
                   </div>
                   <div className="mb-3">
-                    <label className="form-label">Description (optional)</label>
+                    <label className="form-label">Manifesto (optional)</label>
                     <textarea
                       className="form-control"
                       rows={3}
-                      name="description"
-                      value={formData.description}
+                      name="manifesto"
+                      value={formData.manifesto}
                       onChange={handleChange}
-                      placeholder="Brief description about the candidate"
+                      placeholder="Brief manifesto about the candidate"
                     ></textarea>
                   </div>
                 </div>

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { adminLogin } from '../services/api';
-import { storeUserData } from '../services/auth';
+import { storeRole } from '../services/auth';
 import './AdminLogin.css';
 
 const AdminLogin = () => {
@@ -18,9 +18,8 @@ const AdminLogin = () => {
     try {
       const res = await adminLogin(username, password);
       
-      // Store user data in localStorage for navigation purposes
-      // Token is stored in HTTP-only cookie automatically
-      storeUserData(res.admin, res.admin.role);
+      // Store role temporarily for navigation (will be cleared on logout)
+      storeRole(res.admin.role);
       
       setLoading(false);
       if (res.admin.role === 'SUPERADMIN') {
@@ -104,7 +103,6 @@ const AdminLogin = () => {
               <button
                 type="button"
                 onClick={() => {
-                  console.log('Admin forgot password button clicked');
                   navigate('/forgot-password');
                 }}
                 className="forgot-password-btn"

@@ -1204,7 +1204,7 @@ export class VoteService {
       throw new NotFoundException('Election not found');
     }
 
-    // Get all positions in this election
+    // Get all positions in this election, ordered by displayOrder
     const electionPositions = await this.prisma.electionPosition.findMany({
       where: { electionId },
       include: {
@@ -1213,7 +1213,13 @@ export class VoteService {
             id: true,
             title: true,
             voteLimit: true,
+            displayOrder: true,
           },
+        },
+      },
+      orderBy: {
+        position: {
+          displayOrder: 'asc',
         },
       },
     });

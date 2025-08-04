@@ -126,6 +126,7 @@ export class ElectionService {
         startDate: new Date(startDate),
         endDate: new Date(endDate),
         isActive: isActive || false,
+        status: 'draft', // Explicitly set status to draft
         createdBy: adminId,
       },
       include: {
@@ -161,6 +162,7 @@ export class ElectionService {
         startDate: election.startDate,
         endDate: election.endDate,
         isActive: election.isActive,
+        status: election.status, // Include status in response
         createdBy: election.createdBy,
         admin: election.admin,
         createdAt: election.createdAt,
@@ -407,6 +409,44 @@ export class ElectionService {
 
     return {
       message: 'Ballot resumed successfully! Voting is now open again.',
+      election: updatedElection,
+    };
+  }
+
+  async stopBallot(id: string) {
+    const election = await this.prisma.election.findUnique({
+      where: { id },
+    });
+
+    if (!election) {
+      throw new NotFoundException('Election not found');
+    }
+
+    // Check if ballot is active or paused
+    if (election.status !== 'active' && election.status !== 'paused') {
+      throw new ConflictException('Cannot stop ballot: Ballot is not active or paused');
+    }
+
+    const updatedElection = await this.prisma.election.update({
+      where: { id },
+      data: { 
+        isActive: false,
+        status: 'stopped'
+      },
+    });
+
+    // Emit real-time election status update
+    this.votingGateway.emitElectionStatusUpdate(id, 'stopped', {
+      id: updatedElection.id,
+      title: updatedElection.title,
+      status: updatedElection.status,
+      startDate: updatedElection.startDate,
+      endDate: updatedElection.endDate,
+      updatedAt: updatedElection.updatedAt,
+    });
+
+    return {
+      message: 'Ballot stopped successfully! Voting is now closed.',
       election: updatedElection,
     };
   }

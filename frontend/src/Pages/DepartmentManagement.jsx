@@ -36,13 +36,16 @@ const DepartmentManagement = () => {
   
   // Form data
   const [departmentFormData, setDepartmentFormData] = useState({
-    id: '',
-    name: ''
+    name: '',
+    description: '',
+    customId: ''
   });
   
   const [courseFormData, setCourseFormData] = useState({
-    id: '',
     name: '',
+    code: '',
+    description: '',
+    customId: '',
     departmentId: ''
   });
 
@@ -82,15 +85,16 @@ const DepartmentManagement = () => {
 
   // Modal handlers
   const openModal = () => {
-    setDepartmentFormData({ id: '', name: '' });
+    setDepartmentFormData({ name: '', description: '', customId: '' });
     setShowModal(true);
   };
 
   const openEditModal = (department) => {
     setSelectedDepartment(department);
     setDepartmentFormData({
-      id: department.id,
-      name: department.name
+      name: department.name,
+      description: department.description || '',
+      customId: department.id
     });
     setShowEditModal(true);
   };
@@ -100,13 +104,15 @@ const DepartmentManagement = () => {
     if (course) {
       setEditingCourse(course);
       setCourseFormData({
-        id: course.id,
         name: course.name,
+        code: course.code || '',
+        description: course.description || '',
+        customId: course.id || '',
         departmentId: course.departmentId || department.id
       });
     } else {
       setEditingCourse(null);
-      setCourseFormData({ id: '', name: '', departmentId: department.id });
+      setCourseFormData({ name: '', code: '', description: '', customId: '', departmentId: department.id });
     }
     setShowCourseModal(true);
   };
@@ -139,10 +145,7 @@ const DepartmentManagement = () => {
   const handleCreateCourse = async (e) => {
     e.preventDefault();
     try {
-      await createCourse({
-        ...courseFormData,
-        departmentId: selectedDepartment.id
-      });
+      await createCourse(courseFormData);
       setMessage('Course created successfully!');
       setShowCourseModal(false);
       fetchData();
@@ -182,7 +185,8 @@ const DepartmentManagement = () => {
         setMessage('Course deleted successfully!');
         fetchData();
       } catch (error) {
-        setMessage('Error deleting course: ' + error.message);
+        const errorMessage = error.response?.data?.message || error.message;
+        setMessage('Error deleting course: ' + errorMessage);
       }
     }
   };
@@ -429,19 +433,28 @@ const DepartmentManagement = () => {
                   />
                 </div>
                 <div className="department-form-group">
-                  <label className="department-form-label">Department ID</label>
+                  <label className="department-form-label">Description</label>
+                  <textarea
+                    className="department-form-input"
+                    value={departmentFormData.description}
+                    onChange={(e) => setDepartmentFormData({...departmentFormData, description: e.target.value})}
+                    placeholder="Optional description for the department"
+                    rows={3}
+                  />
+                </div>
+                <div className="department-form-group">
+                  <label className="department-form-label">Custom ID (Optional)</label>
                   <input
                     type="text"
                     className="department-form-input"
-                    value={departmentFormData.id}
-                    onChange={(e) => setDepartmentFormData({...departmentFormData, id: e.target.value.toUpperCase()})}
+                    value={departmentFormData.customId}
+                    onChange={(e) => setDepartmentFormData({...departmentFormData, customId: e.target.value.toUpperCase()})}
                     placeholder="e.g., CCS"
                     maxLength="10"
                     pattern="[A-Za-z0-9]+"
-                    required
                   />
                   <small className="department-form-help">
-                    Short identifier for the department (max 10 characters)
+                    Custom identifier for the department (max 10 characters, optional)
                   </small>
                 </div>
               </div>
@@ -493,11 +506,21 @@ const DepartmentManagement = () => {
                   />
                 </div>
                 <div className="department-form-group">
+                  <label className="department-form-label">Description</label>
+                  <textarea
+                    className="department-form-input"
+                    value={departmentFormData.description}
+                    onChange={(e) => setDepartmentFormData({...departmentFormData, description: e.target.value})}
+                    placeholder="Optional description for the department"
+                    rows={3}
+                  />
+                </div>
+                <div className="department-form-group">
                   <label className="department-form-label">Department ID</label>
                   <input
                     type="text"
                     className="department-form-input"
-                    value={departmentFormData.id}
+                    value={departmentFormData.customId}
                     disabled
                   />
                   <small className="department-form-help">
@@ -548,19 +571,40 @@ const DepartmentManagement = () => {
                   value={courseFormData.departmentId}
                 />
                 <div className="department-form-group">
-                  <label className="department-form-label">Course ID</label>
+                  <label className="department-form-label">Course Code</label>
                   <input
                     type="text"
                     className="department-form-input"
-                    value={courseFormData.id}
-                    onChange={(e) => setCourseFormData({...courseFormData, id: e.target.value.toUpperCase()})}
-                    placeholder="e.g., BSIT, BSME, BSCE"
+                    value={courseFormData.code}
+                    onChange={(e) => setCourseFormData({...courseFormData, code: e.target.value.toUpperCase()})}
+                    placeholder="e.g., CS101, IT201"
                     maxLength="10"
-                    pattern="[A-Za-z0-9-]+"
+                    pattern="[A-Za-z0-9]+"
                     required
                   />
                   <small className="department-form-help">
-                    Enter a unique course identifier (e.g., BSIT for BS in Information Technology)
+                    Enter a unique course code (e.g., CS101 for Computer Science 101)
+                  </small>
+                </div>
+                <div className="department-form-group">
+                  <label className="department-form-label">
+                    {editingCourse ? 'Course ID (Cannot be changed)' : 'Custom ID (Optional)'}
+                  </label>
+                  <input
+                    type="text"
+                    className="department-form-input"
+                    value={courseFormData.customId}
+                    onChange={editingCourse ? undefined : (e) => setCourseFormData({...courseFormData, customId: e.target.value.toUpperCase()})}
+                    placeholder="e.g., CS101"
+                    maxLength="10"
+                    pattern="[A-Za-z0-9]+"
+                    disabled={editingCourse}
+                  />
+                  <small className="department-form-help">
+                    {editingCourse 
+                      ? 'Course ID cannot be changed once created'
+                      : 'Custom identifier for the course (optional, will auto-generate if not provided)'
+                    }
                   </small>
                 </div>
                 <div className="department-form-group">
@@ -570,8 +614,18 @@ const DepartmentManagement = () => {
                     className="department-form-input"
                     value={courseFormData.name}
                     onChange={(e) => setCourseFormData({...courseFormData, name: e.target.value})}
-                    placeholder="e.g., BS in Information Technology"
+                    placeholder="e.g., Introduction to Computer Science"
                     required
+                  />
+                </div>
+                <div className="department-form-group">
+                  <label className="department-form-label">Description (Optional)</label>
+                  <textarea
+                    className="department-form-input"
+                    value={courseFormData.description}
+                    onChange={(e) => setCourseFormData({...courseFormData, description: e.target.value})}
+                    placeholder="Optional description for this course"
+                    rows={3}
                   />
                 </div>
               </div>

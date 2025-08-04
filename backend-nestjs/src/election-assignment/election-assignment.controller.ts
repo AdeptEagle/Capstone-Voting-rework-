@@ -10,7 +10,12 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { ElectionAssignmentService } from './election-assignment.service';
-import { CreateElectionAssignmentDto, UpdateElectionAssignmentDto } from './dto';
+import { 
+  CreateElectionAssignmentDto, 
+  UpdateElectionAssignmentDto,
+  AssignPositionDto,
+  AssignCandidateDto
+} from './dto';
 
 @ApiTags('Election Assignment')
 @Controller('election-assignments')
@@ -121,11 +126,14 @@ export class ElectionAssignmentController {
     return this.electionAssignmentService.getPositionAssignmentStatus(electionId);
   }
 
-  @Post('election/assign-position')
+  @Post('election/:electionId/assign-position/:positionId')
   @ApiOperation({ summary: 'Assign a position to an election' })
   @ApiResponse({ status: 201, description: 'Position assigned to election successfully' })
-  async assignPositionToElection(@Body() assignment: { electionId: string; positionId: string }) {
-    return this.electionAssignmentService.assignPositionToElection(assignment.electionId, assignment.positionId);
+  async assignPositionToElection(
+    @Param('electionId') electionId: string,
+    @Param('positionId') positionId: string,
+  ) {
+    return this.electionAssignmentService.assignPositionToElection(electionId, positionId);
   }
 
   @Delete('election/:electionId/position/:positionId')
@@ -152,11 +160,14 @@ export class ElectionAssignmentController {
     return this.electionAssignmentService.getCandidateAssignmentStatus(electionId);
   }
 
-  @Post('election/assign-candidate')
+  @Post('election/:electionId/assign-candidate/:candidateId')
   @ApiOperation({ summary: 'Assign a candidate to an election' })
   @ApiResponse({ status: 201, description: 'Candidate assigned to election successfully' })
-  async assignCandidateToElection(@Body() assignment: { electionId: string; candidateId: string }) {
-    return this.electionAssignmentService.assignCandidateToElection(assignment.electionId, assignment.candidateId);
+  async assignCandidateToElection(
+    @Param('electionId') electionId: string,
+    @Param('candidateId') candidateId: string,
+  ) {
+    return this.electionAssignmentService.assignCandidateToElection(electionId, candidateId);
   }
 
   @Get('election/:electionId/ballot')

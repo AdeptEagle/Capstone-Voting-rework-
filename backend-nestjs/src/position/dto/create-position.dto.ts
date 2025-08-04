@@ -18,4 +18,10 @@ export class CreatePositionDto {
   @Max(10)
   @IsOptional()
   voteLimit?: number;
+
+  @ApiProperty({ description: 'Display order for sorting', example: 0, default: 0, minimum: 0 })
+  @IsInt()
+  @Min(0)
+  @IsOptional()
+  displayOrder?: number;
 } 

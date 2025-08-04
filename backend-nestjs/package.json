@@ -24,7 +24,9 @@
     "db:studio": "prisma studio",
     "db:seed": "ts-node prisma/seed.ts",
     "setup:super-admin": "ts-node src/scripts/create-super-admin.ts",
-    "create:superadmin": "ts-node src/scripts/create-default-superadmin.ts"
+    "create:superadmin": "ts-node src/scripts/create-default-superadmin.ts",
+    "setup:db": "node scripts/setup-database.js",
+    "init:project": "npm install && npm run setup:db && npm run start:dev"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",

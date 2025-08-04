@@ -18,7 +18,7 @@ const Voters = () => {
     name: '',
     email: '',
     studentId: '',
-    hasVoted: false,
+    password: '',
     departmentId: '',
     courseId: ''
   });
@@ -122,7 +122,16 @@ const Voters = () => {
     try {
       setLoading(true);
       const data = await getVoters();
-      setVoters(data);
+      
+      // Transform the data to flatten nested department and course objects
+      const transformedData = data.map(voter => ({
+        ...voter,
+        departmentName: voter.department?.name || null,
+        courseName: voter.course?.name || null,
+        courseId: voter.course?.id || null
+      }));
+      
+      setVoters(transformedData);
       setError('');
     } catch (error) {
       console.error('Error fetching voters:', error);
@@ -140,12 +149,12 @@ const Voters = () => {
         email: voter.email,
         studentId: voter.studentId,
         hasVoted: voter.hasVoted,
-        departmentId: voter.departmentId || '',
-        courseId: voter.courseId || ''
+        departmentId: voter.departmentId || voter.department?.id || '',
+        courseId: voter.courseId || voter.course?.id || ''
       });
       // Load courses for the voter's department
-      if (voter.departmentId) {
-        fetchCourses(voter.departmentId);
+      if (voter.departmentId || voter.department?.id) {
+        fetchCourses(voter.departmentId || voter.department.id);
       }
     } else {
       setEditingVoter(null);

@@ -7,7 +7,9 @@ import { CreateCandidateDto, UpdateCandidateDto } from './dto';
 @ApiTags('Candidate')
 @Controller('candidates')
 export class CandidateController {
-  constructor(private readonly candidateService: CandidateService) {}
+  constructor(
+    private readonly candidateService: CandidateService
+  ) {}
 
   @Get()
   @ApiOperation({ summary: 'Get all candidates' })

@@ -9,7 +9,7 @@ const Positions = () => {
   const [editingPosition, setEditingPosition] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
-  const [formData, setFormData] = useState({ id: '', name: '', voteLimit: 1, displayOrder: 0 });
+  const [formData, setFormData] = useState({ id: '', title: '', voteLimit: 1, description: '', displayOrder: 0 });
 
   useEffect(() => {
     fetchPositions();
@@ -25,7 +25,7 @@ const Positions = () => {
     // Apply search filter
     if (searchTerm) {
       filtered = positions.filter(position =>
-        position.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        position.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         position.id.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
@@ -82,21 +82,23 @@ const Positions = () => {
     try {
       if (editingPosition) {
         await updatePosition(editingPosition.id, {
-          name: formData.name,
+          title: formData.title,
+          description: formData.description,
           voteLimit: Number(formData.voteLimit),
           displayOrder: Number(formData.displayOrder)
         });
       } else {
         await createPosition({
           id: formData.id,
-          name: formData.name,
+          title: formData.title,
+          description: formData.description,
           voteLimit: Number(formData.voteLimit),
           displayOrder: Number(formData.displayOrder)
         });
       }
       setShowModal(false);
       setEditingPosition(null);
-      setFormData({ id: '', name: '', voteLimit: 1 });
+      setFormData({ id: '', title: '', voteLimit: 1, description: '', displayOrder: 0 });
       fetchPositions();
     } catch (error) {
       console.error('Error saving position:', error);
@@ -107,8 +109,9 @@ const Positions = () => {
     setEditingPosition(position);
     setFormData({ 
       id: position.id, 
-      name: position.name, 
+      title: position.title, 
       voteLimit: position.voteLimit,
+      description: position.description || '',
       displayOrder: position.displayOrder || 0
     });
     setShowModal(true);
@@ -127,7 +130,7 @@ const Positions = () => {
 
   const openModal = () => {
     setEditingPosition(null);
-    setFormData({ id: '', name: '', voteLimit: 1, displayOrder: 0 });
+    setFormData({ id: '', title: '', voteLimit: 1, description: '', displayOrder: 0 });
     setShowModal(true);
   };
 
@@ -209,10 +212,10 @@ const Positions = () => {
                   </th>
                   <th 
                     style={{ cursor: 'pointer' }}
-                    onClick={() => handleSort('name')}
+                    onClick={() => handleSort('title')}
                     className="sortable-header"
                   >
-                    Name {getSortIcon('name')}
+                    Title {getSortIcon('title')}
                   </th>
                   <th 
                     style={{ cursor: 'pointer' }}
@@ -235,7 +238,7 @@ const Positions = () => {
                 {filteredPositions.map((position) => (
                   <tr key={position.id}>
                     <td>{position.id}</td>
-                    <td>{position.name}</td>
+                    <td>{position.title}</td>
                     <td>{position.voteLimit}</td>
                     <td>{position.displayOrder || 0}</td>
                     <td>
@@ -291,13 +294,23 @@ const Positions = () => {
                     </div>
                   )}
                   <div className="mb-3">
-                    <label className="form-label">Name</label>
+                    <label className="form-label">Title</label>
                     <input
                       type="text"
                       className="form-control"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      value={formData.title}
+                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                       required
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Description</label>
+                    <textarea
+                      className="form-control"
+                      value={formData.description}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                      rows={3}
+                      placeholder="Optional description for this position"
                     />
                   </div>
                   <div className="mb-3">

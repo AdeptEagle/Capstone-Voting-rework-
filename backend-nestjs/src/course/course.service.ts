@@ -173,6 +173,7 @@ export class CourseService {
       }
     }
 
+    // Regular update - ignore customId field
     const course = await this.prisma.course.update({
       where: { id },
       data: {

@@ -1,15 +1,42 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useElection } from '../contexts/ElectionContext';
-import { checkCurrentUser } from '../services/auth';
+import { checkCurrentUser, logout } from '../services/auth';
 import './Sidebar.css';
 
 const Sidebar = ({ isOpen, onToggle }) => {
   const location = useLocation();
   const currentUser = checkCurrentUser();
-  const userRole = currentUser.role;
-  const userName = currentUser.user?.username || 'User';
   const { canVote, canViewCandidates, canViewResults, hasActiveElection, hasAnyElection, hasEndedElection } = useElection();
+  const [userData, setUserData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch user data from server
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const response = await fetch('http://localhost:3001/auth/status', {
+          credentials: 'include'
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.isAuthenticated && data.user) {
+            setUserData(data.user);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching user data for sidebar:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, []);
+
+  const userRole = currentUser.role;
+  const userName = userData?.name || userData?.username || userRole || 'User';
   
   // State for collapsible sections - use localStorage to persist state
   const [expandedSections, setExpandedSections] = useState(() => {
@@ -51,7 +78,7 @@ const Sidebar = ({ isOpen, onToggle }) => {
 
   // Role-specific navigation items with icons and grouping
   const getNavItems = () => {
-    switch (userRole) {
+    switch (userRole?.toLowerCase()) {
       case 'superadmin':
         return {
           main: [
@@ -59,7 +86,8 @@ const Sidebar = ({ isOpen, onToggle }) => {
           ],
           elections: [
             { path: '/admin/elections', label: 'Active Elections', icon: 'fas fa-vote-yea' },
-            { path: '/admin/election-history', label: 'Election History', icon: 'fas fa-history' }
+            { path: '/admin/election-history', label: 'Election History', icon: 'fas fa-history' },
+            { path: '/admin/ballot-creation', label: 'Create Ballot', icon: 'fas fa-plus-circle' }
           ],
           management: [
             { path: '/admin/positions', label: 'Positions', icon: 'fas fa-user-tie' },
@@ -84,7 +112,8 @@ const Sidebar = ({ isOpen, onToggle }) => {
           ],
           elections: [
             { path: '/admin/elections', label: 'Active Elections', icon: 'fas fa-vote-yea' },
-            { path: '/admin/election-history', label: 'Election History', icon: 'fas fa-history' }
+            { path: '/admin/election-history', label: 'Election History', icon: 'fas fa-history' },
+            { path: '/admin/ballot-creation', label: 'Create Ballot', icon: 'fas fa-plus-circle' }
           ],
           management: [
             { path: '/admin/positions', label: 'Positions', icon: 'fas fa-user-tie' },
@@ -129,7 +158,7 @@ const Sidebar = ({ isOpen, onToggle }) => {
   };
 
   const getRoleTitle = () => {
-    switch (userRole) {
+    switch (userRole?.toLowerCase()) {
       case 'superadmin':
         return 'Super Admin Panel';
       case 'admin':
@@ -140,7 +169,7 @@ const Sidebar = ({ isOpen, onToggle }) => {
   };
 
   const getRoleIcon = () => {
-    switch (userRole) {
+    switch (userRole?.toLowerCase()) {
       case 'superadmin':
         return 'fas fa-crown';
       case 'admin':
@@ -154,14 +183,17 @@ const Sidebar = ({ isOpen, onToggle }) => {
   
 
 
-  const handleLogout = () => {
-    const role = currentUser.role;
-    localStorage.removeItem('token');
-    localStorage.removeItem('role');
-    if (role === 'admin' || role === 'superadmin') {
-      window.location.href = '/admin-login';
-    } else {
-      window.location.href = '/user-login';
+  const handleLogout = async () => {
+    try {
+      await logout();
+      // Redirect to appropriate login page based on role
+      const redirectUrl = userRole === 'user' ? '/user-login' : '/admin-login';
+      window.location.href = redirectUrl;
+    } catch (error) {
+      console.error('Logout failed:', error);
+      // Still redirect even if logout fails
+      const redirectUrl = userRole === 'user' ? '/user-login' : '/admin-login';
+      window.location.href = redirectUrl;
     }
   };
 
@@ -221,7 +253,7 @@ const Sidebar = ({ isOpen, onToggle }) => {
           <h3 className="admin-name">{userName}</h3>
           <div className="role-badge">
             <i className="fas fa-circle"></i>
-            <span>{userRole?.toUpperCase() || 'USER'}</span>
+            <span>{userRole === 'user' ? 'VOTER' : userRole?.toUpperCase() || 'USER'}</span>
           </div>
         </div>
 

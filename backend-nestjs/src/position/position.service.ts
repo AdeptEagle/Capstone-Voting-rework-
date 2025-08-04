@@ -12,6 +12,14 @@ export class PositionService {
 
   async getAllPositions(showAll: boolean = false) {
     return this.prisma.position.findMany({
+      orderBy: [
+        {
+          displayOrder: 'asc',
+        },
+        {
+          title: 'asc',
+        },
+      ],
       include: {
         _count: {
           select: {
@@ -25,7 +33,7 @@ export class PositionService {
   }
 
   async createPosition(createPositionDto: CreatePositionDto) {
-    const { title, description, voteLimit } = createPositionDto;
+    const { title, description, voteLimit, displayOrder } = createPositionDto;
 
     // Check if position with this title already exists
     const existingPosition = await this.prisma.position.findFirst({
@@ -45,6 +53,7 @@ export class PositionService {
         title,
         description,
         voteLimit: voteLimit || 1,
+        displayOrder: displayOrder || 0,
       },
       include: {
         _count: {
@@ -85,7 +94,7 @@ export class PositionService {
   }
 
   async updatePosition(id: string, updatePositionDto: UpdatePositionDto) {
-    const { title, description } = updatePositionDto;
+    const { title, description, voteLimit, displayOrder } = updatePositionDto;
 
     // Check if position exists
     const existingPosition = await this.prisma.position.findUnique({
@@ -115,6 +124,8 @@ export class PositionService {
       data: {
         title,
         description,
+        voteLimit,
+        displayOrder,
       },
       include: {
         _count: {

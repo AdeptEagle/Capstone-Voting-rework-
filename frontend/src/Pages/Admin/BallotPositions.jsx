@@ -59,6 +59,24 @@ const BallotPositions = () => {
     );
   }
 
+  if (error) {
+    return (
+      <div className="ballot-positions-error">
+        <div className="alert alert-danger text-center">
+          <i className="fas fa-exclamation-circle fa-2x mb-3"></i>
+          <h4>Error Loading Positions</h4>
+          <p>{error}</p>
+          <button 
+            className="btn btn-primary mt-3"
+            onClick={fetchPositions}
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   const assignedPositions = positions.filter(pos => pos.isAssigned);
   const unassignedPositions = positions.filter(pos => !pos.isAssigned);
 
@@ -105,7 +123,7 @@ const BallotPositions = () => {
                   {assignedPositions.map((position) => (
                     <div key={position.id} className="list-group-item d-flex justify-content-between align-items-center">
                       <div>
-                        <h6 className="mb-1">{position.name}</h6>
+                        <h6 className="mb-1">{position.title}</h6>
                         <small className="text-muted">Vote Limit: {position.voteLimit}</small>
                       </div>
                       <span className="badge bg-success">

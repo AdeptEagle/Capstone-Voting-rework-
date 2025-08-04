@@ -387,7 +387,7 @@ export class ElectionAssignmentService {
       } catch (error) {
         results.push({ 
           success: false, 
-          error: error.message,
+          error: error instanceof Error ? error.message : 'Unknown error occurred',
           data: assignment 
         });
       }
@@ -442,14 +442,7 @@ export class ElectionAssignmentService {
     const positions = await this.prisma.electionPosition.findMany({
       where: { electionId },
       include: {
-        position: {
-          select: {
-            id: true,
-            title: true,
-            description: true,
-            voteLimit: true,
-          },
-        },
+        position: true,
       },
     });
 
@@ -476,7 +469,11 @@ export class ElectionAssignmentService {
     }
 
     // Get all positions
-    const allPositions = await this.prisma.position.findMany();
+    const allPositions = await this.prisma.position.findMany({
+      orderBy: {
+        title: 'asc',
+      },
+    });
     
     // Get assigned positions for this election
     const assignedPositions = await this.prisma.electionPosition.findMany({
@@ -735,14 +732,7 @@ export class ElectionAssignmentService {
     const electionPositions = await this.prisma.electionPosition.findMany({
       where: { electionId },
       include: {
-        position: {
-          select: {
-            id: true,
-            title: true,
-            description: true,
-            voteLimit: true,
-          },
-        },
+        position: true,
       },
     });
 
@@ -758,6 +748,7 @@ export class ElectionAssignmentService {
             studentId: true,
             photo: true,
             manifesto: true,
+            positionId: true,
             position: {
               select: {
                 id: true,
@@ -778,7 +769,7 @@ export class ElectionAssignmentService {
     // Group candidates by position
     const ballot = electionPositions.map(electionPosition => {
       const positionCandidates = electionCandidates.filter(
-        ec => ec.candidate.position.id === electionPosition.positionId
+        ec => ec.candidate.positionId === electionPosition.positionId
       );
 
       return {

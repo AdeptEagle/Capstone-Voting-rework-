@@ -18,25 +18,44 @@ This is the NestJS backend for the voting system, replacing the Express.js backe
 - PostgreSQL
 - npm or yarn
 
-## Setup Instructions
+## 🚀 Quick Setup (Recommended)
 
-### 1. Install Dependencies
+### Automatic Database Setup
+The backend now automatically creates the database and tables when initialized on any device:
 
+```bash
+# Navigate to backend directory
+cd backend-nestjs
+
+# Install dependencies and start (auto-creates database)
+npm run init:project
+```
+
+**What happens automatically:**
+- ✅ Installs all dependencies
+- ✅ Creates database schema and tables
+- ✅ Generates Prisma client
+- ✅ Creates default super admin account
+- ✅ Starts the development server
+
+### Manual Setup (Alternative)
+
+If you prefer manual control:
+
+#### 1. Install Dependencies
 ```bash
 cd backend-nestjs
 npm install
 ```
 
-### 2. Database Setup
-
+#### 2. Database Setup
 1. **Install PostgreSQL** if you haven't already
 2. **Create a database**:
    ```sql
    CREATE DATABASE voting_system;
    ```
 
-### 3. Environment Configuration
-
+#### 3. Environment Configuration
 1. **Copy the environment file**:
    ```bash
    cp env.example .env
@@ -50,26 +69,30 @@ npm install
    PORT=3001
    ```
 
-### 4. Database Migration
-
+#### 4. Database Setup
 ```bash
-# Generate Prisma client
+# Set up database (auto-creates tables)
+npm run setup:db
+
+# Or manually:
 npm run db:generate
-
-# Push schema to database
 npm run db:push
-
-# Or create migrations (recommended for production)
-npm run db:migrate
 ```
 
-### 5. Start Development Server
-
+#### 5. Start Development Server
 ```bash
 npm run start:dev
 ```
 
 The server will start on `http://localhost:3001`
+
+### Default Super Admin Account
+After setup, you'll have access to:
+- **Username**: `superadmin`
+- **Password**: `superadmin123`
+- **Email**: `superadmin@votingsystem.com`
+
+⚠️ **Important**: Change the password after first login!
 
 ## API Documentation
 
@@ -80,14 +103,23 @@ Once the server is running, you can access:
 
 ## Available Scripts
 
+### Development
 - `npm run start:dev` - Start development server with hot reload
+- `npm run start:debug` - Start with debug mode
 - `npm run build` - Build the application
 - `npm run start:prod` - Start production server
 - `npm run test` - Run tests
+
+### Database Management
+- `npm run setup:db` - Set up database and tables automatically
+- `npm run init:project` - Complete project initialization (install + setup + start)
 - `npm run db:generate` - Generate Prisma client
 - `npm run db:push` - Push schema to database
 - `npm run db:migrate` - Create and apply migrations
 - `npm run db:studio` - Open Prisma Studio
+
+### Windows Users
+- `.\setup-database.ps1` - PowerShell script for Windows setup
 
 ## Project Structure
 

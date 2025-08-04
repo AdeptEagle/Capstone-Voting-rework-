@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../../services/api';
+import { userLogin } from '../../services/api';
+import { storeUserData, storeRole, getStoredRole } from '../../services/auth';
 import './UserLogin.css';
 
 const UserLogin = () => {
@@ -15,10 +16,18 @@ const UserLogin = () => {
     setError('');
     setLoading(true);
     try {
-      const res = await api.post('/auth/user/login', { studentId, password });
-      // Store role in localStorage for navigation purposes
+      const res = await userLogin(studentId, password);
+      
+      // Store user data in localStorage for navigation purposes
       // Token is stored in HTTP-only cookie automatically
-      localStorage.setItem('role', 'user');
+      storeUserData(res.voter, 'user');
+      storeRole('user');
+      console.log('User login successful, role: user');
+      
+      // Debug: Check if role was stored correctly
+      const storedRole = getStoredRole();
+      console.log('Stored role after login:', storedRole);
+      
       setLoading(false);
       navigate('/user/dashboard');
     } catch (err) {

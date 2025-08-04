@@ -230,7 +230,7 @@ const Results = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [lastUpdate, setLastUpdate] = useState(new Date());
   
-  const { currentElection, canViewResults } = useElection();
+  const { activeElection, canViewResults } = useElection();
   const currentUser = checkCurrentUser();
 
   // Fetch data with real-time updates
@@ -272,10 +272,10 @@ const Results = () => {
 
   // Update time display
   useEffect(() => {
-    if (currentElection) {
+    if (activeElection) {
       const updateTimeDisplay = () => {
         const now = new Date().getTime();
-        const endTime = new Date(currentElection.endTime).getTime();
+        const endTime = new Date(activeElection.endTime).getTime();
         const timeRemaining = Math.max(0, Math.floor((endTime - now) / 1000));
         setTimeLeft(timeRemaining);
       };
@@ -284,7 +284,7 @@ const Results = () => {
       const interval = setInterval(updateTimeDisplay, 1000);
       return () => clearInterval(interval);
     }
-  }, [currentElection]);
+  }, [activeElection]);
 
   // Calculate analytics data from real-time stats
   const analyticsData = useMemo(() => {
@@ -342,8 +342,45 @@ const Results = () => {
     };
   }, [resultsData, realTimeStats, voteTimeline]);
 
+  if (loading) {
+    return (
+      <div className="results-loading">
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+        <p className="mt-3">Loading results...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="results-error">
+        <div className="alert alert-danger text-center">
+          <i className="fas fa-exclamation-circle fa-2x mb-3"></i>
+          <h4>Error Loading Results</h4>
+          <p>{error}</p>
+          <button 
+            className="btn btn-primary mt-3"
+            onClick={fetchData}
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (!canViewResults) {
-    return <ElectionStatusMessage type="results" />;
+    return (
+      <div className="results-no-access">
+        <div className="alert alert-warning text-center">
+          <i className="fas fa-lock fa-2x mb-3"></i>
+          <h4>Results Not Available</h4>
+          <p>Results are only available during active elections or for administrators.</p>
+        </div>
+      </div>
+    );
   }
 
   // Check if there's any active election data
@@ -361,33 +398,6 @@ const Results = () => {
           <h4>No Active Election</h4>
           <p>There is currently no active election with results to display.</p>
           <p className="mb-0">Please wait for an election to be started or check back later.</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (loading) {
-    return (
-      <div className="results-loading">
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
-        <p className="mt-3">Loading real-time results...</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="results-error">
-        <div className="alert alert-danger text-center">
-          <i className="fas fa-exclamation-triangle fa-2x mb-3"></i>
-          <h4>Error Loading Results</h4>
-          <p>{error}</p>
-          <button className="btn btn-primary" onClick={fetchData}>
-            <i className="fas fa-refresh me-2"></i>
-            Retry
-          </button>
         </div>
       </div>
     );
@@ -413,13 +423,13 @@ const Results = () => {
       </div>
 
       {/* Election Status */}
-      {currentElection && (
+      {activeElection && (
         <div className="election-status">
           <div className="status-card">
-            <h3>{currentElection.title}</h3>
+            <h3>{activeElection.title}</h3>
             <p className="status-text">
-              Status: <span className={`status-badge ${currentElection.status}`}>
-                {currentElection.status.toUpperCase()}
+              Status: <span className={`status-badge ${activeElection.status}`}>
+                {activeElection.status.toUpperCase()}
               </span>
             </p>
             {timeLeft > 0 && (

@@ -23,7 +23,8 @@ import ForgotPassword from './Pages/ForgotPassword';
 import AdminForgotPassword from './Pages/AdminForgotPassword';
 import ResetPassword from './Pages/ResetPassword';
 import DepartmentManagement from './Pages/DepartmentManagement';
-import { getToken, checkCurrentUser } from './services/auth';
+import BallotCreation from './Pages/BallotCreation';
+import { getToken, checkCurrentUser, getStoredRole } from './services/auth';
 import { ElectionProvider } from './contexts/ElectionContext';
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -36,7 +37,9 @@ function AdminRoute({ children }) {
     return <Navigate to="/admin-login" />;
   }
   
-  if (currentUser.role !== 'admin' && currentUser.role !== 'SUPERADMIN') {
+  const role = currentUser.role?.toUpperCase();
+  
+  if (role !== 'ADMIN' && role !== 'SUPERADMIN') {
     return <Navigate to="/admin-login" />;
   }
   
@@ -51,7 +54,9 @@ function SuperAdminRoute({ children }) {
     return <Navigate to="/admin-login" />;
   }
   
-  if (currentUser.role !== 'SUPERADMIN') {
+  const role = currentUser.role?.toUpperCase();
+  
+  if (role !== 'SUPERADMIN') {
     return <Navigate to="/admin-login" />;
   }
   
@@ -61,15 +66,20 @@ function SuperAdminRoute({ children }) {
 // User Route Protection (user only)
 function UserRoute({ children }) {
   const currentUser = checkCurrentUser();
+  
+  console.log('UserRoute check:', currentUser);
 
   if (!currentUser.isAuthenticated) {
+    console.log('UserRoute: Not authenticated, redirecting to login');
     return <Navigate to="/user-login" />;
   }
   
   if (currentUser.role !== 'user') {
+    console.log('UserRoute: Role mismatch, expected "user", got:', currentUser.role);
     return <Navigate to="/user-login" />;
   }
   
+  console.log('UserRoute: Access granted');
   return children;
 }
 
@@ -213,13 +223,20 @@ function App() {
                 </AdminLayout>
               </AdminRoute>
             } />
-            <Route path="/admin/department-management" element={
-              <AdminRoute>
-                <AdminLayout>
-                  <DepartmentManagement />
-                </AdminLayout>
-              </AdminRoute>
-            } />
+                         <Route path="/admin/department-management" element={
+               <AdminRoute>
+                 <AdminLayout>
+                   <DepartmentManagement />
+                 </AdminLayout>
+               </AdminRoute>
+             } />
+             <Route path="/admin/ballot-creation" element={
+               <AdminRoute>
+                 <AdminLayout>
+                   <BallotCreation />
+                 </AdminLayout>
+               </AdminRoute>
+             } />
 
             {/* User Routes (User only) */}
             <Route path="/user/dashboard" element={
@@ -261,13 +278,26 @@ function App() {
             <Route path="/elections" element={<Navigate to="/admin/elections" />} />
             <Route path="/vote-traceability" element={<Navigate to="/admin/vote-traceability" />} />
 
-            {/* Catch all - redirect to appropriate login */}
-            <Route path="*" element={<Navigate to="/user-login" />} />
+            {/* Catch all - redirect to appropriate login based on stored role */}
+            <Route path="*" element={<CatchAllRedirect />} />
           </Routes>
         </div>
       </Router>
       </ElectionProvider>
   );
+}
+
+// Component to handle catch-all redirects intelligently
+function CatchAllRedirect() {
+  const role = getStoredRole();
+  
+  // If user has admin role, redirect to admin login
+  if (role === 'ADMIN' || role === 'SUPERADMIN') {
+    return <Navigate to="/admin-login" />;
+  }
+  
+  // Otherwise redirect to user login
+  return <Navigate to="/user-login" />;
 }
 
 export default App; 

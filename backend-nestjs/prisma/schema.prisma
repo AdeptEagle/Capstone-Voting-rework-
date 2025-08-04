@@ -68,6 +68,7 @@ model Position {
   title       String   @db.VarChar(255)
   description String?  @db.Text
   voteLimit   Int      @default(1) @db.Integer
+  displayOrder Int     @default(0) @db.Integer
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 

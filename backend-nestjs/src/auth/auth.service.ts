@@ -16,6 +16,97 @@ export class AuthService {
     private emailService: EmailService,
   ) {}
 
+  async checkAuthStatus(req: any) {
+    try {
+      // Extract token from HTTP-only cookie
+      const token = req.cookies?.access_token;
+      
+      if (!token) {
+        return {
+          isAuthenticated: false,
+          role: null,
+          user: null
+        };
+      }
+
+      // Verify token
+      const decoded = this.jwtService.verify(token);
+      
+      if (decoded.role === 'SUPERADMIN' || decoded.role === 'ADMIN') {
+        // Get admin info
+        const admin = await this.prisma.admin.findUnique({
+          where: { id: decoded.sub }
+        });
+
+        if (!admin) {
+          return {
+            isAuthenticated: false,
+            role: null,
+            user: null
+          };
+        }
+
+        return {
+          isAuthenticated: true,
+          role: admin.role,
+          user: {
+            id: admin.id,
+            username: admin.username,
+            email: admin.email
+          }
+        };
+      } else {
+        // Get voter info
+        const voter = await this.prisma.voter.findUnique({
+          where: { id: decoded.sub },
+          include: {
+            department: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+            course: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        });
+
+        if (!voter) {
+          return {
+            isAuthenticated: false,
+            role: null,
+            user: null
+          };
+        }
+
+        return {
+          isAuthenticated: true,
+          role: 'user',
+          user: {
+            id: voter.id,
+            name: voter.name,
+            email: voter.email,
+            studentId: voter.studentId,
+            hasVoted: voter.hasVoted,
+            department: voter.department,
+            course: voter.course
+          }
+        };
+      }
+    } catch (error) {
+      console.error('Error checking auth status:', error);
+      return {
+        isAuthenticated: false,
+        role: null,
+        user: null
+      };
+    }
+  }
+
   async adminLogin(adminLoginDto: { username: string; password: string }, res: Response) {
     const { username, password } = adminLoginDto;
 

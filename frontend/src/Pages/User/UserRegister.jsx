@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api, { getDepartments, getCoursesByDepartment } from '../../services/api';
+import { storeRole, storeUserData, getStoredRole } from '../../services/auth';
 import './UserRegister.css';
 
 const UserRegister = () => {
@@ -127,12 +128,18 @@ const UserRegister = () => {
       console.log('Registration response:', response.data);
       setSuccess('Registration successful! Redirecting to dashboard...');
       
-      // Store token and redirect
-      const { token, role } = response.data;
-      localStorage.setItem('token', token);
-      localStorage.setItem('role', role);
+      // Store user data and role (token is in HTTP-only cookie)
+      const { voter } = response.data;
+      console.log('Registration successful, storing role as "user"');
+      storeRole('user');
+      storeUserData(voter, 'user');
+      
+      // Debug: Check if role was stored correctly
+      const storedRole = getStoredRole();
+      console.log('Stored role after registration:', storedRole);
       
       setTimeout(() => {
+        console.log('Redirecting to dashboard...');
         navigate('/user/dashboard');
       }, 2000);
 
@@ -143,6 +150,7 @@ const UserRegister = () => {
       // Check if the error is actually a success (user created but response had issues)
       if (err.response?.status === 400 && err.response?.data?.error?.includes('successfully')) {
         setSuccess('Registration successful! Redirecting to dashboard...');
+        storeRole('user');
         setTimeout(() => {
           navigate('/user/dashboard');
         }, 2000);

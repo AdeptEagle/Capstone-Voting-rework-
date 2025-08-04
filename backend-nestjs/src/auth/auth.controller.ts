@@ -1,4 +1,4 @@
-import { Controller, Post, Body, HttpCode, HttpStatus, Res, UseGuards, Get, Param } from '@nestjs/common';
+import { Controller, Post, Body, HttpCode, HttpStatus, Res, UseGuards, Get, Param, Request } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiHeader, ApiParam } from '@nestjs/swagger';
 import { Response } from 'express';
 import { AuthService } from './auth.service';
@@ -12,6 +12,36 @@ import { ResetPasswordDto } from './dto/reset-password.dto';
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
+
+  @Get('status')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ 
+    summary: 'Check authentication status',
+    description: 'Check if user is authenticated and return user info'
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Authentication status check successful',
+    schema: {
+      type: 'object',
+      properties: {
+        isAuthenticated: { type: 'boolean' },
+        role: { type: 'string' },
+        user: {
+          type: 'object',
+          properties: {
+            id: { type: 'string' },
+            username: { type: 'string' },
+            email: { type: 'string' },
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({ status: 401, description: 'Not authenticated' })
+  async checkAuthStatus(@Request() req: any) {
+    return this.authService.checkAuthStatus(req);
+  }
 
   @Post('admin/login')
   @HttpCode(HttpStatus.OK)

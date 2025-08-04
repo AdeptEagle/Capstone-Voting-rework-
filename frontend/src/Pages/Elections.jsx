@@ -23,8 +23,8 @@ const Elections = () => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    startTime: '',
-    endTime: '',
+    startDate: '',
+    endDate: '',
     positionIds: [],
     // New fields for dynamic position/candidate creation
     newPositions: [],
@@ -79,13 +79,14 @@ const Elections = () => {
         if (position.isNew) {
           try {
             // Validate required fields
-            if (!position.id || !position.name) {
-              throw new Error(`Position ${position.id || 'Unknown'} is missing required fields (ID and Name)`);
+            if (!position.id || !position.title) {
+              throw new Error(`Position ${position.id || 'Unknown'} is missing required fields (ID and Title)`);
             }
             
             const newPosition = await createPosition({
               id: position.id,
-              name: position.name,
+              title: position.title,
+              description: position.description || '',
               voteLimit: position.voteLimit,
               displayOrder: position.displayOrder
             });
@@ -93,7 +94,7 @@ const Elections = () => {
           } catch (error) {
             console.error('Error creating position:', error);
             // Use the specific error message from the backend if available
-            const errorMessage = error.response?.data?.error || error.message || `Failed to create position: ${position.name}`;
+            const errorMessage = error.response?.data?.error || error.message || `Failed to create position: ${position.title}`;
             throw new Error(errorMessage);
           }
         }
@@ -106,9 +107,11 @@ const Elections = () => {
             const candidateData = new FormData();
             candidateData.append('id', candidate.id);
             candidateData.append('name', candidate.name);
+            candidateData.append('email', candidate.email || '');
+            candidateData.append('studentId', candidate.studentId || '');
             candidateData.append('positionId', candidate.positionId);
             candidateData.append('departmentId', candidate.departmentId || '');
-            candidateData.append('description', candidate.description || '');
+            candidateData.append('manifesto', candidate.manifesto || '');
             
             if (candidate.photoFile) {
               candidateData.append('photo', candidate.photoFile);
@@ -131,8 +134,8 @@ const Elections = () => {
       const electionData = {
         title: formData.title,
         description: formData.description,
-        startTime: new Date(formData.startTime).toISOString().slice(0, 19).replace('T', ' '),
-        endTime: new Date(formData.endTime).toISOString().slice(0, 19).replace('T', ' '),
+        startDate: new Date(formData.startDate).toISOString(),
+        endDate: new Date(formData.endDate).toISOString(),
         positionIds: allPositionIds,
         candidateIds: formData.selectedCandidateIds
       };
@@ -162,8 +165,8 @@ const Elections = () => {
 
       const electionData = {
         ...formData,
-        startTime: new Date(formData.startTime).toISOString().slice(0, 19).replace('T', ' '),
-        endTime: new Date(formData.endTime).toISOString().slice(0, 19).replace('T', ' '),
+        startDate: new Date(formData.startDate).toISOString(),
+        endDate: new Date(formData.endDate).toISOString(),
         status: editingElection.status // Preserve the current status
       };
 
@@ -382,10 +385,10 @@ const Elections = () => {
         description: election.description,
         startTime: election.startTime,
         endTime: election.endTime,
-        status: 'pending'
+        status: 'draft'
       });
 
-      setSuccess('Election status fixed! Set to Pending.');
+      setSuccess('Election status fixed! Set to Draft.');
       await fetchElectionsData();
       setTimeout(() => setSuccess(''), 3000);
     } catch (error) {
@@ -461,7 +464,8 @@ const Elections = () => {
   const addNewPosition = () => {
     const newPosition = {
       id: '',
-      name: '',
+      title: '',
+      description: '',
       voteLimit: 1,
       displayOrder: tempPositions.length + 1,
       isNew: true,
@@ -493,9 +497,11 @@ const Elections = () => {
     const newCandidate = {
       id: crypto.randomUUID(),
       name: '',
+      email: '',
+      studentId: '',
       positionId: positionId,
       departmentId: '',
-      description: '',
+      manifesto: '',
       photoFile: null,
       isNew: true
     };
@@ -600,8 +606,8 @@ const Elections = () => {
       
       // Validate new positions
       for (const position of tempPositions) {
-        if (!position.id || !position.name) {
-          setError(`Position ${tempPositions.indexOf(position) + 1} is missing required fields (ID and Name)`);
+        if (!position.id || !position.title) {
+          setError(`Position ${tempPositions.indexOf(position) + 1} is missing required fields (ID and Title)`);
           return;
         }
         
@@ -613,11 +619,11 @@ const Elections = () => {
         }
         
         // Check for duplicate names within new positions (case-insensitive)
-        const duplicateName = tempPositions.filter(p => p.name.toLowerCase() === position.name.toLowerCase()).length > 1;
-        if (duplicateName) {
-          setError(`Duplicate Position Name: "${position.name}". Each position must have a unique name.`);
-          return;
-        }
+                  const duplicateName = tempPositions.filter(p => p.title.toLowerCase() === position.title.toLowerCase()).length > 1;
+          if (duplicateName) {
+            setError(`Duplicate Position Title: "${position.title}". Each position must have a unique title.`);
+            return;
+          }
         
         // Check if ID conflicts with existing positions (case-insensitive)
         const existingPosition = positions.find(p => p.id.toLowerCase() === position.id.toLowerCase());
@@ -627,11 +633,11 @@ const Elections = () => {
         }
         
         // Check if name conflicts with existing positions (case-insensitive)
-        const existingPositionName = positions.find(p => p.name.toLowerCase() === position.name.toLowerCase());
-        if (existingPositionName) {
-          setError(`Position name "${position.name}" already exists. Please use a different name.`);
-          return;
-        }
+                  const existingPositionName = positions.find(p => p.title.toLowerCase() === position.title.toLowerCase());
+          if (existingPositionName) {
+            setError(`Position title "${position.title}" already exists. Please use a different title.`);
+            return;
+          }
       }
     }
     
@@ -654,28 +660,28 @@ const Elections = () => {
   };
 
   const getStatusColor = (status) => {
-    // If status is null/undefined, treat as 'pending'
-    const electionStatus = status || 'pending';
+    // If status is null/undefined, treat as 'draft'
+    const electionStatus = status || 'draft';
     switch (electionStatus) {
-      case 'pending': return 'warning';
+      case 'draft': return 'warning';
       case 'active': return 'success';
       case 'paused': return 'info';
       case 'stopped': return 'danger';
       case 'ended': return 'secondary';
-      default: return 'warning'; // Default to warning for pending
+      default: return 'warning'; // Default to warning for draft
     }
   };
 
   const getStatusIcon = (status) => {
-    // If status is null/undefined, treat as 'pending'
-    const electionStatus = status || 'pending';
+    // If status is null/undefined, treat as 'draft'
+    const electionStatus = status || 'draft';
     switch (electionStatus) {
-      case 'pending': return 'fas fa-clock';
+      case 'draft': return 'fas fa-edit';
       case 'active': return 'fas fa-play-circle';
       case 'paused': return 'fas fa-pause-circle';
       case 'stopped': return 'fas fa-stop-circle';
       case 'ended': return 'fas fa-check-circle';
-      default: return 'fas fa-clock'; // Default to clock for pending
+      default: return 'fas fa-edit'; // Default to edit for draft
     }
   };
 
@@ -692,8 +698,8 @@ const Elections = () => {
   const getStatusActions = (election) => {
     const actions = [];
     
-    // If status is null/undefined, treat as 'pending' (default status)
-    const status = election.status || 'pending';
+    // If status is null/undefined, treat as 'draft' (default status)
+    const status = election.status || 'draft';
     
     // If status is null/undefined, show a fix button
     if (!election.status) {
@@ -709,13 +715,13 @@ const Elections = () => {
           ) : (
             <i className="fas fa-wrench me-1"></i>
           )}
-          Fix Status (Set to Pending)
+          Fix Status (Set to Draft)
         </button>
       );
     }
     
     switch (status) {
-      case 'pending':
+      case 'draft':
         actions.push(
           <button
             key="start"
@@ -1134,7 +1140,7 @@ const Elections = () => {
                               }}
                             />
                             <label className="form-check-label" htmlFor={`create-position-${position.id}`}>
-                                {position.name} (Vote Limit: {position.voteLimit})
+                                {position.title} (Vote Limit: {position.voteLimit})
                             </label>
                           </div>
                         ))
@@ -1208,8 +1214,8 @@ const Elections = () => {
                                   <input
                                     type="text"
                                     className="form-control"
-                                    value={position.name}
-                                    onChange={(e) => updateTempPosition(index, 'name', e.target.value)}
+                                    value={position.title}
+                                                                          onChange={(e) => updateTempPosition(index, 'title', e.target.value)}
                                     placeholder="e.g., President, Vice President"
                                     required
                                   />
@@ -1375,7 +1381,7 @@ const Elections = () => {
                             <div className="card-header">
                               <h6 className="mb-0">
                                 <i className="fas fa-user-tie me-2"></i>
-                                {position.name || `Position ${posIndex + 1}`}
+                                {position.title || `Position ${posIndex + 1}`}
                               </h6>
                             </div>
                             <div className="card-body">
@@ -1648,7 +1654,7 @@ const Elections = () => {
                                 }}
                               />
                               <label className="form-check-label" htmlFor={`edit-position-${position.id}`}>
-                                {position.name}
+                                {position.title}
                               </label>
                             </div>
                           ))

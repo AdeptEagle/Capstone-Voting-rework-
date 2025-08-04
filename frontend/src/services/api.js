@@ -17,6 +17,28 @@ api.interceptors.response.use(
   (error) => {
     console.error('API Error:', error);
     
+    // Handle authentication errors (401/403)
+    if (error.response?.status === 401 || error.response?.status === 403) {
+      console.log('Authentication error detected, redirecting to login');
+      // Clear local data and redirect to appropriate login
+      localStorage.removeItem('role');
+      localStorage.removeItem('userId');
+      localStorage.removeItem('username');
+      localStorage.removeItem('email');
+      localStorage.removeItem('token');
+      
+      // Don't redirect if we're already on a login page to avoid infinite loops
+      const currentPath = window.location.pathname;
+      if (!currentPath.includes('/login') && !currentPath.includes('/register')) {
+        const role = localStorage.getItem('role') || 'user';
+        if (role === 'admin' || role === 'SUPERADMIN') {
+          window.location.href = '/admin-login';
+        } else {
+          window.location.href = '/user-login';
+        }
+      }
+    }
+    
     // Handle username/name change errors
     if (error.response?.data?.code === 'USERNAME_CHANGED' || 
         error.response?.data?.code === 'NAME_CHANGED') {
@@ -135,13 +157,8 @@ export const getCandidates = async () => {
 
 export const createCandidate = async (candidate, config = {}) => {
   try {
-    let dataToSend = candidate;
-    if (candidate instanceof FormData) {
-      dataToSend.append('id', crypto.randomUUID());
-    } else {
-      dataToSend = { ...candidate, id: crypto.randomUUID() };
-    }
-    const response = await api.post('/candidates', dataToSend, config);
+    // Don't add ID - let the backend generate it
+    const response = await api.post('/candidates', candidate, config);
     return response.data;
   } catch (error) {
     console.error('Error creating candidate:', error);
@@ -356,7 +373,7 @@ export const updateElection = async (id, election) => {
 
 export const startElection = async (id) => {
   try {
-    const response = await api.post(`/elections/${id}/start`);
+    const response = await api.put(`/elections/${id}/start-ballot`);
     return response.data;
   } catch (error) {
     console.error('Error starting election:', error);
@@ -366,7 +383,7 @@ export const startElection = async (id) => {
 
 export const pauseElection = async (id) => {
   try {
-    const response = await api.post(`/elections/${id}/pause`);
+    const response = await api.put(`/elections/${id}/pause-ballot`);
     return response.data;
   } catch (error) {
     console.error('Error pausing election:', error);
@@ -376,7 +393,7 @@ export const pauseElection = async (id) => {
 
 export const stopElection = async (id) => {
   try {
-    const response = await api.post(`/elections/${id}/stop`);
+    const response = await api.put(`/elections/${id}/stop-ballot`);
     return response.data;
   } catch (error) {
     console.error('Error stopping election:', error);
@@ -386,7 +403,7 @@ export const stopElection = async (id) => {
 
 export const resumeElection = async (id) => {
   try {
-    const response = await api.post(`/elections/${id}/resume`);
+    const response = await api.put(`/elections/${id}/resume-ballot`);
     return response.data;
   } catch (error) {
     console.error('Error resuming election:', error);
@@ -396,7 +413,7 @@ export const resumeElection = async (id) => {
 
 export const endElection = async (id) => {
   try {
-    const response = await api.post(`/elections/${id}/end`);
+    const response = await api.put(`/elections/${id}/end-ballot`);
     return response.data;
   } catch (error) {
     console.error('Error ending election:', error);
@@ -750,10 +767,14 @@ export const createCourse = async (course) => {
 
 export const updateCourse = async (id, course) => {
   try {
+    console.log('updateCourse API call - id:', id);
+    console.log('updateCourse API call - course data:', course);
     const response = await api.put(`/courses/${id}`, course);
+    console.log('updateCourse API response:', response.data);
     return response.data;
   } catch (error) {
     console.error('Error updating course:', error);
+    console.error('Error response data:', error.response?.data);
     throw error;
   }
 };

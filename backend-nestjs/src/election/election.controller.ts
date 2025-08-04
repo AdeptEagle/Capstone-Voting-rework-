@@ -101,6 +101,15 @@ export class ElectionController {
     return this.electionService.resumeBallot(id);
   }
 
+  @Put(':id/stop-ballot')
+  @ApiOperation({ summary: 'Stop ballot - Close voting temporarily' })
+  @ApiResponse({ status: 200, description: 'Ballot stopped successfully' })
+  @ApiResponse({ status: 404, description: 'Election not found' })
+  @ApiResponse({ status: 409, description: 'Cannot stop ballot - not active or paused' })
+  async stopBallot(@Param('id') id: string) {
+    return this.electionService.stopBallot(id);
+  }
+
   @Put(':id/end-ballot')
   @ApiOperation({ summary: 'End ballot - Finalize and save results' })
   @ApiResponse({ status: 200, description: 'Ballot ended successfully with final results' })

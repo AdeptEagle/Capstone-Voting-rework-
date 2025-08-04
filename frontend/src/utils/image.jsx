@@ -8,10 +8,10 @@ export function getCandidatePhotoUrl(photoUrl) {
   }
   // If already starts with /uploads/, use as is (prepend host)
   if (photoUrl.startsWith('/uploads/')) {
-    return `http://localhost:3000${photoUrl}`;
+    return `http://localhost:3001${photoUrl}`;
   }
   // If just a filename, prepend /uploads/
-  return `http://localhost:3000/uploads/${photoUrl}`;
+  return `http://localhost:3001/uploads/${photoUrl}`;
 }
 
 // Placeholder component for candidate photo

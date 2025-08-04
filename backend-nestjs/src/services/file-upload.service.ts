@@ -109,9 +109,20 @@ export class FileUploadService {
 
   // Process uploaded file
   async processUploadedFile(file: Express.Multer.File, type: 'image' | 'document') {
+    console.log('processUploadedFile called with:', { file, type });
+    console.log('File properties:', file ? Object.keys(file) : 'No file');
+    
     if (!file) {
       throw new BadRequestException('No file uploaded');
     }
+
+    console.log('File details:', {
+      originalname: file.originalname,
+      filename: file.filename,
+      mimetype: file.mimetype,
+      size: file.size,
+      path: file.path
+    });
 
     // Validate file size
     if (!this.validateFileSize(file)) {
@@ -135,6 +146,14 @@ export class FileUploadService {
       type: type,
       uploadedAt: new Date(),
     };
+
+    console.log('Generated fileInfo:', fileInfo);
+
+    // Validate that filename is not undefined
+    if (!fileInfo.filename) {
+      console.error('Filename is undefined, file object:', file);
+      throw new BadRequestException('File upload failed: filename is undefined');
+    }
 
     return fileInfo;
   }

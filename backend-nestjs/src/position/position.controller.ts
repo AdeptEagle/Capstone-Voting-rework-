@@ -1,10 +1,12 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Request } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Request, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { PositionService } from './position.service';
 import { CreatePositionDto, UpdatePositionDto } from './dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @ApiTags('Position')
 @Controller('positions')
+@UseGuards(JwtAuthGuard)
 export class PositionController {
   constructor(private readonly positionService: PositionService) {}
 

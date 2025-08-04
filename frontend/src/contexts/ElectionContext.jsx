@@ -27,14 +27,14 @@ export const ElectionProvider = ({ children }) => {
       const allElectionsResponse = await api.get('/elections');
       setAllElections(allElectionsResponse.data || []);
       
-      // Fetch current election (for admin monitoring, includes paused/stopped elections)
+      // Fetch active election (for admin monitoring, includes paused/stopped elections)
       try {
-        const currentResponse = await api.get('/elections/current');
-        console.log('Current election response:', currentResponse.data);
-        setActiveElection(currentResponse.data);
-      } catch (currentError) {
-        // No current election found, which is fine
-        console.log('No current election found:', currentError.message);
+        const activeResponse = await api.get('/elections/active');
+        console.log('Active election response:', activeResponse.data);
+        setActiveElection(activeResponse.data);
+      } catch (activeError) {
+        // No active election found, which is fine
+        console.log('No active election found:', activeError.message);
         setActiveElection(null);
       }
     } catch (error) {
@@ -63,7 +63,7 @@ export const ElectionProvider = ({ children }) => {
   }, []);
 
   // Get user role for permission checks
-      const userRole = checkCurrentUser().role;
+  const userRole = checkCurrentUser().role;
   const isAdmin = userRole === 'admin' || userRole === 'superadmin';
 
   // Debug logging for canViewResults logic

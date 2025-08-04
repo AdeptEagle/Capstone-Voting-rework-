@@ -1,6 +1,9 @@
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
+import { execSync } from 'child_process';
+import { existsSync } from 'fs';
+import { join } from 'path';
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
@@ -11,11 +14,68 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
   }
 
   async onModuleInit() {
-    await this.$connect();
-    console.log('✅ Database connected successfully');
-    
-    // Create default superadmin if it doesn't exist
-    await this.createDefaultSuperAdmin();
+    try {
+      console.log('🔄 Initializing database...');
+      
+      // Check if we're in development mode and need to set up the database
+      if (process.env.NODE_ENV !== 'production') {
+        await this.initializeDatabase();
+      }
+      
+      await this.$connect();
+      console.log('✅ Database connected successfully');
+      
+      // Create default superadmin if it doesn't exist
+      await this.createDefaultSuperAdmin();
+    } catch (error) {
+      console.error('❌ Database initialization failed:', error.message);
+      throw error;
+    }
+  }
+
+  async initializeDatabase() {
+    try {
+      console.log('🔧 Setting up database schema...');
+      
+      // Check if Prisma migrations directory exists
+      const migrationsPath = join(process.cwd(), 'prisma', 'migrations');
+      if (!existsSync(migrationsPath)) {
+        console.log('⚠️  No migrations found, creating initial migration...');
+        this.runPrismaCommand('migrate dev --name init');
+      } else {
+        console.log('📦 Running existing migrations...');
+        this.runPrismaCommand('migrate deploy');
+      }
+      
+      console.log('✅ Database schema setup completed');
+    } catch (error) {
+      console.error('❌ Database schema setup failed:', error.message);
+      
+      // Fallback: try to push the schema directly
+      try {
+        console.log('🔄 Attempting schema push as fallback...');
+        this.runPrismaCommand('db push');
+        console.log('✅ Schema push completed');
+      } catch (pushError) {
+        console.error('❌ Schema push also failed:', pushError.message);
+        throw pushError;
+      }
+    }
+  }
+
+  private runPrismaCommand(command: string) {
+    try {
+      const result = execSync(`npx prisma ${command}`, {
+        cwd: process.cwd(),
+        stdio: 'pipe',
+        encoding: 'utf8',
+      });
+      console.log(result);
+    } catch (error) {
+      console.error(`❌ Prisma command failed: ${command}`);
+      console.error(error.message);
+      throw error;
+    }
   }
 
   async createDefaultSuperAdmin() {

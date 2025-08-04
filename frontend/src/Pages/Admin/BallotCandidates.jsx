@@ -35,19 +35,6 @@ const BallotCandidates = () => {
     }
   };
 
-  // Helper to get correct candidate photo URL
-  const getCandidatePhotoUrl = (photoUrl) => {
-    if (!photoUrl) return null;
-    if (photoUrl.startsWith('http://') || photoUrl.startsWith('https://')) {
-      return photoUrl;
-    }
-    if (photoUrl.startsWith('/uploads/')) {
-      return `http://localhost:3000${photoUrl}`;
-    }
-    return `http://localhost:3000/uploads/${photoUrl}`;
-  };
-
-
   if (loading) {
     return (
       <div className="ballot-candidates-loading">
@@ -72,13 +59,26 @@ const BallotCandidates = () => {
     );
   }
 
+  if (error) {
+    return (
+      <div className="ballot-candidates-error">
+        <div className="alert alert-danger text-center">
+          <i className="fas fa-exclamation-circle fa-2x mb-3"></i>
+          <h4>Error Loading Candidates</h4>
+          <p>{error}</p>
+          <button 
+            className="btn btn-primary mt-3"
+            onClick={fetchCandidates}
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   const assignedCandidates = candidates.filter(candidate => candidate.isAssigned);
   const unassignedCandidates = candidates.filter(candidate => !candidate.isAssigned);
-
-  // Debug logging
-  console.log('All candidates:', candidates);
-  console.log('Assigned candidates:', assignedCandidates);
-  console.log('Unassigned candidates:', unassignedCandidates);
 
   // Group candidates by position
   const groupCandidatesByPosition = (candidates) => {
@@ -95,9 +95,6 @@ const BallotCandidates = () => {
 
   const assignedByPosition = groupCandidatesByPosition(assignedCandidates);
   const unassignedByPosition = groupCandidatesByPosition(unassignedCandidates);
-
-  console.log('Assigned by position:', assignedByPosition);
-  console.log('Sample candidate photo URL:', candidates[0]?.photoUrl);
 
   return (
     <div className="ballot-candidates-container">
