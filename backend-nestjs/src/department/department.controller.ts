@@ -19,8 +19,8 @@ export class DepartmentController {
   @ApiOperation({ summary: 'Create a new department' })
   @ApiResponse({ status: 201, description: 'Department created successfully' })
   async createDepartment(@Body() createDepartmentDto: CreateDepartmentDto, @Request() req) {
-    // Use the existing admin ID from the database
-    const adminId = 'ADMIN-1';
+    // Use the existing superadmin ID from the database
+    const adminId = 'SUPERADMIN-1';
     return this.departmentService.createDepartment(createDepartmentDto, adminId);
   }
 

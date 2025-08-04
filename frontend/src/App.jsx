@@ -30,14 +30,13 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 
 // Admin Route Protection (for admin and superadmin)
 function AdminRoute({ children }) {
-  const token = getToken();
   const currentUser = checkCurrentUser();
 
-  if (!token || !currentUser.isAuthenticated) {
+  if (!currentUser.isAuthenticated) {
     return <Navigate to="/admin-login" />;
   }
   
-  if (currentUser.role !== 'admin' && currentUser.role !== 'superadmin') {
+  if (currentUser.role !== 'admin' && currentUser.role !== 'SUPERADMIN') {
     return <Navigate to="/admin-login" />;
   }
   
@@ -46,14 +45,13 @@ function AdminRoute({ children }) {
 
 // SuperAdmin Route Protection (superadmin only)
 function SuperAdminRoute({ children }) {
-  const token = getToken();
   const currentUser = checkCurrentUser();
 
-  if (!token || !currentUser.isAuthenticated) {
+  if (!currentUser.isAuthenticated) {
     return <Navigate to="/admin-login" />;
   }
   
-  if (currentUser.role !== 'superadmin') {
+  if (currentUser.role !== 'SUPERADMIN') {
     return <Navigate to="/admin-login" />;
   }
   
@@ -62,10 +60,9 @@ function SuperAdminRoute({ children }) {
 
 // User Route Protection (user only)
 function UserRoute({ children }) {
-  const token = getToken();
   const currentUser = checkCurrentUser();
 
-  if (!token || !currentUser.isAuthenticated) {
+  if (!currentUser.isAuthenticated) {
     return <Navigate to="/user-login" />;
   }
   

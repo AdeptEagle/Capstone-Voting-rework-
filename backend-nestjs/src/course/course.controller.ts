@@ -19,8 +19,8 @@ export class CourseController {
   @ApiOperation({ summary: 'Create a new course' })
   @ApiResponse({ status: 201, description: 'Course created successfully' })
   async createCourse(@Body() createCourseDto: CreateCourseDto, @Request() req) {
-    // Use the existing admin ID from the database
-    const adminId = 'ADMIN-1';
+    // Use the existing superadmin ID from the database
+    const adminId = 'SUPERADMIN-1';
     return this.courseService.createCourse(createCourseDto, adminId);
   }
 

@@ -27,8 +27,8 @@ export class ElectionController {
   @ApiResponse({ status: 201, description: 'Election created successfully' })
   @ApiResponse({ status: 409, description: 'Election already exists' })
   async createElection(@Body() createElectionDto: CreateElectionDto, @Request() req: any) {
-    // For now, use a default admin ID. In production, get from JWT token
-    const adminId = 'ADMIN-1'; // This should come from req.user.id when auth is implemented
+    // For now, use the existing superadmin ID. In production, get from JWT token
+    const adminId = 'SUPERADMIN-1'; // This should come from req.user.id when auth is implemented
     return this.electionService.createElection(createElectionDto, adminId);
   }
 

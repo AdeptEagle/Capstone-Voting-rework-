@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../services/api';
+import { adminLogin } from '../services/api';
+import { storeUserData } from '../services/auth';
 import './AdminLogin.css';
 
 const AdminLogin = () => {
@@ -15,18 +16,21 @@ const AdminLogin = () => {
     setError('');
     setLoading(true);
     try {
-      const res = await api.post('/auth/admin/login', { username, password });
-      localStorage.setItem('token', res.data.token);
-      localStorage.setItem('role', res.data.role);
+      const res = await adminLogin(username, password);
+      
+      // Store user data in localStorage for navigation purposes
+      // Token is stored in HTTP-only cookie automatically
+      storeUserData(res.admin, res.admin.role);
+      
       setLoading(false);
-      if (res.data.role === 'superadmin') {
+      if (res.admin.role === 'SUPERADMIN') {
         navigate('/superadmin');
       } else {
         navigate('/admin');
       }
     } catch (err) {
       setLoading(false);
-      setError(err.response?.data?.error || 'Login failed');
+      setError(err.response?.data?.message || 'Login failed');
     }
   };
 

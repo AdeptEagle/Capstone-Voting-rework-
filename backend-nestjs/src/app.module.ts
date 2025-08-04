@@ -13,6 +13,7 @@ import { DepartmentModule } from './department/department.module';
 import { CourseModule } from './course/course.module';
 import { FileUploadModule } from './modules/file-upload.module';
 import { ElectionAssignmentModule } from './election-assignment/election-assignment.module';
+import { AuditModule } from './audit/audit.module';
 import { SchedulerService } from './services/scheduler.service';
 import { TimezoneService } from './services/timezone.service';
 import { TimezoneController } from './controllers/timezone.controller';
@@ -36,6 +37,7 @@ import { WebsocketModule } from './websocket/websocket.module';
     CourseModule,
     FileUploadModule,
     ElectionAssignmentModule,
+    AuditModule,
     WebsocketModule,
   ],
   controllers: [TimezoneController],

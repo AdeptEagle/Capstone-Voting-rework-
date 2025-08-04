@@ -118,6 +118,7 @@ model Voter {
   department Department? @relation(fields: [departmentId], references: [id])
   course     Course?    @relation(fields: [courseId], references: [id])
   votes      Vote[]
+  auditLogs  AuditLog[]
 
   @@map("voters")
 }
@@ -139,17 +140,23 @@ model Election {
   votes   Vote[]
   electionPositions ElectionPosition[]
   electionCandidates ElectionCandidate[]
+  auditLogs AuditLog[]
 
   @@map("elections")
 }
 
 model Vote {
-  id          String   @id @db.VarChar(50)
-  voterId     String
-  candidateId String
-  electionId  String
-  positionId  String
-  createdAt   DateTime @default(now()) @map("created_at")
+  id               String   @id @db.VarChar(50)
+  voterId          String
+  candidateId      String
+  electionId       String
+  positionId       String
+  verificationCode String?  @db.VarChar(255) // For vote verification
+  auditHash        String?  @db.VarChar(255) // For integrity verification
+  ipAddress        String?  @db.VarChar(45)  // IP address of voter
+  userAgent        String?  @db.Text          // User agent string
+  sessionId        String?  @db.VarChar(255) // Session identifier
+  createdAt        DateTime @default(now()) @map("created_at")
 
   // Relations
   voter     Voter     @relation(fields: [voterId], references: [id])
@@ -197,6 +204,25 @@ model PasswordResetToken {
   createdAt DateTime @default(now()) @map("created_at")
 
   @@map("password_reset_tokens")
+}
+
+model AuditLog {
+  id         String   @id @db.VarChar(50)
+  eventType  String   @db.VarChar(50) // VOTE_CAST, VOTE_VERIFIED, LOGIN_ATTEMPT, etc.
+  timestamp  DateTime @default(now())
+  userId     String?  @db.VarChar(50)  // ID of user who triggered the event
+  electionId String?  @db.VarChar(50)  // ID of election if applicable
+  action     String   @db.VarChar(255) // Human-readable action description
+  details    Json?    // Additional event details
+  metadata   Json?    // IP address, user agent, session info
+  severity   String   @db.VarChar(20)  // LOW, MEDIUM, HIGH, CRITICAL
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user     Voter?    @relation(fields: [userId], references: [id])
+  election Election? @relation(fields: [electionId], references: [id])
+
+  @@map("audit_logs")
 }
 
 enum Role {

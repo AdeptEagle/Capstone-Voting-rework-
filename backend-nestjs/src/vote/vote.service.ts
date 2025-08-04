@@ -4,6 +4,7 @@ import { CreateVoteDto } from './dto';
 import { IdGeneratorService } from '../utils/id-generator.service';
 import { TimezoneService } from '../services/timezone.service';
 import { VotingGateway } from '../websocket/voting.gateway';
+import { AuditService } from '../services/audit.service';
 
 @Injectable()
 export class VoteService {
@@ -12,6 +13,7 @@ export class VoteService {
     private idGenerator: IdGeneratorService,
     private readonly timezoneService: TimezoneService,
     private readonly votingGateway: VotingGateway,
+    private readonly auditService: AuditService,
   ) {}
 
   async getAllVotes() {
@@ -186,7 +188,16 @@ export class VoteService {
 
     // BEGIN TRANSACTION - ACID Atomicity
     return await this.prisma.$transaction(async (prisma) => {
-      // Create the vote
+      // Generate audit data
+      const verificationCode = this.auditService.generateVerificationCode();
+      const auditHash = this.auditService.generateAuditHash({
+        voterId,
+        electionId,
+        candidateId,
+        timestamp: new Date(),
+      });
+
+      // Create the vote with audit fields
       const vote = await prisma.vote.create({
       data: {
         id: customId,
@@ -194,6 +205,11 @@ export class VoteService {
         candidateId,
         electionId,
         positionId,
+        verificationCode,
+        auditHash,
+        ipAddress: createVoteDto.ipAddress,
+        userAgent: createVoteDto.userAgent,
+        sessionId: createVoteDto.sessionId,
       },
       include: {
         voter: {
@@ -300,6 +316,18 @@ export class VoteService {
         },
       };
 
+      // Create audit trail for the vote
+      await this.auditService.createVoteAudit({
+        voteId: vote.id,
+        voterId,
+        electionId,
+        candidateId,
+        timestamp: vote.createdAt,
+        ipAddress: createVoteDto.ipAddress,
+        userAgent: createVoteDto.userAgent,
+        sessionId: createVoteDto.sessionId,
+      });
+
       // Create confirmation object
       const confirmation = {
         voterName: vote.voter.name,
@@ -308,6 +336,7 @@ export class VoteService {
         electionTitle: vote.election.title,
         votedAt: vote.createdAt,
         voteId: vote.id,
+        verificationCode: vote.verificationCode,
         remainingVotes: voteLimit - updatedVoteCount,
         lockoutMessage: allPositionsCompleted ? 'Voter has completed all voting and is now locked out' : null,
       };

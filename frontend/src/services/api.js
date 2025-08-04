@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:3000/api';
+const API_BASE_URL = 'http://localhost:3001';
 
 // Create axios instance with default config
 const api = axios.create({
@@ -8,6 +8,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true, // Important for HTTP-only cookies
 });
 
 // Response interceptor for error handling
@@ -24,7 +25,7 @@ api.interceptors.response.use(
       localStorage.removeItem('role');
       
       const role = localStorage.getItem('role') || 'user';
-      if (role === 'admin' || role === 'superadmin') {
+      if (role === 'admin' || role === 'SUPERADMIN') {
         window.location.href = '/admin-login';
       } else {
         window.location.href = '/user-login';
@@ -38,20 +39,20 @@ api.interceptors.response.use(
   }
 );
 
-// Add a request interceptor to include JWT token
+// Add a request interceptor for HTTP-only cookies
+// Cookies are automatically sent with requests when withCredentials: true
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
     // Don't add Authorization header for login/register endpoints
+    // HTTP-only cookies are automatically handled by the browser
     const isAuthEndpoint = config.url && (
       config.url.includes('/auth/admin/login') ||
       config.url.includes('/auth/user/login') ||
       config.url.includes('/auth/user/register')
     );
     
-    if (token && !isAuthEndpoint) {
-      config.headers['Authorization'] = `Bearer ${token}`;
-    }
+    // For non-auth endpoints, cookies will be sent automatically
+    // No need to manually add Authorization header
     return config;
   },
   (error) => Promise.reject(error)
@@ -66,7 +67,7 @@ const handleAuthError = (error) => {
     localStorage.removeItem('role');
     
     const role = localStorage.getItem('role') || 'user';
-    if (role === 'admin' || role === 'superadmin') {
+    if (role === 'admin' || role === 'SUPERADMIN') {
       window.location.href = '/admin-login';
     } else {
       window.location.href = '/user-login';

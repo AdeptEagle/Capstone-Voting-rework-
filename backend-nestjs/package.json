@@ -23,7 +23,8 @@
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
     "db:seed": "ts-node prisma/seed.ts",
-    "setup:super-admin": "ts-node src/scripts/create-super-admin.ts"
+    "setup:super-admin": "ts-node src/scripts/create-super-admin.ts",
+    "create:superadmin": "ts-node src/scripts/create-default-superadmin.ts"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",

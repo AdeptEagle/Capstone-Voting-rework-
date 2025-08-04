@@ -1,4 +1,4 @@
-import { IsString } from 'class-validator';
+import { IsString, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateVoteDto {
@@ -17,4 +17,19 @@ export class CreateVoteDto {
   @ApiProperty({ description: 'Position ID' })
   @IsString()
   positionId: string;
+
+  @ApiProperty({ description: 'IP Address of voter', required: false })
+  @IsOptional()
+  @IsString()
+  ipAddress?: string;
+
+  @ApiProperty({ description: 'User agent string', required: false })
+  @IsOptional()
+  @IsString()
+  userAgent?: string;
+
+  @ApiProperty({ description: 'Session identifier', required: false })
+  @IsOptional()
+  @IsString()
+  sessionId?: string;
 } 

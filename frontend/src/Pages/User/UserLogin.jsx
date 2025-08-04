@@ -16,13 +16,14 @@ const UserLogin = () => {
     setLoading(true);
     try {
       const res = await api.post('/auth/user/login', { studentId, password });
-      localStorage.setItem('token', res.data.token);
-      localStorage.setItem('role', res.data.role);
+      // Store role in localStorage for navigation purposes
+      // Token is stored in HTTP-only cookie automatically
+      localStorage.setItem('role', 'user');
       setLoading(false);
       navigate('/user/dashboard');
     } catch (err) {
       setLoading(false);
-      setError(err.response?.data?.error || 'Login failed');
+      setError(err.response?.data?.message || 'Login failed');
     }
   };
 
