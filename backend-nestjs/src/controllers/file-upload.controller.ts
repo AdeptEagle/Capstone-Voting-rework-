@@ -13,6 +13,7 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
+import { v4 as uuidv4 } from 'uuid';
 import * as fs from 'fs';
 import * as path from 'path';
 import { ApiTags, ApiOperation, ApiConsumes, ApiBody, ApiResponse, ApiParam } from '@nestjs/swagger';
@@ -27,7 +28,8 @@ export class FileUploadController {
   @UseInterceptors(FileInterceptor('file', {
     storage: diskStorage({
       destination: (req, file, cb) => {
-        const uploadPath = path.join(process.cwd(), 'uploads', 'images');
+        // Temporary storage before Cloudinary upload
+        const uploadPath = path.join(process.cwd(), 'uploads', 'temp');
         if (!fs.existsSync(uploadPath)) {
           fs.mkdirSync(uploadPath, { recursive: true });
         }
@@ -35,7 +37,7 @@ export class FileUploadController {
       },
       filename: (req, file, cb) => {
         const fileExtension = extname(file.originalname);
-        const uniqueId = require('uuid').v4();
+        const uniqueId = uuidv4();
         const fileName = `${uniqueId}${fileExtension}`;
         cb(null, fileName);
       },
@@ -127,7 +129,7 @@ export class FileUploadController {
       },
       filename: (req, file, cb) => {
         const fileExtension = extname(file.originalname);
-        const uniqueId = require('uuid').v4();
+        const uniqueId = uuidv4();
         const fileName = `${uniqueId}${fileExtension}`;
         cb(null, fileName);
       },
@@ -291,7 +293,14 @@ export class FileUploadController {
     @Param('type') type: 'image' | 'document',
     @Param('filename') filename: string,
   ) {
-    const deleted = await this.fileUploadService.deleteFile(filename, type);
+    // Create file info object for deletion
+    const fileInfo = {
+      url: `/${type}s/${filename}`,
+      filename: filename,
+      type: type
+    };
+    
+    const deleted = await this.fileUploadService.deleteFile(fileInfo);
     
     if (!deleted) {
       throw new BadRequestException('File not found or could not be deleted');

@@ -11,7 +11,13 @@ export class PositionService {
   ) {}
 
   async getAllPositions(showAll: boolean = false) {
-    return this.prisma.position.findMany({
+    console.log(`[PositionService] getAllPositions called with showAll: ${showAll}`);
+    
+    const whereClause = showAll ? {} : { isDeleted: false };
+    console.log(`[PositionService] Using where clause:`, whereClause);
+    
+    const positions = await this.prisma.position.findMany({
+      where: whereClause,
       orderBy: [
         {
           displayOrder: 'asc',
@@ -30,6 +36,11 @@ export class PositionService {
         },
       },
     });
+    
+    console.log(`[PositionService] Found ${positions.length} positions`);
+    console.log(`[PositionService] Position IDs:`, positions.map(p => ({ id: p.id, title: p.title, isDeleted: p.isDeleted })));
+    
+    return positions;
   }
 
   async createPosition(createPositionDto: CreatePositionDto) {
@@ -90,6 +101,11 @@ export class PositionService {
       throw new NotFoundException('Position not found');
     }
 
+    // Check if position is soft-deleted
+    if (position.isDeleted) {
+      throw new NotFoundException('Position has been deleted');
+    }
+
     return position;
   }
 
@@ -145,6 +161,8 @@ export class PositionService {
   }
 
   async deletePosition(id: string) {
+    console.log(`[PositionService] deletePosition called with ID: ${id}`);
+    
     const position = await this.prisma.position.findUnique({
       where: { id },
       include: {
@@ -159,20 +177,38 @@ export class PositionService {
     });
 
     if (!position) {
+      console.log(`[PositionService] Position not found with ID: ${id}`);
       throw new NotFoundException('Position not found');
     }
 
-    // Check if position has related data
-    if (position._count.candidates > 0 || position._count.votes > 0 || position._count.electionPositions > 0) {
-      throw new ConflictException('Cannot delete position with related candidates, votes, or election assignments');
-    }
-
-    await this.prisma.position.delete({
-      where: { id },
+    console.log(`[PositionService] Found position:`, { 
+      id: position.id, 
+      title: position.title, 
+      isDeleted: position.isDeleted 
     });
 
+    // Check if position is already soft-deleted
+    if (position.isDeleted) {
+      console.log(`[PositionService] Position already soft-deleted: ${id}`);
+      throw new NotFoundException('Position has already been deleted');
+    }
+
+    console.log(`[PositionService] Performing soft delete for position: ${id}`);
+
+    // SOFT DELETE: Mark as deleted but preserve data
+    // We allow deletion even with related data since soft delete preserves everything
+    await this.prisma.position.update({
+      where: { id },
+      data: {
+        isDeleted: true,
+        deletedAt: new Date()
+      }
+    });
+
+    console.log(`[PositionService] Position ${id} soft-deleted successfully`);
+
     return {
-      message: 'Position deleted successfully!',
+      message: 'Position moved to trash successfully!',
     };
   }
 } 

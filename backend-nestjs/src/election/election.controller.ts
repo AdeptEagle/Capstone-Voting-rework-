@@ -22,6 +22,13 @@ export class ElectionController {
     return this.electionService.getActiveElections();
   }
 
+  @Get('history')
+  @ApiOperation({ summary: 'Get election history - comprehensive data for ended elections' })
+  @ApiResponse({ status: 200, description: 'Election history retrieved successfully' })
+  async getElectionHistory() {
+    return this.electionService.getElectionHistory();
+  }
+
   @Post()
   @ApiOperation({ summary: 'Create a new election' })
   @ApiResponse({ status: 201, description: 'Election created successfully' })
@@ -183,12 +190,5 @@ export class ElectionController {
   @ApiResponse({ status: 404, description: 'Candidate not found in election' })
   async removeCandidateFromElection(@Param('id') id: string, @Param('candidateId') candidateId: string) {
     return this.electionService.removeCandidateFromElection(id, candidateId);
-  }
-
-  @Get('history')
-  @ApiOperation({ summary: 'Get election history - comprehensive data for ended elections' })
-  @ApiResponse({ status: 200, description: 'Election history retrieved successfully' })
-  async getElectionHistory() {
-    return this.electionService.getElectionHistory();
   }
 } 

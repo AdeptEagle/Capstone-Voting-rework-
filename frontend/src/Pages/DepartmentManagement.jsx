@@ -23,12 +23,16 @@ const DepartmentManagement = () => {
   const [voters, setVoters] = useState([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   
   // Modal states
   const [showModal, setShowModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showCourseModal, setShowCourseModal] = useState(false);
+  const [showDeleteDepartmentModal, setShowDeleteDepartmentModal] = useState(false);
+  const [showDeleteCourseModal, setShowDeleteCourseModal] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
   
   // Selected items
   const [selectedDepartment, setSelectedDepartment] = useState(null);
@@ -94,7 +98,7 @@ const DepartmentManagement = () => {
     setDepartmentFormData({
       name: department.name,
       description: department.description || '',
-      customId: department.id
+      customId: department.customId || '' // Use customId field, not department.id
     });
     setShowEditModal(true);
   };
@@ -121,7 +125,13 @@ const DepartmentManagement = () => {
   const handleCreateDepartment = async (e) => {
     e.preventDefault();
     try {
-      await createDepartment(departmentFormData);
+      // Only send fields that the backend DTO expects
+      const dataToSend = {
+        name: departmentFormData.name,
+        description: departmentFormData.description || undefined,
+        customId: departmentFormData.customId || undefined
+      };
+      await createDepartment(dataToSend);
       setMessage('Department created successfully!');
       setShowModal(false);
       fetchData();
@@ -133,7 +143,13 @@ const DepartmentManagement = () => {
   const handleUpdateDepartment = async (e) => {
     e.preventDefault();
     try {
-      await updateDepartment(selectedDepartment.id, departmentFormData);
+      // Only send fields that the backend DTO expects
+      const dataToSend = {
+        name: departmentFormData.name,
+        description: departmentFormData.description || undefined,
+        customId: departmentFormData.customId || undefined
+      };
+      await updateDepartment(selectedDepartment.id, dataToSend);
       setMessage('Department updated successfully!');
       setShowEditModal(false);
       fetchData();
@@ -145,7 +161,15 @@ const DepartmentManagement = () => {
   const handleCreateCourse = async (e) => {
     e.preventDefault();
     try {
-      await createCourse(courseFormData);
+      // Only send fields that the backend DTO expects
+      const dataToSend = {
+        name: courseFormData.name,
+        code: courseFormData.code,
+        description: courseFormData.description || undefined,
+        customId: courseFormData.customId || undefined,
+        departmentId: courseFormData.departmentId
+      };
+      await createCourse(dataToSend);
       setMessage('Course created successfully!');
       setShowCourseModal(false);
       fetchData();
@@ -157,7 +181,15 @@ const DepartmentManagement = () => {
   const handleUpdateCourse = async (e) => {
     e.preventDefault();
     try {
-      await updateCourse(editingCourse.id, courseFormData);
+      // Only send fields that the backend DTO expects
+      const dataToSend = {
+        name: courseFormData.name,
+        code: courseFormData.code,
+        description: courseFormData.description || undefined,
+        customId: courseFormData.customId || undefined,
+        departmentId: courseFormData.departmentId
+      };
+      await updateCourse(editingCourse.id, dataToSend);
       setMessage('Course updated successfully!');
       setShowCourseModal(false);
       fetchData();
@@ -167,28 +199,54 @@ const DepartmentManagement = () => {
   };
 
   const handleDeleteDepartment = async (departmentId) => {
-    if (window.confirm('Are you sure you want to delete this department? This will also delete all associated courses.')) {
-      try {
-        await deleteDepartment(departmentId);
-        setMessage('Department deleted successfully!');
-        fetchData();
-      } catch (error) {
-        setMessage('Error deleting department: ' + error.message);
-      }
+    try {
+      await deleteDepartment(departmentId);
+      
+      // Show success message about trash bin
+      setSuccessMessage(`Department "${itemToDelete?.name}" has been moved to the trash bin. You can restore it later or permanently delete it from the Trash Bin page.`);
+      
+      // Refresh the data to get updated list
+      await fetchData();
+      // Close modal and reset state
+      setShowDeleteDepartmentModal(false);
+      setItemToDelete(null);
+      
+      // Clear success message after 8 seconds
+      setTimeout(() => setSuccessMessage(''), 8000);
+    } catch (error) {
+      setMessage('Error deleting department: ' + error.message);
     }
   };
 
   const handleDeleteCourse = async (courseId) => {
-    if (window.confirm('Are you sure you want to delete this course?')) {
-      try {
-        await deleteCourse(courseId);
-        setMessage('Course deleted successfully!');
-        fetchData();
-      } catch (error) {
-        const errorMessage = error.response?.data?.message || error.message;
-        setMessage('Error deleting course: ' + errorMessage);
-      }
+    try {
+      await deleteCourse(courseId);
+      
+      // Show success message about trash bin
+      setSuccessMessage(`Course "${itemToDelete?.name}" has been moved to the trash bin. You can restore it later or permanently delete it from the Trash Bin page.`);
+      
+      // Refresh the data to get updated list
+      await fetchData();
+      // Close modal and reset state
+      setShowDeleteCourseModal(false);
+      setItemToDelete(null);
+      
+      // Clear success message after 8 seconds
+      setTimeout(() => setSuccessMessage(''), 8000);
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || error.message;
+      setMessage('Error deleting course: ' + errorMessage);
     }
+  };
+
+  const openDeleteDepartmentModal = (department) => {
+    setItemToDelete(department);
+    setShowDeleteDepartmentModal(true);
+  };
+
+  const openDeleteCourseModal = (course) => {
+    setItemToDelete(course);
+    setShowDeleteCourseModal(true);
   };
 
   if (loading) {
@@ -215,19 +273,37 @@ const DepartmentManagement = () => {
         </div>
       )}
       
-      {/* Modern Header */}
-      <div className="department-header">
-        <div className="department-header-content">
-          <div className="department-header-text">
-            <h1 className="department-title">
-              <i className="fas fa-university"></i>
+      {/* Success Message for Trash Bin */}
+      {successMessage && (
+        <div className="department-alert department-alert-success">
+          <i className="fas fa-trash-alt"></i>
+          <span>{successMessage}</span>
+          <div className="mt-2">
+            <a href="/trash-bin?tab=departments" className="btn btn-sm btn-outline-success me-2">
+              <i className="fas fa-trash me-1"></i>
+              Go to Trash Bin
+            </a>
+            <button
+              type="button"
+              className="btn btn-sm btn-outline-secondary"
+              onClick={() => setSuccessMessage('')}
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
+      
+      {/* Unified Professional Header */}
+      <div className="dashboard-header-pro">
+        <div className="dashboard-header-row">
+          <div>
+            <h1 className="dashboard-title-pro">
               Department Management
             </h1>
-            <p className="department-subtitle">
-              Organize academic departments, courses, and manage voter groups efficiently
-            </p>
+            <p className="dashboard-subtitle-pro">Organize academic departments, courses, and manage voter groups efficiently</p>
           </div>
-          <div className="department-header-actions">
+          <div className="dashboard-header-actions">
             <button className="department-btn department-btn-primary" onClick={openModal}>
               <i className="fas fa-plus"></i>
               Add Department
@@ -308,7 +384,7 @@ const DepartmentManagement = () => {
                     </button>
                     <button 
                       className="department-btn department-btn-danger department-btn-sm"
-                      onClick={() => handleDeleteDepartment(department.id)}
+                      onClick={() => openDeleteDepartmentModal(department)}
                       title="Delete Department"
                     >
                       <i className="fas fa-trash"></i>
@@ -354,7 +430,7 @@ const DepartmentManagement = () => {
                             </button>
                             <button 
                               className="department-btn department-btn-outline-danger department-btn-sm"
-                              onClick={() => handleDeleteCourse(course.id)}
+                              onClick={() => openDeleteCourseModal(course)}
                               title="Delete Course"
                             >
                               <i className="fas fa-trash"></i>
@@ -643,6 +719,129 @@ const DepartmentManagement = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Department Confirmation Modal */}
+      {showDeleteDepartmentModal && itemToDelete && (
+        <div className="department-modal-overlay">
+          <div className="department-modal">
+            <div className="department-modal-header">
+              <h5 className="department-modal-title text-danger">
+                <i className="fas fa-exclamation-triangle me-2"></i>
+                Confirm Department Deletion
+              </h5>
+              <button
+                type="button"
+                className="department-modal-close"
+                onClick={() => {
+                  setShowDeleteDepartmentModal(false);
+                  setItemToDelete(null);
+                }}
+              >
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+            <div className="department-modal-body">
+              <div className="alert alert-danger">
+                <strong>Warning:</strong> This action cannot be undone!
+              </div>
+              <p>Are you sure you want to delete this department?</p>
+              <div className="department-delete-info">
+                <strong>Name:</strong> {itemToDelete.name}<br />
+                <strong>ID:</strong> {itemToDelete.id}<br />
+                <strong>Description:</strong> {itemToDelete.description || 'No description'}
+              </div>
+              <p className="text-muted mt-2">
+                <small>
+                  <i className="fas fa-info-circle me-1"></i>
+                  The department will be moved to the trash and can be restored later.
+                </small>
+              </p>
+            </div>
+            <div className="department-modal-footer">
+              <button
+                type="button"
+                className="department-btn department-btn-secondary"
+                onClick={() => {
+                  setShowDeleteDepartmentModal(false);
+                  setItemToDelete(null);
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="department-btn department-btn-danger"
+                onClick={() => handleDeleteDepartment(itemToDelete.id)}
+              >
+                <i className="fas fa-trash me-1"></i>
+                Delete Department
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Course Confirmation Modal */}
+      {showDeleteCourseModal && itemToDelete && (
+        <div className="department-modal-overlay">
+          <div className="department-modal">
+            <div className="department-modal-header">
+              <h5 className="department-modal-title text-danger">
+                <i className="fas fa-exclamation-triangle me-2"></i>
+                Confirm Course Deletion
+              </h5>
+              <button
+                type="button"
+                className="department-modal-close"
+                onClick={() => {
+                  setShowDeleteCourseModal(false);
+                  setItemToDelete(null);
+                }}
+              >
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+            <div className="department-modal-body">
+              <div className="alert alert-danger">
+                <strong>Warning:</strong> This action cannot be undone!
+              </div>
+              <p>Are you sure you want to delete this course?</p>
+              <div className="department-delete-info">
+                <strong>Name:</strong> {itemToDelete.name}<br />
+                <strong>Code:</strong> {itemToDelete.code}<br />
+                <strong>ID:</strong> {itemToDelete.id}<br />
+                <strong>Description:</strong> {itemToDelete.description || 'No description'}
+              </div>
+              <p className="text-muted mt-2">
+                <small>
+                  <i className="fas fa-info-circle me-1"></i>
+                  The course will be moved to the trash and can be restored later.
+                </small>
+              </p>
+            </div>
+            <div className="department-modal-footer">
+              <button
+                type="button"
+                className="department-btn department-btn-secondary"
+                onClick={() => {
+                  setShowDeleteCourseModal(false);
+                  setItemToDelete(null);
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="department-btn department-btn-danger"
+                onClick={() => handleDeleteCourse(itemToDelete.id)}
+              >
+                <i className="fas fa-trash me-1"></i>
+                Delete Course
+              </button>
+            </div>
           </div>
         </div>
       )}

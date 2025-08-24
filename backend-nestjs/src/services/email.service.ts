@@ -6,25 +6,7 @@ export class EmailService {
   private transporter: nodemailer.Transporter;
 
   constructor() {
-    // ===== ETHEREAL EMAIL (TESTING) - CURRENTLY ACTIVE =====
-    // Perfect for testing - no real credentials needed
-    // No real emails sent, perfect for testing and demos
-    this.transporter = nodemailer.createTransport({
-      host: 'smtp.ethereal.email',
-      port: 587,
-      secure: false, // true for 465, false for other ports
-      auth: {
-        user: process.env.ETHEREAL_USER || 'test@ethereal.email',
-        pass: process.env.ETHEREAL_PASS || 'test123',
-      },
-    });
-
-    // ===== GMAIL SMTP (REAL EMAILS) - COMMENTED FOR EASY SWITCHING =====
-    // Uncomment the lines below and comment out the Ethereal config above to use Gmail
-    // Real emails sent to users for password reset and notifications
-    // Perfect for school projects - no 2FA required
-    
-    /*
+    // Gmail SMTP Configuration
     this.transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
@@ -33,7 +15,6 @@ export class EmailService {
         // For production with 2FA: use GMAIL_APP_PASSWORD instead
       },
     });
-    */
   }
 
   async sendPasswordResetEmail(
@@ -44,13 +25,7 @@ export class EmailService {
     const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
     
     const mailOptions = {
-      // ===== GMAIL SMTP (REAL EMAILS) =====
       from: process.env.GMAIL_USER,
-      
-      // ===== ETHEREAL EMAIL (TESTING) =====
-      // Uncomment the line below and comment out the Gmail line above to use Ethereal
-      // from: process.env.ETHEREAL_USER || 'test@ethereal.email',
-      
       to: to,
       subject: 'Password Reset Request - Voting System',
       html: `
@@ -109,14 +84,7 @@ export class EmailService {
     try {
       const info = await this.transporter.sendMail(mailOptions);
       console.log(`✅ Password reset email sent to ${to}`);
-      
-      // ===== GMAIL SMTP (REAL EMAILS) =====
       console.log(`📧 Real email sent via Gmail to ${to}`);
-      
-      // ===== ETHEREAL EMAIL (TESTING) =====
-      // Uncomment the line below and comment out the Gmail line above for Ethereal
-      // console.log(`📧 Ethereal Email URL: ${nodemailer.getTestMessageUrl(info)}`);
-      
       return info;
     } catch (error) {
       console.error('❌ Error sending password reset email:', error);
@@ -126,13 +94,7 @@ export class EmailService {
 
   async sendPasswordChangedEmail(to: string, userType: 'voter' | 'admin'): Promise<void> {
     const mailOptions = {
-      // ===== GMAIL SMTP (REAL EMAILS) =====
       from: process.env.GMAIL_USER,
-      
-      // ===== ETHEREAL EMAIL (TESTING) =====
-      // Uncomment the line below and comment out the Gmail line above to use Ethereal
-      // from: process.env.ETHEREAL_USER || 'test@ethereal.email',
-      
       to: to,
       subject: 'Password Successfully Changed - Voting System',
       html: `
@@ -169,14 +131,7 @@ export class EmailService {
     try {
       const info = await this.transporter.sendMail(mailOptions);
       console.log(`✅ Password changed confirmation email sent to ${to}`);
-      
-      // ===== GMAIL SMTP (REAL EMAILS) =====
       console.log(`📧 Real confirmation email sent via Gmail to ${to}`);
-      
-      // ===== ETHEREAL EMAIL (TESTING) =====
-      // Uncomment the line below and comment out the Gmail line above for Ethereal
-      // console.log(`📧 Ethereal Email URL: ${nodemailer.getTestMessageUrl(info)}`);
-      
       return info;
     } catch (error) {
       console.error('❌ Error sending password changed email:', error);
@@ -187,7 +142,6 @@ export class EmailService {
   // Test email connection and get credentials
   async testConnection(): Promise<boolean> {
     try {
-      // ===== GMAIL SMTP (REAL EMAILS) =====
       console.log('✅ Testing Gmail SMTP connection...');
       console.log(`📧 Gmail User: ${process.env.GMAIL_USER}`);
       console.log(`🔑 Gmail Password: ${process.env.GMAIL_PASSWORD ? '***configured***' : 'NOT CONFIGURED'}`);
@@ -199,25 +153,6 @@ export class EmailService {
           pass: process.env.GMAIL_PASSWORD,
         },
       });
-
-      // ===== ETHEREAL EMAIL (TESTING) =====
-      // Uncomment the lines below and comment out the Gmail lines above to test Ethereal
-      /*
-      const testAccount = await nodemailer.createTestAccount();
-      console.log('✅ Ethereal test account created');
-      console.log(`📧 Test Email: ${testAccount.user}`);
-      console.log(`🔑 Test Password: ${testAccount.pass}`);
-      
-      this.transporter = nodemailer.createTransport({
-        host: 'smtp.ethereal.email',
-        port: 587,
-        secure: false,
-        auth: {
-          user: testAccount.user,
-          pass: testAccount.pass,
-        },
-      });
-      */
 
       await this.transporter.verify();
       console.log('✅ Email service connection verified');

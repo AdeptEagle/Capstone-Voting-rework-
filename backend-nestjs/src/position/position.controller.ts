@@ -14,7 +14,15 @@ export class PositionController {
   @ApiOperation({ summary: 'Get all positions' })
   @ApiResponse({ status: 200, description: 'List of all positions' })
   async getAllPositions(@Request() req) {
-    const showAll = req.user && (req.user.role === 'ADMIN' || req.user.role === 'SUPERADMIN');
+    console.log(`[PositionController] getAllPositions called`);
+    console.log(`[PositionController] User:`, req.user);
+    console.log(`[PositionController] User role:`, req.user?.role);
+    
+    // Admin users should NOT see deleted positions in the main list
+    // They should only see deleted positions in the Trash Bin
+    const showAll = false; // Always filter out deleted positions
+    console.log(`[PositionController] showAll parameter: ${showAll} (always false for main list)`);
+    
     return this.positionService.getAllPositions(showAll);
   }
 

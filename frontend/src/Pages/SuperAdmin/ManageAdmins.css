@@ -5,6 +5,15 @@
   min-height: 100vh;
 }
 
+/* Force flat background on dashboard header - Maximum specificity */
+.manage-admins-container .dashboard-header-pro,
+.manage-admins-container div.dashboard-header-pro,
+.manage-admins-container .dashboard-header-pro.dashboard-header-pro {
+  background: #ffffff !important;
+  background: var(--white) !important;
+  background: white !important;
+}
+
 .manage-admins-container .card {
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
@@ -30,4 +39,96 @@
 .manage-admins-container .table th,
 .manage-admins-container .table td {
   padding: 0.75rem 1rem;
+}
+
+/* Admin Actions Icon Buttons */
+.admin-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.action-btn-icon {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  /* Reset button defaults */
+  font-size: inherit;
+  line-height: 1;
+  text-decoration: none;
+  outline: none;
+  box-shadow: none;
+}
+
+.action-btn-icon:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  transform: translateY(-1px);
+}
+
+.action-btn-icon:active {
+  transform: translateY(0);
+}
+
+.action-btn-icon i {
+  font-size: 14px;
+  /* Ensure icon inherits button color */
+  color: inherit;
+}
+
+/* Edit button specific styles */
+.edit-btn {
+  color: #007bff !important;
+}
+
+.edit-btn:hover {
+  color: #0056b3 !important;
+}
+
+.edit-btn i {
+  color: #007bff !important;
+}
+
+.edit-btn:hover i {
+  color: #0056b3 !important;
+}
+
+/* Delete button specific styles */
+.delete-btn {
+  color: #dc3545 !important;
+}
+
+.delete-btn:hover {
+  color: #c82333 !important;
+}
+
+.delete-btn i {
+  color: #dc3545 !important;
+}
+
+.delete-btn:hover i {
+  color: #c82333 !important;
+}
+
+/* Disabled state */
+.action-btn-icon:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.action-btn-icon:disabled:hover {
+  transform: none;
+  background-color: transparent;
+}
+
+.action-btn-icon:disabled i {
+  color: inherit !important;
 } 

@@ -3,6 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import { IdGeneratorService } from '../utils/id-generator.service';
 import { EmailService } from '../services/email.service';
+import { VotingGateway } from '../websocket/voting.gateway';
 import * as bcrypt from 'bcryptjs';
 import { Response } from 'express';
 import { randomBytes } from 'crypto';
@@ -14,6 +15,7 @@ export class AuthService {
     private jwtService: JwtService,
     private idGenerator: IdGeneratorService,
     private emailService: EmailService,
+    private votingGateway: VotingGateway,
   ) {}
 
   async checkAuthStatus(req: any) {
@@ -278,6 +280,32 @@ export class AuthService {
         },
       },
     });
+
+    // Emit real-time voter registration event
+    console.log('🔌 [AuthService] Emitting voter-registered WebSocket event...');
+    try {
+      this.votingGateway.emitVoterRegistered({
+        id: voter.id,
+        studentId: voter.studentId,
+        name: voter.name,
+        email: voter.email,
+        hasVoted: voter.hasVoted,
+        department: voter.department,
+        course: voter.course,
+        createdAt: voter.createdAt,
+      });
+      console.log('✅ [AuthService] voter-registered event emitted successfully');
+
+      // Also emit admin action for voter management
+      this.votingGateway.emitAdminAction('voter-management', {
+        action: 'voter-created',
+        voterId: voter.id,
+        voterName: voter.name,
+      });
+      console.log('✅ [AuthService] admin-action event emitted successfully');
+    } catch (error) {
+      console.error('❌ [AuthService] Error emitting WebSocket events:', error);
+    }
 
     const payload = { 
       sub: voter.id, 

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api, { getDepartments, getCoursesByDepartment } from '../../services/api';
 import { storeRole, storeUserData, getStoredRole } from '../../services/auth';
+import io from 'socket.io-client';
 import './UserRegister.css';
 
 const UserRegister = () => {
@@ -21,6 +22,9 @@ const UserRegister = () => {
   const [courses, setCourses] = useState([]);
   const [loadingDepartments, setLoadingDepartments] = useState(true);
   const [loadingCourses, setLoadingCourses] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [socket, setSocket] = useState(null);
   const navigate = useNavigate();
 
   // Fetch departments on component mount
@@ -38,6 +42,73 @@ const UserRegister = () => {
     };
 
     fetchData();
+  }, []);
+
+  // WebSocket connection setup
+  useEffect(() => {
+    console.log('🔌 [UserRegister] Setting up WebSocket connection...');
+    const newSocket = io('http://localhost:3001', {
+      withCredentials: true,
+      transports: ['websocket', 'polling'],
+      timeout: 20000,
+      forceNew: true,
+    });
+
+    newSocket.on('connect', () => {
+      console.log('🔌 [UserRegister] WebSocket connected:', newSocket.id);
+    });
+
+    newSocket.on('disconnect', () => {
+      console.log('🔌 [UserRegister] WebSocket disconnected');
+    });
+
+    newSocket.on('connect_error', (error) => {
+      console.error('❌ [UserRegister] WebSocket connection error:', error);
+    });
+
+    // Test event listeners
+    newSocket.on('test-event', (data) => {
+      console.log('🧪 [UserRegister] Test event received:', data);
+    });
+
+    newSocket.on('test-response', (data) => {
+      console.log('🧪 [UserRegister] Test response received:', data);
+    });
+
+    // Election status update listeners
+    newSocket.on('election-status-updated', (data) => {
+      console.log('🗳️ [UserRegister] Election status updated:', data);
+      // Show notification to user about status change
+      const statusMessages = {
+        'active': '🗳️ Voting is now OPEN! You can cast your vote.',
+        'paused': '⏸️ Voting has been PAUSED temporarily.',
+        'stopped': '⏹️ Voting has been STOPPED.',
+        'ended': '✅ Voting has ENDED. Results are now available.',
+        'draft': '📝 Election is in DRAFT mode.'
+      };
+      
+      const message = statusMessages[data.status] || `Election status changed to: ${data.status}`;
+      console.log('📢 Status Update:', message);
+    });
+
+    // Listen for new elections being created
+    newSocket.on('election-created', (data) => {
+      console.log('🆕 [UserRegister] New election created:', data);
+    });
+
+    // Listen for election updates
+    newSocket.on('election-updated', (data) => {
+      console.log('🔄 [UserRegister] Election updated:', data);
+    });
+
+    setSocket(newSocket);
+
+    return () => {
+      console.log('🧹 [UserRegister] Cleaning up WebSocket connection...');
+      if (newSocket.connected) {
+        newSocket.disconnect();
+      }
+    };
   }, []);
 
   const handleChange = (e) => {
@@ -215,6 +286,37 @@ const UserRegister = () => {
         <form className="user-register-form card-shadow" onSubmit={handleSubmit}>
           <h2>Create Your Account</h2>
           
+          {/* WebSocket Test Button */}
+          <div className="d-flex justify-content-end mb-3">
+            <button
+              type="button"
+              className="btn btn-outline-info btn-sm"
+              onClick={() => {
+                console.log('🧪 [UserRegister] Test button clicked');
+                console.log('🔌 Socket state:', {
+                  exists: !!socket,
+                  connected: socket?.connected,
+                  id: socket?.id,
+                  readyState: socket?.readyState
+                });
+                if (socket && socket.connected) {
+                  console.log('🧪 [UserRegister] Sending test WebSocket request...');
+                  socket.emit('test-websocket');
+                  setSuccess('Test WebSocket request sent! Check console for response.');
+                  setTimeout(() => setSuccess(''), 3000);
+                } else {
+                  console.error('❌ [UserRegister] WebSocket not connected');
+                  setError('WebSocket not connected');
+                  setTimeout(() => setError(''), 3000);
+                }
+              }}
+              title="Test WebSocket Connection"
+            >
+              <i className="fas fa-wifi me-1"></i>
+              Test WebSocket
+            </button>
+          </div>
+          
           {error && <div className="user-register-error">{error}</div>}
           {success && <div className="user-register-success">{success}</div>}
 
@@ -326,7 +428,7 @@ const UserRegister = () => {
           <div className="user-register-field">
             <label htmlFor="password">Password *</label>
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               id="password"
               name="password"
               value={formData.password}
@@ -335,12 +437,15 @@ const UserRegister = () => {
               required
               autoComplete="new-password"
             />
+            <span className="password-toggle-icon" onClick={() => setShowPassword(!showPassword)}>
+              {showPassword ? <i className="fas fa-eye-slash"></i> : <i className="fas fa-eye"></i>}
+            </span>
           </div>
 
           <div className="user-register-field">
             <label htmlFor="confirmPassword">Confirm Password *</label>
             <input
-              type="password"
+              type={showConfirmPassword ? "text" : "password"}
               id="confirmPassword"
               name="confirmPassword"
               value={formData.confirmPassword}
@@ -349,6 +454,9 @@ const UserRegister = () => {
               required
               autoComplete="new-password"
             />
+            <span className="password-toggle-icon" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
+              {showConfirmPassword ? <i className="fas fa-eye-slash"></i> : <i className="fas fa-eye"></i>}
+            </span>
           </div>
 
           <button type="submit" className="user-register-btn" disabled={loading}>

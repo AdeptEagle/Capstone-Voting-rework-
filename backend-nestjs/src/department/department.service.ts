@@ -176,17 +176,25 @@ export class DepartmentService {
       throw new NotFoundException('Department not found');
     }
 
-    // Check if department has related data
-    if (department._count.courses > 0 || department._count.voters > 0 || department._count.candidates > 0) {
-      throw new ConflictException('Cannot delete department with related courses, voters, or candidates');
+    // Check if department is already soft-deleted
+    if (department.isDeleted) {
+      throw new NotFoundException('Department has already been deleted');
     }
 
-    await this.prisma.department.delete({
+    // SOFT DELETE: Mark as deleted but preserve data
+    // We allow deletion even with related data since soft delete preserves everything
+
+    // SOFT DELETE: Mark as deleted but preserve data
+    await this.prisma.department.update({
       where: { id },
+      data: {
+        isDeleted: true,
+        deletedAt: new Date()
+      }
     });
 
     return {
-      message: 'Department deleted successfully!',
+      message: 'Department moved to trash successfully!',
     };
   }
 

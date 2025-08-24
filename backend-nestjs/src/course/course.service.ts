@@ -222,17 +222,25 @@ export class CourseService {
       throw new NotFoundException('Course not found');
     }
 
-    // Check if course has related data
-    if (course._count.voters > 0 || course._count.candidates > 0) {
-      throw new ConflictException('Cannot delete course with related voters or candidates');
+    // Check if course is already soft-deleted
+    if (course.isDeleted) {
+      throw new NotFoundException('Course has already been deleted');
     }
 
-    await this.prisma.course.delete({
+    // SOFT DELETE: Mark as deleted but preserve data
+    // We allow deletion even with related data since soft delete preserves everything
+
+    // SOFT DELETE: Mark as deleted but preserve data
+    await this.prisma.course.update({
       where: { id },
+      data: {
+        isDeleted: true,
+        deletedAt: new Date()
+      }
     });
 
     return {
-      message: 'Course deleted successfully!',
+      message: 'Course moved to trash successfully!',
     };
   }
 

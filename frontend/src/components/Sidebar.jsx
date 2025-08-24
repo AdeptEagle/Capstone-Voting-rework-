@@ -52,7 +52,6 @@ const Sidebar = ({ isOpen, onToggle }) => {
       main: true,
       elections: true,
       management: true,
-      ballot: true,
       voting: true,
       advanced: false
     };
@@ -65,7 +64,6 @@ const Sidebar = ({ isOpen, onToggle }) => {
         main: prev.main,
         elections: prev.elections,
         management: prev.management,
-        ballot: prev.ballot,
         voting: prev.voting,
         advanced: prev.advanced,
         [section]: !prev[section]
@@ -86,8 +84,7 @@ const Sidebar = ({ isOpen, onToggle }) => {
           ],
           elections: [
             { path: '/admin/elections', label: 'Active Elections', icon: 'fas fa-vote-yea' },
-            { path: '/admin/election-history', label: 'Election History', icon: 'fas fa-history' },
-            { path: '/admin/ballot-creation', label: 'Create Ballot', icon: 'fas fa-plus-circle' }
+            { path: '/admin/election-history', label: 'Election History', icon: 'fas fa-history' }
           ],
           management: [
             { path: '/admin/positions', label: 'Positions', icon: 'fas fa-user-tie' },
@@ -95,25 +92,21 @@ const Sidebar = ({ isOpen, onToggle }) => {
             { path: '/admin/voters', label: 'Voters', icon: 'fas fa-user-friends' },
             { path: '/admin/department-management', label: 'Department Management', icon: 'fas fa-university' }
           ],
-          ballot: [
-            { path: '/admin/ballot-positions', label: 'Ballot Positions', icon: 'fas fa-list-ol' },
-            { path: '/admin/ballot-candidates', label: 'Ballot Candidates', icon: 'fas fa-list-check' }
-          ],
           advanced: [
             { path: '/superadmin/manage-admins', label: 'Manage Admins', icon: 'fas fa-user-shield' },
             { path: '/admin/results', label: 'Results', icon: 'fas fa-chart-bar' },
-            { path: '/admin/vote-traceability', label: 'Vote Traceability', icon: 'fas fa-search' }
+            { path: '/admin/vote-traceability', label: 'Vote Traceability', icon: 'fas fa-search' },
+            { path: '/trash-bin', label: 'Trash Bin', icon: 'fas fa-trash' }
           ]
         };
       case 'admin':
         return {
           main: [
-            { path: '/admin', label: 'Dashboard', icon: 'fas fa-tachometer-alt' }
+            { path: '/admin/dashboard', label: 'Dashboard', icon: 'fas fa-tachometer-alt' }
           ],
           elections: [
             { path: '/admin/elections', label: 'Active Elections', icon: 'fas fa-vote-yea' },
-            { path: '/admin/election-history', label: 'Election History', icon: 'fas fa-history' },
-            { path: '/admin/ballot-creation', label: 'Create Ballot', icon: 'fas fa-plus-circle' }
+            { path: '/admin/election-history', label: 'Election History', icon: 'fas fa-history' }
           ],
           management: [
             { path: '/admin/positions', label: 'Positions', icon: 'fas fa-user-tie' },
@@ -121,13 +114,10 @@ const Sidebar = ({ isOpen, onToggle }) => {
             { path: '/admin/voters', label: 'Voters', icon: 'fas fa-user-friends' },
             { path: '/admin/department-management', label: 'Department Management', icon: 'fas fa-university' }
           ],
-          ballot: [
-            { path: '/admin/ballot-positions', label: 'Ballot Positions', icon: 'fas fa-list-ol' },
-            { path: '/admin/ballot-candidates', label: 'Ballot Candidates', icon: 'fas fa-list-check' }
-          ],
           advanced: [
             { path: '/admin/results', label: 'Results', icon: 'fas fa-chart-bar' },
-            { path: '/admin/vote-traceability', label: 'Vote Traceability', icon: 'fas fa-search' }
+            { path: '/admin/vote-traceability', label: 'Vote Traceability', icon: 'fas fa-search' },
+            { path: '/trash-bin', label: 'Trash Bin', icon: 'fas fa-trash' }
           ]
         };
       default: // User role
@@ -266,9 +256,6 @@ const Sidebar = ({ isOpen, onToggle }) => {
           
           {/* Management Section */}
           {renderNavSection('management', navItems.management || [], 'Management', 'fas fa-cogs')}
-          
-          {/* Ballot Section */}
-          {renderNavSection('ballot', navItems.ballot || [], 'Ballot', 'fas fa-list')}
           
           {/* Voting Section (for users) */}
           {renderNavSection('voting', navItems.voting || [], 'Voting', 'fas fa-vote-yea')}

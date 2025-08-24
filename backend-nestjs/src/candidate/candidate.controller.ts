@@ -30,7 +30,7 @@ export class CandidateController {
   ) {
     // Check if photo URL is provided in the form data
     const photoUrl = (createCandidateDto as any).photo;
-    if (photoUrl && typeof photoUrl === 'string' && photoUrl.startsWith('/uploads/')) {
+    if (photoUrl && typeof photoUrl === 'string' && (photoUrl.startsWith('/uploads/') || photoUrl.startsWith('https://res.cloudinary.com/'))) {
       // Pass the URL string to the service
       return this.candidateService.createCandidate(createCandidateDto, photoUrl);
     }
@@ -59,7 +59,7 @@ export class CandidateController {
   ) {
     // Check if photo URL is provided in the form data
     const photoUrl = (updateCandidateDto as any).photo;
-    if (photoUrl && typeof photoUrl === 'string' && photoUrl.startsWith('/uploads/')) {
+    if (photoUrl && typeof photoUrl === 'string' && (photoUrl.startsWith('/uploads/') || photoUrl.startsWith('https://res.cloudinary.com/'))) {
       // Pass the URL string to the service
       return this.candidateService.updateCandidate(id, updateCandidateDto, photoUrl);
     }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getElections, getPositions, getCandidates, createElection, updateElection, deleteElection, startElection, pauseElection, stopElection, resumeElection, endElection, getElectionPositions, createPosition, createCandidate, getDepartments } from '../services/api';
+import { getElections, getPositions, getCandidates, createElection, updateElection, deleteElection, startElection, pauseElection, stopElection, resumeElection, endElection, getElectionPositions, createPosition, createCandidate, getDepartments, addPositionToElection, addCandidateToElection } from '../services/api';
 import './Elections.css';
 
 const Elections = () => {
@@ -17,6 +17,7 @@ const Elections = () => {
   const [editingElection, setEditingElection] = useState(null);
   const [updatingElection, setUpdatingElection] = useState(null);
   const [loadingPositions, setLoadingPositions] = useState(false);
+  const [activeTab, setActiveTab] = useState('active'); // 'active' or 'ended'
   const navigate = useNavigate();
 
   // Enhanced form state for creating elections with positions and candidates
@@ -73,6 +74,30 @@ const Elections = () => {
       setError('');
       setSuccess('');
 
+      // Validate dates before processing
+      if (!formData.startDate || !formData.endDate) {
+        setError('Please select both start and end dates');
+        setLoading(false);
+        return;
+      }
+
+      // Validate that dates are valid
+      const startDate = new Date(formData.startDate);
+      const endDate = new Date(formData.endDate);
+      
+      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+        setError('Please enter valid start and end dates');
+        setLoading(false);
+        return;
+      }
+
+      // Validate that end date is after start date
+      if (endDate <= startDate) {
+        setError('End date must be after start date');
+        setLoading(false);
+        return;
+      }
+
       // First, create any new positions
       const createdPositions = [];
       for (const position of tempPositions) {
@@ -111,6 +136,7 @@ const Elections = () => {
             candidateData.append('studentId', candidate.studentId || '');
             candidateData.append('positionId', candidate.positionId);
             candidateData.append('departmentId', candidate.departmentId || '');
+            candidateData.append('courseId', candidate.courseId || ''); // Add required courseId
             candidateData.append('manifesto', candidate.manifesto || '');
             
             if (candidate.photoFile) {
@@ -125,22 +151,42 @@ const Elections = () => {
         }
       }
 
-      // Finally, create the election with all position IDs (existing + new)
+      // Create the election with only the basic fields (matching the DTO)
+      const electionData = {
+        title: formData.title,
+        description: formData.description,
+        startDate: new Date(formData.startDate).toISOString(),
+        endDate: new Date(formData.endDate).toISOString()
+      };
+
+      console.log('Creating election with data:', electionData);
+      const createdElection = await createElection(electionData);
+      
+      // Now add positions to the election
       const allPositionIds = [
         ...formData.positionIds,
         ...createdPositions.map(p => p.id)
       ];
 
-      const electionData = {
-        title: formData.title,
-        description: formData.description,
-        startDate: new Date(formData.startDate).toISOString(),
-        endDate: new Date(formData.endDate).toISOString(),
-        positionIds: allPositionIds,
-        candidateIds: formData.selectedCandidateIds
-      };
+      // Add existing and new positions to the election
+      for (const positionId of allPositionIds) {
+        try {
+          await addPositionToElection(createdElection.election.id, { positionId });
+        } catch (error) {
+          console.error(`Error adding position ${positionId} to election:`, error);
+          // Continue with other positions even if one fails
+        }
+      }
 
-      await createElection(electionData);
+      // Add candidates to the election
+      for (const candidateId of formData.selectedCandidateIds) {
+        try {
+          await addCandidateToElection(createdElection.election.id, { candidateId });
+        } catch (error) {
+          console.error(`Error adding candidate ${candidateId} to election:`, error);
+          // Continue with other candidates even if one fails
+        }
+      }
       
       setSuccess('Election created successfully with all positions and candidates!');
       setShowCreateModal(false);
@@ -162,6 +208,30 @@ const Elections = () => {
       setUpdatingElection(editingElection.id);
       setError('');
       setSuccess('');
+
+      // Validate dates before processing
+      if (!formData.startDate || !formData.endDate) {
+        setError('Please select both start and end dates');
+        setUpdatingElection(null);
+        return;
+      }
+
+      // Validate that dates are valid
+      const startDate = new Date(formData.startDate);
+      const endDate = new Date(formData.endDate);
+      
+      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+        setError('Please enter valid start and end dates');
+        setUpdatingElection(null);
+        return;
+      }
+
+      // Validate that end date is after start date
+      if (endDate <= startDate) {
+        setError('End date must be after start date');
+        setUpdatingElection(null);
+        return;
+      }
 
       const electionData = {
         ...formData,
@@ -350,8 +420,8 @@ const Elections = () => {
       await updateElection(electionId, {
         title: election.title,
         description: election.description,
-        startTime: election.startTime,
-        endTime: election.endTime,
+        startDate: election.startDate,
+        endDate: election.endDate,
         status: newStatus
       });
 
@@ -383,8 +453,8 @@ const Elections = () => {
       await updateElection(electionId, {
         title: election.title,
         description: election.description,
-        startTime: election.startTime,
-        endTime: election.endTime,
+        startDate: election.startDate,
+        endDate: election.endDate,
         status: 'draft'
       });
 
@@ -409,8 +479,8 @@ const Elections = () => {
       setFormData({
         title: election.title || '',
         description: election.description || '',
-        startTime: election.startTime ? election.startTime.slice(0, 16) : '', // Format for datetime-local input
-        endTime: election.endTime ? election.endTime.slice(0, 16) : '',
+        startDate: election.startDate ? election.startDate.slice(0, 16) : '', // Format for datetime-local input
+        endDate: election.endDate ? election.endDate.slice(0, 16) : '',
         positionIds: [] // Start with empty array
       });
       setShowEditModal(true);
@@ -445,8 +515,8 @@ const Elections = () => {
     setFormData({
       title: '',
       description: '',
-      startTime: '',
-      endTime: '',
+      startDate: '',
+      endDate: '',
       positionIds: [],
       // New fields for dynamic position/candidate creation
       newPositions: [],
@@ -495,12 +565,13 @@ const Elections = () => {
 
   const addCandidateToPosition = (positionId) => {
     const newCandidate = {
-      id: crypto.randomUUID(),
+      id: crypto.randomUUID ? crypto.randomUUID() : Date.now().toString() + Math.random().toString(36).substr(2, 9),
       name: '',
       email: '',
       studentId: '',
       positionId: positionId,
       departmentId: '',
+      courseId: '', // Add required courseId field
       manifesto: '',
       photoFile: null,
       isNew: true
@@ -593,7 +664,7 @@ const Elections = () => {
   };
 
   const nextStep = () => {
-    if (currentStep === 1 && (!formData.title || !formData.startTime || !formData.endTime)) {
+    if (currentStep === 1 && (!formData.title || !formData.startDate || !formData.endDate)) {
       setError('Please fill in all required fields');
       return;
     }
@@ -648,6 +719,14 @@ const Elections = () => {
         setError('Please select at least one candidate or add new candidates');
         return;
       }
+      
+      // Validate new candidates have required fields
+      for (const candidate of tempCandidates) {
+        if (!candidate.name || !candidate.departmentId || !candidate.courseId) {
+          setError(`Candidate ${candidate.name || 'Unknown'} is missing required fields (Name, Department, and Course)`);
+          return;
+        }
+      }
     }
     
     setCurrentStep(currentStep + 1);
@@ -693,6 +772,21 @@ const Elections = () => {
       console.error('Error formatting date:', error);
       return 'Invalid date';
     }
+  };
+
+  // Helper functions to categorize elections
+  const getActiveElections = () => {
+    return elections.filter(election => {
+      const status = election.status || 'draft';
+      return status !== 'ended';
+    });
+  };
+
+  const getEndedElections = () => {
+    return elections.filter(election => {
+      const status = election.status || 'draft';
+      return status === 'ended';
+    });
   };
 
   const getStatusActions = (election) => {
@@ -878,8 +972,8 @@ const Elections = () => {
             <button
               className="btn btn-custom-blue"
               onClick={openCreateModal}
-              disabled={elections.some(e => e.status !== 'ended')}
-              title={elections.some(e => e.status !== 'ended') ? "End the current election first" : ""}
+              disabled={getActiveElections().length > 0}
+              title={getActiveElections().length > 0 ? "End the current election first" : ""}
             >
               <i className="fas fa-plus me-2"></i>
               Create Ballot with Positions & Candidates
@@ -891,6 +985,23 @@ const Elections = () => {
               <i className="fas fa-history me-2"></i>
               View History
             </button>
+            <button
+              className="btn btn-outline-info ms-2"
+              onClick={() => {
+                console.log('🧪 [Elections] Test WebSocket button clicked');
+                if (elections.length > 0) {
+                  const election = elections[0];
+                  console.log('🧪 [Elections] Testing with election:', election.id);
+                  // You can add a test WebSocket emit here if needed
+                } else {
+                  console.log('🧪 [Elections] No elections available for testing');
+                }
+              }}
+              title="Test WebSocket Election Updates"
+            >
+              <i className="fas fa-wifi me-2"></i>
+              Test WebSocket
+            </button>
           </div>
         </div>
       </div>
@@ -901,130 +1012,236 @@ const Elections = () => {
 
       {/* Admin Guide for Single Election Policy */}
       {(() => {
-        const currentElection = elections.length > 0 ? elections[0] : null;
-        if (currentElection) {
+        const activeElections = getActiveElections();
+        if (activeElections.length > 0) {
           return (
             <div className="alert alert-warning mb-3">
               <i className="fas fa-exclamation-triangle me-2"></i>
               <strong>Reminder:</strong> Only one active election allowed. End current election to create a new one.
+              <span className="ms-2 badge bg-warning text-dark">
+                {activeElections.length} Active Election{activeElections.length > 1 ? 's' : ''}
+              </span>
             </div>
           );
         }
         return null;
       })()}
 
-      {/* Elections List */}
-      <div className="elections-list">
-        {elections.length > 0 ? (
-          elections.map((election) => (
-            <div key={election.id} className="election-card">
-              <div className="election-header">
-                <div className="election-title">
-                  <h3>{election.title || 'Untitled Election'}</h3>
-                  <span className={`status-badge badge bg-${getStatusColor(election.status)}`}>
-                    <i className={`${getStatusIcon(election.status)} me-1`}></i>
-                    {(election.status || 'pending').charAt(0).toUpperCase() + (election.status || 'pending').slice(1)}
-                    {/* Debug: Show raw status */}
-                    <small className="ms-1">({election.status || 'null'})</small>
-                  </span>
-                </div>
-                <div className="election-meta">
-                  <small className="text-muted">
-                    Created by {election.createdByUsername || 'Unknown'}
-                  </small>
-                </div>
-              </div>
-
-              <div className="election-content">
-                <p className="election-description">{election.description || 'No description available'}</p>
-                
-                <div className="election-details">
-                  <div className="detail-row">
-                    <span className="detail-label">Start Time:</span>
-                    <span className="detail-value">{election.startTime ? formatDateTime(election.startTime) : 'Not set'}</span>
-                  </div>
-                  <div className="detail-row">
-                    <span className="detail-label">End Time:</span>
-                    <span className="detail-value">{election.endTime ? formatDateTime(election.endTime) : 'Not set'}</span>
-                  </div>
-                  {election.positionCount > 0 && (
-                    <div className="detail-row">
-                      <span className="detail-label">Positions:</span>
-                      <span className="detail-value">{election.positionCount} position{election.positionCount !== 1 ? 's' : ''}</span>
-                    </div>
-                  )}
-                </div>
-
-                <div className="election-actions">
-                  <div className="status-actions">
-                    {getStatusActions(election)}
-                    {getStatusActions(election).length === 0 && (
-                      <span className="text-muted">
-                        <i className="fas fa-info-circle me-1"></i>
-                        No actions available for status: {election.status || 'pending'}
-                      </span>
-                    )}
-                  </div>
-                  
-                  <div className="management-actions">
-                    {election.status !== 'ended' && (
-                      <>
-                        <button
-                          className="btn btn-outline-primary btn-sm me-2"
-                          onClick={() => openEditModal(election)}
-                          disabled={updatingElection === election.id}
-                        >
-                          <i className="fas fa-edit me-1"></i>
-                          Edit
-                        </button>
-                        <button
-                          className="btn btn-outline-danger btn-sm"
-                          onClick={() => handleDeleteElection(election.id)}
-                          disabled={updatingElection === election.id}
-                        >
-                          {updatingElection === election.id ? (
-                            <i className="fas fa-spinner fa-spin me-1"></i>
-                          ) : (
-                            <i className="fas fa-trash me-1"></i>
-                          )}
-                          Delete
-                        </button>
-                      </>
-                    )}
-                    {election.status === 'ended' && (
-                      <div className="d-flex align-items-center">
-                        <span className="text-success me-3">
-                          <i className="fas fa-check-circle me-1"></i>
-                          Completed
-                        </span>
-                        <button
-                          className="btn btn-outline-primary btn-sm"
-                          onClick={() => navigate('/admin/election-history')}
-                        >
-                          <i className="fas fa-history me-1"></i>
-                          View History
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))
-        ) : (
-          <div className="no-elections">
-            <i className="fas fa-vote-yea"></i>
-            <h3>No Elections Found</h3>
-            <p>Create your first election to get started</p>
+      {/* Tabbed Elections Interface */}
+      <div className="elections-tabs-container">
+        <ul className="nav nav-tabs elections-tabs" role="tablist">
+          <li className="nav-item" role="presentation">
             <button
-              className="btn btn-primary"
-              onClick={openCreateModal}
+              className={`nav-link ${activeTab === 'active' ? 'active' : ''}`}
+              onClick={() => setActiveTab('active')}
+              type="button"
+              role="tab"
             >
-              <i className="fas fa-plus me-2"></i>
-              Create Ballot with Positions & Candidates
+              <i className="fas fa-play-circle me-2"></i>
+              Active Ballots
+              <span className="badge bg-primary ms-2">{getActiveElections().length}</span>
             </button>
+          </li>
+          <li className="nav-item" role="presentation">
+            <button
+              className={`nav-link ${activeTab === 'ended' ? 'active' : ''}`}
+              onClick={() => setActiveTab('ended')}
+              type="button"
+              role="tab"
+            >
+              <i className="fas fa-check-circle me-2"></i>
+              Ended/Saved Ballots
+              <span className="badge bg-secondary ms-2">{getEndedElections().length}</span>
+            </button>
+          </li>
+        </ul>
+
+        {/* Tab Content */}
+        <div className="tab-content">
+          {/* Active Ballots Tab */}
+          <div className={`tab-pane fade ${activeTab === 'active' ? 'show active' : ''}`} role="tabpanel">
+            <div className="elections-list">
+              {getActiveElections().length > 0 ? (
+                getActiveElections().map((election) => (
+                  <div key={election.id} className="election-card">
+                    <div className="election-header">
+                      <div className="election-title">
+                        <h3>{election.title || 'Untitled Election'}</h3>
+                        <span className={`status-badge badge bg-${getStatusColor(election.status)}`}>
+                          <i className={`${getStatusIcon(election.status)} me-1`}></i>
+                          {(election.status || 'pending').charAt(0).toUpperCase() + (election.status || 'pending').slice(1)}
+                          {/* Debug: Show raw status */}
+                          <small className="ms-1">({election.status || 'null'})</small>
+                        </span>
+                      </div>
+                      <div className="election-meta">
+                        <small className="text-muted">
+                          Created by {election.createdByUsername || 'Unknown'}
+                        </small>
+                      </div>
+                    </div>
+
+                    <div className="election-content">
+                      <p className="election-description">{election.description || 'No description available'}</p>
+                      
+                      <div className="election-details">
+                        <div className="detail-row">
+                          <span className="detail-label">Start Time:</span>
+                          <span className="detail-value">{election.startDate ? formatDateTime(election.startDate) : 'Not set'}</span>
+                        </div>
+                        <div className="detail-row">
+                          <span className="detail-label">End Time:</span>
+                          <span className="detail-value">{election.endDate ? formatDateTime(election.endDate) : 'Not set'}</span>
+                        </div>
+                        {election.positionCount > 0 && (
+                          <div className="detail-row">
+                            <span className="detail-label">Positions:</span>
+                            <span className="detail-value">{election.positionCount} position{election.positionCount !== 1 ? 's' : ''}</span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="election-actions">
+                        <div className="status-actions">
+                          {getStatusActions(election)}
+                          {getStatusActions(election).length === 0 && (
+                            <span className="text-muted">
+                              <i className="fas fa-info-circle me-1"></i>
+                              No actions available for status: {election.status || 'pending'}
+                            </span>
+                          )}
+                        </div>
+                        
+                        <div className="management-actions">
+                          {election.status !== 'ended' && (
+                            <>
+                              <button
+                                className="btn btn-outline-primary btn-sm me-2"
+                                onClick={() => openEditModal(election)}
+                                disabled={updatingElection === election.id}
+                              >
+                                <i className="fas fa-edit me-1"></i>
+                                Edit
+                              </button>
+                              <button
+                                className="btn btn-outline-danger btn-sm"
+                                onClick={() => handleDeleteElection(election.id)}
+                                disabled={updatingElection === election.id}
+                              >
+                                {updatingElection === election.id ? (
+                                  <i className="fas fa-spinner fa-spin me-1"></i>
+                                ) : (
+                                  <i className="fas fa-trash me-1"></i>
+                                )}
+                                Delete
+                              </button>
+                            </>
+                          )}
+                          {election.status === 'ended' && (
+                            <div className="d-flex align-items-center">
+                              <span className="text-success me-3">
+                                <i className="fas fa-check-circle me-1"></i>
+                                Completed
+                              </span>
+                              <button
+                                className="btn btn-outline-primary btn-sm"
+                                onClick={() => navigate('/admin/election-history')}
+                              >
+                                <i className="fas fa-history me-1"></i>
+                                View History
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="no-elections">
+                  <i className="fas fa-vote-yea"></i>
+                  <h3>No Active Elections Found</h3>
+                  <p>Create your first election to get started</p>
+                  <button
+                    className="btn btn-primary"
+                    onClick={openCreateModal}
+                  >
+                    <i className="fas fa-plus me-2"></i>
+                    Create Ballot with Positions & Candidates
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
-        )}
+
+          {/* Ended Ballots Tab */}
+          <div className={`tab-pane fade ${activeTab === 'ended' ? 'show active' : ''}`} role="tabpanel">
+            <div className="elections-list">
+              {getEndedElections().length > 0 ? (
+                getEndedElections().map((election) => (
+                  <div key={election.id} className="election-card ended-election">
+                    <div className="election-header">
+                      <div className="election-title">
+                        <h3>{election.title || 'Untitled Election'}</h3>
+                        <span className={`status-badge badge bg-${getStatusColor(election.status)}`}>
+                          <i className={`${getStatusIcon(election.status)} me-1`}></i>
+                          {(election.status || 'ended').charAt(0).toUpperCase() + (election.status || 'ended').slice(1)}
+                        </span>
+                      </div>
+                      <div className="election-meta">
+                        <small className="text-muted">
+                          Created by {election.createdByUsername || 'Unknown'}
+                        </small>
+                      </div>
+                    </div>
+
+                    <div className="election-content">
+                      <p className="election-description">{election.description || 'No description available'}</p>
+                      
+                      <div className="election-dates">
+                        <div className="date-item">
+                          <i className="fas fa-calendar-plus me-2"></i>
+                          <strong>Start:</strong> {formatDateTime(election.startDate)}
+                        </div>
+                        <div className="date-item">
+                          <i className="fas fa-calendar-check me-2"></i>
+                          <strong>End:</strong> {formatDateTime(election.endDate)}
+                        </div>
+                      </div>
+
+                      <div className="election-stats">
+                        <div className="stat-item">
+                          <i className="fas fa-users me-2"></i>
+                          <strong>Positions:</strong> {election.positions?.length || 0}
+                        </div>
+                        <div className="stat-item">
+                          <i className="fas fa-user-tie me-2"></i>
+                          <strong>Candidates:</strong> {election.candidates?.length || 0}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="election-actions">
+                      <button
+                        className="btn btn-outline-primary btn-sm"
+                        onClick={() => navigate('/admin/election-history')}
+                      >
+                        <i className="fas fa-history me-1"></i>
+                        View Results
+                      </button>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="no-elections">
+                  <i className="fas fa-archive"></i>
+                  <h3>No Ended Elections Found</h3>
+                  <p>Completed elections will appear here</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Enhanced Create Election Modal with Multi-Step Form */}
@@ -1086,8 +1303,8 @@ const Elections = () => {
                         <input
                           type="datetime-local"
                           className="form-control"
-                          value={formData.startTime}
-                          onChange={(e) => setFormData({...formData, startTime: e.target.value})}
+                          value={formData.startDate}
+                          onChange={(e) => setFormData({...formData, startDate: e.target.value})}
                           required
                         />
                       </div>
@@ -1098,8 +1315,8 @@ const Elections = () => {
                         <input
                           type="datetime-local"
                           className="form-control"
-                          value={formData.endTime}
-                          onChange={(e) => setFormData({...formData, endTime: e.target.value})}
+                          value={formData.endDate}
+                          onChange={(e) => setFormData({...formData, endDate: e.target.value})}
                           required
                         />
                       </div>
@@ -1458,6 +1675,25 @@ const Elections = () => {
                                               />
                                             </div>
                                           </div>
+                                          <div className="col-md-6">
+                                            <div className="mb-3">
+                                              <label className="form-label">Course</label>
+                                              <select
+                                                className="form-select"
+                                                value={candidate.courseId}
+                                                onChange={(e) => updateTempCandidate(globalCandidateIndex, 'courseId', e.target.value)}
+                                              >
+                                                <option value="">Select a course</option>
+                                                {departments.map(department => 
+                                                  department.courses?.map(course => (
+                                                    <option key={course.id} value={course.id}>
+                                                      {course.name}
+                                                    </option>
+                                                  ))
+                                                ).flat().filter(Boolean)}
+                                              </select>
+                                            </div>
+                                          </div>
                                         </div>
                                         <div className="mb-3">
                                           <label className="form-label">Description/Platform</label>
@@ -1601,8 +1837,8 @@ const Elections = () => {
                         <input
                           type="datetime-local"
                           className="form-control"
-                          value={formData.startTime}
-                          onChange={(e) => setFormData({...formData, startTime: e.target.value})}
+                          value={formData.startDate}
+                          onChange={(e) => setFormData({...formData, startDate: e.target.value})}
                           required
                         />
                       </div>
@@ -1613,8 +1849,8 @@ const Elections = () => {
                         <input
                           type="datetime-local"
                           className="form-control"
-                          value={formData.endTime}
-                          onChange={(e) => setFormData({...formData, endTime: e.target.value})}
+                          value={formData.endDate}
+                          onChange={(e) => setFormData({...formData, endDate: e.target.value})}
                           required
                         />
                       </div>

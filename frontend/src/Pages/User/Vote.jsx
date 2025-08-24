@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getPositions, getCandidates, getVoters, createVote, getElectionCandidates, getElectionPositions } from '../../services/api';
+import { getPositions, getCandidates, getVoters, createVote, getElectionBallot, getElectionPositions, getElectionCandidates } from '../../services/api';
 import { useNavigate } from 'react-router-dom';
 import { useElection } from '../../contexts/ElectionContext';
 import ElectionStatusMessage from '../../components/ElectionStatusMessage';
@@ -34,40 +34,309 @@ const Vote = () => {
   const navigate = useNavigate();
   const { canVote, hasActiveElection, triggerImmediateRefresh, activeElection } = useElection();
   const [imgError, setImgError] = useState({}); // Track image errors by candidate ID
+  const [electionToUse, setElectionToUse] = useState(null); // Store the election to use for voting
 
   useEffect(() => {
-    // Trigger immediate election status refresh
-    triggerImmediateRefresh();
+    console.log('Vote component - activeElection received:', activeElection);
+    console.log('Vote component - canVote:', canVote);
+    console.log('Vote component - hasActiveElection:', hasActiveElection);
+    
+    // Trigger immediate election status refresh only if no active election exists
+    if (!activeElection) {
+      console.log('No active election, triggering refresh...');
+      triggerImmediateRefresh();
+    }
     
     const fetchData = async () => {
       try {
-        const userId = localStorage.getItem('userId') || JSON.parse(atob(localStorage.getItem('token').split('.')[1])).id;
+        // Get user info from auth status endpoint instead of localStorage
+        let userId = null;
+        try {
+          const authResponse = await fetch('http://localhost:3001/auth/status', {
+            credentials: 'include'
+          });
+          if (authResponse.ok) {
+            const authData = await authResponse.json();
+            console.log('Full auth response:', authData);
+            userId = authData.user?.id;
+            console.log('Extracted userId from auth:', userId);
+            console.log('User type:', typeof userId);
+          }
+        } catch (authError) {
+          console.warn('Could not fetch auth status, falling back to localStorage:', authError);
+          // Fallback to localStorage if auth endpoint fails
+          userId = localStorage.getItem('userId');
+          console.log('Fallback userId from localStorage:', userId);
+        }
         
         if (!activeElection) {
+          console.log('No active election found');
           setLoading(false);
           return;
         }
 
-        const [positions, candidates, voters] = await Promise.all([
-          getElectionPositions(activeElection.id), // Only positions assigned to this election
-          getElectionCandidates(activeElection.id), // Only candidates assigned to this election
-          getVoters()
-        ]);
+        console.log('Active election data:', activeElection);
+        console.log('Active election type:', typeof activeElection);
+        console.log('Active election is array:', Array.isArray(activeElection));
         
-        setPositions(positions);
-        setCandidates(candidates);
-        const voter = voters.find(v => v.id === userId);
+        // Handle case where activeElection is an array
+        let electionToUse = activeElection;
+        if (Array.isArray(activeElection) && activeElection.length > 0) {
+          electionToUse = activeElection[0];
+          console.log('Using first election from array:', electionToUse);
+        }
+        
+        if (!electionToUse || !electionToUse.id) {
+          console.error('No valid election found:', electionToUse);
+          setError('No active election found. Please check back later.');
+          setLoading(false);
+          return;
+        }
+        
+        // Store the election in state for use in vote submission
+        setElectionToUse(electionToUse);
+
+        if (!userId) {
+          console.error('No user ID found');
+          setLoading(false);
+          return;
+        }
+
+        console.log('Attempting to fetch ballot data for election ID:', electionToUse.id);
+        
+        let ballotData, voters;
+        
+        try {
+          // Try to get complete ballot data first
+          console.log('Attempting to fetch ballot data for election ID:', electionToUse.id);
+          
+                  // First, test if backend is accessible
+        try {
+          const testResponse = await fetch('http://localhost:3001/auth/status', { credentials: 'include' });
+          console.log('Backend connectivity test response:', testResponse.status);
+          
+          if (testResponse.status !== 200) {
+            console.error('Backend server is not responding properly. Status:', testResponse.status);
+            setError('Backend server is not accessible. Please check if the server is running.');
+            setLoading(false);
+            return;
+          }
+        } catch (healthError) {
+          console.error('Backend server is not accessible:', healthError);
+          setError('Cannot connect to the voting server. Please check your internet connection or try again later.');
+          setLoading(false);
+          return;
+        }
+          
+          // Test if the election exists in the database
+          try {
+            const electionTestResponse = await fetch(`http://localhost:3001/elections/${electionToUse.id}`, { credentials: 'include' });
+            console.log('Election existence check response:', electionTestResponse.status);
+            
+            if (electionTestResponse.status === 404) {
+              console.error('Election not found in database:', electionToUse.id);
+              setError('The election you are trying to access does not exist in the database. Please contact an administrator.');
+              setLoading(false);
+              return;
+            }
+          } catch (electionTestError) {
+            console.warn('Could not verify election existence:', electionTestError);
+          }
+          
+          [ballotData, voters] = await Promise.all([
+            getElectionBallot(electionToUse.id), // Get complete ballot data
+            getVoters()
+          ]);
+          
+          console.log('Ballot data received:', ballotData);
+          console.log('Voters data received:', voters);
+          console.log('Active election ID:', electionToUse.id);
+          
+          // Extract positions and candidates from ballot data
+          const positions = ballotData.ballot.map(item => item.position);
+          const candidates = ballotData.ballot.flatMap(item => 
+            item.candidates.map(candidate => ({
+              ...candidate,
+              positionId: item.position.id,
+              positionName: item.position.title
+            }))
+          );
+        
+                  console.log('Extracted positions:', positions);
+          console.log('Extracted candidates:', candidates);
+          
+          setPositions(positions);
+          setCandidates(candidates);
+        } catch (ballotError) {
+          console.warn('Ballot endpoint failed, falling back to individual endpoints:', ballotError);
+          console.log('Ballot error details:', {
+            status: ballotError.response?.status,
+            url: ballotError.config?.url,
+            message: ballotError.message
+          });
+          
+          // Fallback: Get positions and candidates separately
+          try {
+            const [positions, candidates, votersData] = await Promise.all([
+              getElectionPositions(electionToUse.id),
+              getElectionCandidates(electionToUse.id),
+              getVoters()
+            ]);
+            
+            console.log('Fallback - Positions received:', positions);
+            console.log('Fallback - Candidates received:', candidates);
+            console.log('Fallback - Voters received:', votersData);
+            
+            setPositions(positions);
+            setCandidates(candidates);
+            voters = votersData;
+          } catch (fallbackError) {
+            console.error('Fallback endpoints also failed:', fallbackError);
+            throw fallbackError; // Re-throw to be caught by outer catch block
+          }
+        }
+        
+        // Find the voter in the voters list
+        console.log('Searching for voter with userId:', userId);
+        console.log('UserId type:', typeof userId);
+        console.log('Available voters:', voters.map(v => ({ 
+          id: v.id, 
+          idType: typeof v.id, 
+          name: v.name, 
+          studentId: v.studentId, 
+          email: v.email 
+        })));
+        
+        // Check if there's a type mismatch
+        const userIdString = String(userId);
+        const userIdNumber = Number(userId);
+        console.log('UserId as string:', userIdString);
+        console.log('UserId as number:', userIdNumber);
+        
+        // Try multiple ways to find the voter
+        let voter = voters.find(v => v.id === userId);
+        console.log('Direct ID match result:', voter);
+        
+        if (!voter) {
+          // Try finding by email if available
+          try {
+            const authData = await fetch('http://localhost:3001/auth/status', { credentials: 'include' });
+            if (authData.ok) {
+              const userData = await authData.json();
+              console.log('Auth user data for email search:', userData);
+              
+              if (userData.user?.email) {
+                voter = voters.find(v => v.email === userData.user.email);
+                console.log('Found voter by email:', voter);
+              }
+            }
+          } catch (emailError) {
+            console.warn('Could not fetch user email:', emailError);
+          }
+        }
+        
+        if (!voter) {
+          // Try finding by student ID if available
+          try {
+            const authData = await fetch('http://localhost:3001/auth/status', { credentials: 'include' });
+            if (authData.ok) {
+              const userData = await authData.json();
+              console.log('Auth user data for student ID search:', userData);
+              
+              if (userData.user?.studentId) {
+                voter = voters.find(v => v.studentId === userData.user.studentId);
+                console.log('Found voter by student ID:', voter);
+              }
+            }
+          } catch (studentIdError) {
+            console.warn('Could not fetch user student ID:', studentIdError);
+          }
+        }
+        
+        // Try type conversion if still not found
+        if (!voter) {
+          console.log('Trying type conversion search...');
+          voter = voters.find(v => String(v.id) === String(userId));
+          console.log('Type conversion search result:', voter);
+        }
+        
+        if (!voter) {
+          // Try finding by exact string match
+          voter = voters.find(v => v.id === userIdString);
+          console.log('String match search result:', voter);
+        }
+        
+        if (!voter) {
+          // Try finding by exact number match
+          voter = voters.find(v => v.id === userIdNumber);
+          console.log('Number match search result:', voter);
+        }
+        
+        // Try direct API call to get voter by ID
+        if (!voter) {
+          try {
+            console.log('Trying direct API call to get voter by ID:', userId);
+            const directVoterResponse = await fetch(`http://localhost:3001/voters/${userId}`, { credentials: 'include' });
+            console.log('Direct voter API response status:', directVoterResponse.status);
+            
+            if (directVoterResponse.ok) {
+              const directVoter = await directVoterResponse.json();
+              console.log('Direct voter API response:', directVoter);
+              
+              // Check if this voter exists in our voters list
+              const voterInList = voters.find(v => v.id === directVoter.id);
+              console.log('Voter found in list via direct API:', voterInList);
+              
+              if (voterInList) {
+                voter = voterInList;
+                console.log('Using voter from direct API call');
+              }
+            }
+          } catch (directError) {
+            console.warn('Direct voter API call failed:', directError);
+          }
+        }
+        
+        if (!voter) {
+          console.error('Voter not found in voters list. User ID:', userId);
+          console.error('Available voters:', voters.map(v => ({ 
+            id: v.id, 
+            idType: typeof v.id, 
+            name: v.name, 
+            studentId: v.studentId, 
+            email: v.email 
+          })));
+          setError('Your account was not found in the voters list. Please contact an administrator.');
+          setLoading(false);
+          return;
+        }
+        
         setUser(voter);
         setHasVoted(voter?.hasVoted);
       } catch (error) {
         console.error('Error fetching vote data:', error);
+        
+        // Provide more specific error messages
+        if (error.response?.status === 404) {
+          if (error.config?.url?.includes('/ballot')) {
+            setError('No ballot data found for this election. The election may not have positions or candidates assigned yet.');
+          } else {
+            setError('Election data not found. Please check if the election is properly configured.');
+          }
+        } else if (error.response?.status === 401) {
+          setError('Authentication failed. Please log in again.');
+        } else if (error.response?.status === 403) {
+          setError('Access denied. You may not have permission to view this election.');
+        } else {
+          setError('Failed to load election data. Please try again or contact support.');
+        }
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, [activeElection?.id]);
+  }, [activeElection, triggerImmediateRefresh]);
 
   const handleSelect = (positionId, candidateId) => {
     const currentPosition = positions.find(p => p.id === positionId);
@@ -139,32 +408,59 @@ const Vote = () => {
       return;
     }
     
+    if (!electionToUse || !electionToUse.id) {
+      setError('Election information not found. Please refresh the page and try again.');
+      return;
+    }
+    
     const voterId = user.id; // This is the voter's ID from the voters table
     const studentId = user.studentId;
     
     try {
+      console.log('Starting vote submission with election:', electionToUse);
+      console.log('User data:', user);
+      console.log('Selected votes:', selectedVotes);
+      
       // Submit votes for all positions
       const positionsToVote = positions.filter(pos => selectedVotes[pos.id] && selectedVotes[pos.id].length > 0);
       let voteCount = 0;
       const totalVotes = positionsToVote.reduce((total, pos) => total + selectedVotes[pos.id].length, 0);
       
+      console.log('Positions to vote:', positionsToVote);
+      console.log('Total votes to submit:', totalVotes);
+      
       for (let i = 0; i < positionsToVote.length; i++) {
         const pos = positionsToVote[i];
         const candidateIds = selectedVotes[pos.id];
         
+        console.log(`Processing position ${pos.id} (${pos.name}) with ${candidateIds.length} candidates`);
+        
         for (let j = 0; j < candidateIds.length; j++) {
           const candidateId = candidateIds[j];
           voteCount++;
-          const isLastVote = voteCount === totalVotes;
           
-          console.log(`Submitting vote: voterId=${voterId}, candidateId=${candidateId}, isLastVote=${isLastVote}`);
+          const voteData = {
+            voterId: String(voterId), // Ensure voterId is a string
+            candidateId: String(candidateId), // Ensure candidateId is a string
+            electionId: String(electionToUse.id), // Ensure electionId is a string
+            positionId: String(pos.id) // Ensure positionId is a string
+          };
           
-          await createVote({
-            voterId: voterId, // Use the correct voter ID
-            candidateId,
-            positionId: pos.id, // Add the position ID
-            isLastVote: isLastVote
+          console.log(`Submitting vote ${voteCount}/${totalVotes}:`, voteData);
+          console.log(`Vote data types:`, {
+            voterId: typeof voteData.voterId,
+            candidateId: typeof voteData.candidateId,
+            electionId: typeof voteData.electionId,
+            positionId: typeof voteData.positionId
           });
+          
+          try {
+            await createVote(voteData);
+            console.log(`Vote ${voteCount} submitted successfully`);
+          } catch (voteError) {
+            console.error(`Failed to submit vote ${voteCount}:`, voteError);
+            throw voteError; // Re-throw to stop the process
+          }
         }
       }
       
@@ -174,7 +470,21 @@ const Vote = () => {
       setShowFinalScreen(true);
     } catch (err) {
       console.error('Vote submission error:', err);
-      setError(err.response?.data?.error || 'Failed to submit votes');
+      console.error('Error response data:', err.response?.data);
+      console.error('Error response status:', err.response?.status);
+      console.error('Error response headers:', err.response?.headers);
+      
+      // Try to get more detailed error information
+      let errorMessage = 'Failed to submit votes';
+      if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      } else if (err.response?.data?.error) {
+        errorMessage = err.response.data.error;
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
+      setError(errorMessage);
     } finally {
       setSubmitting(false);
     }
@@ -234,8 +544,10 @@ const Vote = () => {
         <div className="alert alert-danger text-center">
           <i className="fas fa-exclamation-triangle fa-2x mb-3"></i>
           <h4>User Not Found</h4>
-          <p>Your account was not found in the voters list.</p>
-          <p className="mb-0">Please contact an administrator to register you as a voter.</p>
+          <div className="error-message-content">
+            <p className="mb-2">Your account was not found in the voters list.</p>
+            <p className="mb-0">Please contact an administrator to register you as a voter.</p>
+          </div>
         </div>
       </div>
     );
@@ -330,8 +642,18 @@ const Vote = () => {
           }
         </p>
 
-        {error && <div className="alert alert-danger">{error}</div>}
-        {success && <div className="alert alert-success">{success}</div>}
+        {error && (
+          <div className="alert alert-danger vote-inline-error">
+            <i className="fas fa-exclamation-triangle me-2"></i>
+            {error}
+          </div>
+        )}
+        {success && (
+          <div className="alert alert-success vote-inline-success">
+            <i className="fas fa-check-circle me-2"></i>
+            {success}
+          </div>
+        )}
 
         <div className="vote-candidates-grid">
           {getCurrentCandidates().map((candidate, index) => (
@@ -601,7 +923,12 @@ const Vote = () => {
                   onChange={(e) => setIdConfirmation(e.target.value)}
                   style={{ textTransform: 'uppercase' }}
                 />
-                {error && <div className="alert alert-danger mt-2">{error}</div>}
+                {error && (
+                  <div className="alert alert-danger mt-2 vote-modal-error">
+                    <i className="fas fa-exclamation-triangle me-2"></i>
+                    {error}
+                  </div>
+                )}
               </div>
               <div className="vote-confirmation-summary">
                 <h5>Final Vote Summary:</h5>

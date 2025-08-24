@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { userLogin } from '../../services/api';
-import { storeUserData, storeRole, getStoredRole } from '../../services/auth';
+import { storeUserData, storeRole, getStoredRole, clearUserData } from '../../services/auth';
+import io from 'socket.io-client';
 import './UserLogin.css';
 
 const UserLogin = () => {
@@ -9,7 +10,76 @@ const UserLogin = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [socket, setSocket] = useState(null);
   const navigate = useNavigate();
+
+  // WebSocket connection setup
+  useEffect(() => {
+    console.log('🔌 [UserLogin] Setting up WebSocket connection...');
+    const newSocket = io('http://localhost:3001', {
+      withCredentials: true,
+      transports: ['websocket', 'polling'],
+      timeout: 20000,
+      forceNew: true,
+    });
+
+    newSocket.on('connect', () => {
+      console.log('🔌 [UserLogin] WebSocket connected:', newSocket.id);
+    });
+
+    newSocket.on('disconnect', () => {
+      console.log('🔌 [UserLogin] WebSocket disconnected');
+    });
+
+    newSocket.on('connect_error', (error) => {
+      console.error('❌ [UserLogin] WebSocket connection error:', error);
+    });
+
+    // Test event listeners
+    newSocket.on('test-event', (data) => {
+      console.log('🧪 [UserLogin] Test event received:', data);
+    });
+
+    newSocket.on('test-response', (data) => {
+      console.log('🧪 [UserLogin] Test response received:', data);
+    });
+
+    // Election status update listeners
+    newSocket.on('election-status-updated', (data) => {
+      console.log('🗳️ [UserLogin] Election status updated:', data);
+      // Show notification to user about status change
+      const statusMessages = {
+        'active': '🗳️ Voting is now OPEN! You can cast your vote.',
+        'paused': '⏸️ Voting has been PAUSED temporarily.',
+        'stopped': '⏹️ Voting has been STOPPED.',
+        'ended': '✅ Voting has ENDED. Results are now available.',
+        'draft': '📝 Election is in DRAFT mode.'
+      };
+      
+      const message = statusMessages[data.status] || `Election status changed to: ${data.status}`;
+      console.log('📢 Status Update:', message);
+    });
+
+    // Listen for new elections being created
+    newSocket.on('election-created', (data) => {
+      console.log('🆕 [UserLogin] New election created:', data);
+    });
+
+    // Listen for election updates
+    newSocket.on('election-updated', (data) => {
+      console.log('🔄 [UserLogin] Election updated:', data);
+    });
+
+    setSocket(newSocket);
+
+    return () => {
+      console.log('🧹 [UserLogin] Cleaning up WebSocket connection...');
+      if (newSocket.connected) {
+        newSocket.disconnect();
+      }
+    };
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -18,10 +88,17 @@ const UserLogin = () => {
     try {
       const res = await userLogin(studentId, password);
       
-      // Store user data in localStorage for navigation purposes
-      // Token is stored in HTTP-only cookie automatically
+      // Clear any existing data and store user data securely
+      clearUserData();
       storeUserData(res.voter, 'user');
       storeRole('user');
+      
+      // Store userId in localStorage for fallback access
+      if (res.voter && res.voter.id) {
+        localStorage.setItem('userId', res.voter.id);
+        console.log('User ID stored in localStorage:', res.voter.id);
+      }
+      
       console.log('User login successful, role: user');
       
       // Debug: Check if role was stored correctly
@@ -82,6 +159,39 @@ const UserLogin = () => {
       <div className="user-login-right-panel">
         <form className="user-login-form card-shadow" onSubmit={handleSubmit}>
           <h2>User Login</h2>
+          
+          {/* WebSocket Test Button */}
+          <div className="d-flex justify-content-end mb-3">
+            <button
+              type="button"
+              className="btn btn-outline-info btn-sm"
+              onClick={() => {
+                console.log('🧪 [UserLogin] Test button clicked');
+                console.log('🔌 Socket state:', {
+                  exists: !!socket,
+                  connected: socket?.connected,
+                  id: socket?.id,
+                  readyState: socket?.readyState
+                });
+                if (socket && socket.connected) {
+                  console.log('🧪 [UserLogin] Sending test WebSocket request...');
+                  socket.emit('test-websocket');
+                  setError(''); // Clear any existing errors
+                  setError('Test WebSocket request sent! Check console for response.');
+                  setTimeout(() => setError(''), 3000);
+                } else {
+                  console.error('❌ [UserLogin] WebSocket not connected');
+                  setError('WebSocket not connected');
+                  setTimeout(() => setError(''), 3000);
+                }
+              }}
+              title="Test WebSocket Connection"
+            >
+              <i className="fas fa-wifi me-1"></i>
+              Test WebSocket
+            </button>
+          </div>
+          
           {error && <div className="user-login-error">{error}</div>}
           <div className="user-login-field">
             <label htmlFor="studentId">Student ID</label>
@@ -97,14 +207,23 @@ const UserLogin = () => {
           </div>
           <div className="user-login-field">
             <label htmlFor="password">Password</label>
-            <input
-              type="password"
-              id="password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              autoComplete="current-password"
-              required
-            />
+            <div className="password-input-group">
+              <input
+                type={showPassword ? "text" : "password"}
+                id="password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                autoComplete="current-password"
+                required
+              />
+              <button
+                type="button"
+                className="password-toggle-btn"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                <i className={`fas fa-${showPassword ? 'eye-slash' : 'eye'}`}></i>
+              </button>
+            </div>
             <div className="forgot-password-link">
               <button
                 type="button"

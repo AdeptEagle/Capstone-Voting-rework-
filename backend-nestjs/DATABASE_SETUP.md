@@ -90,10 +90,8 @@ JWT_SECRET=your-super-secret-jwt-key-here
 JWT_EXPIRES_IN=24h
 
 # Email Configuration (for password reset)
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=your-email@gmail.com
-SMTP_PASS=your-app-password
+GMAIL_USER=your-email@gmail.com
+GMAIL_PASSWORD=your-gmail-password
 ```
 
 ### 3. Create Database

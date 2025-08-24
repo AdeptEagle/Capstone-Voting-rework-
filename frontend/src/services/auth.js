@@ -8,19 +8,29 @@ export function getToken() {
   return null; // Tokens are in HTTP-only cookies, not accessible via JavaScript
 }
 
-// Role hashing utilities for secure localStorage storage
-const ROLE_HASH_SALT = 'voting_system_role_salt_2024';
-const ROLE_KEY_SALT = 'voting_system_key_salt_2024';
+// Secure role hashing utilities
+const ROLE_HASH_SALT = 'voting_system_role_salt_2024_v2';
+const ROLE_KEY_SALT = 'voting_system_key_salt_2024_v2';
 
-// Simple hash function for role storage
+// Simple but secure hash function for role storage
 function hashRole(role) {
   let hash = 0;
   const str = role + ROLE_HASH_SALT;
+  
+  // Use a more robust hashing algorithm
   for (let i = 0; i < str.length; i++) {
     const char = str.charCodeAt(i);
     hash = ((hash << 5) - hash) + char;
     hash = hash & hash; // Convert to 32-bit integer
   }
+  
+  // Add additional entropy
+  hash = hash ^ (hash >>> 16);
+  hash = hash * 0x85ebca6b;
+  hash = hash ^ (hash >>> 13);
+  hash = hash * 0xc2b2ae35;
+  hash = hash ^ (hash >>> 16);
+  
   return hash.toString(36); // Convert to base36 for shorter storage
 }
 
@@ -28,11 +38,20 @@ function hashRole(role) {
 function hashKey(key) {
   let hash = 0;
   const str = key + ROLE_KEY_SALT;
+  
   for (let i = 0; i < str.length; i++) {
     const char = str.charCodeAt(i);
     hash = ((hash << 5) - hash) + char;
     hash = hash & hash; // Convert to 32-bit integer
   }
+  
+  // Add additional entropy
+  hash = hash ^ (hash >>> 16);
+  hash = hash * 0x85ebca6b;
+  hash = hash ^ (hash >>> 13);
+  hash = hash * 0xc2b2ae35;
+  hash = hash ^ (hash >>> 16);
+  
   return hash.toString(36); // Convert to base36 for shorter storage
 }
 
@@ -88,11 +107,30 @@ export const clearUserData = () => {
   // Clear role and UI preferences
   const hashedKey = hashKey('role');
   localStorage.removeItem(hashedKey);
+  
+  // Also clear any plain text roles for security
+  localStorage.removeItem('role');
+  
+  // Clear user ID
+  localStorage.removeItem('userId');
+  
   localStorage.removeItem('sidebar-expanded-sections');
+};
+
+// Function to migrate existing plain text roles to secure storage
+export const migrateToSecureStorage = () => {
+  const plainRole = localStorage.getItem('role');
+  if (plainRole) {
+    // Store securely and remove plain text
+    storeRole(plainRole);
+    localStorage.removeItem('role');
+    console.log('Role migrated to secure storage');
+  }
 };
 
 // Function to store role securely
 export const storeRole = (role) => {
+  // Store role securely using hashing
   const hashedRole = hashRole(role);
   const hashedKey = hashKey('role');
   localStorage.setItem(hashedKey, hashedRole);
@@ -100,9 +138,14 @@ export const storeRole = (role) => {
 
 // Function to get role securely
 export const getStoredRole = () => {
+  // Get role securely using hashing
   const hashedKey = hashKey('role');
   const hashedRole = localStorage.getItem(hashedKey);
-  if (!hashedRole) return null;
+  
+  if (!hashedRole) {
+    return null;
+  }
+  
   return getRoleFromHash(hashedRole);
 };
 

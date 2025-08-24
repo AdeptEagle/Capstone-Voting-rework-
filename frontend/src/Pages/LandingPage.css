@@ -46,10 +46,6 @@
   margin-bottom: 1.5rem;
   font-size: 2.5rem;
   font-weight: 800;
-  background: linear-gradient(135deg, var(--primary-navy), var(--accent-steel));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
   letter-spacing: -1px;
 }
 .landing-btn-group {

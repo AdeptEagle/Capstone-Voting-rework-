@@ -33,6 +33,9 @@ const Candidates = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortField, setSortField] = useState('name');
   const [sortOrder, setSortOrder] = useState('asc');
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [candidateToDelete, setCandidateToDelete] = useState(null);
+  const [successMessage, setSuccessMessage] = useState('');
 
   const role = checkCurrentUser().role;
   const { canViewCandidates, hasActiveElection, triggerImmediateRefresh } = useElection();
@@ -189,22 +192,21 @@ const Candidates = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Validate required fields - Department and Course are required for non-admin users
-    if (role !== 'ADMIN' && role !== 'SUPERADMIN') {
-      if (!formData.departmentId) {
-        setError('Please select a department');
-        return;
-      }
-      
-      if (!formData.courseId) {
-        setError('Please select a course');
-        return;
-      }
+    // Validate required fields - Department and Course are now required for all users
+    if (!formData.departmentId) {
+      setError('Please select a department');
+      return;
+    }
+    
+    if (!formData.courseId) {
+      setError('Please select a course');
+      return;
     }
     
     try {
       let dataToSend;
       if (photoFile) {
+        // New photo file selected - use FormData
         dataToSend = new FormData();
         dataToSend.append('name', formData.name);
         dataToSend.append('email', formData.email);
@@ -215,12 +217,15 @@ const Candidates = () => {
         dataToSend.append('manifesto', formData.manifesto);
         dataToSend.append('photo', photoFile);
       } else {
+        // No new photo file - use JSON data
         dataToSend = { ...formData };
-        // Remove photo field if no photo is selected (don't send undefined)
-        delete dataToSend.photo;
+        
         // If editing and no new photo selected, preserve the existing photo URL
-        if (editingCandidate && !photoFile && editingCandidate.photo) {
+        if (editingCandidate && editingCandidate.photo) {
           dataToSend.photo = editingCandidate.photo;
+        } else {
+          // Remove photo field if no existing photo and no new photo
+          delete dataToSend.photo;
         }
       }
       
@@ -268,15 +273,42 @@ const Candidates = () => {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this candidate?')) {
-      try {
-        await deleteCandidate(id);
-        fetchData();
-      } catch (error) {
-        console.error('Error deleting candidate:', error);
+    try {
+      await deleteCandidate(id);
+      // Clear any existing errors
+      setError('');
+      
+      // Show success message about trash bin
+      setSuccessMessage(`Candidate "${candidateToDelete?.name}" has been moved to the trash bin. You can restore it later or permanently delete it from the Trash Bin page.`);
+      
+      // Refresh the data to get updated list
+      await fetchData();
+      // Close modal and reset state
+      setShowDeleteModal(false);
+      setCandidateToDelete(null);
+      
+      // Clear success message after 8 seconds
+      setTimeout(() => setSuccessMessage(''), 8000);
+    } catch (error) {
+      console.error('Error deleting candidate:', error);
+      
+      // Handle specific error cases
+      if (error.response?.status === 404) {
+        // Candidate was already deleted or doesn't exist
+        // Refresh the list to get current data
+        await fetchData();
+        setShowDeleteModal(false);
+        setCandidateToDelete(null);
+        setError('Candidate was already deleted or not found');
+      } else {
         setError('Failed to delete candidate');
       }
     }
+  };
+
+  const openDeleteModal = (candidate) => {
+    setCandidateToDelete(candidate);
+    setShowDeleteModal(true);
   };
 
   // Helper to get correct candidate photo URL
@@ -453,7 +485,7 @@ const Candidates = () => {
         {/* Enhanced View Candidate Modal */}
         {viewCandidate && (
           <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-            <div className="modal-dialog modal-dialog-centered modal-xl">
+            <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: '1000px', width: '90%' }}>
               <div className="modal-content">
                 <div className="modal-header">
                   <div className="modal-candidate-info">
@@ -484,145 +516,97 @@ const Candidates = () => {
                   ></button>
                 </div>
                 <div className="modal-body">
-                  <div className="row">
-                    {/* Main Content */}
-                    <div className="col-lg-8">
-                      {/* Platform & Vision Section */}
-                      <div className="candidate-platform mb-4">
-                        <div className="platform-header">
-                          <i className="fas fa-bullhorn"></i>
-                          <h5>Platform & Vision</h5>
-                        </div>
-                        <div className="platform-content">
-                          {viewCandidate?.description ? (
-                            <div className="platform-text">
-                              {viewCandidate.description.split('\n').map((paragraph, index) => (
-                                <p key={index}>{paragraph}</p>
-                              ))}
-                            </div>
-                          ) : (
-                            <div className="no-platform">
-                              <i className="fas fa-info-circle"></i>
-                              <p>No platform information available yet.</p>
-                            </div>
-                          )}
-                        </div>
+                  {/* Full-width content layout */}
+                  <div className="candidate-content-full">
+                    {/* Platform & Vision Section */}
+                    <div className="candidate-platform mb-4">
+                      <div className="platform-header">
+                        <i className="fas fa-bullhorn"></i>
+                        <h5>Platform & Vision</h5>
                       </div>
-
-                      {/* Key Priorities Section */}
-                      <div className="candidate-priorities mb-4">
-                        <div className="priorities-header">
-                          <i className="fas fa-target"></i>
-                          <h5>Key Priorities</h5>
-                        </div>
-                        <div className="priorities-content">
-                          <div className="priority-item">
-                            <i className="fas fa-star text-warning"></i>
-                            <span>Transparency and Accountability</span>
+                      <div className="platform-content">
+                        {viewCandidate?.manifesto ? (
+                          <div className="platform-text">
+                            {viewCandidate.manifesto.split('\n').map((paragraph, index) => (
+                              <p key={index}>{paragraph}</p>
+                            ))}
                           </div>
-                          <div className="priority-item">
-                            <i className="fas fa-star text-warning"></i>
-                            <span>Community Engagement</span>
+                        ) : (
+                          <div className="no-platform">
+                            <i className="fas fa-info-circle"></i>
+                            <p>No platform information available yet.</p>
                           </div>
-                          <div className="priority-item">
-                            <i className="fas fa-star text-warning"></i>
-                            <span>Innovation and Progress</span>
-                          </div>
-                        </div>
+                        )}
                       </div>
                     </div>
 
-                    {/* Sidebar */}
-                    <div className="col-lg-4">
-                      {/* Candidate Details */}
-                      <div className="candidate-details-card mb-4">
-                        <div className="card">
-                          <div className="card-header">
-                            <h6><i className="fas fa-user-circle me-2"></i>Candidate Details</h6>
+                    {/* Candidate Details Section - Now below the main content */}
+                    <div className="candidate-details-section">
+                      <div className="row">
+                        <div className="col-md-6">
+                          <div className="candidate-details-card mb-4">
+                            <div className="card">
+                              <div className="card-header">
+                                <h6><i className="fas fa-user-circle me-2"></i>Candidate Details</h6>
+                              </div>
+                              <div className="card-body">
+                                <div className="detail-item">
+                                  <i className="fas fa-id-card"></i>
+                                  <span><strong>Position:</strong> {viewCandidate?.position?.title || 'Not specified'}</span>
+                                </div>
+                                <div className="detail-item">
+                                  <i className="fas fa-user"></i>
+                                  <span><strong>Name:</strong> {viewCandidate?.name}</span>
+                                </div>
+                                {(viewCandidate?.department?.name || viewCandidate?.course?.id) && (
+                                  <div className="detail-item">
+                                    <i className="fas fa-university"></i>
+                                    <span><strong>Department:</strong> {viewCandidate?.department?.name || 'Not specified'}</span>
+                                  </div>
+                                )}
+                                {viewCandidate?.course?.id && (
+                                  <div className="detail-item">
+                                    <i className="fas fa-graduation-cap"></i>
+                                    <span><strong>Course:</strong> {viewCandidate?.course?.id}</span>
+                                  </div>
+                                )}
+                                <div className="detail-item">
+                                  <i className="fas fa-calendar-alt"></i>
+                                  <span><strong>Registration Date:</strong> {new Date().toLocaleDateString()}</span>
+                                </div>
+                                <div className="detail-item">
+                                  <i className="fas fa-check-circle"></i>
+                                  <span><strong>Status:</strong> <span className="text-success">Active</span></span>
+                                </div>
+                              </div>
+                            </div>
                           </div>
-                          <div className="card-body">
-                            <div className="detail-item">
-                              <i className="fas fa-id-card"></i>
-                              <span><strong>Position:</strong> {viewCandidate?.positionName}</span>
-                            </div>
-                            <div className="detail-item">
-                              <i className="fas fa-user"></i>
-                              <span><strong>Name:</strong> {viewCandidate?.name}</span>
-                            </div>
-                            {(viewCandidate?.departmentName || viewCandidate?.courseName) && (
-                              <div className="detail-item">
-                                <i className="fas fa-university"></i>
-                                <span><strong>Department:</strong> {viewCandidate?.departmentName || 'Not specified'}</span>
+                        </div>
+                        
+                        <div className="col-md-6">
+                          <div className="campaign-stats-card mb-4">
+                            <div className="card">
+                              <div className="card-header">
+                                <h6><i className="fas fa-chart-bar me-2"></i>Campaign Statistics</h6>
                               </div>
-                            )}
-                            {viewCandidate?.courseName && (
-                              <div className="detail-item">
-                                <i className="fas fa-graduation-cap"></i>
-                                <span><strong>Course:</strong> {viewCandidate?.courseName}</span>
+                              <div className="card-body">
+                                <div className="stat-item">
+                                  <div className="stat-number">0</div>
+                                  <div className="stat-label">Total Votes</div>
+                                </div>
+                                <div className="stat-item">
+                                  <div className="stat-number">0%</div>
+                                  <div className="stat-label">Vote Share</div>
+                                </div>
+                                <div className="stat-item">
+                                  <div className="stat-number">0</div>
+                                  <div className="stat-label">Endorsements</div>
+                                </div>
                               </div>
-                            )}
-                            <div className="detail-item">
-                              <i className="fas fa-calendar-alt"></i>
-                              <span><strong>Registration Date:</strong> {new Date().toLocaleDateString()}</span>
-                            </div>
-                            <div className="detail-item">
-                              <i className="fas fa-check-circle"></i>
-                              <span><strong>Status:</strong> <span className="text-success">Active</span></span>
                             </div>
                           </div>
                         </div>
                       </div>
-
-                      {/* Campaign Statistics */}
-                      <div className="campaign-stats-card mb-4">
-                        <div className="card">
-                          <div className="card-header">
-                            <h6><i className="fas fa-chart-bar me-2"></i>Campaign Statistics</h6>
-                          </div>
-                          <div className="card-body">
-                            <div className="stat-item">
-                              <div className="stat-number">0</div>
-                              <div className="stat-label">Total Votes</div>
-                            </div>
-                            <div className="stat-item">
-                              <div className="stat-number">0%</div>
-                              <div className="stat-label">Vote Share</div>
-                            </div>
-                            <div className="stat-item">
-                              <div className="stat-number">0</div>
-                              <div className="stat-label">Endorsements</div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Quick Actions - Only for Admins */}
-                      {(role === 'admin' || role === 'superadmin') && (
-                        <div className="quick-actions-card">
-                          <div className="card">
-                            <div className="card-header">
-                              <h6><i className="fas fa-bolt me-2"></i>Quick Actions</h6>
-                            </div>
-                            <div className="card-body">
-                              <button 
-                                className="btn btn-outline-primary btn-sm w-100 mb-2"
-                                onClick={() => {
-                                  setViewCandidate(null);
-                                  handleShowModal(viewCandidate);
-                                }}
-                              >
-                                <i className="fas fa-edit me-2"></i>Edit Candidate
-                              </button>
-                              <button className="btn btn-outline-info btn-sm w-100 mb-2">
-                                <i className="fas fa-share me-2"></i>Share Profile
-                              </button>
-                              <button className="btn btn-outline-success btn-sm w-100">
-                                <i className="fas fa-download me-2"></i>Export Details
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      )}
                     </div>
                   </div>
                 </div>
@@ -687,6 +671,27 @@ const Candidates = () => {
       </div>
 
       {error && <div className="alert alert-danger">{error}</div>}
+      
+      {/* Success Message */}
+      {successMessage && (
+        <div className="alert alert-success alert-dismissible fade show mb-3" role="alert">
+          <i className="fas fa-trash-alt me-2"></i>
+          {successMessage}
+          <div className="mt-2">
+            <a href="/trash-bin?tab=candidates" className="btn btn-sm btn-outline-success me-2">
+              <i className="fas fa-trash me-1"></i>
+              Go to Trash Bin
+            </a>
+            <button
+              type="button"
+              className="btn btn-sm btn-outline-secondary"
+              onClick={() => setSuccessMessage('')}
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="d-flex flex-wrap align-items-center mb-3 gap-2">
         <input
@@ -733,7 +738,10 @@ const Candidates = () => {
                 Course {renderSortIcon('courseName')}
               </th>
               <th>Description</th>
-              <th>Actions</th>
+              <th style={{ textAlign: 'center' }}>
+                <i className="fas fa-cogs me-1"></i>
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -766,24 +774,29 @@ const Candidates = () => {
                   <td>{candidate.course?.id || '-'}</td>
                   <td>{candidate.manifesto || '-'}</td>
                   <td>
-                    <button 
-                      className="btn btn-sm btn-outline-primary me-2"
-                      onClick={() => handleShowModal(candidate)}
-                    >
-                      Edit
-                    </button>
-                    <button 
-                      className="btn btn-sm btn-outline-danger me-2"
-                      onClick={() => handleDelete(candidate.id)}
-                    >
-                      Delete
-                    </button>
-                    <button 
-                      className="btn btn-sm btn-outline-info"
-                      onClick={() => setViewCandidate(candidate)}
-                    >
-                      View
-                    </button>
+                    <div className="candidate-actions">
+                      <button 
+                        className="btn btn-sm btn-outline-primary me-2 action-btn-icon"
+                        onClick={() => handleShowModal(candidate)}
+                        title="Edit Candidate"
+                      >
+                        <i className="fas fa-edit"></i>
+                      </button>
+                      <button 
+                        className="btn btn-sm btn-outline-danger me-2 action-btn-icon"
+                        onClick={() => openDeleteModal(candidate)}
+                        title="Delete Candidate"
+                      >
+                        <i className="fas fa-trash"></i>
+                      </button>
+                      <button 
+                        className="btn btn-sm btn-outline-info action-btn-icon"
+                        onClick={() => setViewCandidate(candidate)}
+                        title="View Candidate Details"
+                      >
+                        <i className="fas fa-eye"></i>
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))
@@ -799,7 +812,7 @@ const Candidates = () => {
       {/* Enhanced View Candidate Modal */}
       {viewCandidate && (
         <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="modal-dialog modal-dialog-centered modal-xl">
+          <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: '1000px', width: '90%' }}>
             <div className="modal-content">
               <div className="modal-header">
                 <div className="modal-candidate-info">
@@ -814,7 +827,7 @@ const Candidates = () => {
                     </div>
                   <div className="modal-candidate-details">
                     <h4 className="modal-candidate-name">{viewCandidate?.name}</h4>
-                    <p className="modal-position">{viewCandidate?.positionName}</p>
+                    <p className="modal-position">{viewCandidate?.position?.title || 'Position not specified'}</p>
                     <div className="candidate-status">
                       <span className="badge bg-success">
                         <i className="fas fa-check-circle me-1"></i>
@@ -830,134 +843,94 @@ const Candidates = () => {
                 ></button>
               </div>
               <div className="modal-body">
-                <div className="row">
-                  {/* Main Content */}
-                  <div className="col-lg-8">
-                    {/* Platform & Vision Section */}
-                    <div className="candidate-platform mb-4">
-                      <div className="platform-header">
-                        <i className="fas fa-bullhorn"></i>
-                        <h5>Platform & Vision</h5>
-                      </div>
-                      <div className="platform-content">
-                        {viewCandidate?.description ? (
-                          <div className="platform-text">
-                            {viewCandidate.description.split('\n').map((paragraph, index) => (
-                              <p key={index}>{paragraph}</p>
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="no-platform">
-                            <i className="fas fa-info-circle"></i>
-                            <p>No platform information available yet.</p>
-                          </div>
-                        )}
-                      </div>
+                {/* Full-width content layout */}
+                <div className="candidate-content-full">
+                  {/* Platform & Vision Section */}
+                  <div className="candidate-platform mb-4">
+                    <div className="platform-header">
+                      <i className="fas fa-bullhorn"></i>
+                      <h5>Platform & Vision</h5>
                     </div>
-
-                    {/* Key Priorities Section */}
-                    <div className="candidate-priorities mb-4">
-                      <div className="priorities-header">
-                        <i className="fas fa-target"></i>
-                        <h5>Key Priorities</h5>
-                      </div>
-                      <div className="priorities-content">
-                        <div className="priority-item">
-                          <i className="fas fa-star text-warning"></i>
-                          <span>Transparency and Accountability</span>
+                    <div className="platform-content">
+                      {viewCandidate?.manifesto ? (
+                        <div className="platform-text">
+                          {viewCandidate.manifesto.split('\n').map((paragraph, index) => (
+                            <p key={index}>{paragraph}</p>
+                          ))}
                         </div>
-                        <div className="priority-item">
-                          <i className="fas fa-star text-warning"></i>
-                          <span>Community Engagement</span>
+                      ) : (
+                        <div className="no-platform">
+                          <i className="fas fa-info-circle"></i>
+                          <p>No platform information available yet.</p>
                         </div>
-                        <div className="priority-item">
-                          <i className="fas fa-star text-warning"></i>
-                          <span>Innovation and Progress</span>
-                        </div>
-                      </div>
+                      )}
                     </div>
                   </div>
 
-                  {/* Sidebar */}
-                  <div className="col-lg-4">
-                    {/* Candidate Details */}
-                    <div className="candidate-details-card mb-4">
-                      <div className="card">
-                        <div className="card-header">
-                          <h6><i className="fas fa-user-circle me-2"></i>Candidate Details</h6>
-                        </div>
-                        <div className="card-body">
-                          <div className="detail-item">
-                            <i className="fas fa-id-card"></i>
-                            <span><strong>Position:</strong> {viewCandidate?.positionName}</span>
-                          </div>
-                          <div className="detail-item">
-                            <i className="fas fa-user"></i>
-                            <span><strong>Name:</strong> {viewCandidate?.name}</span>
-                          </div>
-                          {(viewCandidate?.departmentName || viewCandidate?.courseName) && (
-                            <div className="detail-item">
-                              <i className="fas fa-university"></i>
-                              <span><strong>Department:</strong> {viewCandidate?.departmentName || 'Not specified'}</span>
+                  {/* Candidate Details Section - Now below the main content */}
+                  <div className="candidate-details-section">
+                    <div className="row">
+                      <div className="col-md-6">
+                        <div className="candidate-details-card mb-4">
+                          <div className="card">
+                            <div className="card-header">
+                              <h6><i className="fas fa-user-circle me-2"></i>Candidate Details</h6>
                             </div>
-                          )}
-                          {viewCandidate?.courseName && (
-                            <div className="detail-item">
-                              <i className="fas fa-graduation-cap"></i>
-                              <span><strong>Course:</strong> {viewCandidate?.courseName}</span>
+                            <div className="card-body">
+                              <div className="detail-item">
+                                <i className="fas fa-id-card"></i>
+                                <span><strong>Position:</strong> {viewCandidate?.position?.title || 'Not specified'}</span>
+                              </div>
+                              <div className="detail-item">
+                                <i className="fas fa-user"></i>
+                                <span><strong>Name:</strong> {viewCandidate?.name}</span>
+                              </div>
+                              {(viewCandidate?.department?.name || viewCandidate?.course?.id) && (
+                                <div className="detail-item">
+                                  <i className="fas fa-university"></i>
+                                  <span><strong>Department:</strong> {viewCandidate?.department?.name || 'Not specified'}</span>
+                                </div>
+                              )}
+                              {viewCandidate?.course?.id && (
+                                <div className="detail-item">
+                                  <i className="fas fa-graduation-cap"></i>
+                                  <span><strong>Course:</strong> {viewCandidate?.course?.id}</span>
+                                </div>
+                              )}
+                              <div className="detail-item">
+                                <i className="fas fa-calendar-alt"></i>
+                                <span><strong>Registration Date:</strong> {new Date().toLocaleDateString()}</span>
+                              </div>
+                              <div className="detail-item">
+                                <i className="fas fa-check-circle"></i>
+                                <span><strong>Status:</strong> <span className="text-success">Active</span></span>
+                              </div>
                             </div>
-                          )}
-                          <div className="detail-item">
-                            <i className="fas fa-calendar-alt"></i>
-                            <span><strong>Registration Date:</strong> {new Date().toLocaleDateString()}</span>
-                          </div>
-                          <div className="detail-item">
-                            <i className="fas fa-check-circle"></i>
-                            <span><strong>Status:</strong> <span className="text-success">Active</span></span>
                           </div>
                         </div>
                       </div>
-                    </div>
-
-                    {/* Campaign Statistics */}
-                    <div className="campaign-stats-card mb-4">
-                      <div className="card">
-                        <div className="card-header">
-                          <h6><i className="fas fa-chart-bar me-2"></i>Campaign Statistics</h6>
-                        </div>
-                        <div className="card-body">
-                          <div className="stat-item">
-                            <div className="stat-number">0</div>
-                            <div className="stat-label">Total Votes</div>
+                      
+                      <div className="col-md-6">
+                        <div className="campaign-stats-card mb-4">
+                          <div className="card">
+                            <div className="card-header">
+                              <h6><i className="fas fa-chart-bar me-2"></i>Campaign Statistics</h6>
+                            </div>
+                            <div className="card-body">
+                              <div className="stat-item">
+                                <div className="stat-number">0</div>
+                                <div className="stat-label">Total Votes</div>
+                              </div>
+                              <div className="stat-item">
+                                <div className="stat-number">0%</div>
+                                <div className="stat-label">Vote Share</div>
+                              </div>
+                              <div className="stat-item">
+                                <div className="stat-number">0</div>
+                                <div className="stat-label">Endorsements</div>
+                              </div>
+                            </div>
                           </div>
-                          <div className="stat-item">
-                            <div className="stat-number">0%</div>
-                            <div className="stat-label">Vote Share</div>
-                          </div>
-                          <div className="stat-item">
-                            <div className="stat-number">0</div>
-                            <div className="stat-label">Endorsements</div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Quick Actions */}
-                    <div className="quick-actions-card">
-                      <div className="card">
-                        <div className="card-header">
-                          <h6><i className="fas fa-bolt me-2"></i>Quick Actions</h6>
-                        </div>
-                        <div className="card-body">
-                          <button className="btn btn-outline-primary btn-sm w-100 mb-2" onClick={() => handleShowModal(viewCandidate)}>
-                            <i className="fas fa-edit me-2"></i>Edit Candidate
-                          </button>
-                          <button className="btn btn-outline-info btn-sm w-100 mb-2">
-                            <i className="fas fa-share me-2"></i>Share Profile
-                          </button>
-                          <button className="btn btn-outline-success btn-sm w-100">
-                            <i className="fas fa-download me-2"></i>Export Details
-                          </button>
                         </div>
                       </div>
                     </div>
@@ -1053,7 +1026,7 @@ const Candidates = () => {
                   </div>
                   <div className="mb-3">
                     <label className="form-label">
-                      Department {role !== 'ADMIN' && role !== 'SUPERADMIN' ? '*' : ''}
+                      Department <span className="text-danger">*</span>
                     </label>
                     <select
                       className="form-select"
@@ -1063,7 +1036,7 @@ const Candidates = () => {
                         handleChange(e);
                         fetchCourses(e.target.value);
                       }}
-                      required={role !== 'ADMIN' && role !== 'SUPERADMIN'}
+                      required
                     >
                       <option value="">Select a department</option>
                       {departments.map(department => (
@@ -1073,14 +1046,12 @@ const Candidates = () => {
                       ))}
                     </select>
                     <small className="text-muted">
-                      {role !== 'ADMIN' && role !== 'SUPERADMIN' 
-                        ? 'Choose the department this candidate represents (required)' 
-                        : 'Choose the department this candidate represents (optional for admins)'}
+                      Choose the department this candidate represents (required)
                     </small>
                   </div>
                   <div className="mb-3">
                     <label className="form-label">
-                      Course {role !== 'ADMIN' && role !== 'SUPERADMIN' ? '*' : ''}
+                      Course <span className="text-danger">*</span>
                     </label>
                     <select
                       className="form-select"
@@ -1088,7 +1059,7 @@ const Candidates = () => {
                       value={formData.courseId}
                       onChange={handleChange}
                       disabled={!formData.departmentId || loadingCourses}
-                      required={role !== 'ADMIN' && role !== 'SUPERADMIN'}
+                      required
                     >
                       <option value="">Select a course</option>
                       {courses.map(course => (
@@ -1100,9 +1071,7 @@ const Candidates = () => {
                     <small className="text-muted">
                       {loadingCourses ? 'Loading courses...' : 
                        formData.departmentId 
-                         ? (role !== 'ADMIN' && role !== 'SUPERADMIN' 
-                             ? 'Choose the course this candidate represents (required)' 
-                             : 'Choose the course this candidate represents (optional for admins)')
+                         ? 'Choose the course this candidate represents (required)'
                          : 'Select a department first to choose a course'}
                     </small>
                   </div>
@@ -1149,6 +1118,68 @@ const Candidates = () => {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && candidateToDelete && (
+        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title text-danger">
+                  <i className="fas fa-exclamation-triangle me-2"></i>
+                  Confirm Deletion
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => {
+                    setShowDeleteModal(false);
+                    setCandidateToDelete(null);
+                  }}
+                ></button>
+              </div>
+              <div className="modal-body">
+                <div className="alert alert-danger">
+                  <strong>Warning:</strong> This action cannot be undone!
+                </div>
+                <p>Are you sure you want to delete this candidate?</p>
+                <div className="candidate-delete-info">
+                  <strong>Name:</strong> {candidateToDelete.name}<br />
+                  <strong>Position:</strong> {candidateToDelete.position?.title || 'N/A'}<br />
+                  <strong>Department:</strong> {candidateToDelete.department?.name || 'N/A'}<br />
+                  <strong>Course:</strong> {candidateToDelete.course?.id || 'N/A'}
+                </div>
+                <p className="text-muted mt-2">
+                  <small>
+                    <i className="fas fa-info-circle me-1"></i>
+                    The candidate will be moved to the trash and can be restored later.
+                  </small>
+                </p>
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => {
+                    setShowDeleteModal(false);
+                    setCandidateToDelete(null);
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-danger"
+                  onClick={() => handleDelete(candidateToDelete.id)}
+                >
+                  <i className="fas fa-trash me-1"></i>
+                  Delete Candidate
+                </button>
+              </div>
             </div>
           </div>
         </div>

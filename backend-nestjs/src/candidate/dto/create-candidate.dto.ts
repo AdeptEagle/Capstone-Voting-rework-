@@ -20,15 +20,13 @@ export class CreateCandidateDto {
   @IsString()
   positionId: string;
 
-  @ApiProperty({ description: 'Department ID', example: 'clx1234567890', required: false })
+  @ApiProperty({ description: 'Department ID (required)', example: 'clx1234567890' })
   @IsString()
-  @IsOptional()
-  departmentId?: string;
+  departmentId: string;
 
-  @ApiProperty({ description: 'Course ID', example: 'clx1234567890', required: false })
+  @ApiProperty({ description: 'Course ID (required)', example: 'clx1234567890' })
   @IsString()
-  @IsOptional()
-  courseId?: string;
+  courseId: string;
 
   @ApiProperty({ description: 'Candidate manifesto', example: 'I will work for student welfare', required: false })
   @IsString()

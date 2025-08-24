@@ -21,13 +21,11 @@ export class CreateVoterDto {
   @MinLength(6)
   password: string;
 
-  @ApiProperty({ description: 'Department ID (optional)' })
-  @IsOptional()
+  @ApiProperty({ description: 'Department ID (required)' })
   @IsString()
-  departmentId?: string;
+  departmentId: string;
 
-  @ApiProperty({ description: 'Course ID (optional)' })
-  @IsOptional()
+  @ApiProperty({ description: 'Course ID (required)' })
   @IsString()
-  courseId?: string;
+  courseId: string;
 } 

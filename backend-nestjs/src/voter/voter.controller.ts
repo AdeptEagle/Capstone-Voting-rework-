@@ -70,4 +70,21 @@ export class VoterController {
   async resetVoterVoteStatus(@Param('id') id: string) {
     return this.voterService.resetVoterVoteStatus(id);
   }
+
+  @Get(':id/password')
+  @ApiOperation({ summary: 'Get voter password (Admin only)' })
+  @ApiResponse({ status: 200, description: 'Voter password retrieved' })
+  @ApiResponse({ status: 404, description: 'Voter not found' })
+  @ApiResponse({ status: 403, description: 'Access denied' })
+  async getVoterPassword(@Param('id') id: string) {
+    return this.voterService.getVoterPassword(id);
+  }
+
+  @Put(':id/reset-password')
+  @ApiOperation({ summary: 'Reset voter password to student ID' })
+  @ApiResponse({ status: 200, description: 'Password reset successfully' })
+  @ApiResponse({ status: 404, description: 'Voter not found' })
+  async resetVoterPassword(@Param('id') id: string) {
+    return this.voterService.resetVoterPassword(id);
+  }
 } 

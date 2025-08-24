@@ -32,6 +32,8 @@ model Department {
   name        String   @db.VarChar(255)
   description String?  @db.Text
   createdBy   String
+  isDeleted   Boolean  @default(false) @map("is_deleted")
+  deletedAt   DateTime? @map("deleted_at")
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
@@ -51,6 +53,8 @@ model Course {
   description  String?  @db.Text
   departmentId String
   createdBy    String
+  isDeleted    Boolean  @default(false) @map("is_deleted")
+  deletedAt    DateTime? @map("deleted_at")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
@@ -69,6 +73,8 @@ model Position {
   description String?  @db.Text
   voteLimit   Int      @default(1) @db.Integer
   displayOrder Int     @default(0) @db.Integer
+  isDeleted   Boolean  @default(false) @map("is_deleted")
+  deletedAt   DateTime? @map("deleted_at")
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
@@ -90,6 +96,8 @@ model Candidate {
   positionId  String
   departmentId String?
   courseId    String?
+  isDeleted   Boolean  @default(false) @map("is_deleted")
+  deletedAt   DateTime? @map("deleted_at")
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
@@ -112,6 +120,8 @@ model Voter {
   departmentId String?
   courseId     String?
   hasVoted     Boolean  @default(false)
+  isDeleted    Boolean  @default(false) @map("is_deleted")
+  deletedAt    DateTime? @map("deleted_at")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 

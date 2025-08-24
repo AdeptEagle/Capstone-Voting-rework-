@@ -118,13 +118,7 @@ export class VoterService {
       password: hashedPassword,
     };
 
-    // Only include departmentId and courseId if they exist
-    if (rest.departmentId) {
-      voterData.departmentId = rest.departmentId;
-    }
-    if (rest.courseId) {
-      voterData.courseId = rest.courseId;
-    }
+    // departmentId and courseId are now required fields, no need for conditional logic
 
     const voter = await this.prisma.voter.create({
       data: voterData,
@@ -146,16 +140,42 @@ export class VoterService {
     });
 
     // Emit real-time voter registration
-    this.votingGateway.emitVoterRegistered({
+    console.log('🔌 Emitting voter-registered WebSocket event...');
+    console.log('📊 Voter data to emit:', {
       id: voter.id,
       studentId: voter.studentId,
       name: voter.name,
-      email: voter.email,
-      hasVoted: voter.hasVoted,
-      department: voter.department,
-      course: voter.course,
-      createdAt: voter.createdAt,
+      email: voter.email
     });
+    
+    try {
+      this.votingGateway.emitVoterRegistered({
+        id: voter.id,
+        studentId: voter.studentId,
+        name: voter.name,
+        email: voter.email,
+        hasVoted: voter.hasVoted,
+        department: voter.department,
+        course: voter.course,
+        createdAt: voter.createdAt,
+      });
+      console.log('✅ voter-registered event emitted successfully');
+    } catch (error) {
+      console.error('❌ Error emitting voter-registered event:', error);
+    }
+
+    // Also emit admin action for voter management
+    console.log('🔌 Emitting admin-action WebSocket event...');
+    try {
+      this.votingGateway.emitAdminAction('voter-management', {
+        action: 'voter-created',
+        voterId: voter.id,
+        voterName: voter.name,
+      });
+      console.log('✅ admin-action event emitted successfully');
+    } catch (error) {
+      console.error('❌ Error emitting admin-action event:', error);
+    }
 
     return {
       message: 'Voter created successfully!',
@@ -209,6 +229,25 @@ export class VoterService {
       },
     });
 
+    // Emit real-time voter update
+    this.votingGateway.emitVoterUpdated({
+      id: updatedVoter.id,
+      studentId: updatedVoter.studentId,
+      name: updatedVoter.name,
+      email: updatedVoter.email,
+      hasVoted: updatedVoter.hasVoted,
+      department: updatedVoter.department,
+      course: updatedVoter.course,
+      updatedAt: updatedVoter.updatedAt,
+    });
+
+    // Also emit admin action for voter management
+    this.votingGateway.emitAdminAction('voter-management', {
+      action: 'voter-updated',
+      voterId: updatedVoter.id,
+      voterName: updatedVoter.name,
+    });
+
     return {
       message: 'Voter updated successfully!',
       voter: updatedVoter,
@@ -228,6 +267,15 @@ export class VoterService {
       where: { id },
     });
 
+    // Emit real-time voter deletion
+    this.votingGateway.emitVoterDeleted(id);
+
+    // Also emit admin action for voter management
+    this.votingGateway.emitAdminAction('voter-management', {
+      action: 'voter-deleted',
+      voterId: id,
+    });
+
     return {
       message: 'Voter deleted successfully!',
     };
@@ -245,6 +293,16 @@ export class VoterService {
     const updatedVoter = await this.prisma.voter.update({
       where: { id },
       data: { hasVoted: true },
+    });
+
+    // Emit real-time voter update for vote status
+    this.votingGateway.emitVoterUpdated({
+      id: updatedVoter.id,
+      studentId: updatedVoter.studentId,
+      name: updatedVoter.name,
+      email: updatedVoter.email,
+      hasVoted: updatedVoter.hasVoted,
+      updatedAt: updatedVoter.updatedAt,
     });
 
     return {
@@ -267,9 +325,88 @@ export class VoterService {
       data: { hasVoted: false },
     });
 
+    // Emit real-time voter update for vote status reset
+    this.votingGateway.emitVoterUpdated({
+      id: updatedVoter.id,
+      studentId: updatedVoter.studentId,
+      name: updatedVoter.name,
+      email: updatedVoter.email,
+      hasVoted: updatedVoter.hasVoted,
+      updatedAt: updatedVoter.updatedAt,
+    });
+
     return {
       message: 'Voter vote status reset!',
       voter: updatedVoter,
+    };
+  }
+
+  async getVoterPassword(id: string) {
+    const voter = await this.prisma.voter.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        studentId: true,
+        password: true,
+      },
+    });
+
+    if (!voter) {
+      throw new NotFoundException('Voter not found');
+    }
+
+    // For security, we don't return the actual hashed password
+    // Instead, we return a message indicating the password status
+    return {
+      message: 'Password retrieved successfully',
+      hasCustomPassword: voter.password !== voter.studentId,
+      defaultPassword: voter.studentId,
+    };
+  }
+
+  async resetVoterPassword(id: string) {
+    const voter = await this.prisma.voter.findUnique({
+      where: { id },
+    });
+
+    if (!voter) {
+      throw new NotFoundException('Voter not found');
+    }
+
+    // Reset password to student ID
+    const hashedPassword = await bcrypt.hash(voter.studentId, 10);
+
+    const updatedVoter = await this.prisma.voter.update({
+      where: { id },
+      data: { password: hashedPassword },
+    });
+
+    // Emit real-time voter update for password reset
+    this.votingGateway.emitVoterUpdated({
+      id: updatedVoter.id,
+      studentId: updatedVoter.studentId,
+      name: updatedVoter.name,
+      email: updatedVoter.email,
+      hasVoted: updatedVoter.hasVoted,
+      updatedAt: updatedVoter.updatedAt,
+    });
+
+    // Also emit admin action for voter management
+    this.votingGateway.emitAdminAction('voter-management', {
+      action: 'voter-password-reset',
+      voterId: updatedVoter.id,
+      voterName: updatedVoter.name,
+    });
+
+    return {
+      message: 'Password reset to Student ID successfully!',
+      newPassword: voter.studentId,
+      voter: {
+        id: updatedVoter.id,
+        studentId: updatedVoter.studentId,
+        name: updatedVoter.name,
+        email: updatedVoter.email,
+      },
     };
   }
 } 

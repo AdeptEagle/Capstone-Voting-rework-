@@ -204,6 +204,19 @@ export class ElectionService {
       },
     });
 
+    // Emit real-time election update event
+    this.votingGateway.emitElectionUpdated({
+      id: updatedElection.id,
+      title: updatedElection.title,
+      description: updatedElection.description,
+      status: updatedElection.status,
+      startDate: updatedElection.startDate,
+      endDate: updatedElection.endDate,
+      isActive: updatedElection.isActive,
+      updatedAt: updatedElection.updatedAt,
+      admin: updatedElection.admin,
+    });
+
     return {
       message: 'Election updated successfully!',
       election: updatedElection,
@@ -221,6 +234,13 @@ export class ElectionService {
 
     await this.prisma.election.delete({
       where: { id },
+    });
+
+    // Emit real-time election deletion event
+    this.votingGateway.emitElectionStatusUpdate(id, 'deleted', {
+      id: id,
+      message: 'Election deleted',
+      timestamp: new Date().toISOString(),
     });
 
     return {
@@ -245,6 +265,16 @@ export class ElectionService {
       },
     });
 
+    // Emit real-time election status update
+    this.votingGateway.emitElectionStatusUpdate(id, 'active', {
+      id: updatedElection.id,
+      title: updatedElection.title,
+      status: updatedElection.status,
+      startDate: updatedElection.startDate,
+      endDate: updatedElection.endDate,
+      updatedAt: updatedElection.updatedAt,
+    });
+
     return {
       message: 'Election activated successfully!',
       election: updatedElection,
@@ -266,6 +296,16 @@ export class ElectionService {
         isActive: false,
         status: 'draft'
       },
+    });
+
+    // Emit real-time election status update
+    this.votingGateway.emitElectionStatusUpdate(id, 'draft', {
+      id: updatedElection.id,
+      title: updatedElection.title,
+      status: updatedElection.status,
+      startDate: updatedElection.startDate,
+      endDate: updatedElection.endDate,
+      updatedAt: updatedElection.updatedAt,
     });
 
     return {

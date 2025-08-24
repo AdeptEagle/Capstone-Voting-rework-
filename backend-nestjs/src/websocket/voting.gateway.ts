@@ -14,7 +14,6 @@ import { Logger } from '@nestjs/common';
     origin: process.env.FRONTEND_URL || 'http://localhost:3000',
     credentials: true,
   },
-  namespace: 'voting',
 })
 export class VotingGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
@@ -65,8 +64,27 @@ export class VotingGateway implements OnGatewayInit, OnGatewayConnection, OnGate
 
   // Real-time voter registration
   emitVoterRegistered(voterData: any) {
+    console.log('🔌 [WebSocket] Emitting voter-registered event to all clients');
+    console.log('📊 Connected clients count:', this.connectedClients.size);
     this.server.emit('voter-registered', {
       voterData,
+      timestamp: new Date().toISOString(),
+    });
+    console.log('✅ [WebSocket] voter-registered event emitted successfully');
+  }
+
+  // Real-time voter updates
+  emitVoterUpdated(voterData: any) {
+    this.server.emit('voter-updated', {
+      voterData,
+      timestamp: new Date().toISOString(),
+    });
+  }
+
+  // Real-time voter deletions
+  emitVoterDeleted(voterId: string) {
+    this.server.emit('voter-deleted', {
+      voterId,
       timestamp: new Date().toISOString(),
     });
   }
@@ -95,6 +113,14 @@ export class VotingGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     });
   }
 
+  // Real-time election updates
+  emitElectionUpdated(electionData: any) {
+    this.server.emit('election-updated', {
+      electionData,
+      timestamp: new Date().toISOString(),
+    });
+  }
+
   // Real-time results updates
   emitResultsUpdate(electionId: string, resultsData: any) {
     this.server.emit('results-updated', {
@@ -106,11 +132,14 @@ export class VotingGateway implements OnGatewayInit, OnGatewayConnection, OnGate
 
   // Real-time admin actions
   emitAdminAction(action: string, data: any) {
+    console.log('🔌 [WebSocket] Emitting admin-action event to all clients');
+    console.log('📊 Connected clients count:', this.connectedClients.size);
     this.server.emit('admin-action', {
       action,
       data,
       timestamp: new Date().toISOString(),
     });
+    console.log('✅ [WebSocket] admin-action event emitted successfully');
   }
 
   // Real-time system notifications
@@ -121,6 +150,21 @@ export class VotingGateway implements OnGatewayInit, OnGatewayConnection, OnGate
       data,
       timestamp: new Date().toISOString(),
     });
+  }
+
+  // Test event to verify WebSocket functionality
+  emitTestEvent() {
+    console.log('🧪 [WebSocket] Emitting test event to all clients');
+    console.log('📊 Connected clients count:', this.connectedClients.size);
+    console.log('🔌 Client IDs:', Array.from(this.connectedClients.keys()));
+    
+    this.server.emit('test-event', {
+      message: 'This is a test event from the server',
+      timestamp: new Date().toISOString(),
+      clientCount: this.connectedClients.size,
+    });
+    
+    console.log('✅ [WebSocket] Test event emitted successfully');
   }
 
   // Join specific election room
@@ -148,6 +192,20 @@ export class VotingGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   handleGetClientsCount(client: Socket) {
     client.emit('clients-count', {
       count: this.connectedClients.size,
+      timestamp: new Date().toISOString(),
+    });
+  }
+
+  // Test WebSocket functionality
+  @SubscribeMessage('test-websocket')
+  handleTestWebSocket(client: Socket) {
+    console.log('🧪 Test WebSocket request received from client:', client.id);
+    this.emitTestEvent();
+    
+    // Also send a direct response to the requesting client
+    client.emit('test-response', {
+      message: 'Test response sent directly to client',
+      clientId: client.id,
       timestamp: new Date().toISOString(),
     });
   }
