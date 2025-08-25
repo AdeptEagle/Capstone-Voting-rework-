@@ -467,12 +467,63 @@ export const deleteElection = async (id) => {
   }
 };
 
+// Election Trash Management
+export const getDeletedElections = async () => {
+  try {
+    const response = await api.get('/elections/trash/deleted');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching deleted elections:', error);
+    throw error;
+  }
+};
+
+export const restoreElection = async (id) => {
+  try {
+    const response = await api.post(`/elections/trash/restore/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error restoring election:', error);
+    throw error;
+  }
+};
+
+export const permanentlyDeleteElection = async (id) => {
+  try {
+    const response = await api.delete(`/elections/trash/permanent/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error permanently deleting election:', error);
+    throw error;
+  }
+};
+
 export const getActiveElection = async () => {
   try {
     const response = await api.get('/elections/active');
     return response.data;
   } catch (error) {
     console.error('Error fetching active election:', error);
+    throw error;
+  }
+};
+
+export const hasActiveElections = async () => {
+  try {
+    const response = await api.get('/elections/active/check');
+    return response.data;
+  } catch (error) {
+    console.error('Error checking active elections:', error);
+    throw error;
+  }
+};
+
+export const getActiveElectionInfo = async () => {
+  try {
+    const response = await api.get('/elections/active/info');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching active election info:', error);
     throw error;
   }
 };

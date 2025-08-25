@@ -179,6 +179,31 @@
   color: #6c757d;
 }
 
+/* Active Election Indicator */
+.election-card.active-election {
+  border: 2px solid #28a745;
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.15);
+  background: linear-gradient(135deg, #f8fff9 0%, #ffffff 100%);
+}
+
+.election-card.active-election::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #28a745, #20c997);
+  border-radius: 8px 8px 0 0;
+}
+
+.election-card.active-election .election-header {
+  background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+  border-radius: 8px 8px 0 0;
+  padding: 1rem 1.5rem;
+  margin: -1rem -1.5rem 1rem -1.5rem;
+}
+
 /* Responsive Design for Tabs */
 @media (max-width: 768px) {
   .elections-tabs {

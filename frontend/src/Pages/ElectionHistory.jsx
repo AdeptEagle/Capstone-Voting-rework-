@@ -127,11 +127,21 @@ const ElectionHistory = () => {
 
       await deleteElection(election.electionId);
       
-      setSuccess(`Election "${election.title}" has been permanently deleted.`);
+      setSuccess(
+        <div>
+          Election "{election.title}" moved to trash successfully! 
+          <button 
+            className="btn btn-link p-0 ms-2" 
+            onClick={() => window.location.href = '/trash-bin?tab=elections'}
+          >
+            Go to Trash Bin
+          </button>
+        </div>
+      );
       closeDeleteModal();
       await fetchHistory(); // Refresh the list
       
-      setTimeout(() => setSuccess(''), 3000);
+      setTimeout(() => setSuccess(''), 5000);
     } catch (error) {
       console.error('Error deleting election:', error);
       setError(error.response?.data?.error || 'Failed to delete election');
@@ -191,7 +201,7 @@ const ElectionHistory = () => {
                 </div>
                 <div className="election-history-meta">
                   <small className="text-muted">
-                    Created by {election.createdBy || 'Unknown'}
+                    Created by {election.admin?.username || 'Unknown'}
                   </small>
                 </div>
               </div>
@@ -282,7 +292,7 @@ const ElectionHistory = () => {
                      <div className="col-md-6 mb-3">
                        <label className="form-label"><strong>Created By:</strong></label>
                        <div className="form-control-plaintext">
-                         {selectedElection.createdBy || 'Unknown'}
+                         {selectedElection.admin?.username || 'Unknown'}
                        </div>
                      </div>
                    </div>

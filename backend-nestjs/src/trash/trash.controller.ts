@@ -55,6 +55,13 @@ export class TrashController {
     return await this.trashService.getDeletedVoters();
   }
 
+  @Get('elections')
+  @ApiOperation({ summary: 'Get all deleted elections' })
+  @ApiResponse({ status: 200, description: 'List of deleted elections' })
+  async getDeletedElections() {
+    return await this.trashService.getDeletedElections();
+  }
+
   @Post('restore/candidate/:id')
   @ApiOperation({ summary: 'Restore a deleted candidate' })
   @ApiResponse({ status: 200, description: 'Candidate restored successfully' })
@@ -93,6 +100,14 @@ export class TrashController {
   @ApiResponse({ status: 404, description: 'Deleted voter not found' })
   async restoreVoter(@Param('id') id: string) {
     return await this.trashService.restoreVoter(id);
+  }
+
+  @Post('restore/election/:id')
+  @ApiOperation({ summary: 'Restore deleted election' })
+  @ApiResponse({ status: 200, description: 'Election restored successfully' })
+  @ApiResponse({ status: 404, description: 'Election not found' })
+  async restoreElection(@Param('id') id: string) {
+    return await this.trashService.restoreElection(id);
   }
 
   @Post('restore/bulk')
@@ -155,6 +170,16 @@ export class TrashController {
   @HttpCode(HttpStatus.OK)
   async permanentlyDeleteVoter(@Param('id') id: string) {
     return await this.trashService.permanentlyDeleteVoter(id);
+  }
+
+  @Delete('permanent/election/:id')
+  @Roles(Role.SUPERADMIN, Role.ADMIN)
+  @ApiOperation({ summary: 'Permanently delete election (cannot be undone)' })
+  @ApiResponse({ status: 200, description: 'Election permanently deleted' })
+  @ApiResponse({ status: 404, description: 'Election not found' })
+  @ApiResponse({ status: 409, description: 'Cannot delete election with voting history' })
+  async permanentlyDeleteElection(@Param('id') id: string) {
+    return await this.trashService.permanentlyDeleteElection(id);
   }
 
   @Delete('empty')

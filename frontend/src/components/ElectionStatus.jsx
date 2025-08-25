@@ -303,7 +303,7 @@ const ElectionStatus = () => {
                   </div>
                   <div className="detail-item">
                     <span className="detail-label">Created By:</span>
-                    <span className="detail-value">{activeElection.createdByUsername}</span>
+                    <span className="detail-value">{activeElection.admin?.username || 'Unknown'}</span>
                   </div>
                 </div>
                 <div className="active-election-actions mt-3">
@@ -402,7 +402,7 @@ const ElectionStatus = () => {
                     </div>
                     <div className="election-meta">
                       <small className="text-muted">
-                        Created by {election.createdByUsername || 'Unknown'}
+                        Created by {election.admin?.username || 'Unknown'}
                       </small>
                     </div>
                   </div>

@@ -7,12 +7,13 @@ export class TrashService {
 
   // Get summary of all deleted items
   async getTrashSummary() {
-    const [candidates, positions, departments, courses, voters] = await Promise.all([
+    const [candidates, positions, departments, courses, voters, elections] = await Promise.all([
       this.prisma.candidate.count({ where: { isDeleted: true } }),
       this.prisma.position.count({ where: { isDeleted: true } }),
       this.prisma.department.count({ where: { isDeleted: true } }),
       this.prisma.course.count({ where: { isDeleted: true } }),
-      this.prisma.voter.count({ where: { isDeleted: true } })
+      this.prisma.voter.count({ where: { isDeleted: true } }),
+      this.prisma.election.count({ where: { isDeleted: true } })
     ]);
 
     return {
@@ -21,7 +22,8 @@ export class TrashService {
       departments,
       courses,
       voters,
-      total: candidates + positions + departments + courses + voters
+      elections,
+      total: candidates + positions + departments + courses + voters + elections
     };
   }
 
@@ -315,17 +317,19 @@ export class TrashService {
       departments: 0,
       courses: 0,
       voters: 0,
+      elections: 0,
       errors: []
     };
 
     try {
       // Get all soft-deleted items
-      const [candidates, positions, departments, courses, voters] = await Promise.all([
+      const [candidates, positions, departments, courses, voters, elections] = await Promise.all([
         this.prisma.candidate.findMany({ where: { isDeleted: true } }),
         this.prisma.position.findMany({ where: { isDeleted: true } }),
         this.prisma.department.findMany({ where: { isDeleted: true } }),
         this.prisma.course.findMany({ where: { isDeleted: true } }),
-        this.prisma.voter.findMany({ where: { isDeleted: true } })
+        this.prisma.voter.findMany({ where: { isDeleted: true } }),
+        this.prisma.election.findMany({ where: { isDeleted: true } })
       ]);
 
       // Attempt to permanently delete each item
@@ -374,9 +378,121 @@ export class TrashService {
         }
       }
 
-      return results;
+      for (const election of elections) {
+        try {
+          await this.permanentlyDeleteElection(election.id);
+          results.elections++;
+        } catch (error) {
+          results.errors.push({ type: 'election', id: election.id, error: error.message });
+        }
+      }
+
+      return {
+        message: `Trash emptied successfully! Deleted: ${results.candidates} candidates, ${results.positions} positions, ${results.departments} departments, ${results.courses} courses, ${results.voters} voters, ${results.elections} elections`,
+        results,
+        errors: results.errors.length > 0 ? results.errors : null
+      };
     } catch (error) {
       throw new Error(`Failed to empty trash: ${error.message}`);
     }
+  }
+
+  // ===== ELECTION TRASH MANAGEMENT =====
+
+  async getDeletedElections() {
+    return await this.prisma.election.findMany({
+      where: { isDeleted: true },
+      include: {
+        admin: {
+          select: {
+            id: true,
+            username: true,
+            email: true,
+          },
+        },
+        electionPositions: {
+          include: {
+            position: {
+              select: {
+                id: true,
+                title: true,
+              },
+            },
+          },
+        },
+        electionCandidates: {
+          include: {
+            candidate: {
+              select: {
+                id: true,
+                name: true,
+                studentId: true,
+              },
+            },
+          },
+        },
+        votes: {
+          select: {
+            id: true,
+            createdAt: true,
+          },
+        },
+      },
+    });
+  }
+
+  async restoreElection(electionId: string) {
+    const election = await this.prisma.election.findUnique({
+      where: { id: electionId },
+    });
+
+    if (!election) {
+      throw new Error('Election not found');
+    }
+
+    if (!election.isDeleted) {
+      throw new Error('Election is not deleted');
+    }
+
+    return await this.prisma.election.update({
+      where: { id: electionId },
+      data: {
+        isDeleted: false,
+        deletedAt: null
+      }
+    });
+  }
+
+  async permanentlyDeleteElection(electionId: string) {
+    const election = await this.prisma.election.findUnique({
+      where: { id: electionId },
+      include: {
+        _count: {
+          select: {
+            votes: true,
+            electionPositions: true,
+            electionCandidates: true,
+          },
+        },
+      },
+    });
+
+    if (!election) {
+      throw new Error('Election not found');
+    }
+
+    if (!election.isDeleted) {
+      throw new Error('Election must be soft-deleted before permanent deletion');
+    }
+
+    // Check if election has votes (prevent deletion if votes exist)
+    if (election._count.votes > 0) {
+      throw new Error('Cannot permanently delete election with voting history. Votes must be preserved for audit purposes.');
+    }
+
+    // Permanently delete the election
+    return await this.prisma.election.delete({
+      where: { id: electionId }
+    });
   }
 }

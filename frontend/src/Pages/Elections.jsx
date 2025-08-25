@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getElections, getPositions, getCandidates, createElection, updateElection, deleteElection, startElection, pauseElection, stopElection, resumeElection, endElection, getElectionPositions, createPosition, createCandidate, getDepartments, addPositionToElection, addCandidateToElection } from '../services/api';
+import { getElections, getPositions, getCandidates, createElection, updateElection, deleteElection, startElection, pauseElection, stopElection, resumeElection, endElection, getElectionPositions, createPosition, createCandidate, getDepartments, addPositionToElection, addCandidateToElection, hasActiveElections, getActiveElectionInfo } from '../services/api';
 import './Elections.css';
+import Button from 'react-bootstrap/Button'; // Added missing import for Button
 
 const Elections = () => {
   const [elections, setElections] = useState([]);
@@ -18,6 +19,7 @@ const Elections = () => {
   const [updatingElection, setUpdatingElection] = useState(null);
   const [loadingPositions, setLoadingPositions] = useState(false);
   const [activeTab, setActiveTab] = useState('active'); // 'active' or 'ended'
+  const [activeElectionInfo, setActiveElectionInfo] = useState({ hasActive: false, activeCount: 0, activeElections: [] });
   const navigate = useNavigate();
 
   // Enhanced form state for creating elections with positions and candidates
@@ -49,16 +51,18 @@ const Elections = () => {
   const fetchElectionsData = async () => {
     try {
       setLoading(true);
-      const [elections, positions, departmentsData] = await Promise.all([
+      const [elections, positions, departmentsData, activeInfo] = await Promise.all([
         getElections(),
         getPositions(),
-        getDepartments()
+        getDepartments(),
+        getActiveElectionInfo()
       ]);
 
       console.log('Fetched elections:', elections); // Debug log
       setElections(elections || []);
       setPositions(positions || []);
       setDepartments(departmentsData || []);
+      setActiveElectionInfo(activeInfo || { hasActive: false, activeCount: 0, activeElections: [] });
     } catch (error) {
       console.error('Error fetching elections data:', error);
       setError('Failed to load elections data');
@@ -264,12 +268,12 @@ const Elections = () => {
       setError('');
       setSuccess('');
 
-      await startElection(electionId);
+      const result = await startElection(electionId);
       
-      setSuccess('Election started successfully!');
+      setSuccess(result.message || 'Election started successfully!');
       await fetchElectionsData();
       
-      setTimeout(() => setSuccess(''), 3000);
+      setTimeout(() => setSuccess(''), 5000);
     } catch (error) {
       console.error('Error starting election:', error);
       setError(error.response?.data?.error || 'Failed to start election');
@@ -382,14 +386,25 @@ const Elections = () => {
 
       await deleteElection(deletingElection.id);
       
-      setSuccess(`Ballot "${electionTitle}" deleted successfully!`);
+      setSuccess(
+        <div>
+          Ballot "{electionTitle}" moved to trash successfully! 
+          <Button 
+            variant="link" 
+            className="p-0 ms-2" 
+            onClick={() => window.location.href = '/trash-bin?tab=elections'}
+          >
+            Go to Trash Bin
+          </Button>
+        </div>
+      );
       await fetchElectionsData();
       
       setShowDeleteModal(false);
       setDeletingElection(null);
       setDeleteConfirmation('');
       
-      setTimeout(() => setSuccess(''), 3000);
+      setTimeout(() => setSuccess(''), 5000);
     } catch (error) {
       console.error('Error deleting election:', error);
       setError(error.response?.data?.error || 'Failed to delete election');
@@ -789,17 +804,19 @@ const Elections = () => {
     });
   };
 
-  const getStatusActions = (election) => {
+  const renderElectionActions = (election) => {
+    const { status } = election;
     const actions = [];
-    
-    // If status is null/undefined, treat as 'draft' (default status)
-    const status = election.status || 'draft';
-    
-    // If status is null/undefined, show a fix button
-    if (!election.status) {
+
+    // Check if this election can be started (grayed out if another election is active)
+    const canStartElection = !activeElectionInfo.hasActive || 
+      activeElectionInfo.activeElections.some(active => active.id === election.id);
+
+    // Add fix status button for invalid statuses
+    if (!['draft', 'active', 'paused', 'stopped', 'ended'].includes(status)) {
       actions.push(
         <button
-          key="fix-status"
+          key="fix"
           className="btn btn-warning btn-sm me-2"
           onClick={() => handleFixStatus(election.id)}
           disabled={updatingElection === election.id}
@@ -819,9 +836,10 @@ const Elections = () => {
         actions.push(
           <button
             key="start"
-            className="btn btn-success btn-sm me-2"
+            className={`btn btn-sm me-2 ${canStartElection ? 'btn-success' : 'btn-secondary'}`}
             onClick={() => handleStartElection(election.id)}
-            disabled={updatingElection === election.id}
+            disabled={updatingElection === election.id || !canStartElection}
+            title={!canStartElection ? 'Another ballot is currently active. End or pause the active ballot first.' : 'Start this ballot'}
           >
             {updatingElection === election.id ? (
               <i className="fas fa-spinner fa-spin me-1"></i>
@@ -1013,14 +1031,22 @@ const Elections = () => {
       {/* Admin Guide for Single Election Policy */}
       {(() => {
         const activeElections = getActiveElections();
-        if (activeElections.length > 0) {
+        const currentlyActive = activeElections.filter(e => e.status === 'active');
+        
+        if (currentlyActive.length > 0) {
           return (
-            <div className="alert alert-warning mb-3">
-              <i className="fas fa-exclamation-triangle me-2"></i>
-              <strong>Reminder:</strong> Only one active election allowed. End current election to create a new one.
-              <span className="ms-2 badge bg-warning text-dark">
-                {activeElections.length} Active Election{activeElections.length > 1 ? 's' : ''}
-              </span>
+            <div className="alert alert-info mb-3">
+              <i className="fas fa-info-circle me-2"></i>
+              <strong>Active Election Policy:</strong> Only one election can be active at a time. 
+              {currentlyActive.length > 0 && (
+                <span className="ms-2">
+                  <strong>Currently Active:</strong> {currentlyActive.map(e => e.title).join(', ')}
+                </span>
+              )}
+              <br />
+              <small className="text-muted">
+                Starting a new election will automatically pause any currently active elections.
+              </small>
             </div>
           );
         }
@@ -1063,7 +1089,7 @@ const Elections = () => {
             <div className="elections-list">
               {getActiveElections().length > 0 ? (
                 getActiveElections().map((election) => (
-                  <div key={election.id} className="election-card">
+                  <div key={election.id} className={`election-card ${election.status === 'active' ? 'active-election' : ''}`}>
                     <div className="election-header">
                       <div className="election-title">
                         <h3>{election.title || 'Untitled Election'}</h3>
@@ -1073,10 +1099,16 @@ const Elections = () => {
                           {/* Debug: Show raw status */}
                           <small className="ms-1">({election.status || 'null'})</small>
                         </span>
+                        {election.status === 'active' && (
+                          <span className="badge bg-success ms-2">
+                            <i className="fas fa-star me-1"></i>
+                            Currently Active
+                          </span>
+                        )}
                       </div>
                       <div className="election-meta">
                         <small className="text-muted">
-                          Created by {election.createdByUsername || 'Unknown'}
+                          Created by {election.admin?.username || 'Unknown'}
                         </small>
                       </div>
                     </div>
@@ -1103,8 +1135,8 @@ const Elections = () => {
 
                       <div className="election-actions">
                         <div className="status-actions">
-                          {getStatusActions(election)}
-                          {getStatusActions(election).length === 0 && (
+                          {renderElectionActions(election)}
+                          {renderElectionActions(election).length === 0 && (
                             <span className="text-muted">
                               <i className="fas fa-info-circle me-1"></i>
                               No actions available for status: {election.status || 'pending'}
@@ -1190,7 +1222,7 @@ const Elections = () => {
                       </div>
                       <div className="election-meta">
                         <small className="text-muted">
-                          Created by {election.createdByUsername || 'Unknown'}
+                          Created by {election.admin?.username || 'Unknown'}
                         </small>
                       </div>
                     </div>

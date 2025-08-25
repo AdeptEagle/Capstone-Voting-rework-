@@ -142,6 +142,8 @@ model Election {
   endDate   DateTime
   isActive  Boolean  @default(false)
   status    String   @default("draft") @db.VarChar(50) // draft, active, paused, ended
+  isDeleted Boolean  @default(false) @map("is_deleted")
+  deletedAt DateTime? @map("deleted_at")
   createdBy String
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")

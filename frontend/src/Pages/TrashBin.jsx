@@ -20,7 +20,8 @@ const TrashBin = () => {
     { key: 'positions', label: 'Positions', icon: '🏛️' },
     { key: 'departments', label: 'Departments', icon: '🏢' },
     { key: 'courses', label: 'Courses', icon: '📚' },
-    { key: 'voters', label: 'Voters', icon: '🗳️' }
+    { key: 'voters', label: 'Voters', icon: '🗳️' },
+    { key: 'elections', label: 'Elections', icon: '🗳️' }
   ];
 
   useEffect(() => {
@@ -201,6 +202,23 @@ const TrashBin = () => {
         { key: 'description', label: 'Description' },
         { key: 'department', label: 'Department' },
         { key: 'deletedAt', label: 'Deleted Date' }
+      ],
+      voters: [
+        { key: 'name', label: 'Name' },
+        { key: 'studentId', label: 'Student ID' },
+        { key: 'email', label: 'Email' },
+        { key: 'department', label: 'Department' },
+        { key: 'course', label: 'Course' },
+        { key: 'deletedAt', label: 'Deleted Date' }
+      ],
+      elections: [
+        { key: 'title', label: 'Title' },
+        { key: 'description', label: 'Description' },
+        { key: 'status', label: 'Status' },
+        { key: 'startDate', label: 'Start Date' },
+        { key: 'endDate', label: 'End Date' },
+        { key: 'admin', label: 'Created By' },
+        { key: 'deletedAt', label: 'Deleted Date' }
       ]
     };
 
@@ -233,6 +251,8 @@ const TrashBin = () => {
                   value = item.admin.username;
                 } else if (column.key === 'deletedAt') {
                   value = new Date(item.deletedAt).toLocaleDateString();
+                } else if (column.key === 'startDate' || column.key === 'endDate') {
+                  value = new Date(item[column.key]).toLocaleDateString();
                 }
                 
                 return <td key={column.key}>{value || 'N/A'}</td>;

@@ -22,6 +22,20 @@ export class ElectionController {
     return this.electionService.getActiveElections();
   }
 
+  @Get('active/check')
+  @ApiOperation({ summary: 'Check if there are any active elections' })
+  @ApiResponse({ status: 200, description: 'Active election status' })
+  async hasActiveElections() {
+    return this.electionService.hasActiveElections();
+  }
+
+  @Get('active/info')
+  @ApiOperation({ summary: 'Get detailed information about active elections' })
+  @ApiResponse({ status: 200, description: 'Active election information' })
+  async getActiveElectionInfo() {
+    return this.electionService.getActiveElectionInfo();
+  }
+
   @Get('history')
   @ApiOperation({ summary: 'Get election history - comprehensive data for ended elections' })
   @ApiResponse({ status: 200, description: 'Election history retrieved successfully' })
@@ -56,11 +70,37 @@ export class ElectionController {
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Delete election' })
-  @ApiResponse({ status: 200, description: 'Election deleted successfully' })
+  @ApiOperation({ summary: 'Delete election (soft delete - moves to trash)' })
+  @ApiResponse({ status: 200, description: 'Election moved to trash successfully' })
   @ApiResponse({ status: 404, description: 'Election not found' })
   async deleteElection(@Param('id') id: string) {
     return this.electionService.deleteElection(id);
+  }
+
+  // ===== TRASH MANAGEMENT ENDPOINTS =====
+
+  @Get('trash/deleted')
+  @ApiOperation({ summary: 'Get all deleted elections' })
+  @ApiResponse({ status: 200, description: 'List of deleted elections' })
+  async getDeletedElections() {
+    return this.electionService.getDeletedElections();
+  }
+
+  @Post('trash/restore/:id')
+  @ApiOperation({ summary: 'Restore deleted election' })
+  @ApiResponse({ status: 200, description: 'Election restored successfully' })
+  @ApiResponse({ status: 404, description: 'Election not found' })
+  async restoreElection(@Param('id') id: string) {
+    return this.electionService.restoreElection(id);
+  }
+
+  @Delete('trash/permanent/:id')
+  @ApiOperation({ summary: 'Permanently delete election (cannot be undone)' })
+  @ApiResponse({ status: 200, description: 'Election permanently deleted' })
+  @ApiResponse({ status: 404, description: 'Election not found' })
+  @ApiResponse({ status: 409, description: 'Cannot delete election with voting history' })
+  async permanentlyDeleteElection(@Param('id') id: string) {
+    return this.electionService.permanentlyDeleteElection(id);
   }
 
   @Put(':id/activate')
