@@ -6,6 +6,8 @@ import { TimezoneService } from '../services/timezone.service';
 import { VotingGateway } from '../websocket/voting.gateway';
 import { AuditService } from '../services/audit.service';
 
+// Vote service for handling all voting operations and analytics
+
 @Injectable()
 export class VoteService {
   constructor(

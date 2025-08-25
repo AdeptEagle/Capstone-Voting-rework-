@@ -1091,19 +1091,24 @@ const Elections = () => {
         
         if (currentlyActive.length > 0) {
           return (
-            <div className="alert alert-info mb-3">
-              <i className="fas fa-info-circle me-2"></i>
-              <strong>Active Election Policy:</strong> Only one election can be active at a time. 
-              {currentlyActive.length > 0 && (
-                <span className="ms-2">
-                  <strong>Currently Active:</strong> {currentlyActive.map(e => e.title).join(', ')}
-                </span>
-              )}
-              <br />
-              <small className="text-muted">
-                Starting a new election will automatically pause any currently active elections.
-              </small>
-            </div>
+                         <div className="alert alert-info mb-3">
+               <div className="d-flex align-items-start">
+                 <i className="fas fa-info-circle me-2 mt-1"></i>
+                 <div>
+                   <div className="mb-1">
+                     <strong>Active Election Policy:</strong> Only one election can be active at a time.
+                   </div>
+                   {currentlyActive.length > 0 && (
+                     <div className="mb-1">
+                       <strong>Currently Active:</strong> {currentlyActive.map(e => e.title).join(', ')}
+                     </div>
+                   )}
+                   <small className="text-muted">
+                     Starting a new election will automatically pause any currently active elections.
+                   </small>
+                 </div>
+               </div>
+             </div>
           );
         }
         return null;
@@ -1455,108 +1460,7 @@ const Elections = () => {
                     </div>
                     </div>
 
-                                          <div className="mb-4">
-                        <div className="d-flex justify-content-between align-items-center mb-3">
-                          <h6>
-                            <i className="fas fa-plus me-2"></i>
-                            Add New Positions
-                          </h6>
-                          <button
-                            type="button"
-                            className="btn btn-sm btn-outline-primary"
-                            onClick={addNewPosition}
-                          >
-                            <i className="fas fa-plus me-1"></i>
-                            Add Position
-                          </button>
-                        </div>
-                        <div className="alert alert-info mb-3">
-                          <i className="fas fa-info-circle me-2"></i>
-                          <strong>Tip:</strong> Position IDs and names must be unique. Use descriptive names like "President", "Vice President", etc. Position IDs are typically short codes like "PRES", "VP", "SEC".
-                        </div>
-                      
-                                             {tempPositions.map((position, index) => (
-                         <div key={`temp-position-${index}`} className="card mb-3">
-                          <div className="card-body">
-                            <div className="d-flex justify-content-between align-items-start mb-3">
-                              <h6 className="card-title mb-0">New Position {index + 1}</h6>
-                              <button
-                                type="button"
-                                className="btn btn-sm btn-outline-danger"
-                                onClick={() => removeTempPosition(index)}
-                              >
-                                <i className="fas fa-trash"></i>
-                              </button>
-                            </div>
-                            <div className="row">
-                              <div className="col-md-6">
-                                <div className="mb-3">
-                                  <label className="form-label">Position ID *</label>
-                                  <input
-                                    type="text"
-                                    className="form-control"
-                                    value={position.id}
-                                    onChange={(e) => {
-                                      const value = e.target.value;
-                                      updateTempPosition(index, 'id', value);
-                                    }}
-                                    onBlur={(e) => {
-                                      // Convert to uppercase on blur for consistency
-                                      const value = e.target.value.toUpperCase();
-                                      if (value !== position.id) {
-                                        updateTempPosition(index, 'id', value);
-                                      }
-                                    }}
-                                    placeholder="e.g., PRES, VP, SEC"
-                                    required
-                                  />
-                                  <small className="text-muted">Type normally, will convert to uppercase when you leave the field</small>
-                                </div>
-                              </div>
-                              <div className="col-md-6">
-                                <div className="mb-3">
-                                  <label className="form-label">Position Name *</label>
-                                  <input
-                                    type="text"
-                                    className="form-control"
-                                    value={position.title}
-                                                                          onChange={(e) => updateTempPosition(index, 'title', e.target.value)}
-                                    placeholder="e.g., President, Vice President"
-                                    required
-                                  />
-                                </div>
-                              </div>
-                            </div>
-                            <div className="row">
-                              <div className="col-md-6">
-                                <div className="mb-3">
-                                  <label className="form-label">Vote Limit</label>
-                                  <input
-                                    type="number"
-                                    className="form-control"
-                                    min="1"
-                                    value={position.voteLimit}
-                                    onChange={(e) => updateTempPosition(index, 'voteLimit', parseInt(e.target.value))}
-                                  />
-                                </div>
-                              </div>
-                              <div className="col-md-6">
-                                <div className="mb-3">
-                                  <label className="form-label">Display Order</label>
-                                  <input
-                                    type="number"
-                                    className="form-control"
-                                    min="0"
-                                    value={position.displayOrder}
-                                    onChange={(e) => updateTempPosition(index, 'displayOrder', parseInt(e.target.value))}
-                                  />
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+
                   </div>
                 )}
 
@@ -1610,57 +1514,118 @@ const Elections = () => {
                           <span className="text-muted">Loading existing candidates...</span>
                         </div>
                       ) : getFilteredCandidates().length > 0 ? (
-                        <div className="candidate-selection-grid">
-                          {getFilteredCandidates().map(candidate => (
-                            <div key={candidate.id} className={`candidate-selection-card ${formData.selectedCandidateIds.includes(candidate.id) ? 'selected' : ''}`}>
-                              <div className="form-check">
-                                <input
-                                  type="checkbox"
-                                  className="form-check-input"
-                                  id={`candidate-${candidate.id}`}
-                                  checked={formData.selectedCandidateIds.includes(candidate.id)}
-                                  onChange={(e) => handleCandidateSelection(candidate.id, e.target.checked)}
-                                />
-                                <label className="form-check-label" htmlFor={`candidate-${candidate.id}`}>
-                                  <div className="candidate-card-header">
-                                    <div className="candidate-photo-container">
-                                      {candidate.photoUrl && candidate.photoUrl.trim() !== '' ? (
-                                        <img 
-                                          src={candidate.photoUrl} 
-                                          alt={candidate.name}
-                                          className="candidate-photo"
-                                          onError={(e) => {
-                                            e.target.style.display = 'none';
-                                            e.target.nextSibling.style.display = 'flex';
-                                          }}
-                                          onLoad={(e) => {
-                                            // Ensure image fits properly
-                                            e.target.style.maxWidth = '100%';
-                                            e.target.style.maxHeight = '100%';
-                                            e.target.style.objectFit = 'cover';
-                                            e.target.style.objectPosition = 'center';
-                                          }}
+                        <div>
+                          {/* Group candidates by position */}
+                          {(() => {
+                            const candidatesByPosition = {};
+                            getFilteredCandidates().forEach(candidate => {
+                              if (!candidatesByPosition[candidate.positionId]) {
+                                candidatesByPosition[candidate.positionId] = {
+                                  positionName: candidate.position?.title || 'Unknown Position',
+                                  candidates: []
+                                };
+                              }
+                              candidatesByPosition[candidate.positionId].candidates.push(candidate);
+                            });
+
+                            return Object.entries(candidatesByPosition).map(([positionId, positionData]) => (
+                              <div key={positionId} className="mb-4">
+                                <div className="position-header mb-3">
+                                  <h6 className="text-primary mb-2">
+                                    <i className="fas fa-user-tie me-2"></i>
+                                    {positionData.positionName}
+                                  </h6>
+                                  <div className="d-flex justify-content-between align-items-center">
+                                    <span className="text-muted small">
+                                      {positionData.candidates.length} candidate{positionData.candidates.length !== 1 ? 's' : ''} available
+                                    </span>
+                                    <div className="position-actions">
+                                      <button
+                                        type="button"
+                                        className="btn btn-sm btn-outline-success me-2"
+                                        onClick={() => {
+                                          positionData.candidates.forEach(candidate => {
+                                            if (!formData.selectedCandidateIds.includes(candidate.id)) {
+                                              handleCandidateSelection(candidate.id, true);
+                                            }
+                                          });
+                                        }}
+                                      >
+                                        <i className="fas fa-check-double me-1"></i>
+                                        Add All
+                                      </button>
+                                      <button
+                                        type="button"
+                                        className="btn btn-sm btn-outline-danger"
+                                        onClick={() => {
+                                          positionData.candidates.forEach(candidate => {
+                                            if (formData.selectedCandidateIds.includes(candidate.id)) {
+                                              handleCandidateSelection(candidate.id, false);
+                                            }
+                                          });
+                                        }}
+                                      >
+                                        <i className="fas fa-times me-1"></i>
+                                        Remove All
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="candidate-selection-grid">
+                                  {positionData.candidates.map(candidate => (
+                                    <div key={candidate.id} className={`candidate-selection-card ${formData.selectedCandidateIds.includes(candidate.id) ? 'selected' : ''}`}>
+                                      <div className="form-check">
+                                        <input
+                                          type="checkbox"
+                                          className="form-check-input"
+                                          id={`candidate-${candidate.id}`}
+                                          checked={formData.selectedCandidateIds.includes(candidate.id)}
+                                          onChange={(e) => handleCandidateSelection(candidate.id, e.target.checked)}
                                         />
-                                      ) : null}
-                                      <div className="candidate-photo-placeholder" style={{ display: candidate.photoUrl && candidate.photoUrl.trim() !== '' ? 'none' : 'flex' }}>
-                                        <i className="fas fa-user"></i>
+                                        <label className="form-check-label" htmlFor={`candidate-${candidate.id}`}>
+                                          <div className="candidate-card-header">
+                                            <div className="candidate-photo-container">
+                                              {candidate.photoUrl && candidate.photoUrl.trim() !== '' ? (
+                                                <img 
+                                                  src={candidate.photoUrl} 
+                                                  alt={candidate.name}
+                                                  className="candidate-photo"
+                                                  onError={(e) => {
+                                                    e.target.style.display = 'none';
+                                                    e.target.nextSibling.style.display = 'flex';
+                                                  }}
+                                                  onLoad={(e) => {
+                                                    // Ensure image fits properly
+                                                    e.target.style.maxWidth = '100%';
+                                                    e.target.style.maxHeight = '100%';
+                                                    e.target.style.objectFit = 'cover';
+                                                    e.target.style.objectPosition = 'center';
+                                                  }}
+                                                />
+                                              ) : null}
+                                              <div className="candidate-photo-placeholder" style={{ display: candidate.photoUrl && candidate.photoUrl.trim() !== '' ? 'none' : 'flex' }}>
+                                                <i className="fas fa-user"></i>
+                                              </div>
+                                            </div>
+                                          </div>
+                                          <div className="candidate-card-body">
+                                            <div className="candidate-info">
+                                              <div className="candidate-name">
+                                                {candidate.name}
+                                              </div>
+                                              <div className="candidate-position">
+                                                {candidate.position?.title || 'Unknown Position'}
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </label>
                                       </div>
                                     </div>
-                                  </div>
-                                  <div className="candidate-card-body">
-                                    <div className="candidate-info">
-                                      <div className="candidate-name">
-                                        {candidate.name}
-                                      </div>
-                                      <div className="candidate-position">
-                                        {candidate.positionName}
-                                      </div>
-                                    </div>
-                                  </div>
-                                </label>
+                                  ))}
+                                </div>
                               </div>
-                            </div>
-                          ))}
+                            ));
+                          })()}
                         </div>
                       ) : (
                         <div className="alert alert-info">
