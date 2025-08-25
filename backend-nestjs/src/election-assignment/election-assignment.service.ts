@@ -65,7 +65,10 @@ export class ElectionAssignmentService {
 
     // Check if election exists
     const election = await this.prisma.election.findUnique({
-      where: { id: electionId },
+      where: { 
+        id: electionId,
+        isDeleted: false
+      },
     });
 
     if (!election) {
@@ -204,7 +207,10 @@ export class ElectionAssignmentService {
     // Check if election exists if provided
     if (electionId) {
       const election = await this.prisma.election.findUnique({
-        where: { id: electionId },
+        where: { 
+          id: electionId,
+          isDeleted: false
+        },
       });
 
       if (!election) {
@@ -291,7 +297,10 @@ export class ElectionAssignmentService {
 
   async getCandidatesForElection(electionId: string) {
     const election = await this.prisma.election.findUnique({
-      where: { id: electionId },
+      where: { 
+        id: electionId,
+        isDeleted: false
+      },
     });
 
     if (!election) {

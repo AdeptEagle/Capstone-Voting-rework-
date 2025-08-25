@@ -472,6 +472,7 @@ export class TrashService {
             votes: true,
             electionPositions: true,
             electionCandidates: true,
+            auditLogs: true,
           },
         },
       },
@@ -490,9 +491,33 @@ export class TrashService {
       throw new Error('Cannot permanently delete election with voting history. Votes must be preserved for audit purposes.');
     }
 
-    // Permanently delete the election
-    return await this.prisma.election.delete({
-      where: { id: electionId }
+    // Use a transaction to ensure all related data is deleted properly
+    return await this.prisma.$transaction(async (tx) => {
+      // First delete audit logs
+      if (election._count.auditLogs > 0) {
+        await tx.auditLog.deleteMany({
+          where: { electionId }
+        });
+      }
+
+      // Then delete election candidates
+      if (election._count.electionCandidates > 0) {
+        await tx.electionCandidate.deleteMany({
+          where: { electionId }
+        });
+      }
+
+      // Then delete election positions
+      if (election._count.electionPositions > 0) {
+        await tx.electionPosition.deleteMany({
+          where: { electionId }
+        });
+      }
+
+      // Finally delete the election
+      return await tx.election.delete({
+        where: { id: electionId }
+      });
     });
   }
 }

@@ -340,6 +340,7 @@ export class ElectionService {
             votes: true,
             electionPositions: true,
             electionCandidates: true,
+            auditLogs: true,
           },
         },
       },
@@ -358,9 +359,33 @@ export class ElectionService {
       throw new ConflictException('Cannot permanently delete election with voting history. Votes must be preserved for audit purposes.');
     }
 
-    // Permanently delete the election
-    await this.prisma.election.delete({
-      where: { id },
+    // Use a transaction to ensure all related data is deleted properly
+    await this.prisma.$transaction(async (tx) => {
+      // First delete audit logs
+      if (election._count.auditLogs > 0) {
+        await tx.auditLog.deleteMany({
+          where: { electionId: id }
+        });
+      }
+
+      // Then delete election candidates
+      if (election._count.electionCandidates > 0) {
+        await tx.electionCandidate.deleteMany({
+          where: { electionId: id }
+        });
+      }
+
+      // Then delete election positions
+      if (election._count.electionPositions > 0) {
+        await tx.electionPosition.deleteMany({
+          where: { electionId: id }
+        });
+      }
+
+      // Finally delete the election
+      await tx.election.delete({
+        where: { id }
+      });
     });
 
     return {
@@ -723,7 +748,10 @@ export class ElectionService {
 
   async getBallotStatus(id: string) {
     const election = await this.prisma.election.findUnique({
-      where: { id },
+      where: { 
+        id,
+        isDeleted: false
+      },
       include: {
         electionPositions: {
           include: {
@@ -788,7 +816,10 @@ export class ElectionService {
 
   async getActiveElections() {
     return this.prisma.election.findMany({
-      where: { isActive: true },
+      where: { 
+        isActive: true,
+        isDeleted: false
+      },
       include: {
         admin: {
           select: {
@@ -867,6 +898,7 @@ export class ElectionService {
     const expiredElections = await this.prisma.election.findMany({
       where: {
         status: 'active',
+        isDeleted: false,
         endDate: {
           lte: now, // Less than or equal to current Philippine time
         },
@@ -929,7 +961,10 @@ export class ElectionService {
 
   async getElectionTimeStatus(id: string) {
     const election = await this.prisma.election.findUnique({
-      where: { id },
+      where: { 
+        id,
+        isDeleted: false
+      },
     });
 
     if (!election) {
@@ -982,9 +1017,12 @@ export class ElectionService {
   async addPositionToElection(electionId: string, addPositionDto: AddPositionDto) {
     const { positionId } = addPositionDto;
 
-    // Check if election exists
+    // Check if election exists and is not soft-deleted
     const election = await this.prisma.election.findUnique({
-      where: { id: electionId },
+      where: { 
+        id: electionId,
+        isDeleted: false
+      },
     });
 
     if (!election) {
@@ -1042,9 +1080,12 @@ export class ElectionService {
   async addCandidateToElection(electionId: string, addCandidateDto: AddCandidateDto) {
     const { candidateId } = addCandidateDto;
 
-    // Check if election exists
+    // Check if election exists and is not soft-deleted
     const election = await this.prisma.election.findUnique({
-      where: { id: electionId },
+      where: { 
+        id: electionId,
+        isDeleted: false
+      },
     });
 
     if (!election) {
@@ -1161,10 +1202,11 @@ export class ElectionService {
 
   async getElectionHistory() {
     try {
-      // Get all ended elections with comprehensive data
+      // Get all ended elections with comprehensive data (excluding soft-deleted ones)
       const endedElections = await this.prisma.election.findMany({
         where: {
-          status: 'ended'
+          status: 'ended',
+          isDeleted: false
         },
         include: {
           admin: {

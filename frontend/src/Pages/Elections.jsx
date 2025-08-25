@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getElections, getPositions, getCandidates, createElection, updateElection, deleteElection, startElection, pauseElection, stopElection, resumeElection, endElection, getElectionPositions, createPosition, createCandidate, getDepartments, addPositionToElection, addCandidateToElection, hasActiveElections, getActiveElectionInfo } from '../services/api';
+import { getElections, getPositions, getCandidates, createElection, updateElection, deleteElection, startElection, pauseElection, stopElection, resumeElection, endElection, getElectionPositions, createPosition, createCandidate, getDepartments, addPositionToElection, addCandidateToElection, hasActiveElections, getActiveElectionInfo, getElectionCandidates, getUnassignedCandidates, assignCandidateToElection, removeCandidateFromElection } from '../services/api';
 import './Elections.css';
 import Button from 'react-bootstrap/Button'; // Added missing import for Button
 
@@ -41,6 +41,8 @@ const Elections = () => {
   const [tempPositions, setTempPositions] = useState([]);
   const [tempCandidates, setTempCandidates] = useState([]);
   const [existingCandidates, setExistingCandidates] = useState([]);
+  const [electionCandidates, setElectionCandidates] = useState([]);
+  const [unassignedCandidates, setUnassignedCandidates] = useState([]);
   const [loadingCandidates, setLoadingCandidates] = useState(false);
   const [departments, setDepartments] = useState([]);
 
@@ -489,6 +491,7 @@ const Elections = () => {
       setEditingElection(election);
       setError(''); // Clear any previous errors
       setLoadingPositions(true);
+      setLoadingCandidates(true);
       
       // Set initial form data while loading positions
       setFormData({
@@ -500,8 +503,13 @@ const Elections = () => {
       });
       setShowEditModal(true);
       
-      // Fetch the positions for this specific election
-      const electionPositions = await getElectionPositions(election.id);
+      // Fetch the positions and candidates for this specific election
+      const [electionPositions, electionCandidatesData, unassignedCandidatesData] = await Promise.all([
+        getElectionPositions(election.id),
+        getElectionCandidates(election.id),
+        getUnassignedCandidates(election.id)
+      ]);
+      
       const positionIds = electionPositions.map(pos => pos.id);
       
       // Update form data with fetched positions
@@ -509,12 +517,17 @@ const Elections = () => {
         ...prev,
         positionIds: positionIds
       }));
+      
+      // Set candidates data
+      setElectionCandidates(electionCandidatesData || []);
+      setUnassignedCandidates(unassignedCandidatesData || []);
     } catch (error) {
-      console.error('Error fetching election positions:', error);
-      setError('Failed to load election positions. Please try again.');
+      console.error('Error fetching election data:', error);
+      setError('Failed to load election data. Please try again.');
       // Don't close the modal, let user see the error
     } finally {
       setLoadingPositions(false);
+      setLoadingCandidates(false);
     }
   };
 
@@ -575,6 +588,49 @@ const Elections = () => {
     const positionId = tempPositions[index]?.id;
     if (positionId) {
       setTempCandidates(tempCandidates.filter(c => c.positionId !== positionId));
+    }
+  };
+
+  // Candidate management functions for edit modal
+  const handleAssignCandidate = async (candidateId) => {
+    try {
+      await assignCandidateToElection(editingElection.id, candidateId);
+      
+      // Refresh candidate data
+      const [electionCandidatesData, unassignedCandidatesData] = await Promise.all([
+        getElectionCandidates(editingElection.id),
+        getUnassignedCandidates(editingElection.id)
+      ]);
+      
+      setElectionCandidates(electionCandidatesData || []);
+      setUnassignedCandidates(unassignedCandidatesData || []);
+      
+      setSuccess('Candidate assigned successfully!');
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (error) {
+      console.error('Error assigning candidate:', error);
+      setError('Failed to assign candidate. Please try again.');
+    }
+  };
+
+  const handleRemoveCandidate = async (candidateId) => {
+    try {
+      await removeCandidateFromElection(editingElection.id, candidateId);
+      
+      // Refresh candidate data
+      const [electionCandidatesData, unassignedCandidatesData] = await Promise.all([
+        getElectionCandidates(editingElection.id),
+        getUnassignedCandidates(editingElection.id)
+      ]);
+      
+      setElectionCandidates(electionCandidatesData || []);
+      setUnassignedCandidates(unassignedCandidatesData || []);
+      
+      setSuccess('Candidate removed successfully!');
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (error) {
+      console.error('Error removing candidate:', error);
+      setError('Failed to remove candidate. Please try again.');
     }
   };
 
@@ -1935,6 +1991,87 @@ const Elections = () => {
                       <small className="text-danger">Please select at least one position</small>
                     )}
                   </div>
+
+                  {/* Candidate Management Section */}
+                  <div className="mb-3">
+                    <label className="form-label">Candidates Management</label>
+                    {loadingCandidates ? (
+                      <div className="text-center py-3">
+                        <div className="spinner-border spinner-border-sm text-primary me-2" role="status">
+                          <span className="visually-hidden">Loading...</span>
+                        </div>
+                        <span className="text-muted">Loading candidates...</span>
+                      </div>
+                    ) : (
+                      <div className="candidate-management">
+                        {/* Assigned Candidates */}
+                        <div className="mb-3">
+                          <h6 className="text-success">
+                            <i className="fas fa-check-circle me-2"></i>
+                            Assigned Candidates ({electionCandidates.length})
+                          </h6>
+                          {electionCandidates.length > 0 ? (
+                            <div className="assigned-candidates-list">
+                              {electionCandidates.map(candidate => (
+                                <div key={candidate.id} className="candidate-item d-flex justify-content-between align-items-center p-2 border rounded mb-2">
+                                  <div>
+                                    <strong>{candidate.name}</strong>
+                                    <br />
+                                    <small className="text-muted">
+                                      {candidate.positionName} • {candidate.studentId}
+                                    </small>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    className="btn btn-sm btn-outline-danger"
+                                    onClick={() => handleRemoveCandidate(candidate.id)}
+                                    title="Remove from election"
+                                  >
+                                    <i className="fas fa-times"></i>
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="text-muted">No candidates assigned to this election.</p>
+                          )}
+                        </div>
+
+                        {/* Unassigned Candidates */}
+                        <div className="mb-3">
+                          <h6 className="text-warning">
+                            <i className="fas fa-users me-2"></i>
+                            Available Candidates ({unassignedCandidates.length})
+                          </h6>
+                          {unassignedCandidates.length > 0 ? (
+                            <div className="unassigned-candidates-list">
+                              {unassignedCandidates.map(candidate => (
+                                <div key={candidate.id} className="candidate-item d-flex justify-content-between align-items-center p-2 border rounded mb-2">
+                                  <div>
+                                    <strong>{candidate.name}</strong>
+                                    <br />
+                                    <small className="text-muted">
+                                      {candidate.positionName} • {candidate.studentId}
+                                    </small>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    className="btn btn-sm btn-outline-success"
+                                    onClick={() => handleAssignCandidate(candidate.id)}
+                                    title="Add to election"
+                                  >
+                                    <i className="fas fa-plus"></i>
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="text-muted">No available candidates to assign.</p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div className="modal-footer">
                   <button
@@ -1972,34 +2109,35 @@ const Elections = () => {
         <div className="modal fade show" style={{ display: 'block' }} tabIndex="-1">
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
-              <div className="modal-header bg-danger text-white">
+              <div className="modal-header bg-warning text-dark">
                 <h5 className="modal-title">
-                  <i className="fas fa-exclamation-triangle me-2"></i>
-                  Delete Ballot
+                  <i className="fas fa-trash me-2"></i>
+                  Move Ballot to Trash
                 </h5>
                 <button
                   type="button"
-                  className="btn-close btn-close-white"
+                  className="btn-close"
                   onClick={cancelDeleteElection}
                 ></button>
               </div>
               <div className="modal-body">
-                <div className="alert alert-danger">
+                <div className="alert alert-warning">
                   <h6 className="alert-heading">
-                    <i className="fas fa-exclamation-triangle me-2"></i>
-                    Warning: This action cannot be undone!
+                    <i className="fas fa-info-circle me-2"></i>
+                    Move to Trash Bin
                   </h6>
                   <p className="mb-0">
-                    You are about to permanently delete the ballot <strong>"{deletingElection.title}"</strong>.
+                    You are about to move the ballot <strong>"{deletingElection.title}"</strong> to the trash bin.
                   </p>
                 </div>
                 
-                <p>This will permanently remove:</p>
-                <ul className="text-danger">
-                  <li>All election data</li>
-                  <li>All votes cast by voters</li>
-                  <li>All candidate assignments</li>
-                  <li>All position assignments</li>
+                <p>The ballot will be moved to the trash bin where:</p>
+                <ul className="text-muted">
+                  <li>All election data will be preserved</li>
+                  <li>All votes cast by voters will be kept</li>
+                  <li>All candidate assignments will be maintained</li>
+                  <li>All position assignments will be retained</li>
+                  <li>You can restore it later or permanently delete it</li>
                 </ul>
                 
                 <div className="mb-3">
@@ -2031,7 +2169,7 @@ const Elections = () => {
                 </button>
                 <button
                   type="button"
-                  className="btn btn-danger"
+                  className="btn btn-warning"
                   onClick={confirmDeleteElection}
                   disabled={deleteConfirmation !== deletingElection.title || updatingElection === deletingElection.id}
                 >
@@ -2040,7 +2178,7 @@ const Elections = () => {
                   ) : (
                     <i className="fas fa-trash me-1"></i>
                   )}
-                  Delete Ballot
+                  Move to Trash
                 </button>
               </div>
             </div>

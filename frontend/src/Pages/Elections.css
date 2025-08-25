@@ -1375,4 +1375,83 @@
   color: #dc3545;
   font-size: 0.875rem;
   margin-top: 0.25rem;
+}
+
+/* Candidate Management Styles */
+.candidate-management {
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 1rem;
+  background: #f8f9fa;
+}
+
+.candidate-management h6 {
+  margin-bottom: 1rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.assigned-candidates-list,
+.unassigned-candidates-list {
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  background: #fff;
+  padding: 0.5rem;
+}
+
+.candidate-item {
+  background: #fff;
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.candidate-item:hover {
+  background: #f8f9fa;
+  border-color: #007bff;
+}
+
+.candidate-item .btn {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  border-radius: 4px;
+}
+
+.candidate-item .btn-outline-success:hover {
+  background-color: #28a745;
+  border-color: #28a745;
+  color: white;
+}
+
+.candidate-item .btn-outline-danger:hover {
+  background-color: #dc3545;
+  border-color: #dc3545;
+  color: white;
+}
+
+/* Scrollbar styling for candidate lists */
+.assigned-candidates-list::-webkit-scrollbar,
+.unassigned-candidates-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.assigned-candidates-list::-webkit-scrollbar-track,
+.unassigned-candidates-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.assigned-candidates-list::-webkit-scrollbar-thumb,
+.unassigned-candidates-list::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.assigned-candidates-list::-webkit-scrollbar-thumb:hover,
+.unassigned-candidates-list::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
 } 

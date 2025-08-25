@@ -94,7 +94,10 @@ export class VoteService {
 
     // Check if election exists and is active
     const election = await this.prisma.election.findUnique({
-      where: { id: electionId },
+      where: { 
+        id: electionId,
+        isDeleted: false
+      },
     });
 
     if (!election) {
@@ -397,7 +400,10 @@ export class VoteService {
 
     // Check if election exists and is active
     const election = await this.prisma.election.findUnique({
-      where: { id: electionId },
+      where: { 
+        id: electionId,
+        isDeleted: false
+      },
     });
 
     if (!election) {
@@ -816,7 +822,10 @@ export class VoteService {
 
     // Get election details
     const election = await this.prisma.election.findUnique({
-      where: { id: electionId },
+      where: { 
+        id: electionId,
+        isDeleted: false
+      },
       include: {
         admin: {
           select: {
@@ -1197,7 +1206,10 @@ export class VoteService {
 
     // Check if election exists
     const election = await this.prisma.election.findUnique({
-      where: { id: electionId },
+      where: { 
+        id: electionId,
+        isDeleted: false
+      },
     });
 
     if (!election) {
@@ -1293,11 +1305,11 @@ export class VoteService {
 
   async getRealTimeStats() {
     try {
-      // Get all votes for active elections
+      // Get all votes for active and paused elections
       const activeVotes = await this.prisma.vote.findMany({
         where: {
           election: {
-            status: 'active'
+            status: { in: ['active', 'paused'] }
           }
         },
         select: {
@@ -1316,11 +1328,11 @@ export class VoteService {
       const uniqueVoters = new Set(activeVotes.map(vote => vote.voterId)).size;
       const candidatesWithVotes = new Set(activeVotes.map(vote => vote.candidateId)).size;
 
-      // Get positions count for active elections
+      // Get positions count for active and paused elections
       const totalPositions = await this.prisma.electionPosition.count({
         where: {
           election: {
-            status: 'active'
+            status: { in: ['active', 'paused'] }
           }
         }
       });
@@ -1346,20 +1358,49 @@ export class VoteService {
 
   async getVoteTimeline() {
     try {
-      // Get votes from the last 24 hours for active elections
+      // Get votes from the last 24 hours for active and paused elections
       const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
-      const timelineData = await this.prisma.$queryRaw`
-        SELECT 
-          TO_CHAR(v.created_at, 'HH24:00') as hour,
-          COUNT(*) as voteCount
-        FROM votes v
-        INNER JOIN elections e ON v.election_id = e.id
-        WHERE e.status = 'active'
-        AND v.created_at >= ${twentyFourHoursAgo}
-        GROUP BY TO_CHAR(v.created_at, 'HH24:00')
-        ORDER BY hour
-      `;
+      // Get all votes from the last 24 hours for active and paused elections
+      const votes = await this.prisma.vote.findMany({
+        where: {
+          createdAt: {
+            gte: twentyFourHoursAgo
+          },
+          election: {
+            status: { in: ['active', 'paused'] }
+          }
+        },
+        select: {
+          createdAt: true
+        }
+      });
+
+      // Group votes by hour
+      const timelineData = [];
+      const hourMap = new Map();
+
+      votes.forEach(vote => {
+        const hour = vote.createdAt.getHours();
+        const hourKey = `${hour.toString().padStart(2, '0')}:00`;
+        
+        if (hourMap.has(hourKey)) {
+          hourMap.set(hourKey, hourMap.get(hourKey) + 1);
+        } else {
+          hourMap.set(hourKey, 1);
+        }
+      });
+
+      // Convert to array format
+      for (const [hour, voteCount] of hourMap) {
+        timelineData.push({
+          hour,
+          voteCount
+        });
+      }
+
+      // Sort by hour
+      timelineData.sort((a, b) => a.hour.localeCompare(b.hour));
 
       return timelineData;
     } catch (error) {
@@ -1375,7 +1416,7 @@ export class VoteService {
         by: ['electionId', 'positionId', 'candidateId'],
         where: {
           election: {
-            status: 'active'
+            status: { in: ['active', 'paused'] } // Include both active and paused elections
           }
         },
         _count: {
@@ -1406,6 +1447,14 @@ export class VoteService {
             photoUrl: candidate.photo,
             voteCount: result._count.id
           });
+        }
+      }
+
+      // Emit real-time results update via WebSocket
+      if (results.length > 0) {
+        const electionId = activeElectionResults[0]?.electionId;
+        if (electionId) {
+          this.votingGateway.emitResultsUpdate(electionId, results);
         }
       }
 

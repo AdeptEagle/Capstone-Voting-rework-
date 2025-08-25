@@ -33,28 +33,34 @@ export class VoteController {
     return this.voteService.confirmVote(createVoteDto);
   }
 
+  // Specific routes must come before parameterized routes
+  @Get('active-results')
+  @ApiOperation({ summary: 'Get results for currently active elections' })
+  @ApiResponse({ status: 200, description: 'Active election results' })
+  async getActiveElectionResults() {
+    return this.voteService.getActiveElectionResults();
+  }
+
+  @Get('real-time-stats')
+  @ApiOperation({ summary: 'Get real-time voting statistics' })
+  @ApiResponse({ status: 200, description: 'Real-time voting statistics' })
+  async getRealTimeStats() {
+    return this.voteService.getRealTimeStats();
+  }
+
+  @Get('vote-timeline')
+  @ApiOperation({ summary: 'Get vote timeline for the last 24 hours' })
+  @ApiResponse({ status: 200, description: 'Vote timeline data' })
+  async getVoteTimeline() {
+    return this.voteService.getVoteTimeline();
+  }
+
   @Get('voter/:voterId/election/:electionId/status')
   @ApiOperation({ summary: 'Get voter voting status and lockout information' })
   @ApiResponse({ status: 200, description: 'Voter voting status' })
   @ApiResponse({ status: 404, description: 'Voter or election not found' })
   async getVoterVotingStatus(@Param('voterId') voterId: string, @Param('electionId') electionId: string) {
     return this.voteService.getVoterVotingStatus(voterId, electionId);
-  }
-
-  @Get(':id')
-  @ApiOperation({ summary: 'Get vote by ID' })
-  @ApiResponse({ status: 200, description: 'Vote found' })
-  @ApiResponse({ status: 404, description: 'Vote not found' })
-  async getVoteById(@Param('id') id: string) {
-    return this.voteService.getVoteById(id);
-  }
-
-  @Delete(':id')
-  @ApiOperation({ summary: 'Delete vote' })
-  @ApiResponse({ status: 200, description: 'Vote deleted successfully' })
-  @ApiResponse({ status: 404, description: 'Vote not found' })
-  async deleteVote(@Param('id') id: string) {
-    return this.voteService.deleteVote(id);
   }
 
   @Get('election/:electionId')
@@ -92,25 +98,21 @@ export class VoteController {
     return this.voteService.getDepartmentVotingResults(electionId);
   }
 
-  @Get('real-time-stats')
-  @ApiOperation({ summary: 'Get real-time voting statistics' })
-  @ApiResponse({ status: 200, description: 'Real-time voting statistics' })
-  async getRealTimeStats() {
-    return this.voteService.getRealTimeStats();
+  // Parameterized routes come after specific routes
+  @Get(':id')
+  @ApiOperation({ summary: 'Get vote by ID' })
+  @ApiResponse({ status: 200, description: 'Vote found' })
+  @ApiResponse({ status: 404, description: 'Vote not found' })
+  async getVoteById(@Param('id') id: string) {
+    return this.voteService.getVoteById(id);
   }
 
-  @Get('vote-timeline')
-  @ApiOperation({ summary: 'Get vote timeline for the last 24 hours' })
-  @ApiResponse({ status: 200, description: 'Vote timeline data' })
-  async getVoteTimeline() {
-    return this.voteService.getVoteTimeline();
-  }
-
-  @Get('active-results')
-  @ApiOperation({ summary: 'Get results for currently active elections' })
-  @ApiResponse({ status: 200, description: 'Active election results' })
-  async getActiveElectionResults() {
-    return this.voteService.getActiveElectionResults();
+  @Delete(':id')
+  @ApiOperation({ summary: 'Delete vote' })
+  @ApiResponse({ status: 200, description: 'Vote deleted successfully' })
+  @ApiResponse({ status: 404, description: 'Vote not found' })
+  async deleteVote(@Param('id') id: string) {
+    return this.voteService.deleteVote(id);
   }
 
   @Put('reset-voter/:voterId')

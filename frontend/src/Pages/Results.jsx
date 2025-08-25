@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { getActiveElectionResults, getRealTimeStats, getVoteTimeline, getPositions, getCandidates, getVoters, getDepartments, getCourses } from '../services/api';
+import { io } from 'socket.io-client';
+import { getActiveElectionResults, getRealTimeStats, getVoteTimeline, getPositions, getCandidates, getVoters, getDepartments, getCourses, getActiveElectionInfo } from '../services/api';
 import { checkCurrentUser } from '../services/auth';
 import { useElection } from '../contexts/ElectionContext';
 import ElectionStatusMessage from '../components/ElectionStatusMessage';
@@ -229,14 +230,93 @@ const Results = () => {
   const [timeLeft, setTimeLeft] = useState(0);
   const [activeTab, setActiveTab] = useState('overview');
   const [lastUpdate, setLastUpdate] = useState(new Date());
+  const [activeElectionInfo, setActiveElectionInfo] = useState(null);
+  const [socket, setSocket] = useState(null);
   
   const { activeElection, canViewResults } = useElection();
   const currentUser = checkCurrentUser();
+
+  // WebSocket connection for real-time updates
+  useEffect(() => {
+    const connectWebSocket = () => {
+      try {
+        const newSocket = io('http://localhost:3001', {
+          withCredentials: true,
+          transports: ['websocket', 'polling']
+        });
+
+        newSocket.on('connect', () => {
+          console.log('🔌 [Results] WebSocket connected');
+        });
+
+        newSocket.on('disconnect', () => {
+          console.log('🔌 [Results] WebSocket disconnected');
+        });
+
+        newSocket.on('vote-updated', (data) => {
+          console.log('🗳️ [Results] Vote update received:', data);
+          // Refresh data when a vote is cast
+          fetchData();
+        });
+
+        newSocket.on('election-status-updated', (data) => {
+          console.log('📊 [Results] Election status update received:', data);
+          // Refresh data when election status changes
+          fetchData();
+        });
+
+        newSocket.on('results-updated', (data) => {
+          console.log('📈 [Results] Results update received:', data);
+          // Update results data directly
+          if (data.resultsData) {
+            setResultsData(data.resultsData);
+            setLastUpdate(new Date());
+          }
+        });
+
+        setSocket(newSocket);
+
+        return () => {
+          newSocket.disconnect();
+        };
+      } catch (error) {
+        console.error('❌ [Results] WebSocket connection error:', error);
+      }
+    };
+
+    // Only connect if there's an active or paused election
+    if (activeElectionInfo && (activeElectionInfo.hasActive || activeElectionInfo.activeElections.some(e => e.status === 'paused'))) {
+      const cleanup = connectWebSocket();
+      return cleanup;
+    }
+  }, [activeElectionInfo]);
+
+  // Check for active or paused elections
+  const checkActiveElections = async () => {
+    try {
+      const info = await getActiveElectionInfo();
+      setActiveElectionInfo(info);
+      return info;
+    } catch (error) {
+      console.error('Error checking active elections:', error);
+      setActiveElectionInfo({ hasActive: false, activeCount: 0, activeElections: [] });
+      return { hasActive: false, activeCount: 0, activeElections: [] };
+    }
+  };
 
   // Fetch data with real-time updates
   const fetchData = async () => {
     try {
       setLoading(true);
+      
+      // First check if there are any active or paused elections
+      const electionInfo = await checkActiveElections();
+      
+      if (!electionInfo.hasActive && !electionInfo.activeElections.some(e => e.status === 'paused')) {
+        setLoading(false);
+        return; // No active or paused elections
+      }
+
       const [
         activeResults,
         stats,
@@ -264,18 +344,19 @@ const Results = () => {
     fetchData();
   }, []);
 
-  // Real-time updates every 30 seconds
+  // Real-time updates every 30 seconds (as backup to WebSocket)
   useEffect(() => {
     const interval = setInterval(fetchData, 30000);
     return () => clearInterval(interval);
   }, []);
 
-  // Update time display
+  // Update time display for active election
   useEffect(() => {
-    if (activeElection) {
+    if (activeElectionInfo && activeElectionInfo.activeElections.length > 0) {
+      const activeElection = activeElectionInfo.activeElections[0]; // Get the first active election
       const updateTimeDisplay = () => {
         const now = new Date().getTime();
-        const endTime = new Date(activeElection.endTime).getTime();
+        const endTime = new Date(activeElection.endDate).getTime();
         const timeRemaining = Math.max(0, Math.floor((endTime - now) / 1000));
         setTimeLeft(timeRemaining);
       };
@@ -284,7 +365,7 @@ const Results = () => {
       const interval = setInterval(updateTimeDisplay, 1000);
       return () => clearInterval(interval);
     }
-  }, [activeElection]);
+  }, [activeElectionInfo]);
 
   // Calculate analytics data from real-time stats
   const analyticsData = useMemo(() => {
@@ -342,6 +423,10 @@ const Results = () => {
     };
   }, [resultsData, realTimeStats, voteTimeline]);
 
+  // Check if there's an active or paused election
+  const hasActiveOrPausedElection = activeElectionInfo && 
+    (activeElectionInfo.hasActive || activeElectionInfo.activeElections.some(e => e.status === 'paused'));
+
   if (loading) {
     return (
       <div className="results-loading">
@@ -371,37 +456,28 @@ const Results = () => {
     );
   }
 
-  if (!canViewResults) {
-    return (
-      <div className="results-no-access">
-        <div className="alert alert-warning text-center">
-          <i className="fas fa-lock fa-2x mb-3"></i>
-          <h4>Results Not Available</h4>
-          <p>Results are only available during active elections or for administrators.</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Check if there's any active election data
-  if (!resultsData.length) {
+  // NEW LOGIC: Only show results if there's an active or paused election
+  if (!hasActiveOrPausedElection) {
     return (
       <div className="results-container">
         <div className="results-header">
           <div className="results-title">
             <h1>Election Results</h1>
-            <p className="text-muted">No active election found</p>
+            <p className="text-muted">No active or paused election found</p>
           </div>
         </div>
         <div className="alert alert-info text-center">
           <i className="fas fa-info-circle fa-2x mb-3"></i>
-          <h4>No Active Election</h4>
-          <p>There is currently no active election with results to display.</p>
+          <h4>No Active or Paused Election</h4>
+          <p>Results are only available when there is an active or paused election.</p>
           <p className="mb-0">Please wait for an election to be started or check back later.</p>
         </div>
       </div>
     );
   }
+
+  // Get the active or paused election details
+  const currentElection = activeElectionInfo.activeElections[0];
 
   return (
     <div className="results-container">
@@ -423,18 +499,26 @@ const Results = () => {
       </div>
 
       {/* Election Status */}
-      {activeElection && (
+      {currentElection && (
         <div className="election-status">
           <div className="status-card">
-            <h3>{activeElection.title}</h3>
+            <h3>{currentElection.title}</h3>
             <p className="status-text">
-              Status: <span className={`status-badge ${activeElection.status}`}>
-                {activeElection.status.toUpperCase()}
+              Status: <span className={`status-badge ${currentElection.status}`}>
+                {currentElection.status.toUpperCase()}
               </span>
             </p>
-            {timeLeft > 0 && (
+            {timeLeft > 0 && currentElection.status === 'active' && (
               <p className="time-remaining">
                 Time Remaining: <span className="countdown">{formatTime(timeLeft)}</span>
+              </p>
+            )}
+            {currentElection.status === 'paused' && (
+              <p className="time-remaining">
+                <span className="text-warning">
+                  <i className="fas fa-pause me-2"></i>
+                  Election is currently paused
+                </span>
               </p>
             )}
           </div>

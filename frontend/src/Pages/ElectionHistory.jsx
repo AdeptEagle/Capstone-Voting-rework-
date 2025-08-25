@@ -559,9 +559,9 @@ const ElectionHistory = () => {
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title text-danger">
-                  <i className="fas fa-exclamation-triangle me-2"></i>
-                  Delete Election
+                <h5 className="modal-title text-warning">
+                  <i className="fas fa-trash me-2"></i>
+                  Move Election to Trash
                 </h5>
                 <button
                   type="button"
@@ -571,8 +571,8 @@ const ElectionHistory = () => {
               </div>
               <div className="modal-body">
                 <div className="alert alert-warning mb-3">
-                  <i className="fas fa-exclamation-triangle me-2"></i>
-                  <strong>Warning:</strong> This action cannot be undone. All election data, votes, and results will be permanently deleted.
+                  <i className="fas fa-info-circle me-2"></i>
+                  <strong>Move to Trash:</strong> The election will be moved to the trash bin where it can be restored later or permanently deleted.
                 </div>
                 
                 <div className="mb-3">
@@ -612,19 +612,19 @@ const ElectionHistory = () => {
                 </button>
                 <button
                   type="button"
-                  className="btn btn-danger"
+                  className="btn btn-warning"
                   onClick={handleDeleteElection}
                   disabled={deleting || deleteModal.confirmationText !== deleteModal.election.title}
                 >
                   {deleting ? (
                     <>
                       <i className="fas fa-spinner fa-spin me-1"></i>
-                      Deleting...
+                      Moving to Trash...
                     </>
                   ) : (
                     <>
                       <i className="fas fa-trash me-1"></i>
-                      Delete Permanently
+                      Move to Trash
                     </>
                   )}
                 </button>
