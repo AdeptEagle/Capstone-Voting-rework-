@@ -9,7 +9,7 @@ async function createDefaultAdmin() {
 
     // Check if admin already exists
     const existingAdmin = await prisma.admin.findFirst({
-      where: { username: 'admin' }
+      where: { Admin_Username: 'admin' }
     });
 
     if (existingAdmin) {
@@ -23,8 +23,8 @@ async function createDefaultAdmin() {
     const admin = await prisma.admin.create({
       data: {
         id: 'ADMIN-1',
-        username: 'admin',
-        email: 'admin@example.com',
+        Admin_Username: 'admin',
+        Admin_Email: 'admin@example.com',
         password: hashedPassword,
         role: 'ADMIN'
       }

@@ -23,7 +23,7 @@ export class PositionService {
           displayOrder: 'asc',
         },
         {
-          title: 'asc',
+          Position_Title: 'asc',
         },
       ],
       include: {
@@ -38,17 +38,17 @@ export class PositionService {
     });
     
     console.log(`[PositionService] Found ${positions.length} positions`);
-    console.log(`[PositionService] Position IDs:`, positions.map(p => ({ id: p.id, title: p.title, isDeleted: p.isDeleted })));
+    console.log(`[PositionService] Position IDs:`, positions.map(p => ({ id: p.id, title: p.Position_Title, isDeleted: p.isDeleted })));
     
     return positions;
   }
 
   async createPosition(createPositionDto: CreatePositionDto) {
-    const { title, description, voteLimit, displayOrder } = createPositionDto;
+    const { Position_Title, Position_Description, voteLimit, displayOrder } = createPositionDto;
 
     // Check if position with this title already exists
     const existingPosition = await this.prisma.position.findFirst({
-      where: { title },
+      where: { Position_Title: Position_Title },
     });
 
     if (existingPosition) {
@@ -61,8 +61,8 @@ export class PositionService {
     const position = await this.prisma.position.create({
       data: {
         id: customId,
-        title,
-        description,
+        Position_Title: Position_Title,
+        Position_Description: Position_Description,
         voteLimit: voteLimit || 1,
         displayOrder: displayOrder || 0,
       },
@@ -110,7 +110,7 @@ export class PositionService {
   }
 
   async updatePosition(id: string, updatePositionDto: UpdatePositionDto) {
-    const { title, description, voteLimit, displayOrder } = updatePositionDto;
+    const { Position_Title, Position_Description, voteLimit, displayOrder } = updatePositionDto;
 
     // Check if position exists
     const existingPosition = await this.prisma.position.findUnique({
@@ -122,10 +122,10 @@ export class PositionService {
     }
 
     // Check if title is already taken by another position
-    if (title && title !== existingPosition.title) {
+    if (Position_Title && Position_Title !== existingPosition.Position_Title) {
       const conflictingPosition = await this.prisma.position.findFirst({
         where: {
-          title,
+          Position_Title: Position_Title,
           NOT: { id },
         },
       });
@@ -138,8 +138,8 @@ export class PositionService {
     const position = await this.prisma.position.update({
       where: { id },
       data: {
-        title,
-        description,
+        Position_Title: Position_Title,
+        Position_Description: Position_Description,
         voteLimit,
         displayOrder,
       },
@@ -183,7 +183,7 @@ export class PositionService {
 
     console.log(`[PositionService] Found position:`, { 
       id: position.id, 
-      title: position.title, 
+      title: position.Position_Title, 
       isDeleted: position.isDeleted 
     });
 

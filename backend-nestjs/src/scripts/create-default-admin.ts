@@ -22,8 +22,8 @@ async function createDefaultAdmin() {
     const admin = await prisma.admin.create({
       data: {
         id: 'ADMIN-1',
-        username: 'admin',
-        email: 'admin@votingsystem.com',
+        Admin_Username: 'admin',
+        Admin_Email: 'admin@votingsystem.com',
         password: hashedPassword,
         role: 'ADMIN',
       },

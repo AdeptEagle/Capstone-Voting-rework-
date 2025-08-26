@@ -15,8 +15,8 @@ export class AdminService {
     return this.prisma.admin.findMany({
       select: {
         id: true,
-        username: true,
-        email: true,
+        Admin_Username: true,
+        Admin_Email: true,
         role: true,
         createdAt: true,
         updatedAt: true,
@@ -25,14 +25,14 @@ export class AdminService {
   }
 
   async createAdmin(createAdminDto: CreateAdminDto) {
-    const { username, email, password } = createAdminDto;
+    const { Admin_Username, Admin_Email, password } = createAdminDto;
 
     // Check if admin already exists
     const existingAdmin = await this.prisma.admin.findFirst({
       where: {
         OR: [
-          { username },
-          { email },
+          { Admin_Username: Admin_Username },
+          { Admin_Email: Admin_Email },
         ],
       },
     });
@@ -50,8 +50,8 @@ export class AdminService {
     const admin = await this.prisma.admin.create({
       data: {
         id: customId,
-        username,
-        email,
+        Admin_Username: Admin_Username,
+        Admin_Email: Admin_Email,
         password: hashedPassword,
         role: 'ADMIN',
       },
@@ -61,8 +61,8 @@ export class AdminService {
       message: 'Admin created successfully!',
       admin: {
         id: admin.id,
-        username: admin.username,
-        email: admin.email,
+        username: admin.Admin_Username,
+        email: admin.Admin_Email,
         role: admin.role,
         createdAt: admin.createdAt,
         updatedAt: admin.updatedAt,
@@ -72,14 +72,14 @@ export class AdminService {
 
   // New method for admin to customize ID format
   async createAdminWithCustomId(createAdminDto: CreateAdminDto, idFormat: 'simple' | 'padded' | 'year' = 'simple') {
-    const { username, email, password } = createAdminDto;
+    const { Admin_Username, Admin_Email, password } = createAdminDto;
 
     // Check if admin already exists
     const existingAdmin = await this.prisma.admin.findFirst({
       where: {
         OR: [
-          { username },
-          { email },
+          { Admin_Username: Admin_Username },
+          { Admin_Email: Admin_Email },
         ],
       },
     });
@@ -97,8 +97,8 @@ export class AdminService {
     const admin = await this.prisma.admin.create({
       data: {
         id: customId,
-        username,
-        email,
+        Admin_Username: Admin_Username,
+        Admin_Email: Admin_Email,
         password: hashedPassword,
         role: 'ADMIN',
       },
@@ -108,8 +108,8 @@ export class AdminService {
       message: 'Admin created successfully!',
       admin: {
         id: admin.id,
-        username: admin.username,
-        email: admin.email,
+        username: admin.Admin_Username,
+        email: admin.Admin_Email,
         role: admin.role,
         createdAt: admin.createdAt,
         updatedAt: admin.updatedAt,
@@ -173,8 +173,8 @@ export class AdminService {
       where: { id },
       select: {
         id: true,
-        username: true,
-        email: true,
+        Admin_Username: true,
+        Admin_Email: true,
         role: true,
         createdAt: true,
         updatedAt: true,
@@ -189,7 +189,7 @@ export class AdminService {
   }
 
   async updateAdmin(id: string, updateAdminDto: UpdateAdminDto) {
-    const { username, email, password, role } = updateAdminDto;
+    const { Admin_Username, Admin_Email, password, role } = updateAdminDto;
 
     // Check if admin exists
     const existingAdmin = await this.prisma.admin.findUnique({
@@ -201,12 +201,12 @@ export class AdminService {
     }
 
     // Check if username or email is already taken by another admin
-    if (username || email) {
+    if (Admin_Username || Admin_Email) {
       const conflictingAdmin = await this.prisma.admin.findFirst({
         where: {
           OR: [
-            { username: username || existingAdmin.username },
-            { email: email || existingAdmin.email },
+            { Admin_Username: Admin_Username || existingAdmin.Admin_Username },
+            { Admin_Email: Admin_Email || existingAdmin.Admin_Email },
           ],
           NOT: { id },
         },
@@ -218,8 +218,8 @@ export class AdminService {
     }
 
     const updateData: any = {};
-    if (username) updateData.username = username;
-    if (email) updateData.email = email;
+    if (Admin_Username) updateData.Admin_Username = Admin_Username;
+    if (Admin_Email) updateData.Admin_Email = Admin_Email;
     if (role) updateData.role = role;
     if (password) {
       updateData.password = await bcrypt.hash(password, 10);
@@ -230,8 +230,8 @@ export class AdminService {
       data: updateData,
       select: {
         id: true,
-        username: true,
-        email: true,
+        Admin_Username: true,
+        Admin_Email: true,
         role: true,
         createdAt: true,
         updatedAt: true,
@@ -264,25 +264,25 @@ export class AdminService {
 
   async getAdminByUsername(username: string) {
     return this.prisma.admin.findUnique({
-      where: { username },
+      where: { Admin_Username: username },
     });
   }
 
   async getAdminByEmail(email: string) {
     return this.prisma.admin.findUnique({
-      where: { email },
+      where: { Admin_Email: email },
     });
   }
 
   async createSuperAdmin(createAdminDto: CreateAdminDto) {
-    const { username, email, password } = createAdminDto;
+    const { Admin_Username, Admin_Email, password } = createAdminDto;
 
     // Check if admin already exists
     const existingAdmin = await this.prisma.admin.findFirst({
       where: {
         OR: [
-          { username },
-          { email },
+          { Admin_Username: Admin_Username },
+          { Admin_Email: Admin_Email },
         ],
       },
     });
@@ -300,8 +300,8 @@ export class AdminService {
     const admin = await this.prisma.admin.create({
       data: {
         id: customId,
-        username,
-        email,
+        Admin_Username: Admin_Username,
+        Admin_Email: Admin_Email,
         password: hashedPassword,
         role: 'SUPERADMIN',
       },
@@ -311,8 +311,8 @@ export class AdminService {
       message: 'Super Admin created successfully!',
       admin: {
         id: admin.id,
-        username: admin.username,
-        email: admin.email,
+        username: admin.Admin_Username,
+        email: admin.Admin_Email,
         role: admin.role,
         createdAt: admin.createdAt,
         updatedAt: admin.updatedAt,
@@ -339,7 +339,7 @@ export class AdminService {
       },
       select: {
         id: true,
-        username: true,
+        Admin_Username: true,
         role: true,
         createdAt: true,
       },
@@ -351,7 +351,7 @@ export class AdminService {
     const adminActivity = await this.prisma.admin.findMany({
       select: {
         id: true,
-        username: true,
+        Admin_Username: true,
         role: true,
         createdAt: true,
         updatedAt: true,

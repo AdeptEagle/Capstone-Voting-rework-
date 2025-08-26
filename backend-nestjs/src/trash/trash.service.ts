@@ -54,7 +54,7 @@ export class TrashService {
       where: { isDeleted: true },
       include: {
         admin: {
-          select: { username: true }
+          select: { Admin_Username: true }
         }
       },
       orderBy: { deletedAt: 'desc' }
@@ -68,7 +68,7 @@ export class TrashService {
       include: {
         department: true,
         admin: {
-          select: { username: true }
+          select: { Admin_Username: true }
         }
       },
       orderBy: { deletedAt: 'desc' }
@@ -406,28 +406,28 @@ export class TrashService {
         admin: {
           select: {
             id: true,
-            username: true,
-            email: true,
+            Admin_Username: true,
+            Admin_Email: true,
           },
         },
         electionPositions: {
           include: {
             position: {
-              select: {
-                id: true,
-                title: true,
-              },
+                              select: {
+                  id: true,
+                  Position_Title: true,
+                },
             },
           },
         },
         electionCandidates: {
           include: {
             candidate: {
-              select: {
-                id: true,
-                name: true,
-                studentId: true,
-              },
+                              select: {
+                  id: true,
+                  Candidate_Name: true,
+                  Candidate_StudentId: true,
+                },
             },
           },
         },

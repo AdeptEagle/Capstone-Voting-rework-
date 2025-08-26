@@ -19,20 +19,20 @@ export class CandidateService {
         position: {
           select: {
             id: true,
-            title: true,
+            Position_Title: true,
           },
         },
         department: {
           select: {
             id: true,
-            name: true,
+            Department_Name: true,
           },
         },
         course: {
           select: {
             id: true,
-            name: true,
-            code: true,
+            Course_Name: true,
+            Course_Code: true,
           },
         },
         _count: {
@@ -48,7 +48,7 @@ export class CandidateService {
   async createCandidate(createCandidateDto: CreateCandidateDto, photo?: any) {
     console.log('createCandidate called with photo:', photo);
     console.log('createCandidateDto:', createCandidateDto);
-    const { name, email, studentId, positionId, departmentId, courseId, manifesto } = createCandidateDto;
+    const { Candidate_Name, Candidate_Email, Candidate_StudentId, positionId, departmentId, courseId, manifesto } = createCandidateDto;
 
     // Check if position exists
     const position = await this.prisma.position.findUnique({
@@ -79,7 +79,7 @@ export class CandidateService {
 
     // Check if candidate with this student ID already exists
     const existingCandidate = await this.prisma.candidate.findFirst({
-      where: { studentId },
+      where: { Candidate_StudentId: Candidate_StudentId },
     });
 
     if (existingCandidate) {
@@ -135,9 +135,9 @@ export class CandidateService {
     const candidate = await this.prisma.candidate.create({
       data: {
         id: customId,
-        name,
-        email,
-        studentId,
+        Candidate_Name: Candidate_Name,
+        Candidate_Email: Candidate_Email,
+        Candidate_StudentId: Candidate_StudentId,
         positionId,
         departmentId,
         courseId,
@@ -148,20 +148,20 @@ export class CandidateService {
         position: {
           select: {
             id: true,
-            title: true,
+            Position_Title: true,
           },
         },
         department: {
           select: {
             id: true,
-            name: true,
+            Department_Name: true,
           },
         },
         course: {
           select: {
             id: true,
-            name: true,
-            code: true,
+            Course_Name: true,
+            Course_Code: true,
           },
         },
       },
@@ -180,20 +180,20 @@ export class CandidateService {
         position: {
           select: {
             id: true,
-            title: true,
+            Position_Title: true,
           },
         },
         department: {
           select: {
             id: true,
-            name: true,
+            Department_Name: true,
           },
         },
         course: {
           select: {
             id: true,
-            name: true,
-            code: true,
+            Course_Name: true,
+            Course_Code: true,
           },
         },
         _count: {
@@ -218,7 +218,7 @@ export class CandidateService {
   }
 
   async updateCandidate(id: string, updateCandidateDto: UpdateCandidateDto, photo?: any) {
-    const { name, email, studentId, positionId, departmentId, courseId, manifesto } = updateCandidateDto;
+    const { Candidate_Name, Candidate_Email, Candidate_StudentId, positionId, departmentId, courseId, manifesto } = updateCandidateDto;
 
     // Check if candidate exists
     const existingCandidate = await this.prisma.candidate.findUnique({
@@ -263,10 +263,10 @@ export class CandidateService {
     }
 
     // Check if student ID is already taken by another candidate
-    if (studentId && studentId !== existingCandidate.studentId) {
+    if (Candidate_StudentId && Candidate_StudentId !== existingCandidate.Candidate_StudentId) {
       const conflictingCandidate = await this.prisma.candidate.findFirst({
         where: {
-          studentId,
+          Candidate_StudentId: Candidate_StudentId,
           NOT: { id },
         },
       });
@@ -340,9 +340,9 @@ export class CandidateService {
     const candidate = await this.prisma.candidate.update({
       where: { id },
       data: {
-        name,
-        email,
-        studentId,
+        Candidate_Name: Candidate_Name,
+        Candidate_Email: Candidate_Email,
+        Candidate_StudentId: Candidate_StudentId,
         positionId,
         departmentId,
         courseId,
@@ -353,20 +353,20 @@ export class CandidateService {
         position: {
           select: {
             id: true,
-            title: true,
+            Position_Title: true,
           },
         },
         department: {
           select: {
             id: true,
-            name: true,
+            Department_Name: true,
           },
         },
         course: {
           select: {
             id: true,
-            name: true,
-            code: true,
+            Course_Name: true,
+            Course_Code: true,
           },
         },
       },

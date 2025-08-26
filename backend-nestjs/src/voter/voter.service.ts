@@ -19,14 +19,14 @@ export class VoterService {
         department: {
           select: {
             id: true,
-            name: true,
+            Department_Name: true,
           },
         },
         course: {
           select: {
             id: true,
-            name: true,
-            code: true,
+            Course_Name: true,
+            Course_Code: true,
           },
         },
       },
@@ -40,14 +40,14 @@ export class VoterService {
         department: {
           select: {
             id: true,
-            name: true,
+            Department_Name: true,
           },
         },
         course: {
           select: {
             id: true,
-            name: true,
-            code: true,
+            Course_Name: true,
+            Course_Code: true,
           },
         },
       },
@@ -62,19 +62,19 @@ export class VoterService {
 
   async getVoterByStudentId(studentId: string) {
     const voter = await this.prisma.voter.findUnique({
-      where: { studentId }, // Use studentId field
+      where: { Voter_StudentId: studentId }, // Use Voter_StudentId field
       include: {
         department: {
           select: {
             id: true,
-            name: true,
+            Department_Name: true,
           },
         },
         course: {
           select: {
             id: true,
-            name: true,
-            code: true,
+            Course_Name: true,
+            Course_Code: true,
           },
         },
       },
@@ -88,14 +88,14 @@ export class VoterService {
   }
 
   async createVoter(createVoterDto: CreateVoterDto) {
-    const { email, studentId, password, ...rest } = createVoterDto;
+    const { Voter_Email, Voter_StudentId, password, ...rest } = createVoterDto;
 
     // Check if voter already exists
     const existingVoter = await this.prisma.voter.findFirst({
       where: {
         OR: [
-          { email },
-          { studentId }, // Check if student ID already exists
+          { Voter_Email: Voter_Email },
+          { Voter_StudentId: Voter_StudentId }, // Check if student ID already exists
         ],
       },
     });
@@ -112,9 +112,9 @@ export class VoterService {
 
     const voterData: any = {
       id: voterId,
-      studentId,
+      Voter_StudentId: Voter_StudentId,
       ...rest,
-      email,
+      Voter_Email: Voter_Email,
       password: hashedPassword,
     };
 
@@ -126,14 +126,14 @@ export class VoterService {
         department: {
           select: {
             id: true,
-            name: true,
+            Department_Name: true,
           },
         },
         course: {
           select: {
             id: true,
-            name: true,
-            code: true,
+            Course_Name: true,
+            Course_Code: true,
           },
         },
       },
@@ -143,17 +143,17 @@ export class VoterService {
     console.log('🔌 Emitting voter-registered WebSocket event...');
     console.log('📊 Voter data to emit:', {
       id: voter.id,
-      studentId: voter.studentId,
-      name: voter.name,
-      email: voter.email
+      studentId: voter.Voter_StudentId,
+      name: voter.Voter_Name,
+      email: voter.Voter_Email
     });
     
     try {
       this.votingGateway.emitVoterRegistered({
         id: voter.id,
-        studentId: voter.studentId,
-        name: voter.name,
-        email: voter.email,
+        studentId: voter.Voter_StudentId,
+        name: voter.Voter_Name,
+        email: voter.Voter_Email,
         hasVoted: voter.hasVoted,
         department: voter.department,
         course: voter.course,
@@ -170,7 +170,7 @@ export class VoterService {
       this.votingGateway.emitAdminAction('voter-management', {
         action: 'voter-created',
         voterId: voter.id,
-        voterName: voter.name,
+        voterName: voter.Voter_Name,
       });
       console.log('✅ admin-action event emitted successfully');
     } catch (error) {
@@ -181,9 +181,9 @@ export class VoterService {
       message: 'Voter created successfully!',
       voter: {
         id: voter.id,
-        studentId: voter.studentId,
-        name: voter.name,
-        email: voter.email,
+        studentId: voter.Voter_StudentId,
+        name: voter.Voter_Name,
+        email: voter.Voter_Email,
         hasVoted: voter.hasVoted,
         department: voter.department,
         course: voter.course,
@@ -216,14 +216,14 @@ export class VoterService {
         department: {
           select: {
             id: true,
-            name: true,
+            Department_Name: true,
           },
         },
         course: {
           select: {
             id: true,
-            name: true,
-            code: true,
+            Course_Name: true,
+            Course_Code: true,
           },
         },
       },
@@ -232,9 +232,9 @@ export class VoterService {
     // Emit real-time voter update
     this.votingGateway.emitVoterUpdated({
       id: updatedVoter.id,
-      studentId: updatedVoter.studentId,
-      name: updatedVoter.name,
-      email: updatedVoter.email,
+      studentId: updatedVoter.Voter_StudentId,
+      name: updatedVoter.Voter_Name,
+      email: updatedVoter.Voter_Email,
       hasVoted: updatedVoter.hasVoted,
       department: updatedVoter.department,
       course: updatedVoter.course,
@@ -245,7 +245,7 @@ export class VoterService {
     this.votingGateway.emitAdminAction('voter-management', {
       action: 'voter-updated',
       voterId: updatedVoter.id,
-      voterName: updatedVoter.name,
+      voterName: updatedVoter.Voter_Name,
     });
 
     return {
@@ -298,9 +298,9 @@ export class VoterService {
     // Emit real-time voter update for vote status
     this.votingGateway.emitVoterUpdated({
       id: updatedVoter.id,
-      studentId: updatedVoter.studentId,
-      name: updatedVoter.name,
-      email: updatedVoter.email,
+      studentId: updatedVoter.Voter_StudentId,
+      name: updatedVoter.Voter_Name,
+      email: updatedVoter.Voter_Email,
       hasVoted: updatedVoter.hasVoted,
       updatedAt: updatedVoter.updatedAt,
     });
@@ -328,9 +328,9 @@ export class VoterService {
     // Emit real-time voter update for vote status reset
     this.votingGateway.emitVoterUpdated({
       id: updatedVoter.id,
-      studentId: updatedVoter.studentId,
-      name: updatedVoter.name,
-      email: updatedVoter.email,
+      studentId: updatedVoter.Voter_StudentId,
+      name: updatedVoter.Voter_Name,
+      email: updatedVoter.Voter_Email,
       hasVoted: updatedVoter.hasVoted,
       updatedAt: updatedVoter.updatedAt,
     });
@@ -346,7 +346,7 @@ export class VoterService {
       where: { id },
       select: {
         id: true,
-        studentId: true,
+        Voter_StudentId: true,
         password: true,
       },
     });
@@ -359,8 +359,8 @@ export class VoterService {
     // Instead, we return a message indicating the password status
     return {
       message: 'Password retrieved successfully',
-      hasCustomPassword: voter.password !== voter.studentId,
-      defaultPassword: voter.studentId,
+      hasCustomPassword: voter.password !== voter.Voter_StudentId,
+      defaultPassword: voter.Voter_StudentId,
     };
   }
 
@@ -374,7 +374,7 @@ export class VoterService {
     }
 
     // Reset password to student ID
-    const hashedPassword = await bcrypt.hash(voter.studentId, 10);
+    const hashedPassword = await bcrypt.hash(voter.Voter_StudentId, 10);
 
     const updatedVoter = await this.prisma.voter.update({
       where: { id },
@@ -384,9 +384,9 @@ export class VoterService {
     // Emit real-time voter update for password reset
     this.votingGateway.emitVoterUpdated({
       id: updatedVoter.id,
-      studentId: updatedVoter.studentId,
-      name: updatedVoter.name,
-      email: updatedVoter.email,
+      studentId: updatedVoter.Voter_StudentId,
+      name: updatedVoter.Voter_Name,
+      email: updatedVoter.Voter_Email,
       hasVoted: updatedVoter.hasVoted,
       updatedAt: updatedVoter.updatedAt,
     });
@@ -395,17 +395,17 @@ export class VoterService {
     this.votingGateway.emitAdminAction('voter-management', {
       action: 'voter-password-reset',
       voterId: updatedVoter.id,
-      voterName: updatedVoter.name,
+      voterName: updatedVoter.Voter_Name,
     });
 
     return {
       message: 'Password reset to Student ID successfully!',
-      newPassword: voter.studentId,
+      newPassword: voter.Voter_StudentId,
       voter: {
         id: updatedVoter.id,
-        studentId: updatedVoter.studentId,
-        name: updatedVoter.name,
-        email: updatedVoter.email,
+        studentId: updatedVoter.Voter_StudentId,
+        name: updatedVoter.Voter_Name,
+        email: updatedVoter.Voter_Email,
       },
     };
   }

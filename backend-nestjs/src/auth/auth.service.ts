@@ -53,8 +53,8 @@ export class AuthService {
           role: admin.role,
           user: {
             id: admin.id,
-            username: admin.username,
-            email: admin.email
+            username: admin.Admin_Username,
+            email: admin.Admin_Email
           }
         };
       } else {
@@ -62,18 +62,18 @@ export class AuthService {
         const voter = await this.prisma.voter.findUnique({
           where: { id: decoded.sub },
           include: {
-            department: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-            course: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
+                    department: {
+          select: {
+            id: true,
+            Department_Name: true,
+          },
+        },
+        course: {
+          select: {
+            id: true,
+            Course_Name: true,
+          },
+        },
           },
         });
 
@@ -90,9 +90,9 @@ export class AuthService {
           role: 'user',
           user: {
             id: voter.id,
-            name: voter.name,
-            email: voter.email,
-            studentId: voter.studentId,
+            name: voter.Voter_Name,
+            email: voter.Voter_Email,
+            studentId: voter.Voter_StudentId,
             hasVoted: voter.hasVoted,
             department: voter.department,
             course: voter.course
@@ -109,11 +109,11 @@ export class AuthService {
     }
   }
 
-  async adminLogin(adminLoginDto: { username: string; password: string }, res: Response) {
-    const { username, password } = adminLoginDto;
+  async adminLogin(adminLoginDto: { Admin_Username: string; password: string }, res: Response) {
+    const { Admin_Username, password } = adminLoginDto;
 
     const admin = await this.prisma.admin.findUnique({
-      where: { username },
+      where: { Admin_Username: Admin_Username },
     });
 
     if (!admin) {
@@ -127,7 +127,7 @@ export class AuthService {
 
     const payload = { 
       sub: admin.id, 
-      username: admin.username, 
+      username: admin.Admin_Username, 
       role: admin.role,
       type: 'admin'
     };
@@ -147,29 +147,29 @@ export class AuthService {
       message: 'Admin login successful',
       admin: {
         id: admin.id,
-        username: admin.username,
-        email: admin.email,
+        username: admin.Admin_Username,
+        email: admin.Admin_Email,
         role: admin.role,
       },
     };
   }
 
-  async userLogin(userLoginDto: { studentId: string; password: string }, res: Response) {
-    const { studentId, password } = userLoginDto;
+  async userLogin(userLoginDto: { Voter_StudentId: string; password: string }, res: Response) {
+    const { Voter_StudentId, password } = userLoginDto;
 
     const voter = await this.prisma.voter.findUnique({
-      where: { studentId },
+      where: { Voter_StudentId: Voter_StudentId },
       include: {
         department: {
           select: {
             id: true,
-            name: true,
+            Department_Name: true,
           },
         },
         course: {
           select: {
             id: true,
-            name: true,
+            Course_Name: true,
           },
         },
       },
@@ -186,7 +186,7 @@ export class AuthService {
 
     const payload = { 
       sub: voter.id, 
-      studentId: voter.studentId, 
+      studentId: voter.Voter_StudentId, 
       type: 'voter'
     };
 
@@ -205,9 +205,9 @@ export class AuthService {
       message: 'User login successful',
       voter: {
         id: voter.id,
-        name: voter.name,
-        email: voter.email,
-        studentId: voter.studentId,
+        name: voter.Voter_Name,
+        email: voter.Voter_Email,
+        studentId: voter.Voter_StudentId,
         hasVoted: voter.hasVoted,
         department: voter.department,
         course: voter.course,
@@ -216,21 +216,21 @@ export class AuthService {
   }
 
   async userRegister(userRegisterDto: {
-    name: string;
-    email: string;
-    studentId: string;
+    Voter_Name: string;
+    Voter_Email: string;
+    Voter_StudentId: string;
     password: string;
     departmentId?: string;
     courseId?: string;
   }, res: Response) {
-    const { name, email, studentId, password, departmentId, courseId } = userRegisterDto;
+    const { Voter_Name, Voter_Email, Voter_StudentId, password, departmentId, courseId } = userRegisterDto;
 
     // Check if voter already exists
     const existingVoter = await this.prisma.voter.findFirst({
       where: {
         OR: [
-          { email },
-          { studentId },
+          { Voter_Email: Voter_Email },
+          { Voter_StudentId: Voter_StudentId },
         ],
       },
     });
@@ -248,9 +248,9 @@ export class AuthService {
     // Create voter with optional fields
     const voterData: any = {
       id: voterId,
-      name,
-      email,
-      studentId,
+      Voter_Name: Voter_Name,
+      Voter_Email: Voter_Email,
+      Voter_StudentId: Voter_StudentId,
       password: hashedPassword,
     };
 
@@ -269,13 +269,13 @@ export class AuthService {
         department: {
           select: {
             id: true,
-            name: true,
+            Department_Name: true,
           },
         },
         course: {
           select: {
             id: true,
-            name: true,
+            Course_Name: true,
           },
         },
       },
@@ -286,9 +286,9 @@ export class AuthService {
     try {
       this.votingGateway.emitVoterRegistered({
         id: voter.id,
-        studentId: voter.studentId,
-        name: voter.name,
-        email: voter.email,
+        studentId: voter.Voter_StudentId,
+        name: voter.Voter_Name,
+        email: voter.Voter_Email,
         hasVoted: voter.hasVoted,
         department: voter.department,
         course: voter.course,
@@ -300,7 +300,7 @@ export class AuthService {
       this.votingGateway.emitAdminAction('voter-management', {
         action: 'voter-created',
         voterId: voter.id,
-        voterName: voter.name,
+        voterName: voter.Voter_Name,
       });
       console.log('✅ [AuthService] admin-action event emitted successfully');
     } catch (error) {
@@ -309,7 +309,7 @@ export class AuthService {
 
     const payload = { 
       sub: voter.id, 
-      studentId: voter.studentId, 
+      studentId: voter.Voter_StudentId, 
       type: 'voter'
     };
 
@@ -328,9 +328,9 @@ export class AuthService {
       message: 'User registration successful',
       voter: {
         id: voter.id,
-        name: voter.name,
-        email: voter.email,
-        studentId: voter.studentId,
+        name: voter.Voter_Name,
+        email: voter.Voter_Email,
+        studentId: voter.Voter_StudentId,
         hasVoted: voter.hasVoted,
         department: voter.department,
         course: voter.course,
@@ -338,15 +338,15 @@ export class AuthService {
     };
   }
 
-  async requestPasswordReset(requestPasswordResetDto: { email: string; userType: 'voter' | 'admin' }) {
-    const { email, userType } = requestPasswordResetDto;
+  async requestPasswordReset(requestPasswordResetDto: { ResetToken_Email: string; userType: 'voter' | 'admin' }) {
+    const { ResetToken_Email, userType } = requestPasswordResetDto;
 
     // Check if user exists
     let user;
     if (userType === 'voter') {
-      user = await this.prisma.voter.findUnique({ where: { email } });
+      user = await this.prisma.voter.findUnique({ where: { Voter_Email: ResetToken_Email } });
     } else {
-      user = await this.prisma.admin.findUnique({ where: { email } });
+      user = await this.prisma.admin.findUnique({ where: { Admin_Email: ResetToken_Email } });
     }
 
     if (!user) {
@@ -363,21 +363,21 @@ export class AuthService {
     try {
       // Try to delete any existing tokens for this email first
       await this.prisma.passwordResetToken.deleteMany({
-        where: { email },
+        where: { ResetToken_Email: ResetToken_Email },
       });
 
       // Create new reset token
       await this.prisma.passwordResetToken.create({
         data: {
           id: await this.idGenerator.generatePasswordResetTokenId(), // Use correct method
-          email,
+          ResetToken_Email: ResetToken_Email,
           token: resetToken,
           expiresAt,
         },
       });
 
       // Send password reset email
-      await this.emailService.sendPasswordResetEmail(email, resetToken, userType);
+      await this.emailService.sendPasswordResetEmail(ResetToken_Email, resetToken, userType);
 
       return {
         message: 'If an account with this email exists, a password reset link has been sent.',
@@ -390,14 +390,14 @@ export class AuthService {
       await this.prisma.passwordResetToken.create({
         data: {
           id: await this.idGenerator.generatePasswordResetTokenId(), // Use correct method
-          email,
+          ResetToken_Email: ResetToken_Email,
           token: resetToken,
           expiresAt,
         },
       });
 
       // Send password reset email
-      await this.emailService.sendPasswordResetEmail(email, resetToken, userType);
+      await this.emailService.sendPasswordResetEmail(ResetToken_Email, resetToken, userType);
 
       return {
         message: 'If an account with this email exists, a password reset link has been sent.',
@@ -449,23 +449,23 @@ export class AuthService {
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
     // Update user password based on email
-    const email = resetToken.email;
+    const email = resetToken.ResetToken_Email;
     
     // Try to update voter first
-    let user = await this.prisma.voter.findUnique({ where: { email } });
+    let user = await this.prisma.voter.findUnique({ where: { Voter_Email: email } });
     let userType: 'voter' | 'admin' = 'voter';
     
     if (user) {
       await this.prisma.voter.update({
-        where: { email },
+        where: { Voter_Email: email },
         data: { password: hashedPassword },
       });
     } else {
       // Try admin
-      const adminUser = await this.prisma.admin.findUnique({ where: { email } });
+      const adminUser = await this.prisma.admin.findUnique({ where: { Admin_Email: email } });
       if (adminUser) {
         await this.prisma.admin.update({
-          where: { email },
+          where: { Admin_Email: email },
           data: { password: hashedPassword },
         });
         userType = 'admin';

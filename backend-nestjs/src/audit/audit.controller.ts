@@ -18,6 +18,25 @@ import { AuditService } from '../services/audit.service';
 export class AuditController {
   constructor(private readonly auditService: AuditService) {}
 
+  @Get()
+  @ApiOperation({ summary: 'Get all audit logs' })
+  @ApiResponse({ status: 200, description: 'List of all audit logs' })
+  async getAllAuditLogs() {
+    try {
+      const auditLogs = await this.auditService.getAllAuditLogs();
+      return {
+        success: true,
+        message: 'Audit logs retrieved successfully',
+        data: auditLogs,
+      };
+    } catch (error) {
+      throw new HttpException(
+        'Failed to retrieve audit logs',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
   @Get('verify-vote/:voteId')
   @ApiOperation({ summary: 'Verify vote integrity' })
   @ApiResponse({ status: 200, description: 'Vote verification result' })
@@ -184,10 +203,10 @@ export class AuditController {
         data: {
           voteId: vote.id,
           verificationCode: vote.verificationCode,
-          voterName: vote.voter.name,
-          candidateName: vote.candidate.name,
-          electionTitle: vote.election.title,
-          positionTitle: vote.position.title,
+          voterName: vote.voter.Voter_Name,
+          candidateName: vote.candidate.Candidate_Name,
+          electionTitle: vote.election.Election_Title,
+          positionTitle: vote.position.Position_Title,
           timestamp: vote.createdAt,
           integrityVerified: integrityResult.verified,
           auditTrail: integrityResult.auditTrail,

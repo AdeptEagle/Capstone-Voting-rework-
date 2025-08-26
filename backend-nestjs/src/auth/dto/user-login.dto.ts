@@ -10,7 +10,7 @@ export class UserLoginDto {
   @IsNotEmpty()
   @MinLength(10)
   @Matches(/^\d{4}-\d{5}$/, { message: 'Student ID must be in format YYYY-NNNNN (e.g., 2024-00001)' })
-  studentId: string;
+  Voter_StudentId: string;
 
   @ApiProperty({
     description: 'User password',

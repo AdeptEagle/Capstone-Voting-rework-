@@ -21,8 +21,8 @@ export class ElectionService {
         admin: {
           select: {
             id: true,
-            username: true,
-            email: true,
+            Admin_Username: true,
+            Admin_Email: true,
           },
         },
         electionPositions: {
@@ -30,7 +30,7 @@ export class ElectionService {
             position: {
               select: {
                 id: true,
-                title: true,
+                Position_Title: true,
               },
             },
           },
@@ -40,8 +40,8 @@ export class ElectionService {
             candidate: {
               select: {
                 id: true,
-                name: true,
-                studentId: true,
+                Candidate_Name: true,
+                Candidate_StudentId: true,
               },
             },
           },
@@ -66,8 +66,8 @@ export class ElectionService {
         admin: {
           select: {
             id: true,
-            username: true,
-            email: true,
+            Admin_Username: true,
+            Admin_Email: true,
           },
         },
         electionPositions: {
@@ -75,7 +75,7 @@ export class ElectionService {
             position: {
               select: {
                 id: true,
-                title: true,
+                Position_Title: true,
               },
             },
           },
@@ -85,8 +85,8 @@ export class ElectionService {
             candidate: {
               select: {
                 id: true,
-                name: true,
-                studentId: true,
+                Candidate_Name: true,
+                Candidate_StudentId: true,
               },
             },
           },
@@ -108,11 +108,11 @@ export class ElectionService {
   }
 
   async createElection(createElectionDto: CreateElectionDto, adminId: string) {
-    const { title, description, startDate, endDate, isActive } = createElectionDto;
+    const { Election_Title, Election_Description, startDate, endDate, isActive } = createElectionDto;
 
     // Check if election with same title already exists
     const existingElection = await this.prisma.election.findFirst({
-      where: { title },
+      where: { Election_Title: Election_Title },
     });
 
     if (existingElection) {
@@ -125,30 +125,30 @@ export class ElectionService {
     const election = await this.prisma.election.create({
       data: {
         id: customId,
-        title,
-        description,
+        Election_Title: Election_Title,
+        Election_Description: Election_Description,
         startDate: new Date(startDate),
         endDate: new Date(endDate),
         isActive: isActive || false,
         status: 'draft', // Explicitly set status to draft
         createdBy: adminId,
       },
-      include: {
-        admin: {
-          select: {
-            id: true,
-            username: true,
-            email: true,
-          },
-        },
-      },
+             include: {
+         admin: {
+           select: {
+             id: true,
+             Admin_Username: true,
+             Admin_Email: true,
+           },
+         },
+       },
     });
 
     // Emit real-time election creation
     this.votingGateway.emitElectionCreated({
       id: election.id,
-      title: election.title,
-      description: election.description,
+      title: election.Election_Title,
+      description: election.Election_Description,
       startDate: election.startDate,
       endDate: election.endDate,
       isActive: election.isActive,
@@ -161,8 +161,8 @@ export class ElectionService {
       message: 'Election created successfully!',
       election: {
         id: election.id,
-        title: election.title,
-        description: election.description,
+        title: election.Election_Title,
+        description: election.Election_Description,
         startDate: election.startDate,
         endDate: election.endDate,
         isActive: election.isActive,
@@ -201,8 +201,8 @@ export class ElectionService {
         admin: {
           select: {
             id: true,
-            username: true,
-            email: true,
+            Admin_Username: true,
+            Admin_Email: true,
           },
         },
       },
@@ -211,8 +211,8 @@ export class ElectionService {
     // Emit real-time election update event
     this.votingGateway.emitElectionUpdated({
       id: updatedElection.id,
-      title: updatedElection.title,
-      description: updatedElection.description,
+      title: updatedElection.Election_Title,
+      description: updatedElection.Election_Description,
       status: updatedElection.status,
       startDate: updatedElection.startDate,
       endDate: updatedElection.endDate,
@@ -269,8 +269,8 @@ export class ElectionService {
         admin: {
           select: {
             id: true,
-            username: true,
-            email: true,
+            Admin_Username: true,
+            Admin_Email: true,
           },
         },
         electionPositions: {
@@ -278,7 +278,7 @@ export class ElectionService {
             position: {
               select: {
                 id: true,
-                title: true,
+                Position_Title: true,
               },
             },
           },
@@ -288,8 +288,8 @@ export class ElectionService {
             candidate: {
               select: {
                 id: true,
-                name: true,
-                studentId: true,
+                Candidate_Name: true,
+                Candidate_StudentId: true,
               },
             },
           },
@@ -413,7 +413,7 @@ export class ElectionService {
     // Emit real-time election status update
     this.votingGateway.emitElectionStatusUpdate(id, 'active', {
       id: updatedElection.id,
-      title: updatedElection.title,
+      title: updatedElection.Election_Title,
       status: updatedElection.status,
       startDate: updatedElection.startDate,
       endDate: updatedElection.endDate,
@@ -446,7 +446,7 @@ export class ElectionService {
     // Emit real-time election status update
     this.votingGateway.emitElectionStatusUpdate(id, 'draft', {
       id: updatedElection.id,
-      title: updatedElection.title,
+      title: updatedElection.Election_Title,
       status: updatedElection.status,
       startDate: updatedElection.startDate,
       endDate: updatedElection.endDate,
@@ -517,7 +517,7 @@ export class ElectionService {
           // Emit real-time status update for paused elections
           this.votingGateway.emitElectionStatusUpdate(otherElection.id, 'paused', {
             id: otherElection.id,
-            title: otherElection.title,
+            title: otherElection.Election_Title,
             status: 'paused',
             startDate: otherElection.startDate,
             endDate: otherElection.endDate,
@@ -538,7 +538,7 @@ export class ElectionService {
     // Emit real-time election status update
     this.votingGateway.emitElectionStatusUpdate(id, 'active', {
       id: updatedElection.id,
-      title: updatedElection.title,
+      title: updatedElection.Election_Title,
       status: updatedElection.status,
       startDate: updatedElection.startDate,
       endDate: updatedElection.endDate,
@@ -587,7 +587,7 @@ export class ElectionService {
     // Emit real-time election status update
     this.votingGateway.emitElectionStatusUpdate(id, 'paused', {
       id: updatedElection.id,
-      title: updatedElection.title,
+      title: updatedElection.Election_Title,
       status: updatedElection.status,
       startDate: updatedElection.startDate,
       endDate: updatedElection.endDate,
@@ -625,7 +625,7 @@ export class ElectionService {
     // Emit real-time election status update
     this.votingGateway.emitElectionStatusUpdate(id, 'active', {
       id: updatedElection.id,
-      title: updatedElection.title,
+      title: updatedElection.Election_Title,
       status: updatedElection.status,
       startDate: updatedElection.startDate,
       endDate: updatedElection.endDate,
@@ -663,7 +663,7 @@ export class ElectionService {
     // Emit real-time election status update
     this.votingGateway.emitElectionStatusUpdate(id, 'stopped', {
       id: updatedElection.id,
-      title: updatedElection.title,
+      title: updatedElection.Election_Title,
       status: updatedElection.status,
       startDate: updatedElection.startDate,
       endDate: updatedElection.endDate,
@@ -721,7 +721,7 @@ export class ElectionService {
     // Emit real-time election status update
     this.votingGateway.emitElectionStatusUpdate(id, 'ended', {
       id: updatedElection.id,
-      title: updatedElection.title,
+      title: updatedElection.Election_Title,
       status: updatedElection.status,
       startDate: updatedElection.startDate,
       endDate: updatedElection.endDate,
@@ -787,7 +787,7 @@ export class ElectionService {
     const ballotInfo = {
       election: {
         id: election.id,
-        title: election.title,
+        title: election.Election_Title,
         status: election.status,
         isActive: election.isActive,
         startDate: election.startDate,
@@ -824,8 +824,8 @@ export class ElectionService {
         admin: {
           select: {
             id: true,
-            username: true,
-            email: true,
+            Admin_Username: true,
+            Admin_Email: true,
           },
         },
         electionPositions: {
@@ -833,7 +833,7 @@ export class ElectionService {
             position: {
               select: {
                 id: true,
-                title: true,
+                Position_Title: true,
               },
             },
           },
@@ -843,8 +843,8 @@ export class ElectionService {
             candidate: {
               select: {
                 id: true,
-                name: true,
-                studentId: true,
+                Candidate_Name: true,
+                Candidate_StudentId: true,
               },
             },
           },
@@ -875,7 +875,7 @@ export class ElectionService {
       },
       select: {
         id: true,
-        title: true,
+        Election_Title: true,
         status: true,
         startDate: true,
         endDate: true
@@ -946,7 +946,7 @@ export class ElectionService {
           }
         });
 
-        console.log(`🕐 Auto-ended election: ${election.title} (ID: ${election.id})`);
+        console.log(`🕐 Auto-ended election: ${election.Election_Title} (ID: ${election.id})`);
         console.log(`   Total votes: ${totalVotes}, Unique voters: ${uniqueVoters.length}`);
       } catch (error) {
         console.error(`❌ Error auto-ending election ${election.id}:`, error);
@@ -978,7 +978,7 @@ export class ElectionService {
     const timeStatus = {
       election: {
         id: election.id,
-        title: election.title,
+        title: election.Election_Title,
         status: election.status,
       },
       timezone: this.timezoneService.getPhilippineTimezoneInfo(),
@@ -1065,7 +1065,7 @@ export class ElectionService {
         position: {
           select: {
             id: true,
-            title: true,
+            Position_Title: true,
           },
         },
       },
@@ -1128,8 +1128,8 @@ export class ElectionService {
         candidate: {
           select: {
             id: true,
-            name: true,
-            studentId: true,
+            Candidate_Name: true,
+            Candidate_StudentId: true,
             positionId: true,
           },
         },
@@ -1212,7 +1212,7 @@ export class ElectionService {
           admin: {
             select: {
               id: true,
-              username: true,
+              Admin_Username: true,
               role: true
             }
           },
@@ -1221,8 +1221,8 @@ export class ElectionService {
               position: {
                 select: {
                   id: true,
-                  title: true,
-                  description: true,
+                  Position_Title: true,
+                  Position_Description: true,
                   voteLimit: true
                 }
               }
@@ -1230,30 +1230,30 @@ export class ElectionService {
           },
           electionCandidates: {
             include: {
-              candidate: {
-                select: {
-                  id: true,
-                  name: true,
-                  email: true,
-                  studentId: true,
-                  photo: true,
-                  manifesto: true,
+                              candidate: {
+                  select: {
+                    id: true,
+                    Candidate_Name: true,
+                    Candidate_Email: true,
+                    Candidate_StudentId: true,
+                    photo: true,
+                    manifesto: true,
                   position: {
                     select: {
                       id: true,
-                      title: true
+                      Position_Title: true
                     }
                   },
                   department: {
                     select: {
                       id: true,
-                      name: true
+                      Department_Name: true
                     }
                   },
                   course: {
                     select: {
                       id: true,
-                      name: true
+                      Course_Name: true
                     }
                   }
                 }
@@ -1306,7 +1306,7 @@ export class ElectionService {
             const candidate = election.electionCandidates.find(ec => ec.candidateId === result.candidateId);
             
             if (position && candidate) {
-              const positionTitle = position.position.title;
+              const positionTitle = position.position.Position_Title;
               if (!resultsByPosition[positionTitle]) {
                 resultsByPosition[positionTitle] = {
                   positionId: result.positionId,
@@ -1316,17 +1316,17 @@ export class ElectionService {
                 };
               }
               
-              resultsByPosition[positionTitle].candidates.push({
-                candidateId: result.candidateId,
-                candidateName: candidate.candidate.name,
-                candidateEmail: candidate.candidate.email,
-                candidateStudentId: candidate.candidate.studentId,
-                candidatePhoto: candidate.candidate.photo,
-                candidateManifesto: candidate.candidate.manifesto,
-                candidateDepartment: candidate.candidate.department?.name || 'N/A',
-                candidateCourse: candidate.candidate.course?.name || 'N/A',
-                voteCount: result._count.id
-              });
+                             resultsByPosition[positionTitle].candidates.push({
+                 candidateId: result.candidateId,
+                 candidateName: candidate.candidate.Candidate_Name,
+                 candidateEmail: candidate.candidate.Candidate_Email,
+                 candidateStudentId: candidate.candidate.Candidate_StudentId,
+                 candidatePhoto: candidate.candidate.photo,
+                 candidateManifesto: candidate.candidate.manifesto,
+                 candidateDepartment: candidate.candidate.department?.Department_Name || 'N/A',
+                 candidateCourse: candidate.candidate.course?.Course_Name || 'N/A',
+                 voteCount: result._count.id
+               });
             }
           }
 
@@ -1354,15 +1354,15 @@ export class ElectionService {
 
           return {
             electionId: election.id,
-            title: election.title,
-            description: election.description,
+            title: election.Election_Title,
+            description: election.Election_Description,
             status: election.status,
             startDate: election.startDate,
             endDate: election.endDate,
             startDateFormatted: formatDate(election.startDate),
             endDateFormatted: formatDate(election.endDate),
             durationInMinutes,
-            createdBy: election.admin.username,
+            createdBy: election.admin.Admin_Username,
             adminRole: election.admin.role,
             createdAt: election.createdAt,
             updatedAt: election.updatedAt,
@@ -1379,20 +1379,20 @@ export class ElectionService {
             totalCandidates: election.electionCandidates.length,
             positions: election.electionPositions.map(ep => ({
               positionId: ep.position.id,
-              title: ep.position.title,
-              description: ep.position.description,
+              title: ep.position.Position_Title,
+              description: ep.position.Position_Description,
               voteLimit: ep.position.voteLimit
             })),
             candidates: election.electionCandidates.map(ec => ({
               candidateId: ec.candidate.id,
-              name: ec.candidate.name,
-              email: ec.candidate.email,
-              studentId: ec.candidate.studentId,
+              name: ec.candidate.Candidate_Name,
+              email: ec.candidate.Candidate_Email,
+              studentId: ec.candidate.Candidate_StudentId,
               photo: ec.candidate.photo,
               manifesto: ec.candidate.manifesto,
-              position: ec.candidate.position.title,
-              department: ec.candidate.department?.name || 'N/A',
-              course: ec.candidate.course?.name || 'N/A'
+              position: ec.candidate.position.Position_Title,
+              department: ec.candidate.department?.Department_Name || 'N/A',
+              course: ec.candidate.course?.Course_Name || 'N/A'
             })),
             
             // Detailed results by position

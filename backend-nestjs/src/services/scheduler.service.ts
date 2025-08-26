@@ -43,7 +43,7 @@ export class SchedulerService {
           const hoursRemaining = Math.floor(timeRemaining / (1000 * 60 * 60));
           const minutesRemaining = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
           
-          this.logger.log(`   🗳️ ${election.title}: ${hoursRemaining}h ${minutesRemaining}m remaining`);
+          this.logger.log(`   🗳️ ${election.Election_Title}: ${hoursRemaining}h ${minutesRemaining}m remaining`);
         });
       }
     } catch (error) {

@@ -84,8 +84,8 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
       const existingSuperAdmin = await this.admin.findFirst({
         where: {
           OR: [
-            { username: 'superadmin' },
-            { email: 'superadmin@votingsystem.com' },
+            { Admin_Username: 'superadmin' },
+            { Admin_Email: 'superadmin@votingsystem.com' },
           ],
         },
       });
@@ -97,8 +97,8 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
         await this.admin.create({
           data: {
             id: 'SUPERADMIN-1',
-            username: 'superadmin',
-            email: 'superadmin@votingsystem.com',
+            Admin_Username: 'superadmin',
+            Admin_Email: 'superadmin@votingsystem.com',
             password: hashedPassword,
             role: 'SUPERADMIN',
           },

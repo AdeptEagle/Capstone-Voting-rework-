@@ -1,0 +1,141 @@
+config:
+  target: 'http://localhost:3001'
+  phases:
+    # Warm-up phase - gradual increase
+    - duration: 60
+      arrivalRate: 1
+      name: "Warm-up Phase"
+    
+    # Normal load - simulate regular election activity
+    - duration: 120
+      arrivalRate: 5
+      name: "Normal Load Phase"
+    
+    # Peak load - simulate high election participation
+    - duration: 180
+      arrivalRate: 15
+      name: "Peak Load Phase"
+    
+    # Stress test - push system limits
+    - duration: 120
+      arrivalRate: 25
+      name: "Stress Test Phase"
+    
+    # Recovery test - return to normal load
+    - duration: 60
+      arrivalRate: 5
+      name: "Recovery Phase"
+
+  defaults:
+    headers:
+      'Content-Type': 'application/json'
+      'User-Agent': 'Artillery Performance Test'
+
+scenarios:
+  # Test public endpoints (no authentication required)
+  - name: "Public Endpoints Test"
+    weight: 30
+    flow:
+      - get:
+          url: "/departments"
+          expect:
+            - statusCode: 200
+            - hasHeader: "content-type"
+      
+      - think: 2
+      
+      - get:
+          url: "/courses"
+          expect:
+            - statusCode: 200
+      
+      - think: 1
+      
+      - get:
+          url: "/candidates"
+          expect:
+            - statusCode: 200
+      
+      - think: 2
+      
+      - get:
+          url: "/elections"
+          expect:
+            - statusCode: 200
+
+  # Test audit endpoints
+  - name: "Audit System Test"
+    weight: 20
+    flow:
+      - get:
+          url: "/audit"
+          expect:
+            - statusCode: 200
+      
+      - think: 1
+      
+      - get:
+          url: "/audit/verification-code/TEST123"
+          expect:
+            - statusCode: 200
+
+  # Test election assignments
+  - name: "Election Assignment Test"
+    weight: 25
+    flow:
+      - get:
+          url: "/election-assignments"
+          expect:
+            - statusCode: 200
+      
+      - think: 2
+      
+      - get:
+          url: "/election-assignments/election/H3YO-MEEI6/candidates"
+          expect:
+            - statusCode: 200
+
+  # Test protected endpoints (should return 401)
+  - name: "Protected Endpoints Test"
+    weight: 15
+    flow:
+      - get:
+          url: "/positions"
+          expect:
+            - statusCode: 401
+      
+      - think: 1
+      
+      - get:
+          url: "/admins"
+          expect:
+            - statusCode: 401
+      
+      - think: 1
+      
+      - get:
+          url: "/trash/summary"
+          expect:
+            - statusCode: 401
+
+  # Test voting simulation (read-only operations)
+  - name: "Voting Simulation Test"
+    weight: 10
+    flow:
+      - get:
+          url: "/votes"
+          expect:
+            - statusCode: 200
+      
+      - think: 3
+      
+      - get:
+          url: "/voters"
+          expect:
+            - statusCode: 200
+
+# Performance thresholds
+ensure:
+  maxErrorRate: 5
+  maxResponseTime: 2000
+  maxLatency: 1000

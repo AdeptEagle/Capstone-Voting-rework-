@@ -43,6 +43,22 @@ export class AuditService {
   constructor(private prisma: PrismaService) {}
 
   /**
+   * Get all audit logs
+   */
+  async getAllAuditLogs() {
+    try {
+      const auditLogs = await this.prisma.auditLog.findMany({
+        orderBy: { timestamp: 'desc' },
+        take: 100, // Limit to last 100 logs for performance
+      });
+      return auditLogs;
+    } catch (error) {
+      console.error('❌ Error retrieving audit logs:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Generate a unique verification code for vote tracking
    */
   generateVerificationCode(): string {
@@ -460,7 +476,7 @@ export class AuditService {
       if (!electionMap.has(vote.electionId)) {
         electionMap.set(vote.electionId, {
           electionId: vote.electionId,
-          electionTitle: vote.election.title,
+          electionTitle: vote.election.Election_Title,
           voteCount: 0,
           lastVoteDate: vote.createdAt,
           verificationCodes: [],
@@ -515,9 +531,9 @@ export class AuditService {
     const voteDetails = votes.map(vote => ({
       voteId: vote.id,
       voterId: vote.voterId,
-      voterName: vote.voter.name,
+      voterName: vote.voter.Voter_Name,
       candidateId: vote.candidateId,
-      candidateName: vote.candidate.name,
+      candidateName: vote.candidate.Candidate_Name,
       timestamp: vote.createdAt,
       verificationCode: vote.verificationCode,
       auditHash: vote.auditHash,
