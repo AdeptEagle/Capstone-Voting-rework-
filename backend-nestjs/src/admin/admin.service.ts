@@ -61,8 +61,8 @@ export class AdminService {
       message: 'Admin created successfully!',
       admin: {
         id: admin.id,
-        username: admin.Admin_Username,
-        email: admin.Admin_Email,
+        Admin_Username: admin.Admin_Username,
+        Admin_Email: admin.Admin_Email,
         role: admin.role,
         createdAt: admin.createdAt,
         updatedAt: admin.updatedAt,
@@ -108,8 +108,8 @@ export class AdminService {
       message: 'Admin created successfully!',
       admin: {
         id: admin.id,
-        username: admin.Admin_Username,
-        email: admin.Admin_Email,
+        Admin_Username: admin.Admin_Username,
+        Admin_Email: admin.Admin_Email,
         role: admin.role,
         createdAt: admin.createdAt,
         updatedAt: admin.updatedAt,
@@ -311,8 +311,8 @@ export class AdminService {
       message: 'Super Admin created successfully!',
       admin: {
         id: admin.id,
-        username: admin.Admin_Username,
-        email: admin.Admin_Email,
+        Admin_Username: admin.Admin_Username,
+        Admin_Email: admin.Admin_Email,
         role: admin.role,
         createdAt: admin.createdAt,
         updatedAt: admin.updatedAt,

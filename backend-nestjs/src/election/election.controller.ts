@@ -26,6 +26,13 @@ export class ElectionController {
     return this.electionService.getActiveElections();
   }
 
+  @Get('active/single')
+  @ApiOperation({ summary: 'Get single active election' })
+  @ApiResponse({ status: 200, description: 'Single active election' })
+  async getActiveElection() {
+    return this.electionService.getActiveElection();
+  }
+
   @Get('active/check')
   @ApiOperation({ summary: 'Check if there are any active elections' })
   @ApiResponse({ status: 200, description: 'Active election status' })

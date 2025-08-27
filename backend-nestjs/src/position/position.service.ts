@@ -44,7 +44,7 @@ export class PositionService {
   }
 
   async createPosition(createPositionDto: CreatePositionDto) {
-    const { Position_Title, Position_Description, voteLimit, displayOrder } = createPositionDto;
+    const { id, Position_Title, Position_Description, voteLimit, displayOrder } = createPositionDto;
 
     // Check if position with this title already exists
     const existingPosition = await this.prisma.position.findFirst({
@@ -55,12 +55,23 @@ export class PositionService {
       throw new ConflictException('Position with this title already exists');
     }
 
-    // Generate custom ID
-    const customId = await this.idGenerator.generatePositionId();
+    // If custom ID is provided, check if it already exists
+    if (id) {
+      const existingPositionWithId = await this.prisma.position.findUnique({
+        where: { id: id },
+      });
+
+      if (existingPositionWithId) {
+        throw new ConflictException(`Position with ID "${id}" already exists`);
+      }
+    }
+
+    // Use provided ID if available, otherwise generate one
+    const positionId = id || await this.idGenerator.generatePositionId();
 
     const position = await this.prisma.position.create({
       data: {
-        id: customId,
+        id: positionId,
         Position_Title: Position_Title,
         Position_Description: Position_Description,
         voteLimit: voteLimit || 1,

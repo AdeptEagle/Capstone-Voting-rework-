@@ -19,6 +19,11 @@ export class CreateElectionDto {
   @IsDateString()
   endDate: string;
 
+  @ApiProperty({ description: 'Election status', default: 'draft' })
+  @IsOptional()
+  @IsString()
+  status?: string;
+
   @ApiProperty({ description: 'Is election active', default: false })
   @IsOptional()
   @IsBoolean()

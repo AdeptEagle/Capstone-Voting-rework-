@@ -53,8 +53,8 @@ export class AuthService {
           role: admin.role,
           user: {
             id: admin.id,
-            username: admin.Admin_Username,
-            email: admin.Admin_Email
+            Admin_Username: admin.Admin_Username,
+            Admin_Email: admin.Admin_Email
           }
         };
       } else {
@@ -90,9 +90,9 @@ export class AuthService {
           role: 'user',
           user: {
             id: voter.id,
-            name: voter.Voter_Name,
-            email: voter.Voter_Email,
-            studentId: voter.Voter_StudentId,
+            Voter_Name: voter.Voter_Name,
+            Voter_Email: voter.Voter_Email,
+            Voter_StudentId: voter.Voter_StudentId,
             hasVoted: voter.hasVoted,
             department: voter.department,
             course: voter.course
@@ -147,8 +147,8 @@ export class AuthService {
       message: 'Admin login successful',
       admin: {
         id: admin.id,
-        username: admin.Admin_Username,
-        email: admin.Admin_Email,
+        Admin_Username: admin.Admin_Username,
+        Admin_Email: admin.Admin_Email,
         role: admin.role,
       },
     };

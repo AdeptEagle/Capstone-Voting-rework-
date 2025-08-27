@@ -2,6 +2,11 @@ import { IsString, IsOptional, MinLength, IsInt, Min, Max } from 'class-validato
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreatePositionDto {
+  @ApiProperty({ description: 'Custom position ID', example: 'TEST', required: false })
+  @IsString()
+  @IsOptional()
+  id?: string;
+
   @ApiProperty({ description: 'Position title', example: 'Student Council President' })
   @IsString()
   @MinLength(2)

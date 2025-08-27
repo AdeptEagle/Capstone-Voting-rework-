@@ -99,21 +99,21 @@ model Candidate {
 }
 
 model Voter {
-  id              String      @id @db.VarChar(50)
-  Voter_Name      String      @map("voter_name") @db.VarChar(255)
-  Voter_Email     String      @unique @map("voter_email") @db.VarChar(255)
-  Voter_StudentId String      @unique @map("voter_student_id") @db.VarChar(50)
-  password        String?     @db.VarChar(255)
+  id              String     @id @db.VarChar(50)
+  Voter_Name      String     @map("voter_name") @db.VarChar(255)
+  Voter_Email     String     @unique @map("voter_email") @db.VarChar(255)
+  Voter_StudentId String     @unique @map("voter_student_id") @db.VarChar(50)
+  password        String?    @db.VarChar(255)
   departmentId    String
   courseId        String
-  hasVoted        Boolean     @default(false)
-  createdAt       DateTime    @default(now()) @map("created_at")
-  updatedAt       DateTime    @updatedAt @map("updated_at")
-  deletedAt       DateTime?   @map("deleted_at")
-  isDeleted       Boolean     @default(false) @map("is_deleted")
+  hasVoted        Boolean    @default(false)
+  createdAt       DateTime   @default(now()) @map("created_at")
+  updatedAt       DateTime   @updatedAt @map("updated_at")
+  deletedAt       DateTime?  @map("deleted_at")
+  isDeleted       Boolean    @default(false) @map("is_deleted")
   auditLogs       AuditLog[]
-  course          Course      @relation(fields: [courseId], references: [id])
-  department      Department  @relation(fields: [departmentId], references: [id])
+  course          Course     @relation(fields: [courseId], references: [id])
+  department      Department @relation(fields: [departmentId], references: [id])
   votes           Vote[]
 
   @@map("voters")

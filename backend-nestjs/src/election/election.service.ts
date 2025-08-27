@@ -817,7 +817,7 @@ export class ElectionService {
   async getActiveElections() {
     return this.prisma.election.findMany({
       where: { 
-        isActive: true,
+        status: 'active',
         isDeleted: false
       },
       include: {
@@ -851,6 +851,49 @@ export class ElectionService {
         },
       },
     });
+  }
+
+  async getActiveElection() {
+    const activeElections = await this.prisma.election.findMany({
+      where: { 
+        status: 'active',
+        isDeleted: false
+      },
+      include: {
+        admin: {
+          select: {
+            id: true,
+            Admin_Username: true,
+            Admin_Email: true,
+          },
+        },
+        electionPositions: {
+          include: {
+            position: {
+              select: {
+                id: true,
+                Position_Title: true,
+              },
+            },
+          },
+        },
+        electionCandidates: {
+          include: {
+            candidate: {
+              select: {
+                id: true,
+                Candidate_Name: true,
+                Candidate_StudentId: true,
+              },
+            },
+          },
+        },
+      },
+      take: 1, // Only take the first active election
+    });
+    
+    // Return the first active election or null if none found
+    return activeElections.length > 0 ? activeElections[0] : null;
   }
 
   async hasActiveElections() {
@@ -1354,8 +1397,8 @@ export class ElectionService {
 
           return {
             electionId: election.id,
-            title: election.Election_Title,
-            description: election.Election_Description,
+            Election_Title: election.Election_Title,
+            Election_Description: election.Election_Description,
             status: election.status,
             startDate: election.startDate,
             endDate: election.endDate,
@@ -1363,6 +1406,10 @@ export class ElectionService {
             endDateFormatted: formatDate(election.endDate),
             durationInMinutes,
             createdBy: election.admin.Admin_Username,
+            admin: {
+              Admin_Username: election.admin.Admin_Username,
+              role: election.admin.role
+            },
             adminRole: election.admin.role,
             createdAt: election.createdAt,
             updatedAt: election.updatedAt,
@@ -1385,9 +1432,9 @@ export class ElectionService {
             })),
             candidates: election.electionCandidates.map(ec => ({
               candidateId: ec.candidate.id,
-              name: ec.candidate.Candidate_Name,
-              email: ec.candidate.Candidate_Email,
-              studentId: ec.candidate.Candidate_StudentId,
+              Candidate_Name: ec.candidate.Candidate_Name,
+              Candidate_Email: ec.candidate.Candidate_Email,
+              Candidate_StudentId: ec.candidate.Candidate_StudentId,
               photo: ec.candidate.photo,
               manifesto: ec.candidate.manifesto,
               position: ec.candidate.position.Position_Title,
