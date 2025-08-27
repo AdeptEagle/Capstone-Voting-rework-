@@ -7,9 +7,9 @@ import './UserRegister.css';
 
 const UserRegister = () => {
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    studentId: '',
+    Voter_Name: '',
+    Voter_Email: '',
+    Voter_StudentId: '',
     password: '',
     confirmPassword: '',
     departmentId: '',
@@ -162,7 +162,7 @@ const UserRegister = () => {
 
     // Student ID format: YYYY-NNNNN
     const idPattern = /^\d{4}-\d{5}$/;
-    if (!idPattern.test(formData.studentId)) {
+          if (!idPattern.test(formData.Voter_StudentId)) {
       setError('Student ID must be in the format YYYY-NNNNN (e.g., 2022-00222)');
       setLoading(false);
       return;
@@ -188,9 +188,9 @@ const UserRegister = () => {
 
     try {
       const response = await api.post('/auth/user/register', {
-        name: formData.name,
-        email: formData.email,
-        studentId: formData.studentId,
+        Voter_Name: formData.Voter_Name,
+        Voter_Email: formData.Voter_Email,
+        Voter_StudentId: formData.Voter_StudentId,
         password: formData.password,
         departmentId: formData.departmentId,
         courseId: formData.courseId
@@ -326,7 +326,7 @@ const UserRegister = () => {
               type="text"
               id="name"
               name="name"
-              value={formData.name}
+              value={formData.Voter_Name}
               onChange={handleChange}
               placeholder="Enter your full name"
               required
@@ -340,7 +340,7 @@ const UserRegister = () => {
               type="email"
               id="email"
               name="email"
-              value={formData.email}
+              value={formData.Voter_Email}
               onChange={handleChange}
               placeholder="Enter your email address"
               required
@@ -354,7 +354,7 @@ const UserRegister = () => {
               type="text"
               id="studentId"
               name="studentId"
-              value={formData.studentId}
+              value={formData.Voter_StudentId}
               onChange={handleChange}
               placeholder="YYYY-NNNNN (e.g., 2022-00222)"
               required
@@ -380,7 +380,7 @@ const UserRegister = () => {
                 <option value="">Select your department</option>
                 {departments.map(department => (
                   <option key={department.id} value={department.id}>
-                    {department.name} ({department.id})
+                    {department.Department_Name} ({department.id})
                   </option>
                 ))}
               </select>
@@ -415,7 +415,7 @@ const UserRegister = () => {
                 </option>
                 {courses.map(course => (
                   <option key={course.id} value={course.id}>
-                    {course.id} - {course.name}
+                    {course.Course_Code} - {course.Course_Name}
                 </option>
               ))}
             </select>

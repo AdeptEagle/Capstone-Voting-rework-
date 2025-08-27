@@ -18,9 +18,9 @@ const Candidates = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    studentId: '',
+    Candidate_Name: '',
+    Candidate_Email: '',
+    Candidate_StudentId: '',
     positionId: '',
     departmentId: '',
     courseId: '',
@@ -31,7 +31,7 @@ const Candidates = () => {
   const [photoFile, setPhotoFile] = useState(null);
   const [photoPreview, setPhotoPreview] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortField, setSortField] = useState('name');
+  const [sortField, setSortField] = useState('Candidate_Name');
   const [sortOrder, setSortOrder] = useState('asc');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [candidateToDelete, setCandidateToDelete] = useState(null);
@@ -61,12 +61,12 @@ const Candidates = () => {
       
       // Debug individual candidates
       candidatesData.forEach(candidate => {
-        console.log(`Candidate ${candidate.name}:`, {
+        console.log(`Candidate ${candidate.Candidate_Name}:`, {
           departmentId: candidate.departmentId,
-          departmentName: candidate.department?.name,
+          departmentName: candidate.department?.Department_Name,
           courseId: candidate.courseId,
-          courseName: candidate.course?.id,
-          positionName: candidate.position?.title
+          courseName: candidate.course?.Course_Name,
+          positionName: candidate.position?.Position_Title
         });
       });
       
@@ -107,9 +107,9 @@ const Candidates = () => {
     if (candidate) {
       setEditingCandidate(candidate);
       setFormData({
-        name: candidate.name,
-        email: candidate.email || '',
-        studentId: candidate.studentId || '',
+        Candidate_Name: candidate.Candidate_Name,
+        Candidate_Email: candidate.Candidate_Email || '',
+        Candidate_StudentId: candidate.Candidate_StudentId || '',
         positionId: candidate.positionId,
         departmentId: candidate.departmentId || '',
         courseId: candidate.courseId || '',
@@ -126,9 +126,9 @@ const Candidates = () => {
     } else {
       setEditingCandidate(null);
       setFormData({
-        name: '',
-        email: '',
-        studentId: '',
+        Candidate_Name: '',
+        Candidate_Email: '',
+        Candidate_StudentId: '',
         positionId: '',
         departmentId: '',
         courseId: '',
@@ -146,9 +146,9 @@ const Candidates = () => {
     setShowModal(false);
     setEditingCandidate(null);
     setFormData({
-      name: '',
-      email: '',
-      studentId: '',
+      Candidate_Name: '',
+      Candidate_Email: '',
+      Candidate_StudentId: '',
       positionId: '',
       departmentId: '',
       courseId: '',
@@ -208,9 +208,9 @@ const Candidates = () => {
       if (photoFile) {
         // New photo file selected - use FormData
         dataToSend = new FormData();
-        dataToSend.append('name', formData.name);
-        dataToSend.append('email', formData.email);
-        dataToSend.append('studentId', formData.studentId);
+        dataToSend.append('Candidate_Name', formData.Candidate_Name);
+        dataToSend.append('Candidate_Email', formData.Candidate_Email);
+        dataToSend.append('Candidate_StudentId', formData.Candidate_StudentId);
         dataToSend.append('positionId', formData.positionId);
         dataToSend.append('departmentId', formData.departmentId);
         dataToSend.append('courseId', formData.courseId);
@@ -279,7 +279,7 @@ const Candidates = () => {
       setError('');
       
       // Show success message about trash bin
-      setSuccessMessage(`Candidate "${candidateToDelete?.name}" has been moved to the trash bin. You can restore it later or permanently delete it from the Trash Bin page.`);
+      setSuccessMessage(`Candidate "${candidateToDelete?.Candidate_Name}" has been moved to the trash bin. You can restore it later or permanently delete it from the Trash Bin page.`);
       
       // Refresh the data to get updated list
       await fetchData();
@@ -328,10 +328,10 @@ const Candidates = () => {
     .filter(candidate => {
       const term = searchTerm.toLowerCase();
       return (
-        candidate.name?.toLowerCase().includes(term) ||
-        candidate.position?.title?.toLowerCase().includes(term) ||
-        candidate.department?.name?.toLowerCase().includes(term) ||
-        candidate.course?.id?.toLowerCase().includes(term)
+        candidate.Candidate_Name?.toLowerCase().includes(term) ||
+                  candidate.position?.Position_Title?.toLowerCase().includes(term) ||
+          candidate.department?.Department_Name?.toLowerCase().includes(term) ||
+                  candidate.course?.Course_Name?.toLowerCase().includes(term)
       );
     })
     .sort((a, b) => {
@@ -422,7 +422,7 @@ const Candidates = () => {
                       </div>
                       <div className="candidate-photo-container">
                         {candidate.photo && candidate.photo !== 'undefined' ? (
-                          <img src={getCandidatePhotoUrl(candidate.photo)} alt={candidate.name} className="candidate-photo" />
+                          <img src={getCandidatePhotoUrl(candidate.photo)} alt={candidate.Candidate_Name} className="candidate-photo" />
                         ) : (
                           <div className="candidate-photo-placeholder">
                             <i className="fas fa-user"></i>
@@ -433,18 +433,18 @@ const Candidates = () => {
                     <div className="candidate-card-body">
                       <div className="candidate-info">
                         <h3 className="candidate-name">
-                          {candidate.name}
+                          {candidate.Candidate_Name}
                           <span className="verified"><i className="fas fa-check-circle"></i></span>
                         </h3>
-                        <p className="candidate-position">{candidate.position?.title}</p>
-                        {(candidate.department?.name || candidate.course?.id) && (
+                        <p className="candidate-position">{candidate.position?.Position_Title}</p>
+                        {(candidate.department?.Department_Name || candidate.course?.Course_Name) && (
                           <p className="candidate-department">
                             <i className="fas fa-university me-1"></i>
-                            {candidate.department?.name}
-                            {candidate.course?.id && (
+                            {candidate.department?.Department_Name}
+                            {candidate.course?.Course_Name && (
                               <span className="candidate-course">
                                 <i className="fas fa-graduation-cap me-1"></i>
-                                {candidate.course?.id}
+                                {candidate.course?.Course_Name}
                               </span>
                             )}
                           </p>
@@ -491,7 +491,7 @@ const Candidates = () => {
                   <div className="modal-candidate-info">
                     <div className="modal-candidate-photo-container">
                       {viewCandidate?.photoUrl ? (
-                        <img src={getCandidatePhotoUrl(viewCandidate.photoUrl)} alt={viewCandidate.name} className="modal-candidate-photo" />
+                        <img src={getCandidatePhotoUrl(viewCandidate.photoUrl)} alt={viewCandidate.Candidate_Name} className="modal-candidate-photo" />
                       ) : (
                         <div className="modal-candidate-photo-placeholder">
                           <i className="fas fa-user"></i>
@@ -499,8 +499,8 @@ const Candidates = () => {
                       )}
                     </div>
                     <div className="modal-candidate-details">
-                      <h4 className="modal-candidate-name">{viewCandidate?.name}</h4>
-                      <p className="modal-position">{viewCandidate?.position?.title}</p>
+                      <h4 className="modal-candidate-name">{viewCandidate?.Candidate_Name}</h4>
+                      <p className="modal-position">{viewCandidate?.position?.Position_Title}</p>
                       <div className="candidate-status">
                         <span className="badge bg-success">
                           <i className="fas fa-check-circle me-1"></i>
@@ -753,7 +753,7 @@ const Candidates = () => {
                     {candidate.photo && candidate.photo !== 'undefined' ? (
                       <img 
                         src={getCandidatePhotoUrl(candidate.photo)} 
-                        alt={candidate.name}
+                        alt={candidate.Candidate_Name}
                         className="candidate-table-photo"
                         onError={(e) => {
                           e.target.style.display = 'none';
@@ -768,10 +768,10 @@ const Candidates = () => {
                       </div>
                     )}
                   </td>
-                  <td>{candidate.name}</td>
-                  <td>{candidate.position?.title || '-'}</td>
-                  <td>{candidate.department?.name || '-'}</td>
-                  <td>{candidate.course?.id || '-'}</td>
+                                      <td>{candidate.Candidate_Name}</td>
+                                      <td>{candidate.position?.Position_Title || '-'}</td>
+                    <td>{candidate.department?.Department_Name || '-'}</td>
+                                      <td>{candidate.course?.Course_Name || '-'}</td>
                   <td>{candidate.manifesto || '-'}</td>
                   <td>
                     <div className="candidate-actions">
@@ -818,7 +818,7 @@ const Candidates = () => {
                 <div className="modal-candidate-info">
                                       <div className="modal-candidate-photo-container">
                       {viewCandidate?.photo && viewCandidate.photo !== 'undefined' ? (
-                        <img src={getCandidatePhotoUrl(viewCandidate.photo)} alt={viewCandidate.name} className="modal-candidate-photo" />
+                        <img src={getCandidatePhotoUrl(viewCandidate.photo)} alt={viewCandidate.Candidate_Name} className="modal-candidate-photo" />
                       ) : (
                         <div className="modal-candidate-photo-placeholder">
                           <i className="fas fa-user"></i>
@@ -980,7 +980,7 @@ const Candidates = () => {
                       type="text"
                       className="form-control"
                       name="name"
-                      value={formData.name}
+                      value={formData.Candidate_Name}
                       onChange={handleChange}
                       required
                     />
@@ -991,7 +991,7 @@ const Candidates = () => {
                       type="email"
                       className="form-control"
                       name="email"
-                      value={formData.email}
+                      value={formData.Candidate_Email}
                       onChange={handleChange}
                       required
                     />
@@ -1002,7 +1002,7 @@ const Candidates = () => {
                       type="text"
                       className="form-control"
                       name="studentId"
-                      value={formData.studentId}
+                      value={formData.Candidate_StudentId}
                       onChange={handleChange}
                       required
                     />
@@ -1019,7 +1019,7 @@ const Candidates = () => {
                       <option value="">Select a position</option>
                       {positions.map(position => (
                         <option key={position.id} value={position.id}>
-                          {position.title}
+                          {position.Position_Title}
                         </option>
                       ))}
                     </select>
@@ -1041,7 +1041,7 @@ const Candidates = () => {
                       <option value="">Select a department</option>
                       {departments.map(department => (
                         <option key={department.id} value={department.id}>
-                          {department.name}
+                          {department.Department_Name}
                         </option>
                       ))}
                     </select>
@@ -1064,7 +1064,7 @@ const Candidates = () => {
                       <option value="">Select a course</option>
                       {courses.map(course => (
                         <option key={course.id} value={course.id}>
-                          {course.id} - {course.name}
+                          {course.Course_Code} - {course.Course_Name}
                         </option>
                       ))}
                     </select>

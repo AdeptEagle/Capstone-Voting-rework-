@@ -9,7 +9,7 @@ const Positions = () => {
   const [editingPosition, setEditingPosition] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
-  const [formData, setFormData] = useState({ id: '', title: '', voteLimit: 1, description: '', displayOrder: 0 });
+  const [formData, setFormData] = useState({ id: '', Position_Title: '', voteLimit: 1, Position_Description: '', displayOrder: 0 });
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [positionToDelete, setPositionToDelete] = useState(null);
   const [successMessage, setSuccessMessage] = useState('');
@@ -28,7 +28,7 @@ const Positions = () => {
     // Apply search filter
     if (searchTerm) {
       filtered = positions.filter(position =>
-        position.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        position.Position_Title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         position.id.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
@@ -86,15 +86,15 @@ const Positions = () => {
     try {
       if (editingPosition) {
         await updatePosition(editingPosition.id, {
-          title: formData.title,
-          description: formData.description,
+          Position_Title: formData.Position_Title,
+          Position_Description: formData.Position_Description,
           voteLimit: Number(formData.voteLimit),
           displayOrder: Number(formData.displayOrder)
         });
       } else {
         const positionData = {
-          title: formData.title,
-          description: formData.description,
+          Position_Title: formData.Position_Title,
+          Position_Description: formData.Position_Description,
           voteLimit: Number(formData.voteLimit),
           displayOrder: Number(formData.displayOrder)
         };
@@ -103,7 +103,7 @@ const Positions = () => {
       }
       setShowModal(false);
       setEditingPosition(null);
-      setFormData({ id: '', title: '', voteLimit: 1, description: '', displayOrder: 0 });
+      setFormData({ id: '', Position_Title: '', voteLimit: 1, Position_Description: '', displayOrder: 0 });
       fetchPositions();
     } catch (error) {
       console.error('Error saving position:', error);
@@ -114,9 +114,9 @@ const Positions = () => {
     setEditingPosition(position);
     setFormData({ 
       id: position.id, 
-      title: position.title, 
+      Position_Title: position.Position_Title, 
       voteLimit: position.voteLimit,
-      description: position.description || '',
+      Position_Description: position.Position_Description || '',
       displayOrder: position.displayOrder || 0
     });
     setShowModal(true);
@@ -129,7 +129,7 @@ const Positions = () => {
       console.log('Position deleted successfully, refreshing list...'); // Debug log
       
       // Show success message about trash bin
-      setSuccessMessage(`Position "${positionToDelete?.title}" has been moved to the trash bin. You can restore it later or permanently delete it from the Trash Bin page.`);
+      setSuccessMessage(`Position "${positionToDelete?.Position_Title}" has been moved to the trash bin. You can restore it later or permanently delete it from the Trash Bin page.`);
       
       // Refresh the positions list to get updated data
       await fetchPositions();
@@ -160,7 +160,7 @@ const Positions = () => {
 
   const openModal = () => {
     setEditingPosition(null);
-    setFormData({ id: '', title: '', voteLimit: 1, description: '', displayOrder: 0 });
+    setFormData({ id: '', Position_Title: '', voteLimit: 1, Position_Description: '', displayOrder: 0 });
     setShowModal(true);
   };
 
@@ -263,10 +263,10 @@ const Positions = () => {
                   </th>
                   <th 
                     style={{ cursor: 'pointer' }}
-                    onClick={() => handleSort('title')}
+                    onClick={() => handleSort('Position_Title')}
                     className="sortable-header"
                   >
-                    Title {getSortIcon('title')}
+                    Title {getSortIcon('Position_Title')}
                   </th>
                   <th 
                     style={{ cursor: 'pointer' }}
@@ -289,7 +289,7 @@ const Positions = () => {
                 {filteredPositions.map((position) => (
                   <tr key={position.id}>
                     <td>{position.id}</td>
-                    <td>{position.title}</td>
+                    <td>{position.Position_Title}</td>
                     <td>{position.voteLimit}</td>
                     <td>{position.displayOrder || 0}</td>
                     <td>
@@ -353,8 +353,8 @@ const Positions = () => {
                     <input
                       type="text"
                       className="form-control"
-                      value={formData.title}
-                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                      value={formData.Position_Title}
+                      onChange={(e) => setFormData({ ...formData, Position_Title: e.target.value })}
                       required
                     />
                   </div>
@@ -362,8 +362,8 @@ const Positions = () => {
                     <label className="form-label">Description</label>
                     <textarea
                       className="form-control"
-                      value={formData.description}
-                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                      value={formData.Position_Description}
+                      onChange={(e) => setFormData({ ...formData, Position_Description: e.target.value })}
                       rows={3}
                       placeholder="Optional description for this position"
                     />

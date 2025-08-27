@@ -40,15 +40,15 @@ const DepartmentManagement = () => {
   
   // Form data
   const [departmentFormData, setDepartmentFormData] = useState({
-    name: '',
-    description: '',
+    Department_Name: '',
+    Department_Description: '',
     customId: ''
   });
   
   const [courseFormData, setCourseFormData] = useState({
-    name: '',
-    code: '',
-    description: '',
+    Course_Name: '',
+    Course_Code: '',
+    Course_Description: '',
     customId: '',
     departmentId: ''
   });
@@ -78,7 +78,7 @@ const DepartmentManagement = () => {
 
   // Filter departments based on search term
   const filteredDepartments = departments.filter(dept =>
-    dept.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    dept.Department_Name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     dept.id.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -89,15 +89,15 @@ const DepartmentManagement = () => {
 
   // Modal handlers
   const openModal = () => {
-    setDepartmentFormData({ name: '', description: '', customId: '' });
+    setDepartmentFormData({ Department_Name: '', Department_Description: '', customId: '' });
     setShowModal(true);
   };
 
   const openEditModal = (department) => {
     setSelectedDepartment(department);
     setDepartmentFormData({
-      name: department.name,
-      description: department.description || '',
+      Department_Name: department.Department_Name,
+      Department_Description: department.Department_Description || '',
       customId: department.customId || '' // Use customId field, not department.id
     });
     setShowEditModal(true);
@@ -108,15 +108,15 @@ const DepartmentManagement = () => {
     if (course) {
       setEditingCourse(course);
       setCourseFormData({
-        name: course.name,
-        code: course.code || '',
-        description: course.description || '',
+        Course_Name: course.Course_Name,
+        Course_Code: course.Course_Code || '',
+        Course_Description: course.Course_Description || '',
         customId: course.id || '',
         departmentId: course.departmentId || department.id
       });
     } else {
       setEditingCourse(null);
-      setCourseFormData({ name: '', code: '', description: '', customId: '', departmentId: department.id });
+      setCourseFormData({ Course_Name: '', Course_Code: '', Course_Description: '', customId: '', departmentId: department.id });
     }
     setShowCourseModal(true);
   };
@@ -127,8 +127,8 @@ const DepartmentManagement = () => {
     try {
       // Only send fields that the backend DTO expects
       const dataToSend = {
-        name: departmentFormData.name,
-        description: departmentFormData.description || undefined,
+        Department_Name: departmentFormData.Department_Name,
+        Department_Description: departmentFormData.Department_Description || undefined,
         customId: departmentFormData.customId || undefined
       };
       await createDepartment(dataToSend);
@@ -145,8 +145,8 @@ const DepartmentManagement = () => {
     try {
       // Only send fields that the backend DTO expects
       const dataToSend = {
-        name: departmentFormData.name,
-        description: departmentFormData.description || undefined,
+        Department_Name: departmentFormData.Department_Name,
+        Department_Description: departmentFormData.Department_Description || undefined,
         customId: departmentFormData.customId || undefined
       };
       await updateDepartment(selectedDepartment.id, dataToSend);
@@ -163,9 +163,9 @@ const DepartmentManagement = () => {
     try {
       // Only send fields that the backend DTO expects
       const dataToSend = {
-        name: courseFormData.name,
-        code: courseFormData.code,
-        description: courseFormData.description || undefined,
+        Course_Name: courseFormData.Course_Name,
+        Course_Code: courseFormData.Course_Code,
+        Course_Description: courseFormData.Course_Description || undefined,
         customId: courseFormData.customId || undefined,
         departmentId: courseFormData.departmentId
       };
@@ -183,9 +183,9 @@ const DepartmentManagement = () => {
     try {
       // Only send fields that the backend DTO expects
       const dataToSend = {
-        name: courseFormData.name,
-        code: courseFormData.code,
-        description: courseFormData.description || undefined,
+        Course_Name: courseFormData.Course_Name,
+        Course_Code: courseFormData.Course_Code,
+        Course_Description: courseFormData.Course_Description || undefined,
         customId: courseFormData.customId || undefined,
         departmentId: courseFormData.departmentId
       };
@@ -203,7 +203,7 @@ const DepartmentManagement = () => {
       await deleteDepartment(departmentId);
       
       // Show success message about trash bin
-      setSuccessMessage(`Department "${itemToDelete?.name}" has been moved to the trash bin. You can restore it later or permanently delete it from the Trash Bin page.`);
+      setSuccessMessage(`Department "${itemToDelete?.Department_Name}" has been moved to the trash bin. You can restore it later or permanently delete it from the Trash Bin page.`);
       
       // Refresh the data to get updated list
       await fetchData();
@@ -223,7 +223,7 @@ const DepartmentManagement = () => {
       await deleteCourse(courseId);
       
       // Show success message about trash bin
-      setSuccessMessage(`Course "${itemToDelete?.name}" has been moved to the trash bin. You can restore it later or permanently delete it from the Trash Bin page.`);
+      setSuccessMessage(`Course "${itemToDelete?.Course_Name}" has been moved to the trash bin. You can restore it later or permanently delete it from the Trash Bin page.`);
       
       // Refresh the data to get updated list
       await fetchData();
@@ -418,7 +418,7 @@ const DepartmentManagement = () => {
                         <div key={course.id} className="department-course-item">
                           <div className="department-course-info">
                             <div className="department-course-id">{course.id}</div>
-                            <div className="department-course-name">{course.name}</div>
+                            <div className="department-course-name">{course.Course_Name}</div>
                           </div>
                           <div className="department-course-actions">
                             <button 
@@ -502,8 +502,8 @@ const DepartmentManagement = () => {
                   <input
                     type="text"
                     className="department-form-input"
-                    value={departmentFormData.name}
-                    onChange={(e) => setDepartmentFormData({...departmentFormData, name: e.target.value})}
+                    value={departmentFormData.Department_Name}
+                    onChange={(e) => setDepartmentFormData({...departmentFormData, Department_Name: e.target.value})}
                     placeholder="e.g., College of Computer Studies"
                     required
                   />
@@ -576,8 +576,8 @@ const DepartmentManagement = () => {
                   <input
                     type="text"
                     className="department-form-input"
-                    value={departmentFormData.name}
-                    onChange={(e) => setDepartmentFormData({...departmentFormData, name: e.target.value})}
+                    value={departmentFormData.Department_Name}
+                    onChange={(e) => setDepartmentFormData({...departmentFormData, Department_Name: e.target.value})}
                     required
                   />
                 </div>
@@ -585,8 +585,8 @@ const DepartmentManagement = () => {
                   <label className="department-form-label">Description</label>
                   <textarea
                     className="department-form-input"
-                    value={departmentFormData.description}
-                    onChange={(e) => setDepartmentFormData({...departmentFormData, description: e.target.value})}
+                    value={departmentFormData.Department_Description}
+                    onChange={(e) => setDepartmentFormData({...departmentFormData, Department_Description: e.target.value})}
                     placeholder="Optional description for the department"
                     rows={3}
                   />
@@ -629,7 +629,7 @@ const DepartmentManagement = () => {
             <div className="department-modal-header">
               <h5 className="department-modal-title">
                 <i className="fas fa-graduation-cap"></i>
-                {editingCourse ? 'Edit Course' : 'Create Course'} - {selectedDepartment.name}
+                {editingCourse ? 'Edit Course' : 'Create Course'} - {selectedDepartment.Department_Name}
               </h5>
               <button
                 type="button"
@@ -651,8 +651,8 @@ const DepartmentManagement = () => {
                   <input
                     type="text"
                     className="department-form-input"
-                    value={courseFormData.code}
-                    onChange={(e) => setCourseFormData({...courseFormData, code: e.target.value.toUpperCase()})}
+                    value={courseFormData.Course_Code}
+                    onChange={(e) => setCourseFormData({...courseFormData, Course_Code: e.target.value.toUpperCase()})}
                     placeholder="e.g., CS101, IT201"
                     maxLength="10"
                     pattern="[A-Za-z0-9]+"
@@ -688,8 +688,8 @@ const DepartmentManagement = () => {
                   <input
                     type="text"
                     className="department-form-input"
-                    value={courseFormData.name}
-                    onChange={(e) => setCourseFormData({...courseFormData, name: e.target.value})}
+                    value={courseFormData.Course_Name}
+                    onChange={(e) => setCourseFormData({...courseFormData, Course_Name: e.target.value})}
                     placeholder="e.g., Introduction to Computer Science"
                     required
                   />
@@ -698,8 +698,8 @@ const DepartmentManagement = () => {
                   <label className="department-form-label">Description (Optional)</label>
                   <textarea
                     className="department-form-input"
-                    value={courseFormData.description}
-                    onChange={(e) => setCourseFormData({...courseFormData, description: e.target.value})}
+                    value={courseFormData.Course_Description}
+                    onChange={(e) => setCourseFormData({...courseFormData, Course_Description: e.target.value})}
                     placeholder="Optional description for this course"
                     rows={3}
                   />

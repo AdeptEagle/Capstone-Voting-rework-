@@ -24,8 +24,8 @@ const Elections = () => {
 
   // Enhanced form state for creating elections with positions and candidates
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
+    Election_Title: '',
+    Election_Description: '',
     startDate: '',
     endDate: '',
     positionIds: [],
@@ -116,8 +116,8 @@ const Elections = () => {
             
             const newPosition = await createPosition({
               id: position.id,
-              title: position.title,
-              description: position.description || '',
+              Position_Title: position.title,
+              Position_Description: position.description || '',
               voteLimit: position.voteLimit,
               displayOrder: position.displayOrder
             });
@@ -159,8 +159,8 @@ const Elections = () => {
 
       // Create the election with only the basic fields (matching the DTO)
       const electionData = {
-        title: formData.title,
-        description: formData.description,
+        Election_Title: formData.Election_Title,
+        Election_Description: formData.Election_Description,
         startDate: new Date(formData.startDate).toISOString(),
         endDate: new Date(formData.endDate).toISOString()
       };
@@ -735,7 +735,7 @@ const Elections = () => {
   };
 
   const nextStep = () => {
-    if (currentStep === 1 && (!formData.title || !formData.startDate || !formData.endDate)) {
+          if (currentStep === 1 && (!formData.Election_Title || !formData.startDate || !formData.endDate)) {
       setError('Please fill in all required fields');
       return;
     }
@@ -1372,8 +1372,8 @@ const Elections = () => {
                     <input
                       type="text"
                       className="form-control"
-                      value={formData.title}
-                      onChange={(e) => setFormData({...formData, title: e.target.value})}
+                      value={formData.Election_Title}
+                      onChange={(e) => setFormData({...formData, Election_Title: e.target.value})}
                         placeholder="e.g., Student Council Election 2024"
                       required
                     />
@@ -1383,8 +1383,8 @@ const Elections = () => {
                     <textarea
                       className="form-control"
                       rows="3"
-                      value={formData.description}
-                      onChange={(e) => setFormData({...formData, description: e.target.value})}
+                      value={formData.Election_Description}
+                      onChange={(e) => setFormData({...formData, Election_Description: e.target.value})}
                         placeholder="Describe the purpose and scope of this election..."
                       required
                     />
@@ -1449,8 +1449,8 @@ const Elections = () => {
                                 }
                               }}
                             />
-                            <label className="form-check-label" htmlFor={`create-position-${position.id}`}>
-                                {position.title} (Vote Limit: {position.voteLimit})
+                                                          <label className="form-check-label" htmlFor={`create-position-${position.id}`}>
+                                {position.Position_Title} (Vote Limit: {position.voteLimit})
                             </label>
                           </div>
                         ))
@@ -1521,7 +1521,7 @@ const Elections = () => {
                             getFilteredCandidates().forEach(candidate => {
                               if (!candidatesByPosition[candidate.positionId]) {
                                 candidatesByPosition[candidate.positionId] = {
-                                  positionName: candidate.position?.title || 'Unknown Position',
+                                  positionName: candidate.position?.Position_Title || 'Unknown Position',
                                   candidates: []
                                 };
                               }
@@ -1868,8 +1868,8 @@ const Elections = () => {
                     <input
                       type="text"
                       className="form-control"
-                      value={formData.title}
-                      onChange={(e) => setFormData({...formData, title: e.target.value})}
+                      value={formData.Election_Title}
+                      onChange={(e) => setFormData({...formData, Election_Title: e.target.value})}
                       required
                     />
                   </div>
@@ -1878,8 +1878,8 @@ const Elections = () => {
                     <textarea
                       className="form-control"
                       rows="3"
-                      value={formData.description}
-                      onChange={(e) => setFormData({...formData, description: e.target.value})}
+                      value={formData.Election_Description}
+                      onChange={(e) => setFormData({...formData, Election_Description: e.target.value})}
                       required
                     />
                   </div>
@@ -1943,7 +1943,7 @@ const Elections = () => {
                                 }}
                               />
                               <label className="form-check-label" htmlFor={`edit-position-${position.id}`}>
-                                {position.title}
+                                {position.Position_Title}
                               </label>
                             </div>
                           ))

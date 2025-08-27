@@ -10,8 +10,8 @@ const ManageAdmins = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingAdmin, setEditingAdmin] = useState(null);
   const [formData, setFormData] = useState({ 
-    username: '', 
-    email: '', 
+    Admin_Username: '', 
+    Admin_Email: '', 
     password: '', 
     confirmPassword: '',
     role: 'ADMIN' 
@@ -74,8 +74,8 @@ const ManageAdmins = () => {
       if (editingAdmin) {
         // For editing, only send fields that the backend expects
         const updateData = {
-          username: formData.username,
-          email: formData.email,
+          Admin_Username: formData.Admin_Username,
+          Admin_Email: formData.Admin_Email,
           role: formData.role
         };
         
@@ -88,8 +88,8 @@ const ManageAdmins = () => {
       } else {
         // For creating new admin, only send fields that the backend DTO expects
         const createData = {
-          username: formData.username,
-          email: formData.email,
+          Admin_Username: formData.Admin_Username,
+          Admin_Email: formData.Admin_Email,
           password: formData.password,
           role: formData.role
         };
@@ -98,7 +98,7 @@ const ManageAdmins = () => {
       }
       setShowModal(false);
       setEditingAdmin(null);
-      setFormData({ username: '', email: '', password: '', confirmPassword: '', role: 'ADMIN' });
+      setFormData({ Admin_Username: '', Admin_Email: '', password: '', confirmPassword: '', role: 'ADMIN' });
       setShowPassword(false);
       setShowConfirmPassword(false);
       fetchAdmins();
@@ -302,8 +302,8 @@ const ManageAdmins = () => {
                     <input
                       type="text"
                       className="form-control"
-                      value={formData.username}
-                      onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                      value={formData.Admin_Username}
+                      onChange={(e) => setFormData({ ...formData, Admin_Username: e.target.value })}
                       required
                     />
                   </div>
@@ -312,8 +312,8 @@ const ManageAdmins = () => {
                     <input
                       type="email"
                       className="form-control"
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      value={formData.Admin_Email}
+                      onChange={(e) => setFormData({ ...formData, Admin_Email: e.target.value })}
                       required
                       placeholder="admin@votingsystem.com"
                     />

@@ -21,9 +21,9 @@ const Voters = () => {
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const [socket, setSocket] = useState(null);
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    studentId: '',
+    Voter_Name: '',
+    Voter_Email: '',
+    Voter_StudentId: '',
     password: '',
     departmentId: '',
     courseId: ''
@@ -341,7 +341,7 @@ const Voters = () => {
     
     // Student ID format validation for both new and edited voters
     const idPattern = /^\d{4}-\d{5}$/;
-    if (!idPattern.test(formData.studentId)) {
+          if (!idPattern.test(formData.Voter_StudentId)) {
       setError('Student ID must be in the format YYYY-NNNNN (e.g., 2024-00001)');
       return;
     }
@@ -349,10 +349,10 @@ const Voters = () => {
     try {
       // Prepare data to send - only include fields that the backend DTO expects
       const dataToSend = {
-        name: formData.name,
-        email: formData.email,
-        studentId: formData.studentId,
-        password: formData.password || formData.studentId, // Use provided password or Student ID as default
+        Voter_Name: formData.Voter_Name,
+        Voter_Email: formData.Voter_Email,
+        Voter_StudentId: formData.Voter_StudentId,
+        password: formData.password || formData.Voter_StudentId, // Use provided password or Student ID as default
         departmentId: formData.departmentId || undefined,
         courseId: formData.courseId || undefined
       };
@@ -732,7 +732,7 @@ const Voters = () => {
                       type="text"
                       className="form-control"
                       name="name"
-                      value={formData.name}
+                      value={formData.Voter_Name}
                       onChange={handleChange}
                       required
                     />
@@ -744,7 +744,7 @@ const Voters = () => {
                       type="email"
                       className="form-control"
                       name="email"
-                      value={formData.email}
+                      value={formData.Voter_Email}
                       onChange={handleChange}
                       required
                     />
@@ -756,7 +756,7 @@ const Voters = () => {
                       type="text"
                       className="form-control"
                       name="studentId"
-                      value={formData.studentId}
+                      value={formData.Voter_StudentId}
                       onChange={handleChange}
                       required
                     />
