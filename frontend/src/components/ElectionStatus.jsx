@@ -123,10 +123,10 @@ const ElectionStatus = () => {
 
       // Update the election status
       await updateElection(electionId, {
-        title: election.title,
-        description: election.description,
-        startTime: election.startTime,
-        endTime: election.endTime,
+        Election_Title: election.Election_Title,
+        Election_Description: election.Election_Description,
+        startDate: election.startDate,
+        endDate: election.endDate,
         status: newStatus
       });
 
@@ -135,7 +135,7 @@ const ElectionStatus = () => {
       
       // Show success message
       const statusText = newStatus.charAt(0).toUpperCase() + newStatus.slice(1);
-      setSuccess(`Election "${election.title}" has been ${statusText.toLowerCase()}`);
+              setSuccess(`Election "${election.Election_Title}" has been ${statusText.toLowerCase()}`);
       
       // Clear success message after 3 seconds
       setTimeout(() => setSuccess(''), 3000);
@@ -284,26 +284,26 @@ const ElectionStatus = () => {
           <div className="card-body">
             <div className="row">
               <div className="col-md-8">
-                <h4 className="text-success">{activeElection.title}</h4>
-                <p className="text-muted">{activeElection.description}</p>
+                                   <h4 className="text-success">{activeElection.Election_Title}</h4>
+                   <p className="text-muted">{activeElection.Election_Description}</p>
                 <div className="election-details">
                   <div className="detail-item">
                     <span className="detail-label">Start Time:</span>
-                    <span className="detail-value">{formatDateTime(activeElection.startTime)}</span>
+                    <span className="detail-value">{formatDateTime(activeElection.startDate)}</span>
                   </div>
                   <div className="detail-item">
                     <span className="detail-label">End Time:</span>
-                    <span className="detail-value">{formatDateTime(activeElection.endTime)}</span>
+                    <span className="detail-value">{formatDateTime(activeElection.endDate)}</span>
                   </div>
                   <div className="detail-item">
                     <span className="detail-label">Time Remaining:</span>
                     <span className="detail-value text-warning fw-bold">
-                      {getTimeRemaining(activeElection.endTime)}
+                      {getTimeRemaining(activeElection.endDate)}
                     </span>
                   </div>
                   <div className="detail-item">
                     <span className="detail-label">Created By:</span>
-                    <span className="detail-value">{activeElection.admin?.username || 'Unknown'}</span>
+                    <span className="detail-value">{activeElection.admin?.Admin_Username || 'Unknown'}</span>
                   </div>
                 </div>
                 <div className="active-election-actions mt-3">
@@ -394,7 +394,7 @@ const ElectionStatus = () => {
                 <div key={election.id} className="election-item">
                   <div className="election-header">
                     <div className="election-title">
-                      <h6 className="mb-1">{election.title || 'Untitled Election'}</h6>
+                      <h6 className="mb-1">{election.Election_Title || 'Untitled Election'}</h6>
                       <span className={`status-badge ${getStatusColor(election.status)}`}>
                         <i className={`${getStatusIcon(election.status)} me-1`}></i>
                         {election.status ? election.status.charAt(0).toUpperCase() + election.status.slice(1) : 'Unknown'}
@@ -402,7 +402,7 @@ const ElectionStatus = () => {
                     </div>
                     <div className="election-meta">
                       <small className="text-muted">
-                        Created by {election.admin?.username || 'Unknown'}
+                        Created by {election.admin?.Admin_Username || 'Unknown'}
                       </small>
                     </div>
                   </div>
@@ -410,15 +410,15 @@ const ElectionStatus = () => {
                     {getStatusActions(election)}
                   </div>
                                       <div className="election-info">
-                      <p className="election-description">{election.description || 'No description available'}</p>
+                      <p className="election-description">{election.Election_Description || 'No description available'}</p>
                       <div className="election-dates">
                         <span className="date-item">
                           <i className="fas fa-calendar-plus me-1"></i>
-                          Start: {election.startTime ? formatDateTime(election.startTime) : 'Not set'}
+                          Start: {election.startDate ? formatDateTime(election.startDate) : 'Not set'}
                         </span>
                         <span className="date-item">
                           <i className="fas fa-calendar-minus me-1"></i>
-                          End: {election.endTime ? formatDateTime(election.endTime) : 'Not set'}
+                          End: {election.endDate ? formatDateTime(election.endDate) : 'Not set'}
                         </span>
                       </div>
                       {election.positionCount > 0 && (

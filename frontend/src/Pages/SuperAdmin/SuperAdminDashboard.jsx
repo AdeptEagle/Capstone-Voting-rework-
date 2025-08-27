@@ -203,54 +203,7 @@ const SuperAdminDashboard = () => {
         </div>
       </div>
 
-      {/* System Status */}
-      <div className="row">
-        <div className="col-md-6 mb-4">
-          <div className="card">
-            <div className="card-header">
-              <h5 className="mb-0">System Status</h5>
-            </div>
-            <div className="card-body">
-              <div className="status-item">
-                <span className="status-label">Database:</span>
-                <span className="status-value text-success">Online</span>
-              </div>
-              <div className="status-item">
-                <span className="status-label">API Server:</span>
-                <span className="status-value text-success">Running</span>
-              </div>
-              <div className="status-item">
-                <span className="status-label">Voting Status:</span>
-                <span className="status-value text-warning">Active</span>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="col-md-6 mb-4">
-          <div className="card">
-            <div className="card-header">
-              <h5 className="mb-0">Recent Activity</h5>
-            </div>
-            <div className="card-body">
-              <div className="activity-item">
-                <i className="fas fa-circle text-primary me-2"></i>
-                <span>System initialized successfully</span>
-                <small className="text-muted ms-auto">Just now</small>
-              </div>
-              <div className="activity-item">
-                <i className="fas fa-circle text-success me-2"></i>
-                <span>Admin accounts loaded</span>
-                <small className="text-muted ms-auto">2 min ago</small>
-              </div>
-              <div className="activity-item">
-                <i className="fas fa-circle text-info me-2"></i>
-                <span>Dashboard statistics updated</span>
-                <small className="text-muted ms-auto">5 min ago</small>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+
     </div>
   );
 };

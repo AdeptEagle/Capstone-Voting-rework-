@@ -348,14 +348,14 @@
 
 /* Button Styles */
 .btn-custom-blue {
-  background-color: #198754;
-  border-color: #198754;
-  color: white;
+  background-color: #10b981 !important;
+  border-color: #10b981 !important;
+  color: white !important;
 }
 
 .btn-custom-blue:hover:not(:disabled) {
-  background-color: #157347;
-  border-color: #146c43;
+  background-color: #059669 !important;
+  border-color: #059669 !important;
 }
 
 .btn-success {
@@ -1501,4 +1501,48 @@
 .assigned-candidates-list::-webkit-scrollbar-thumb:hover,
 .unassigned-candidates-list::-webkit-scrollbar-thumb:hover {
   background: #a8a8a8;
+}
+
+/* Custom styling for Create Ballot button - SOLID GREEN COLOR (no gradients) */
+.no-elections .btn-primary,
+.no-elections .btn.btn-primary {
+  background: #10b981 !important;
+  background-image: none !important;
+  background: linear-gradient(none) !important;
+  border-color: #10b981 !important;
+  color: white !important;
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.25);
+}
+
+.no-elections .btn-primary:hover,
+.no-elections .btn.btn-primary:hover {
+  background: #059669 !important;
+  background-image: none !important;
+  background: linear-gradient(none) !important;
+  border-color: #059669 !important;
+  color: white !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.35);
+}
+
+.no-elections .btn-primary:focus,
+.no-elections .btn.btn-primary:focus {
+  background: #059669 !important;
+  background-image: none !important;
+  background: linear-gradient(none) !important;
+  border-color: #059669 !important;
+  color: white !important;
+  box-shadow: 0 0 0 0.2rem rgba(16, 185, 129, 0.25);
+}
+
+/* Force remove any Bootstrap gradients */
+.no-elections .btn-primary::before,
+.no-elections .btn-primary::after,
+.no-elections .btn.btn-primary::before,
+.no-elections .btn.btn-primary::after {
+  display: none !important;
 } 

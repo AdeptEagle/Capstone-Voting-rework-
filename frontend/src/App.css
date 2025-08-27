@@ -132,20 +132,22 @@ main {
 
 /* Buttons */
 .btn-custom-blue {
-  background: linear-gradient(135deg, var(--primary-navy) 0%, var(--accent-steel) 100%);
-  color: var(--text-white);
+  background: #10b981 !important;
+  background-image: none !important;
+  color: white !important;
   border: none;
   border-radius: 8px;
   padding: 0.75rem 1.5rem;
   font-weight: 600;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(29, 53, 87, 0.25);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
 }
 .btn-custom-blue:hover {
-  background: linear-gradient(135deg, var(--accent-steel) 0%, var(--primary-navy) 100%);
+  background: #059669 !important;
+  background-image: none !important;
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(29, 53, 87, 0.35);
-  color: var(--text-white);
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.35);
+  color: white !important;
 }
 
 .btn-custom-orange {

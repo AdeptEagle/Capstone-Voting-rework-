@@ -158,7 +158,7 @@ const Vote = () => {
             item.candidates.map(candidate => ({
               ...candidate,
               positionId: item.position.id,
-              positionName: item.position.title
+                             positionName: item.position.Position_Title
             }))
           );
         
@@ -202,9 +202,9 @@ const Vote = () => {
         console.log('Available voters:', voters.map(v => ({ 
           id: v.id, 
           idType: typeof v.id, 
-          name: v.name, 
-          studentId: v.studentId, 
-          email: v.email 
+          name: v.Voter_Name, 
+          studentId: v.Voter_StudentId, 
+          email: v.Voter_Email 
         })));
         
         // Check if there's a type mismatch
@@ -225,8 +225,8 @@ const Vote = () => {
               const userData = await authData.json();
               console.log('Auth user data for email search:', userData);
               
-              if (userData.user?.email) {
-                voter = voters.find(v => v.email === userData.user.email);
+              if (userData.user?.Voter_Email) {
+                voter = voters.find(v => v.Voter_Email === userData.user.Voter_Email);
                 console.log('Found voter by email:', voter);
               }
             }
@@ -243,8 +243,8 @@ const Vote = () => {
               const userData = await authData.json();
               console.log('Auth user data for student ID search:', userData);
               
-              if (userData.user?.studentId) {
-                voter = voters.find(v => v.studentId === userData.user.studentId);
+              if (userData.user?.Voter_StudentId) {
+                voter = voters.find(v => v.Voter_StudentId === userData.user.Voter_StudentId);
                 console.log('Found voter by student ID:', voter);
               }
             }
@@ -668,10 +668,10 @@ const Vote = () => {
                 </div>
                 <div className="vote-candidate-photo-container">
                   {candidate.photoUrl && !imgError[candidate.id] ? (
-                    <img 
-                      src={getCandidatePhotoUrl(candidate.photoUrl)}
-                      alt={candidate.name} 
-                      className="vote-candidate-photo"
+                                       <img 
+                     src={getCandidatePhotoUrl(candidate.photoUrl)} 
+                     alt={candidate.Candidate_Name} 
+                     className="vote-candidate-photo"
                       onError={e => {
                         setImgError(prev => ({ ...prev, [candidate.id]: true }));
                         e.target.style.display = 'none';
@@ -682,10 +682,10 @@ const Vote = () => {
                   <CandidatePhotoPlaceholder className="candidate-photo-placeholder" style={{ display: candidate.photoUrl && !imgError[candidate.id] ? 'none' : 'flex' }} />
                 </div>
                 <div className="vote-candidate-overlay">
-                  <h3 className="vote-candidate-overlay-name">
-                    {candidate.name}
-                    <span className="verified"><i className="fas fa-check-circle"></i></span>
-                  </h3>
+                                     <h3 className="vote-candidate-overlay-name">
+                     {candidate.Candidate_Name}
+                     <span className="verified"><i className="fas fa-check-circle"></i></span>
+                   </h3>
                   <div className="vote-candidate-overlay-position">{candidate.positionName}</div>
                   <p className="vote-candidate-overlay-description">
                     {candidate.description ? 
@@ -816,7 +816,7 @@ const Vote = () => {
                                 <CandidatePhotoPlaceholder className="selected-candidate-photo-placeholder" />
                               )}
                               </div>
-                            <span className="selected-candidate-name">{candidate.name}</span>
+                                                         <span className="selected-candidate-name">{candidate.Candidate_Name}</span>
                           </div>
                         ))}
                         {selectedCandidates.length > 3 && (
@@ -852,7 +852,7 @@ const Vote = () => {
                   const selectedCandidates = candidates.filter(c => selectedVotes[pos.id]?.includes(c.id));
                   return (
                     <div key={pos.id} className="vote-confirmation-item">
-                      <strong>{pos.name}:</strong>
+                      <strong>{pos.Position_Title}:</strong>
                       <div className="confirmation-candidates">
                         {selectedCandidates.length > 0 ? (
                           <div className="confirmation-candidates-grid">
@@ -862,7 +862,7 @@ const Vote = () => {
                                 {candidate.photoUrl && !imgError[candidate.id] ? (
                                   <img 
                                       src={getCandidatePhotoUrl(candidate.photoUrl)} 
-                                    alt={candidate.name} 
+                                    alt={candidate.Candidate_Name} 
                                     className="confirmation-candidate-photo"
                                     onError={() => setImgError(prev => ({ ...prev, [candidate.id]: true }))}
                                   />
@@ -870,7 +870,7 @@ const Vote = () => {
                                     <CandidatePhotoPlaceholder className="confirmation-candidate-photo-placeholder" />
                                   )}
                                   </div>
-                                <span className="confirmation-candidate-name">{candidate.name}</span>
+                                <span className="confirmation-candidate-name">{candidate.Candidate_Name}</span>
                               </div>
                             ))}
                           </div>
@@ -936,7 +936,7 @@ const Vote = () => {
                   const selectedCandidates = candidates.filter(c => selectedVotes[pos.id]?.includes(c.id));
                   return (
                     <div key={pos.id} className="vote-confirmation-item">
-                      <strong>{pos.name}:</strong>
+                      <strong>{pos.Position_Title}:</strong>
                       <div className="confirmation-candidates">
                         {selectedCandidates.length > 0 ? (
                           <div className="confirmation-candidates-grid">
@@ -946,7 +946,7 @@ const Vote = () => {
                                 {candidate.photoUrl && !imgError[candidate.id] ? (
                                   <img 
                                       src={getCandidatePhotoUrl(candidate.photoUrl)} 
-                                    alt={candidate.name} 
+                                    alt={candidate.Candidate_Name} 
                                     className="confirmation-candidate-photo"
                                     onError={() => setImgError(prev => ({ ...prev, [candidate.id]: true }))}
                                   />
@@ -954,7 +954,7 @@ const Vote = () => {
                                     <CandidatePhotoPlaceholder className="confirmation-candidate-photo-placeholder" />
                                   )}
                                   </div>
-                                <span className="confirmation-candidate-name">{candidate.name}</span>
+                                <span className="confirmation-candidate-name">{candidate.Candidate_Name}</span>
                               </div>
                             ))}
                           </div>

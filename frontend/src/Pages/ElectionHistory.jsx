@@ -115,7 +115,9 @@ const ElectionHistory = () => {
   const handleDeleteElection = async () => {
     const { election, confirmationText } = deleteModal;
     
-    if (confirmationText !== election.title) {
+    console.log('Delete confirmation:', { confirmationText, expected: election.Election_Title, match: confirmationText === election.Election_Title });
+    
+    if (confirmationText !== election.Election_Title) {
       setError('Ballot name does not match. Please type the exact ballot name to confirm deletion.');
       return;
     }
@@ -125,11 +127,13 @@ const ElectionHistory = () => {
       setError('');
       setSuccess('');
 
+      console.log('Deleting election:', { electionId: election.electionId, electionTitle: election.Election_Title });
+      
       await deleteElection(election.electionId);
       
       setSuccess(
         <div>
-          Election "{election.title}" moved to trash successfully! 
+          Election "{election.Election_Title}" moved to trash successfully! 
           <button 
             className="btn btn-link p-0 ms-2" 
             onClick={() => window.location.href = '/trash-bin?tab=elections'}
@@ -193,7 +197,7 @@ const ElectionHistory = () => {
             <div key={election.electionId} className="election-history-card">
               <div className="election-history-header">
                 <div className="election-history-title">
-                  <h3>{election.title || 'Untitled Election'}</h3>
+                  <h3>{election.Election_Title || 'Untitled Election'}</h3>
                   <span className={`status-badge badge bg-${getStatusColor(election.status)}`}>
                     <i className={`${getStatusIcon(election.status)} me-1`}></i>
                     {election.status ? election.status.charAt(0).toUpperCase() + election.status.slice(1) : 'Unknown'}
@@ -201,13 +205,13 @@ const ElectionHistory = () => {
                 </div>
                 <div className="election-history-meta">
                   <small className="text-muted">
-                    Created by {election.admin?.username || 'Unknown'}
+                    Created by {election.admin?.Admin_Username || 'Unknown'}
                   </small>
                 </div>
               </div>
 
               <div className="election-history-content">
-                <p className="election-history-description">{election.description || 'No description available'}</p>
+                <p className="election-history-description">{election.Election_Description || 'No description available'}</p>
                 
                 <div className="election-history-stats">
                   <div className="stat-item">
@@ -272,7 +276,7 @@ const ElectionHistory = () => {
            <div className="modal-dialog custom-wide-modal" style={{ maxWidth: '1000px', width: '90%', marginLeft: '250px', marginRight: 'auto' }}>
              <div className="modal-content" style={{ maxWidth: '1700px', width: '100%' }}>
               <div className="modal-header">
-                <h5 className="modal-title">Election Details: {selectedElection.title}</h5>
+                <h5 className="modal-title">Election Details: {selectedElection.Election_Title}</h5>
                 <button
                   type="button"
                   className="btn-close"
@@ -286,13 +290,13 @@ const ElectionHistory = () => {
                      <div className="col-md-6 mb-3">
                        <label className="form-label"><strong>Description:</strong></label>
                        <div className="form-control-plaintext">
-                         {selectedElection.description || 'No description'}
+                         {selectedElection.Election_Description || 'No description'}
                        </div>
                      </div>
                      <div className="col-md-6 mb-3">
                        <label className="form-label"><strong>Created By:</strong></label>
                        <div className="form-control-plaintext">
-                         {selectedElection.admin?.username || 'Unknown'}
+                         {selectedElection.admin?.Admin_Username || 'Unknown'}
                        </div>
                      </div>
                    </div>
@@ -365,9 +369,9 @@ const ElectionHistory = () => {
                                  </span>
                                </td>
                                <td>
-                                 <strong>{candidate.name || 'Unknown'}</strong>
+                                 <strong>{candidate.Candidate_Name || 'Unknown'}</strong>
                                </td>
-                               <td>{candidate.studentId || 'N/A'}</td>
+                               <td>{candidate.Candidate_StudentId || 'N/A'}</td>
                                <td>{candidate.department || 'N/A'}</td>
                                <td>{candidate.course || 'N/A'}</td>
                              </tr>
@@ -407,7 +411,7 @@ const ElectionHistory = () => {
               <div className="modal-header">
                 <h5 className="modal-title">
                   <i className="fas fa-chart-bar me-2 text-success"></i>
-                  Election Results: {resultsModal.election.title}
+                  Election Results: {resultsModal.election.Election_Title}
                 </h5>
                 <button
                   type="button"
@@ -580,13 +584,13 @@ const ElectionHistory = () => {
                     <strong>Election to delete:</strong>
                   </label>
                   <div className="form-control-plaintext">
-                    {deleteModal.election.title}
+                    {deleteModal.election.Election_Title}
                   </div>
                 </div>
                 
                 <div className="mb-3">
                   <label className="form-label">
-                    Type the ballot name <strong>"{deleteModal.election.title}"</strong> to confirm deletion:
+                    Type the ballot name <strong>"{deleteModal.election.Election_Title}"</strong> to confirm deletion:
                   </label>
                   <input
                     type="text"
@@ -596,7 +600,7 @@ const ElectionHistory = () => {
                       ...deleteModal,
                       confirmationText: e.target.value
                     })}
-                    placeholder={`Type: ${deleteModal.election.title}`}
+                    placeholder={`Type: ${deleteModal.election.Election_Title}`}
                     autoFocus
                   />
                 </div>
@@ -614,7 +618,7 @@ const ElectionHistory = () => {
                   type="button"
                   className="btn btn-warning"
                   onClick={handleDeleteElection}
-                  disabled={deleting || deleteModal.confirmationText !== deleteModal.election.title}
+                  disabled={deleting || deleteModal.confirmationText !== deleteModal.election.Election_Title}
                 >
                   {deleting ? (
                     <>

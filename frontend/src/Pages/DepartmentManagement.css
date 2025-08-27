@@ -158,11 +158,13 @@
 }
 
 .department-btn-primary {
-  background: linear-gradient(135deg, var(--primary-navy), var(--accent-steel));
+  background: #10b981 !important;
+  background-image: none !important;
 }
 
 .department-btn-primary:hover {
-  background: linear-gradient(135deg, var(--accent-steel), var(--primary-navy));
+  background: #059669 !important;
+  background-image: none !important;
 }
 
 .department-btn-success {

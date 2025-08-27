@@ -146,9 +146,9 @@ const Voters = () => {
     // Apply search filter
     if (searchTerm) {
       filtered = voters.filter(voter =>
-        voter.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        voter.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        voter.studentId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        voter.Voter_Name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        voter.Voter_Email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        voter.Voter_StudentId.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (voter.departmentName && voter.departmentName.toLowerCase().includes(searchTerm.toLowerCase())) ||
         (voter.courseName && voter.courseName.toLowerCase().includes(searchTerm.toLowerCase()))
       );
@@ -234,8 +234,11 @@ const Voters = () => {
       // Transform the data to flatten nested department and course objects
       const transformedData = data.map(voter => ({
         ...voter,
-        departmentName: voter.department?.name || null,
-        courseName: voter.course?.name || null,
+        name: voter.Voter_Name,
+        email: voter.Voter_Email,
+        studentId: voter.Voter_StudentId,
+        departmentName: voter.department?.Department_Name || null,
+        courseName: voter.course?.Course_Name || null,
         courseId: voter.course?.id || null
       }));
       
@@ -253,9 +256,9 @@ const Voters = () => {
     if (voter) {
       setEditingVoter(voter);
       setFormData({
-        name: voter.name,
-        email: voter.email,
-        studentId: voter.studentId,
+        Voter_Name: voter.Voter_Name,
+        Voter_Email: voter.Voter_Email,
+        Voter_StudentId: voter.Voter_StudentId,
         departmentId: voter.departmentId || voter.department?.id || '',
         courseId: voter.courseId || voter.course?.id || ''
       });
@@ -402,9 +405,9 @@ const Voters = () => {
   const handleEdit = (voter) => {
     setEditingVoter(voter);
     setFormData({
-      name: voter.name,
-      email: voter.email,
-      studentId: voter.studentId,
+      Voter_Name: voter.Voter_Name,
+      Voter_Email: voter.Voter_Email,
+      Voter_StudentId: voter.Voter_StudentId,
       password: '••••••••', // Show asterisks by default
       departmentId: voter.departmentId || '',
       courseId: voter.courseId || ''
@@ -429,12 +432,12 @@ const Voters = () => {
         }
       } else {
         // Fallback: use student ID as password (common default)
-        setActualPassword(editingVoter.studentId);
+        setActualPassword(editingVoter.Voter_StudentId);
       }
     } catch (error) {
       console.error('Error fetching password:', error);
       // Fallback: use student ID as password
-      setActualPassword(editingVoter.studentId);
+              setActualPassword(editingVoter.Voter_StudentId);
     }
   };
 
@@ -837,11 +840,11 @@ const Voters = () => {
                       required
                     >
                       <option value="">Select a department</option>
-                      {departments.map(department => (
-                        <option key={department.id} value={department.id}>
-                          {department.name} ({department.id})
-                        </option>
-                      ))}
+                                             {departments.map(department => (
+                         <option key={department.id} value={department.id}>
+                           {department.Department_Name} ({department.id})
+                         </option>
+                       ))}
                     </select>
                   </div>
                   
@@ -866,11 +869,11 @@ const Voters = () => {
                             : 'Select a course'
                         }
                       </option>
-                      {courses.map(course => (
-                        <option key={course.id} value={course.id}>
-                          {course.name}
-                        </option>
-                      ))}
+                                             {courses.map(course => (
+                         <option key={course.id} value={course.id}>
+                           {course.Course_Name}
+                         </option>
+                       ))}
                     </select>
                   </div>
                   

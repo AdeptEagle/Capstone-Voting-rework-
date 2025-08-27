@@ -329,11 +329,11 @@ const VoteTraceability = () => {
                       <div className="vote-trace-details">
                         <div className="vote-trace-student">
                           <i className="fas fa-id-card me-2"></i>
-                          {showStudentIds ? `Student ID: ${vote.studentId}` : 'Anonymous Vote'}
+                          {showStudentIds ? `Student ID: ${vote.Voter_StudentId}` : 'Anonymous Vote'}
                         </div>
                         <div className="vote-trace-voter">
                           <i className="fas fa-user me-2"></i>
-                          Voter: {vote.voterName}
+                          Voter: {vote.Voter_Name}
                         </div>
                         <div className="vote-trace-candidate">
                           <i className="fas fa-vote-yea me-2"></i>

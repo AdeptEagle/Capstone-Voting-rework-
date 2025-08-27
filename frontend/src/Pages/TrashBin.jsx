@@ -176,44 +176,44 @@ const TrashBin = () => {
 
     const columns = {
       candidates: [
-        { key: 'name', label: 'Name' },
-        { key: 'studentId', label: 'Student ID' },
-        { key: 'email', label: 'Email' },
+        { key: 'Candidate_Name', label: 'Name' },
+        { key: 'Candidate_StudentId', label: 'Student ID' },
+        { key: 'Candidate_Email', label: 'Email' },
         { key: 'position', label: 'Position' },
         { key: 'department', label: 'Department' },
         { key: 'course', label: 'Course' },
         { key: 'deletedAt', label: 'Deleted Date' }
       ],
       positions: [
-        { key: 'title', label: 'Title' },
-        { key: 'description', label: 'Description' },
+        { key: 'Position_Title', label: 'Title' },
+        { key: 'Position_Description', label: 'Description' },
         { key: 'voteLimit', label: 'Vote Limit' },
         { key: 'deletedAt', label: 'Deleted Date' }
       ],
       departments: [
-        { key: 'name', label: 'Name' },
-        { key: 'description', label: 'Description' },
+        { key: 'Department_Name', label: 'Name' },
+        { key: 'Department_Description', label: 'Description' },
         { key: 'admin', label: 'Created By' },
         { key: 'deletedAt', label: 'Deleted Date' }
       ],
       courses: [
-        { key: 'name', label: 'Name' },
-        { key: 'code', label: 'Code' },
-        { key: 'description', label: 'Description' },
+        { key: 'Course_Name', label: 'Name' },
+        { key: 'Course_Code', label: 'Code' },
+        { key: 'Course_Description', label: 'Description' },
         { key: 'department', label: 'Department' },
         { key: 'deletedAt', label: 'Deleted Date' }
       ],
       voters: [
-        { key: 'name', label: 'Name' },
-        { key: 'studentId', label: 'Student ID' },
-        { key: 'email', label: 'Email' },
+        { key: 'Voter_Name', label: 'Name' },
+        { key: 'Voter_StudentId', label: 'Student ID' },
+        { key: 'Voter_Email', label: 'Email' },
         { key: 'department', label: 'Department' },
         { key: 'course', label: 'Course' },
         { key: 'deletedAt', label: 'Deleted Date' }
       ],
       elections: [
-        { key: 'title', label: 'Title' },
-        { key: 'description', label: 'Description' },
+        { key: 'Election_Title', label: 'Title' },
+        { key: 'Election_Description', label: 'Description' },
         { key: 'status', label: 'Status' },
         { key: 'startDate', label: 'Start Date' },
         { key: 'endDate', label: 'End Date' },
@@ -242,13 +242,13 @@ const TrashBin = () => {
                 
                 // Handle nested objects
                 if (column.key === 'position' && item.position) {
-                  value = item.position.title;
+                                       value = item.position.Position_Title;
                 } else if (column.key === 'department' && item.department) {
-                  value = item.department.name;
+                                       value = item.department.Department_Name;
                 } else if (column.key === 'course' && item.course) {
-                  value = item.course.name;
+                                       value = item.course.Course_Name;
                 } else if (column.key === 'admin' && item.admin) {
-                  value = item.admin.username;
+                                       value = item.admin.Admin_Username;
                 } else if (column.key === 'deletedAt') {
                   value = new Date(item.deletedAt).toLocaleDateString();
                 } else if (column.key === 'startDate' || column.key === 'endDate') {
@@ -372,7 +372,14 @@ const TrashBin = () => {
         <Modal.Body>
           Are you sure you want to restore this {activeTab.slice(0, -1)}?
           <br />
-          <strong>{selectedItem?.name || selectedItem?.title}</strong>
+          <strong>
+            {activeTab === 'candidates' ? selectedItem?.Candidate_Name :
+             activeTab === 'positions' ? selectedItem?.Position_Title :
+             activeTab === 'departments' ? selectedItem?.Department_Name :
+             activeTab === 'courses' ? selectedItem?.Course_Name :
+             activeTab === 'voters' ? selectedItem?.Voter_Name :
+             activeTab === 'elections' ? selectedItem?.Election_Title : 'Unknown Item'}
+          </strong>
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowRestoreModal(false)}>
@@ -402,7 +409,14 @@ const TrashBin = () => {
           </div>
           Are you sure you want to permanently delete this {activeTab.slice(0, -1)}?
           <br />
-          <strong>{selectedItem?.name || selectedItem?.title}</strong>
+          <strong>
+            {activeTab === 'candidates' ? selectedItem?.Candidate_Name :
+             activeTab === 'positions' ? selectedItem?.Position_Title :
+             activeTab === 'departments' ? selectedItem?.Department_Name :
+             activeTab === 'courses' ? selectedItem?.Course_Name :
+             activeTab === 'voters' ? selectedItem?.Voter_Name :
+             activeTab === 'elections' ? selectedItem?.Election_Title : 'Unknown Item'}
+          </strong>
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>

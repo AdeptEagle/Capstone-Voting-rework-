@@ -101,7 +101,7 @@ const BallotCandidates = () => {
       <div className="dashboard-header-pro">
         <div className="header-content">
           <h1>Ballot Candidates View</h1>
-          <p>View candidates for: <strong>{activeElection.title}</strong> 
+                             <p>View candidates for: <strong>{activeElection.Election_Title}</strong> 
             <span className={`badge ms-2 ${activeElection.status === 'active' ? 'bg-success' : activeElection.status === 'paused' ? 'bg-warning' : activeElection.status === 'stopped' ? 'bg-danger' : 'bg-secondary'}`}>
               {activeElection.status.toUpperCase()}
             </span>
@@ -173,7 +173,7 @@ const BallotCandidates = () => {
                         {candidate.photoUrl && candidate.photoUrl.trim() !== '' ? (
                           <img 
                             src={getCandidatePhotoUrl(candidate.photoUrl)} 
-                            alt={candidate.name}
+                            alt={candidate.Candidate_Name}
                             className="candidate-photo"
                             onError={(e) => {
                               e.target.style.display = 'none';
@@ -189,7 +189,7 @@ const BallotCandidates = () => {
                     <div className="candidate-card-body">
                       <div className="candidate-info">
                         <div className="candidate-name">
-                          {candidate.name}
+                          {candidate.Candidate_Name}
                           <span className="verified">
                             <i className="fas fa-check-circle"></i>
                           </span>

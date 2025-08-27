@@ -27,14 +27,14 @@ const ElectionStatusMessage = ({ type = 'general' }) => {
           return {
             icon: 'fas fa-pause-circle',
             title: `Election ${statusText}`,
-            message: `The election "${activeElection.title}" is currently ${status}. Voting is not available at this time.`,
+            message: `The election "${activeElection.Election_Title}" is currently ${status}. Voting is not available at this time.`,
             color: status === 'ended' ? 'success' : 'warning'
           };
         case 'candidates':
           return {
             icon: 'fas fa-users',
             title: `Election ${statusText}`,
-            message: `The election "${activeElection.title}" is currently ${status}. Candidates are not available for viewing.`,
+            message: `The election "${activeElection.Election_Title}" is currently ${status}. Candidates are not available for viewing.`,
             color: status === 'ended' ? 'success' : 'warning'
           };
         case 'results':
@@ -42,14 +42,14 @@ const ElectionStatusMessage = ({ type = 'general' }) => {
             return {
               icon: 'fas fa-chart-bar',
               title: 'Election Ended',
-              message: `The election "${activeElection.title}" has ended. Results should be available now.`,
+              message: `The election "${activeElection.Election_Title}" has ended. Results should be available now.`,
               color: 'success'
             };
           } else {
             return {
               icon: 'fas fa-chart-bar',
               title: `Election ${statusText}`,
-              message: `The election "${activeElection.title}" is currently ${status}. Results are not available yet.`,
+              message: `The election "${activeElection.Election_Title}" is currently ${status}. Results are not available yet.`,
               color: 'warning'
             };
           }
@@ -57,7 +57,7 @@ const ElectionStatusMessage = ({ type = 'general' }) => {
           return {
             icon: 'fas fa-info-circle',
             title: `Election ${statusText}`,
-            message: `The election "${activeElection.title}" is currently ${status}.`,
+            message: `The election "${activeElection.Election_Title}" is currently ${status}.`,
             color: status === 'ended' ? 'success' : 'warning'
           };
       }

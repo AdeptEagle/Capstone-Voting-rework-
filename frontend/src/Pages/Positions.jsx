@@ -93,6 +93,7 @@ const Positions = () => {
         });
       } else {
         const positionData = {
+          id: formData.id, // Include the custom ID
           Position_Title: formData.Position_Title,
           Position_Description: formData.Position_Description,
           voteLimit: Number(formData.voteLimit),

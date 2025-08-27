@@ -110,14 +110,14 @@ const Elections = () => {
         if (position.isNew) {
           try {
             // Validate required fields
-            if (!position.id || !position.title) {
+            if (!position.id || !position.Position_Title) {
               throw new Error(`Position ${position.id || 'Unknown'} is missing required fields (ID and Title)`);
             }
             
             const newPosition = await createPosition({
               id: position.id,
-              Position_Title: position.title,
-              Position_Description: position.description || '',
+              Position_Title: position.Position_Title,
+              Position_Description: position.Position_Description || '',
               voteLimit: position.voteLimit,
               displayOrder: position.displayOrder
             });
@@ -125,7 +125,7 @@ const Elections = () => {
           } catch (error) {
             console.error('Error creating position:', error);
             // Use the specific error message from the backend if available
-            const errorMessage = error.response?.data?.error || error.message || `Failed to create position: ${position.title}`;
+            const errorMessage = error.response?.data?.error || error.message || `Failed to create position: ${position.Position_Title}`;
             throw new Error(errorMessage);
           }
         }
@@ -137,9 +137,9 @@ const Elections = () => {
           try {
             const candidateData = new FormData();
             candidateData.append('id', candidate.id);
-            candidateData.append('name', candidate.name);
-            candidateData.append('email', candidate.email || '');
-            candidateData.append('studentId', candidate.studentId || '');
+            candidateData.append('Candidate_Name', candidate.Candidate_Name);
+            candidateData.append('Candidate_Email', candidate.Candidate_Email || '');
+            candidateData.append('Candidate_StudentId', candidate.Candidate_StudentId || '');
             candidateData.append('positionId', candidate.positionId);
             candidateData.append('departmentId', candidate.departmentId || '');
             candidateData.append('courseId', candidate.courseId || ''); // Add required courseId
@@ -152,7 +152,7 @@ const Elections = () => {
             await createCandidate(candidateData);
           } catch (error) {
             console.error('Error creating candidate:', error);
-            throw new Error(`Failed to create candidate: ${candidate.name}`);
+            throw new Error(`Failed to create candidate: ${candidate.Candidate_Name}`);
           }
         }
       }
@@ -374,7 +374,7 @@ const Elections = () => {
   const confirmDeleteElection = async () => {
     if (!deletingElection) return;
     
-    const electionTitle = deletingElection.title || 'Untitled Election';
+           const electionTitle = deletingElection.Election_Title || 'Untitled Election';
     
     if (deleteConfirmation !== electionTitle) {
       setError('Confirmation text does not match the ballot name. Please type the exact ballot name to confirm deletion.');
@@ -435,8 +435,8 @@ const Elections = () => {
       }
 
       await updateElection(electionId, {
-        title: election.title,
-        description: election.description,
+        title: election.Election_Title,
+        description: election.Election_Description,
         startDate: election.startDate,
         endDate: election.endDate,
         status: newStatus
@@ -468,8 +468,8 @@ const Elections = () => {
       }
 
       await updateElection(electionId, {
-        title: election.title,
-        description: election.description,
+        title: election.Election_Title,
+        description: election.Election_Description,
         startDate: election.startDate,
         endDate: election.endDate,
         status: 'draft'
@@ -495,8 +495,8 @@ const Elections = () => {
       
       // Set initial form data while loading positions
       setFormData({
-        title: election.title || '',
-        description: election.description || '',
+        title: election.Election_Title || '',
+        description: election.Election_Description || '',
         startDate: election.startDate ? election.startDate.slice(0, 16) : '', // Format for datetime-local input
         endDate: election.endDate ? election.endDate.slice(0, 16) : '',
         positionIds: [] // Start with empty array
@@ -562,8 +562,8 @@ const Elections = () => {
   const addNewPosition = () => {
     const newPosition = {
       id: '',
-      title: '',
-      description: '',
+      Position_Title: '',
+      Position_Description: '',
       voteLimit: 1,
       displayOrder: tempPositions.length + 1,
       isNew: true,
@@ -637,9 +637,9 @@ const Elections = () => {
   const addCandidateToPosition = (positionId) => {
     const newCandidate = {
       id: crypto.randomUUID ? crypto.randomUUID() : Date.now().toString() + Math.random().toString(36).substr(2, 9),
-      name: '',
-      email: '',
-      studentId: '',
+      Candidate_Name: '',
+      Candidate_Email: '',
+      Candidate_StudentId: '',
       positionId: positionId,
       departmentId: '',
       courseId: '', // Add required courseId field
@@ -748,7 +748,7 @@ const Elections = () => {
       
       // Validate new positions
       for (const position of tempPositions) {
-        if (!position.id || !position.title) {
+        if (!position.id || !position.Position_Title) {
           setError(`Position ${tempPositions.indexOf(position) + 1} is missing required fields (ID and Title)`);
           return;
         }
@@ -760,12 +760,12 @@ const Elections = () => {
           return;
         }
         
-        // Check for duplicate names within new positions (case-insensitive)
-                  const duplicateName = tempPositions.filter(p => p.title.toLowerCase() === position.title.toLowerCase()).length > 1;
-          if (duplicateName) {
-            setError(`Duplicate Position Title: "${position.title}". Each position must have a unique title.`);
-            return;
-          }
+                // Check for duplicate names within new positions (case-insensitive)
+        const duplicateName = tempPositions.filter(p => p.Position_Title.toLowerCase() === position.Position_Title.toLowerCase()).length > 1;
+        if (duplicateName) {
+          setError(`Duplicate Position Title: "${position.Position_Title}". Each position must have a unique title.`);
+          return;
+        }
         
         // Check if ID conflicts with existing positions (case-insensitive)
         const existingPosition = positions.find(p => p.id.toLowerCase() === position.id.toLowerCase());
@@ -774,12 +774,12 @@ const Elections = () => {
           return;
         }
         
-        // Check if name conflicts with existing positions (case-insensitive)
-                  const existingPositionName = positions.find(p => p.title.toLowerCase() === position.title.toLowerCase());
-          if (existingPositionName) {
-            setError(`Position title "${position.title}" already exists. Please use a different title.`);
-            return;
-          }
+                // Check if name conflicts with existing positions (case-insensitive)
+        const existingPositionName = positions.find(p => p.Position_Title.toLowerCase() === position.Position_Title.toLowerCase());
+        if (existingPositionName) {
+          setError(`Position title "${position.Position_Title}" already exists. Please use a different title.`);
+          return;
+        }
       }
     }
     
@@ -793,8 +793,8 @@ const Elections = () => {
       
       // Validate new candidates have required fields
       for (const candidate of tempCandidates) {
-        if (!candidate.name || !candidate.departmentId || !candidate.courseId) {
-          setError(`Candidate ${candidate.name || 'Unknown'} is missing required fields (Name, Department, and Course)`);
+        if (!candidate.Candidate_Name || !candidate.departmentId || !candidate.courseId) {
+          setError(`Candidate ${candidate.Candidate_Name || 'Unknown'} is missing required fields (Name, Department, and Course)`);
           return;
         }
       }
@@ -1044,16 +1044,7 @@ const Elections = () => {
           </div>
           <div className="dashboard-header-actions">
             <button
-              className="btn btn-custom-blue"
-              onClick={openCreateModal}
-              disabled={getActiveElections().length > 0}
-              title={getActiveElections().length > 0 ? "End the current election first" : ""}
-            >
-              <i className="fas fa-plus me-2"></i>
-              Create Ballot with Positions & Candidates
-            </button>
-            <button
-              className="btn btn-outline-secondary ms-2"
+              className="btn btn-outline-secondary"
               onClick={() => navigate('/admin/election-history')}
             >
               <i className="fas fa-history me-2"></i>
@@ -1153,7 +1144,7 @@ const Elections = () => {
                   <div key={election.id} className={`election-card ${election.status === 'active' ? 'active-election' : ''}`}>
                     <div className="election-header">
                       <div className="election-title">
-                        <h3>{election.title || 'Untitled Election'}</h3>
+                        <h3>{election.Election_Title || 'Untitled Election'}</h3>
                         <span className={`status-badge badge bg-${getStatusColor(election.status)}`}>
                           <i className={`${getStatusIcon(election.status)} me-1`}></i>
                           {(election.status || 'pending').charAt(0).toUpperCase() + (election.status || 'pending').slice(1)}
@@ -1169,13 +1160,13 @@ const Elections = () => {
                       </div>
                       <div className="election-meta">
                         <small className="text-muted">
-                          Created by {election.admin?.username || 'Unknown'}
+                          Created by {election.admin?.Admin_Username || 'Unknown'}
                         </small>
                       </div>
                     </div>
 
                     <div className="election-content">
-                      <p className="election-description">{election.description || 'No description available'}</p>
+                      <p className="election-description">{election.Election_Description || 'No description available'}</p>
                       
                       <div className="election-details">
                         <div className="detail-row">
@@ -1275,7 +1266,7 @@ const Elections = () => {
                   <div key={election.id} className="election-card ended-election">
                     <div className="election-header">
                       <div className="election-title">
-                        <h3>{election.title || 'Untitled Election'}</h3>
+                        <h3>{election.Election_Title || 'Untitled Election'}</h3>
                         <span className={`status-badge badge bg-${getStatusColor(election.status)}`}>
                           <i className={`${getStatusIcon(election.status)} me-1`}></i>
                           {(election.status || 'ended').charAt(0).toUpperCase() + (election.status || 'ended').slice(1)}
@@ -1283,13 +1274,13 @@ const Elections = () => {
                       </div>
                       <div className="election-meta">
                         <small className="text-muted">
-                          Created by {election.admin?.username || 'Unknown'}
+                          Created by {election.admin?.Admin_Username || 'Unknown'}
                         </small>
                       </div>
                     </div>
 
                     <div className="election-content">
-                      <p className="election-description">{election.description || 'No description available'}</p>
+                      <p className="election-description">{election.Election_Description || 'No description available'}</p>
                       
                       <div className="election-dates">
                         <div className="date-item">
@@ -1588,7 +1579,7 @@ const Elections = () => {
                                               {candidate.photoUrl && candidate.photoUrl.trim() !== '' ? (
                                                 <img 
                                                   src={candidate.photoUrl} 
-                                                  alt={candidate.name}
+                                                  alt={candidate.Candidate_Name}
                                                   className="candidate-photo"
                                                   onError={(e) => {
                                                     e.target.style.display = 'none';
@@ -1611,7 +1602,7 @@ const Elections = () => {
                                           <div className="candidate-card-body">
                                             <div className="candidate-info">
                                               <div className="candidate-name">
-                                                {candidate.name}
+                                                {candidate.Candidate_Name}
                                               </div>
                                               <div className="candidate-position">
                                                 {candidate.position?.title || 'Unknown Position'}
@@ -1651,7 +1642,7 @@ const Elections = () => {
                             <div className="card-header">
                               <h6 className="mb-0">
                                 <i className="fas fa-user-tie me-2"></i>
-                                {position.title || `Position ${posIndex + 1}`}
+                                {position.Position_Title || `Position ${posIndex + 1}`}
                               </h6>
                             </div>
                             <div className="card-body">
@@ -1691,8 +1682,8 @@ const Elections = () => {
                                               <input
                                                 type="text"
                                                 className="form-control"
-                                                value={candidate.name}
-                                                onChange={(e) => updateTempCandidate(globalCandidateIndex, 'name', e.target.value)}
+                                                value={candidate.Candidate_Name}
+                                                onChange={(e) => updateTempCandidate(globalCandidateIndex, 'Candidate_Name', e.target.value)}
                                                 placeholder="Enter candidate name"
                                                 required
                                               />
@@ -1709,7 +1700,7 @@ const Elections = () => {
                                                 <option value="">Select a department</option>
                                                 {departments.map(department => (
                                                   <option key={department.id} value={department.id}>
-                                                    {department.name}
+                                                    {department.Department_Name}
                                                   </option>
                                                 ))}
                                               </select>
@@ -1740,7 +1731,7 @@ const Elections = () => {
                                                 {departments.map(department => 
                                                   department.courses?.map(course => (
                                                     <option key={course.id} value={course.id}>
-                                                      {course.name}
+                                                      {course.Course_Name}
                                                     </option>
                                                   ))
                                                 ).flat().filter(Boolean)}
@@ -1980,10 +1971,10 @@ const Elections = () => {
                               {electionCandidates.map(candidate => (
                                 <div key={candidate.id} className="candidate-item d-flex justify-content-between align-items-center p-2 border rounded mb-2">
                                   <div>
-                                    <strong>{candidate.name}</strong>
+                                    <strong>{candidate.Candidate_Name}</strong>
                                     <br />
                                     <small className="text-muted">
-                                      {candidate.positionName} • {candidate.studentId}
+                                      {candidate.positionName} • {candidate.Candidate_StudentId}
                                     </small>
                                   </div>
                                   <button
@@ -2013,10 +2004,10 @@ const Elections = () => {
                               {unassignedCandidates.map(candidate => (
                                 <div key={candidate.id} className="candidate-item d-flex justify-content-between align-items-center p-2 border rounded mb-2">
                                   <div>
-                                    <strong>{candidate.name}</strong>
+                                    <strong>{candidate.Candidate_Name}</strong>
                                     <br />
                                     <small className="text-muted">
-                                      {candidate.positionName} • {candidate.studentId}
+                                      {candidate.positionName} • {candidate.Candidate_StudentId}
                                     </small>
                                   </div>
                                   <button
@@ -2092,7 +2083,7 @@ const Elections = () => {
                     Move to Trash Bin
                   </h6>
                   <p className="mb-0">
-                    You are about to move the ballot <strong>"{deletingElection.title}"</strong> to the trash bin.
+                    You are about to move the ballot <strong>"{deletingElection.Election_Title}"</strong> to the trash bin.
                   </p>
                 </div>
                 
@@ -2107,17 +2098,17 @@ const Elections = () => {
                 
                 <div className="mb-3">
                   <label className="form-label">
-                    Type <strong>"{deletingElection.title}"</strong> to confirm deletion:
+                    Type <strong>"{deletingElection.Election_Title}"</strong> to confirm deletion:
                   </label>
                   <input
                     type="text"
-                    className={`form-control ${deleteConfirmation && deleteConfirmation !== deletingElection.title ? 'is-invalid' : ''}`}
+                    className={`form-control ${deleteConfirmation && deleteConfirmation !== deletingElection.Election_Title ? 'is-invalid' : ''}`}
                     value={deleteConfirmation}
                     onChange={(e) => setDeleteConfirmation(e.target.value)}
-                    placeholder={`Type "${deletingElection.title}" to confirm`}
+                    placeholder={`Type "${deletingElection.Election_Title}" to confirm`}
                     autoFocus
                   />
-                  {deleteConfirmation && deleteConfirmation !== deletingElection.title && (
+                                     {deleteConfirmation && deleteConfirmation !== deletingElection.Election_Title && (
                     <div className="invalid-feedback">
                       Confirmation text does not match the ballot name.
                     </div>
@@ -2136,7 +2127,7 @@ const Elections = () => {
                   type="button"
                   className="btn btn-warning"
                   onClick={confirmDeleteElection}
-                  disabled={deleteConfirmation !== deletingElection.title || updatingElection === deletingElection.id}
+                                     disabled={deleteConfirmation !== deletingElection.Election_Title || updatingElection === deletingElection.id}
                 >
                   {updatingElection === deletingElection.id ? (
                     <i className="fas fa-spinner fa-spin me-1"></i>

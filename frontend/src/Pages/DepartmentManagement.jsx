@@ -363,7 +363,7 @@ const DepartmentManagement = () => {
                       <i className="fas fa-university"></i>
                     </div>
                     <div className="department-card-details">
-                      <h3 className="department-card-name">{department.name}</h3>
+                      <h3 className="department-card-name">{department.Department_Name}</h3>
                       <span className="department-card-id">{department.id}</span>
                     </div>
                   </div>
@@ -399,7 +399,7 @@ const DepartmentManagement = () => {
                   </div>
                   <div className="department-stat">
                     <i className="fas fa-users"></i>
-                    <span>{department.voterCount || 0} Voters</span>
+                    <span>{department._count?.voters || 0} Voters</span>
                   </div>
                 </div>
 

@@ -212,7 +212,7 @@ const AdminDashboard = () => {
                 {recentData.positions.length > 0 ? (
                   recentData.positions.map((position, index) => (
                     <div key={position.id} className="data-item">
-                                              <span className="data-label">{position.title}</span>
+                                              <span className="data-label">{position.Position_Title}</span>
                       <span className="data-value">Vote Limit: {position.voteLimit}</span>
                     </div>
                   ))
@@ -244,7 +244,7 @@ const AdminDashboard = () => {
                 {recentData.candidates.length > 0 ? (
                   recentData.candidates.map((candidate, index) => (
                     <div key={candidate.id} className="data-item">
-                      <span className="data-label">{candidate.name}</span>
+                                             <span className="data-label">{candidate.Candidate_Name}</span>
                       <span className="data-value">Position: {candidate.positionId}</span>
                     </div>
                   ))
@@ -276,7 +276,7 @@ const AdminDashboard = () => {
                 {recentData.voters.length > 0 ? (
                   recentData.voters.map((voter, index) => (
                     <div key={voter.id} className="data-item">
-                      <span className="data-label">{voter.name}</span>
+                                              <span className="data-label">{voter.Voter_Name}</span>
                       <span className={`data-value ${voter.hasVoted ? 'text-success' : 'text-warning'}`}>
                         {voter.hasVoted ? 'Voted' : 'Not Voted'}
                       </span>

@@ -19,6 +19,7 @@ const ManageAdmins = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [authError, setAuthError] = useState('');
   const navigate = useNavigate();
 
@@ -110,23 +111,45 @@ const ManageAdmins = () => {
 
   const handleEdit = (admin) => {
     setEditingAdmin(admin);
-    setFormData({ 
-      username: admin.username, 
-      email: admin.email || '', 
-      password: '', 
-      confirmPassword: '',
-      role: admin.role 
-    });
+         setFormData({ 
+       Admin_Username: admin.Admin_Username,
+       Admin_Email: admin.Admin_Email || '', 
+       password: '', 
+       confirmPassword: '',
+       role: admin.role 
+     });
     setShowPassword(false);
     setShowConfirmPassword(false);
     setShowModal(true);
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this admin account?')) {
+    const currentUser = checkCurrentUser();
+    const adminToDelete = admins.find(admin => admin.id === id);
+    
+    // Prevent self-deletion
+    if (currentUser.user?.id === id) {
+      setError('You cannot delete your own account');
+      return;
+    }
+    
+    // Prevent deletion of last superadmin
+    if (adminToDelete?.role === 'SUPERADMIN') {
+      const superadminCount = admins.filter(admin => admin.role === 'SUPERADMIN').length;
+      if (superadminCount <= 1) {
+        setError('Cannot delete the last Superadmin account');
+        return;
+      }
+    }
+    
+    const confirmMessage = `Are you sure you want to delete admin "${adminToDelete?.Admin_Username}"?\n\nThis action cannot be undone and will immediately revoke their access.`;
+    
+    if (window.confirm(confirmMessage)) {
       try {
         await deleteAdmin(id);
+        setSuccess(`Admin "${adminToDelete?.Admin_Username}" has been deleted successfully`);
         fetchAdmins();
+        setTimeout(() => setSuccess(''), 3000);
       } catch (error) {
         console.error('Error deleting admin:', error);
         setError('Failed to delete admin account');
@@ -137,8 +160,8 @@ const ManageAdmins = () => {
   const openModal = () => {
     setEditingAdmin(null);
     setFormData({ 
-      username: '', 
-      email: '', 
+      Admin_Username: '', 
+      Admin_Email: '', 
       password: '', 
       confirmPassword: '', 
       role: 'ADMIN' 
@@ -202,6 +225,7 @@ const ManageAdmins = () => {
 
 
       {error && <div className="alert alert-danger">{error}</div>}
+      {success && <div className="alert alert-success">{success}</div>}
 
       {/* Debug: Show loading state and data */}
       {loading && (
@@ -220,7 +244,7 @@ const ManageAdmins = () => {
 
       {/* Show current user info */}
       <div className="alert alert-info">
-        <strong>Current User:</strong> {checkCurrentUser().user?.username || 'Unknown'} 
+        <strong>Current User:</strong> {checkCurrentUser().user?.Admin_Username || 'Unknown'} 
         <span className="badge bg-primary ms-2">{checkCurrentUser().role || 'No role'}</span>
       </div>
 
@@ -245,32 +269,39 @@ const ManageAdmins = () => {
                 {admins.map((admin) => (
                   <tr key={admin.id}>
                     <td>{admin.id}</td>
-                    <td>{admin.username}</td>
-                    <td>{admin.email || 'N/A'}</td>
+                                           <td>{admin.Admin_Username}</td>
+                       <td>{admin.Admin_Email || 'N/A'}</td>
                     <td>
                       <span className={`badge ${admin.role === 'SUPERADMIN' ? 'bg-danger' : 'bg-primary'}`}>
                         {admin.role}
                       </span>
                     </td>
-                    <td>{new Date(admin.created_at).toLocaleDateString()}</td>
+                    <td>{new Date(admin.createdAt).toLocaleDateString()}</td>
                     <td>
-                       <div className="admin-actions">
-                         <button
-                           className="action-btn-icon edit-btn"
-                           onClick={() => handleEdit(admin)}
-                           title="Edit Admin"
-                         >
-                           <i className="fas fa-edit"></i>
-                         </button>
-                         <button
-                           className="action-btn-icon delete-btn"
-                           onClick={() => handleDelete(admin.id)}
-                           disabled={admin.role === 'SUPERADMIN'}
-                           title="Delete Admin"
-                         >
-                           <i className="fas fa-trash"></i>
-                         </button>
-                       </div>
+                                               <div className="admin-actions">
+                          <button
+                            className="action-btn-icon edit-btn"
+                            onClick={() => handleEdit(admin)}
+                            title="Edit Admin"
+                            disabled={admin.role === 'SUPERADMIN' && !isSuperAdmin()}
+                          >
+                            <i className="fas fa-edit"></i>
+                          </button>
+                          <button
+                            className="action-btn-icon delete-btn"
+                            onClick={() => handleDelete(admin.id)}
+                            disabled={admin.role === 'SUPERADMIN' || checkCurrentUser().user?.id === admin.id}
+                            title={
+                              admin.role === 'SUPERADMIN' 
+                                ? 'Superadmins cannot be deleted' 
+                                : checkCurrentUser().user?.id === admin.id 
+                                  ? 'You cannot delete your own account'
+                                  : 'Delete Admin'
+                            }
+                          >
+                            <i className="fas fa-trash"></i>
+                          </button>
+                        </div>
                      </td>
                   </tr>
                 ))}
@@ -361,18 +392,24 @@ const ManageAdmins = () => {
                       </div>
                     </div>
                   )}
-                  <div className="mb-3">
-                    <label className="form-label">Role</label>
-                    <select
-                      className="form-select"
-                      value={formData.role}
-                      onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                      required
-                    >
-                      <option value="ADMIN">Admin</option>
-                      <option value="SUPERADMIN">Super Admin</option>
-                    </select>
-                  </div>
+                                     <div className="mb-3">
+                     <label className="form-label">Role</label>
+                     <select
+                       className="form-select"
+                       value={formData.role}
+                       onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                       required
+                       disabled={!isSuperAdmin()}
+                     >
+                       <option value="ADMIN">Admin</option>
+                       {isSuperAdmin() && <option value="SUPERADMIN">Super Admin</option>}
+                     </select>
+                     {!isSuperAdmin() && (
+                       <small className="form-text text-muted">
+                         Only Superadmins can create other Superadmins
+                       </small>
+                     )}
+                   </div>
                 </div>
                 <div className="modal-footer">
                   <button

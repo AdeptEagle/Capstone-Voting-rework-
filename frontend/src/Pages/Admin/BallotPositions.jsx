@@ -85,7 +85,7 @@ const BallotPositions = () => {
       <div className="dashboard-header-pro">
         <div className="header-content">
           <h1>Ballot Positions View</h1>
-          <p>View positions for: <strong>{activeElection.title}</strong> 
+                             <p>View positions for: <strong>{activeElection.Election_Title}</strong> 
             <span className={`badge ms-2 ${activeElection.status === 'active' ? 'bg-success' : activeElection.status === 'paused' ? 'bg-warning' : activeElection.status === 'stopped' ? 'bg-danger' : 'bg-secondary'}`}>
               {activeElection.status.toUpperCase()}
             </span>
@@ -123,7 +123,7 @@ const BallotPositions = () => {
                   {assignedPositions.map((position) => (
                     <div key={position.id} className="list-group-item d-flex justify-content-between align-items-center">
                       <div>
-                        <h6 className="mb-1">{position.title}</h6>
+                        <h6 className="mb-1">{position.Position_Title}</h6>
                         <small className="text-muted">Vote Limit: {position.voteLimit}</small>
                       </div>
                       <span className="badge bg-success">

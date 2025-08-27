@@ -160,9 +160,9 @@ export const ElectionProvider = ({ children }) => {
     console.log('🔍 [ElectionContext] Debug Info:', {
       userRole,
       isAdmin,
-      activeElection: activeElection ? { id: activeElection.id, status: activeElection.status, title: activeElection.title } : null,
+              activeElection: activeElection ? { id: activeElection.id, status: activeElection.status, title: activeElection.Election_Title } : null,
       allElectionsCount: allElections.length,
-      allElectionsStatuses: allElections.map(e => ({ id: e.id, status: e.status, title: e.title })),
+              allElectionsStatuses: allElections.map(e => ({ id: e.id, status: e.status, title: e.Election_Title })),
       permissions: {
         canVote: value.canVote,
         canViewCandidates: value.canViewCandidates,

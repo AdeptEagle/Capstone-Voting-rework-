@@ -500,7 +500,7 @@ export const permanentlyDeleteElection = async (id) => {
 
 export const getActiveElection = async () => {
   try {
-    const response = await api.get('/elections/active');
+    const response = await api.get('/elections/active/single');
     return response.data;
   } catch (error) {
     console.error('Error fetching active election:', error);
@@ -531,7 +531,7 @@ export const getActiveElectionInfo = async () => {
 // Admin Authentication
 export const adminLogin = async (username, password) => {
   try {
-    const response = await api.post('/auth/admin/login', { username, password });
+    const response = await api.post('/auth/admin/login', { Admin_Username: username, password });
     return response.data;
   } catch (error) {
     console.error('Error during admin login:', error);
