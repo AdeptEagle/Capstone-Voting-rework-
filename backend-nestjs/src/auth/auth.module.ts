@@ -6,6 +6,7 @@ import { AuthController } from './auth.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { IdGeneratorService } from '../utils/id-generator.service';
 import { EmailService } from '../services/email.service';
+import { VotingGateway } from '../websocket/voting.gateway';
 
 @Module({
   imports: [
@@ -16,7 +17,7 @@ import { EmailService } from '../services/email.service';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, IdGeneratorService, EmailService],
+  providers: [AuthService, JwtStrategy, IdGeneratorService, EmailService, VotingGateway],
   exports: [AuthService],
 })
 export class AuthModule {} 

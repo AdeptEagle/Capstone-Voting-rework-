@@ -11,16 +11,16 @@ async function createDefaultSuperAdmin() {
     const existingSuperAdmin = await prisma.admin.findFirst({
       where: {
         OR: [
-          { username: 'superadmin' },
-          { email: 'superadmin@votingsystem.com' },
+          { Admin_Username: 'superadmin' },
+          { Admin_Email: 'superadmin@votingsystem.com' },
         ],
       },
     });
 
     if (existingSuperAdmin) {
       console.log('✅ Default Super Admin already exists');
-      console.log('👤 Username:', existingSuperAdmin.username);
-      console.log('📧 Email:', existingSuperAdmin.email);
+      console.log('👤 Username:', existingSuperAdmin.Admin_Username);
+      console.log('📧 Email:', existingSuperAdmin.Admin_Email);
       console.log('🔑 Role:', existingSuperAdmin.role);
       return;
     }
@@ -31,8 +31,8 @@ async function createDefaultSuperAdmin() {
     const superAdmin = await prisma.admin.create({
       data: {
         id: 'SUPERADMIN-1',
-        username: 'superadmin',
-        email: 'superadmin@votingsystem.com',
+        Admin_Username: 'superadmin',
+        Admin_Email: 'superadmin@votingsystem.com',
         password: hashedPassword,
         role: 'SUPERADMIN',
       },

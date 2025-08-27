@@ -27,8 +27,8 @@ export class ElectionAssignmentService {
         election: {
           select: {
             id: true,
-            title: true,
-            description: true,
+            Election_Title: true,
+            Election_Description: true,
             startDate: true,
             endDate: true,
             isActive: true,
@@ -37,21 +37,21 @@ export class ElectionAssignmentService {
         candidate: {
           select: {
             id: true,
-            name: true,
-            email: true,
-            studentId: true,
+            Candidate_Name: true,
+            Candidate_Email: true,
+            Candidate_StudentId: true,
             photo: true,
             manifesto: true,
             position: {
               select: {
                 id: true,
-                title: true,
+                Position_Title: true,
               },
             },
             department: {
               select: {
                 id: true,
-                name: true,
+                Department_Name: true,
               },
             },
           },
@@ -65,7 +65,10 @@ export class ElectionAssignmentService {
 
     // Check if election exists
     const election = await this.prisma.election.findUnique({
-      where: { id: electionId },
+      where: { 
+        id: electionId,
+        isDeleted: false
+      },
     });
 
     if (!election) {
@@ -106,8 +109,8 @@ export class ElectionAssignmentService {
         election: {
           select: {
             id: true,
-            title: true,
-            description: true,
+            Election_Title: true,
+            Election_Description: true,
             startDate: true,
             endDate: true,
             isActive: true,
@@ -116,21 +119,21 @@ export class ElectionAssignmentService {
         candidate: {
           select: {
             id: true,
-            name: true,
-            email: true,
-            studentId: true,
+            Candidate_Name: true,
+            Candidate_Email: true,
+            Candidate_StudentId: true,
             photo: true,
             manifesto: true,
             position: {
               select: {
                 id: true,
-                title: true,
+                Position_Title: true,
               },
             },
             department: {
               select: {
                 id: true,
-                name: true,
+                Department_Name: true,
               },
             },
           },
@@ -151,8 +154,8 @@ export class ElectionAssignmentService {
         election: {
           select: {
             id: true,
-            title: true,
-            description: true,
+            Election_Title: true,
+            Election_Description: true,
             startDate: true,
             endDate: true,
             isActive: true,
@@ -161,21 +164,21 @@ export class ElectionAssignmentService {
         candidate: {
           select: {
             id: true,
-            name: true,
-            email: true,
-            studentId: true,
+            Candidate_Name: true,
+            Candidate_Email: true,
+            Candidate_StudentId: true,
             photo: true,
             manifesto: true,
             position: {
               select: {
                 id: true,
-                title: true,
+                Position_Title: true,
               },
             },
             department: {
               select: {
                 id: true,
-                name: true,
+                Department_Name: true,
               },
             },
           },
@@ -204,7 +207,10 @@ export class ElectionAssignmentService {
     // Check if election exists if provided
     if (electionId) {
       const election = await this.prisma.election.findUnique({
-        where: { id: electionId },
+        where: { 
+          id: electionId,
+          isDeleted: false
+        },
       });
 
       if (!election) {
@@ -233,8 +239,8 @@ export class ElectionAssignmentService {
         election: {
           select: {
             id: true,
-            title: true,
-            description: true,
+            Election_Title: true,
+            Election_Description: true,
             startDate: true,
             endDate: true,
             isActive: true,
@@ -243,21 +249,21 @@ export class ElectionAssignmentService {
         candidate: {
           select: {
             id: true,
-            name: true,
-            email: true,
-            studentId: true,
+            Candidate_Name: true,
+            Candidate_Email: true,
+            Candidate_StudentId: true,
             photo: true,
             manifesto: true,
             position: {
               select: {
                 id: true,
-                title: true,
+                Position_Title: true,
               },
             },
             department: {
               select: {
                 id: true,
-                name: true,
+                Department_Name: true,
               },
             },
           },
@@ -291,7 +297,10 @@ export class ElectionAssignmentService {
 
   async getCandidatesForElection(electionId: string) {
     const election = await this.prisma.election.findUnique({
-      where: { id: electionId },
+      where: { 
+        id: electionId,
+        isDeleted: false
+      },
     });
 
     if (!election) {
@@ -304,21 +313,21 @@ export class ElectionAssignmentService {
         candidate: {
           select: {
             id: true,
-            name: true,
-            email: true,
-            studentId: true,
+            Candidate_Name: true,
+            Candidate_Email: true,
+            Candidate_StudentId: true,
             photo: true,
             manifesto: true,
             position: {
               select: {
                 id: true,
-                title: true,
+                Position_Title: true,
               },
             },
             department: {
               select: {
                 id: true,
-                name: true,
+                Department_Name: true,
               },
             },
           },
@@ -329,8 +338,8 @@ export class ElectionAssignmentService {
     return {
       election: {
         id: election.id,
-        title: election.title,
-        description: election.description,
+        title: election.Election_Title,
+        description: election.Election_Description,
         startDate: election.startDate,
         endDate: election.endDate,
         isActive: election.isActive,
@@ -354,8 +363,8 @@ export class ElectionAssignmentService {
         election: {
           select: {
             id: true,
-            title: true,
-            description: true,
+            Election_Title: true,
+            Election_Description: true,
             startDate: true,
             endDate: true,
             isActive: true,
@@ -367,9 +376,9 @@ export class ElectionAssignmentService {
     return {
       candidate: {
         id: candidate.id,
-        name: candidate.name,
-        email: candidate.email,
-        studentId: candidate.studentId,
+        name: candidate.Candidate_Name,
+        email: candidate.Candidate_Email,
+        studentId: candidate.Candidate_StudentId,
         photo: candidate.photo,
         manifesto: candidate.manifesto,
       },
@@ -449,8 +458,8 @@ export class ElectionAssignmentService {
     return {
       election: {
         id: election.id,
-        title: election.title,
-        description: election.description,
+        title: election.Election_Title,
+        description: election.Election_Description,
         startDate: election.startDate,
         endDate: election.endDate,
         isActive: election.isActive,
@@ -471,7 +480,7 @@ export class ElectionAssignmentService {
     // Get all positions
     const allPositions = await this.prisma.position.findMany({
       orderBy: {
-        title: 'asc',
+        Position_Title: 'asc',
       },
     });
     
@@ -491,7 +500,7 @@ export class ElectionAssignmentService {
     return {
       election: {
         id: election.id,
-        title: election.title,
+        title: election.Election_Title,
       },
       unassignedPositions,
     };
@@ -526,7 +535,7 @@ export class ElectionAssignmentService {
     return {
       election: {
         id: election.id,
-        title: election.title,
+        title: election.Election_Title,
       },
       positionStatus: status,
     };
@@ -574,8 +583,8 @@ export class ElectionAssignmentService {
         position: {
           select: {
             id: true,
-            title: true,
-            description: true,
+            Position_Title: true,
+            Position_Description: true,
             voteLimit: true,
           },
         },
@@ -624,13 +633,13 @@ export class ElectionAssignmentService {
         position: {
           select: {
             id: true,
-            title: true,
+            Position_Title: true,
           },
         },
         department: {
           select: {
             id: true,
-            name: true,
+            Department_Name: true,
           },
         },
       },
@@ -652,7 +661,7 @@ export class ElectionAssignmentService {
     return {
       election: {
         id: election.id,
-        title: election.title,
+        title: election.Election_Title,
       },
       unassignedCandidates,
     };
@@ -672,13 +681,13 @@ export class ElectionAssignmentService {
         position: {
           select: {
             id: true,
-            title: true,
+            Position_Title: true,
           },
         },
         department: {
           select: {
             id: true,
-            name: true,
+            Department_Name: true,
           },
         },
       },
@@ -708,7 +717,7 @@ export class ElectionAssignmentService {
     return {
       election: {
         id: election.id,
-        title: election.title,
+        title: election.Election_Title,
       },
       candidateStatus: status,
     };
@@ -743,22 +752,22 @@ export class ElectionAssignmentService {
         candidate: {
           select: {
             id: true,
-            name: true,
-            email: true,
-            studentId: true,
+            Candidate_Name: true,
+            Candidate_Email: true,
+            Candidate_StudentId: true,
             photo: true,
             manifesto: true,
             positionId: true,
             position: {
               select: {
                 id: true,
-                title: true,
+                Position_Title: true,
               },
             },
             department: {
               select: {
                 id: true,
-                name: true,
+                Department_Name: true,
               },
             },
           },
@@ -781,8 +790,8 @@ export class ElectionAssignmentService {
     return {
       election: {
         id: election.id,
-        title: election.title,
-        description: election.description,
+        title: election.Election_Title,
+        description: election.Election_Description,
         startDate: election.startDate,
         endDate: election.endDate,
         isActive: election.isActive,

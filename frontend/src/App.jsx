@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
@@ -6,8 +6,6 @@ import SuperAdminDashboard from './Pages/SuperAdmin/SuperAdminDashboard';
 import ManageAdmins from './Pages/SuperAdmin/ManageAdmins';
 import AdminDashboard from './Pages/Admin/AdminDashboard';
 import VoteTraceability from './Pages/Admin/VoteTraceability';
-import BallotPositions from './Pages/Admin/BallotPositions';
-import BallotCandidates from './Pages/Admin/BallotCandidates';
 import UserDashboard from './Pages/User/UserDashboard';
 import Positions from './Pages/Positions';
 import Candidates from './Pages/Candidates';
@@ -23,8 +21,8 @@ import ForgotPassword from './Pages/ForgotPassword';
 import AdminForgotPassword from './Pages/AdminForgotPassword';
 import ResetPassword from './Pages/ResetPassword';
 import DepartmentManagement from './Pages/DepartmentManagement';
-import BallotCreation from './Pages/BallotCreation';
-import { getToken, checkCurrentUser, getStoredRole } from './services/auth';
+import TrashBin from './Pages/TrashBin';
+import { getToken, checkCurrentUser, getStoredRole, migrateToSecureStorage } from './services/auth';
 import { ElectionProvider } from './contexts/ElectionContext';
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -122,6 +120,10 @@ function UserLayout({ children }) {
 }
 
 function App() {
+  useEffect(() => {
+    migrateToSecureStorage();
+  }, []);
+
   return (
     <ElectionProvider>
     <Router>
@@ -129,12 +131,13 @@ function App() {
           <Routes>
             {/* Public Routes */}
             <Route path="/" element={<UserLogin />} />
+            <Route path="/admin" element={<AdminLogin />} />
             <Route path="/admin-login" element={<AdminLogin />} />
             <Route path="/user-login" element={<UserLogin />} />
             <Route path="/register" element={<UserRegister />} />
-                    <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/admin-forgot-password" element={<AdminForgotPassword />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/admin-forgot-password" element={<AdminForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
 
             {/* SuperAdmin Routes (SuperAdmin only) */}
             <Route path="/superadmin" element={
@@ -152,8 +155,8 @@ function App() {
               </SuperAdminRoute>
             } />
 
-            {/* Admin Routes (Admin and SuperAdmin) */}
-            <Route path="/admin" element={
+            {/* Admin Dashboard Routes (Admin and SuperAdmin) - require authentication */}
+            <Route path="/admin/dashboard" element={
               <AdminRoute>
                 <AdminLayout>
                   <AdminDashboard />
@@ -202,20 +205,6 @@ function App() {
                 </AdminLayout>
               </AdminRoute>
             } />
-            <Route path="/admin/ballot-positions" element={
-              <AdminRoute>
-                <AdminLayout>
-                  <BallotPositions />
-                </AdminLayout>
-              </AdminRoute>
-            } />
-            <Route path="/admin/ballot-candidates" element={
-              <AdminRoute>
-                <AdminLayout>
-                  <BallotCandidates />
-                </AdminLayout>
-              </AdminRoute>
-            } />
             <Route path="/admin/results" element={
               <AdminRoute>
                 <AdminLayout>
@@ -223,20 +212,20 @@ function App() {
                 </AdminLayout>
               </AdminRoute>
             } />
-                         <Route path="/admin/department-management" element={
-               <AdminRoute>
-                 <AdminLayout>
-                   <DepartmentManagement />
-                 </AdminLayout>
-               </AdminRoute>
-             } />
-             <Route path="/admin/ballot-creation" element={
-               <AdminRoute>
-                 <AdminLayout>
-                   <BallotCreation />
-                 </AdminLayout>
-               </AdminRoute>
-             } />
+                                     <Route path="/admin/department-management" element={
+              <AdminRoute>
+                <AdminLayout>
+                  <DepartmentManagement />
+                </AdminLayout>
+              </AdminRoute>
+            } />
+            <Route path="/trash-bin" element={
+              <AdminRoute>
+                <AdminLayout>
+                  <TrashBin />
+                </AdminLayout>
+              </AdminRoute>
+            } />
 
             {/* User Routes (User only) */}
             <Route path="/user/dashboard" element={
@@ -291,9 +280,9 @@ function App() {
 function CatchAllRedirect() {
   const role = getStoredRole();
   
-  // If user has admin role, redirect to admin login
+  // If user has admin role, redirect to admin dashboard
   if (role === 'ADMIN' || role === 'SUPERADMIN') {
-    return <Navigate to="/admin-login" />;
+    return <Navigate to="/admin/dashboard" />;
   }
   
   // Otherwise redirect to user login

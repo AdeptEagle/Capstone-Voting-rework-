@@ -274,3 +274,109 @@
     max-height: 90vh;
   }
 } 
+
+/* Results Modal Specific Styles */
+.results-summary-card {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.results-summary-card h4 {
+  margin: 0;
+  font-weight: 700;
+}
+
+.results-table {
+  margin-bottom: 1.5rem;
+}
+
+.results-table th {
+  background-color: #343a40;
+  color: white;
+  border: none;
+  font-weight: 600;
+}
+
+.results-table .table-success {
+  background-color: #d4edda !important;
+  border-color: #c3e6cb !important;
+}
+
+.progress {
+  background-color: #e9ecef;
+  border-radius: 10px;
+}
+
+.progress-bar {
+  border-radius: 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 20px;
+}
+
+.badge {
+  font-size: 0.875rem;
+  padding: 0.5rem 0.75rem;
+}
+
+.badge.bg-success {
+  background-color: #28a745 !important;
+}
+
+.badge.bg-secondary {
+  background-color: #6c757d !important;
+}
+
+/* Large Modal Styles */
+.modal-dialog.modal-lg {
+  max-width: 900px;
+}
+
+.modal-dialog.modal-lg .modal-content {
+  max-width: 900px;
+}
+
+/* Custom wide modal for election details */
+.custom-wide-modal {
+  max-width: 1000px !important;
+  width: 90% !important;
+  margin-left: 355px !important;
+  margin-right: auto !important;
+  position: relative !important;
+}
+
+/* Force override for election details modal */
+.election-history-container .custom-wide-modal {
+  max-width: 1000px !important;
+  width: 90% !important;
+}
+
+/* Additional specificity to override Bootstrap */
+.modal.show .custom-wide-modal {
+  max-width: 1000px !important;
+  width: 90% !important;
+}
+
+/* Force modal content width */
+.custom-wide-modal .modal-content {
+  max-width: 1000px !important;
+  width: 100% !important;
+}
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 1200px) {
+  .custom-wide-modal {
+    max-width: 95% !important;
+    width: 95% !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .custom-wide-modal {
+    max-width: 98% !important;
+    width: 98% !important;
+  }
+} 

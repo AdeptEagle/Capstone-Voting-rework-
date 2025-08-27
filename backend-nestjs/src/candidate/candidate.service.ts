@@ -14,24 +14,25 @@ export class CandidateService {
 
   async getAllCandidates(showAll: boolean = false) {
     return this.prisma.candidate.findMany({
+      where: showAll ? {} : { isDeleted: false }, // Exclude soft-deleted items by default
       include: {
         position: {
           select: {
             id: true,
-            title: true,
+            Position_Title: true,
           },
         },
         department: {
           select: {
             id: true,
-            name: true,
+            Department_Name: true,
           },
         },
         course: {
           select: {
             id: true,
-            name: true,
-            code: true,
+            Course_Name: true,
+            Course_Code: true,
           },
         },
         _count: {
@@ -47,7 +48,7 @@ export class CandidateService {
   async createCandidate(createCandidateDto: CreateCandidateDto, photo?: any) {
     console.log('createCandidate called with photo:', photo);
     console.log('createCandidateDto:', createCandidateDto);
-    const { name, email, studentId, positionId, departmentId, courseId, manifesto } = createCandidateDto;
+    const { Candidate_Name, Candidate_Email, Candidate_StudentId, positionId, departmentId, courseId, manifesto } = createCandidateDto;
 
     // Check if position exists
     const position = await this.prisma.position.findUnique({
@@ -58,31 +59,27 @@ export class CandidateService {
       throw new NotFoundException('Position not found');
     }
 
-    // Check if department exists if provided
-    if (departmentId) {
-      const department = await this.prisma.department.findUnique({
-        where: { id: departmentId },
-      });
+    // Check if department exists (now required)
+    const department = await this.prisma.department.findUnique({
+      where: { id: departmentId },
+    });
 
-      if (!department) {
-        throw new NotFoundException('Department not found');
-      }
+    if (!department) {
+      throw new NotFoundException('Department not found');
     }
 
-    // Check if course exists if provided
-    if (courseId) {
-      const course = await this.prisma.course.findUnique({
-        where: { id: courseId },
-      });
+    // Check if course exists (now required)
+    const course = await this.prisma.course.findUnique({
+      where: { id: courseId },
+    });
 
-      if (!course) {
-        throw new NotFoundException('Course not found');
-      }
+    if (!course) {
+      throw new NotFoundException('Course not found');
     }
 
     // Check if candidate with this student ID already exists
     const existingCandidate = await this.prisma.candidate.findFirst({
-      where: { studentId },
+      where: { Candidate_StudentId: Candidate_StudentId },
     });
 
     if (existingCandidate) {
@@ -100,31 +97,32 @@ export class CandidateService {
         // Check if photo is a file upload or a URL string
         if (photo.buffer || photo.originalname) {
           console.log('Processing as file upload');
-          // It's a file upload
+          // It's a file upload - will be processed by Cloudinary
           const fileInfo = await this.fileUploadService.processUploadedFile(photo, 'image');
           console.log('FileInfo received:', fileInfo);
           
-          if (fileInfo && fileInfo.url && fileInfo.url !== '/uploads/images/undefined') {
-            photoUrl = fileInfo.url;
+          if (fileInfo && fileInfo.url) {
+            photoUrl = fileInfo.url; // This will be a Cloudinary URL
             console.log('Photo URL set to:', photoUrl);
           } else {
             console.error('Invalid fileInfo or fileInfo.url:', fileInfo);
-            // Don't throw error, just set to null
-            console.log('Setting photo to null due to invalid fileInfo');
             photoUrl = null;
           }
-        } else if (typeof photo === 'string' && photo.startsWith('/uploads/') && photo !== '/uploads/images/undefined') {
-          console.log('Processing as URL string:', photo);
-          // It's a URL string from file upload service
-          photoUrl = photo;
+        } else if (typeof photo === 'string') {
+          // Check if it's a Cloudinary URL or local upload URL
+          if (photo.startsWith('https://res.cloudinary.com/') || photo.startsWith('/uploads/')) {
+            console.log('Processing as URL string:', photo);
+            photoUrl = photo;
+          } else {
+            console.log('Invalid URL format, setting to null');
+            photoUrl = null;
+          }
         } else {
           console.log('Photo is neither file upload nor valid URL string, setting to null');
           photoUrl = null;
         }
       } catch (error) {
         console.error('Photo upload error:', error);
-        // Don't throw error, just set to null
-        console.log('Setting photo to null due to upload error');
         photoUrl = null;
       }
     } else {
@@ -137,9 +135,9 @@ export class CandidateService {
     const candidate = await this.prisma.candidate.create({
       data: {
         id: customId,
-        name,
-        email,
-        studentId,
+        Candidate_Name: Candidate_Name,
+        Candidate_Email: Candidate_Email,
+        Candidate_StudentId: Candidate_StudentId,
         positionId,
         departmentId,
         courseId,
@@ -150,20 +148,20 @@ export class CandidateService {
         position: {
           select: {
             id: true,
-            title: true,
+            Position_Title: true,
           },
         },
         department: {
           select: {
             id: true,
-            name: true,
+            Department_Name: true,
           },
         },
         course: {
           select: {
             id: true,
-            name: true,
-            code: true,
+            Course_Name: true,
+            Course_Code: true,
           },
         },
       },
@@ -182,20 +180,20 @@ export class CandidateService {
         position: {
           select: {
             id: true,
-            title: true,
+            Position_Title: true,
           },
         },
         department: {
           select: {
             id: true,
-            name: true,
+            Department_Name: true,
           },
         },
         course: {
           select: {
             id: true,
-            name: true,
-            code: true,
+            Course_Name: true,
+            Course_Code: true,
           },
         },
         _count: {
@@ -211,11 +209,16 @@ export class CandidateService {
       throw new NotFoundException('Candidate not found');
     }
 
+    // Check if candidate is soft-deleted
+    if (candidate.isDeleted) {
+      throw new NotFoundException('Candidate has been deleted');
+    }
+
     return candidate;
   }
 
   async updateCandidate(id: string, updateCandidateDto: UpdateCandidateDto, photo?: any) {
-    const { name, email, studentId, positionId, departmentId, courseId, manifesto } = updateCandidateDto;
+    const { Candidate_Name, Candidate_Email, Candidate_StudentId, positionId, departmentId, courseId, manifesto } = updateCandidateDto;
 
     // Check if candidate exists
     const existingCandidate = await this.prisma.candidate.findUnique({
@@ -260,10 +263,10 @@ export class CandidateService {
     }
 
     // Check if student ID is already taken by another candidate
-    if (studentId && studentId !== existingCandidate.studentId) {
+    if (Candidate_StudentId && Candidate_StudentId !== existingCandidate.Candidate_StudentId) {
       const conflictingCandidate = await this.prisma.candidate.findFirst({
         where: {
-          studentId,
+          Candidate_StudentId: Candidate_StudentId,
           NOT: { id },
         },
       });
@@ -284,38 +287,51 @@ export class CandidateService {
         // Check if photo is a file upload or a URL string
         if (photo.buffer || photo.originalname) {
           console.log('Processing as file upload');
-          // It's a file upload
-          // Delete old photo if exists
-          if (existingCandidate.photo && existingCandidate.photo !== '/uploads/images/undefined') {
-            const oldPhotoFilename = existingCandidate.photo.split('/').pop();
-            if (oldPhotoFilename) {
-              await this.fileUploadService.deleteFile(oldPhotoFilename, 'image');
+          // It's a file upload - will be processed by Cloudinary
+          
+          // Delete old photo if exists (handles both Cloudinary and local files)
+          if (existingCandidate.photo) {
+            try {
+              // Create file info object for deletion
+              const oldPhotoInfo = {
+                url: existingCandidate.photo,
+                filename: existingCandidate.photo.split('/').pop() || '',
+                type: 'image'
+              };
+              await this.fileUploadService.deleteFile(oldPhotoInfo);
+            } catch (deleteError) {
+              console.log('Failed to delete old photo:', deleteError.message);
+              // Continue with upload even if deletion fails
             }
           }
 
-          // Upload new photo
+          // Upload new photo to Cloudinary
           const fileInfo = await this.fileUploadService.processUploadedFile(photo, 'image');
           console.log('FileInfo received:', fileInfo);
           
-          if (fileInfo && fileInfo.url && fileInfo.url !== '/uploads/images/undefined') {
-            photoUrl = fileInfo.url;
+          if (fileInfo && fileInfo.url) {
+            photoUrl = fileInfo.url; // This will be a Cloudinary URL
             console.log('Photo URL set to:', photoUrl);
           } else {
             console.error('Invalid fileInfo or fileInfo.url:', fileInfo);
-            // Don't throw error, just keep existing photo
-            console.log('Keeping existing photo due to invalid fileInfo');
+            photoUrl = existingCandidate.photo; // Keep existing photo
           }
-        } else if (typeof photo === 'string' && photo.startsWith('/uploads/') && photo !== '/uploads/images/undefined') {
-          console.log('Processing as URL string:', photo);
-          // It's a URL string from file upload service
-          photoUrl = photo;
+        } else if (typeof photo === 'string') {
+          // Check if it's a Cloudinary URL or local upload URL
+          if (photo.startsWith('https://res.cloudinary.com/') || photo.startsWith('/uploads/')) {
+            console.log('Processing as URL string:', photo);
+            photoUrl = photo;
+          } else {
+            console.log('Invalid URL format, keeping existing photo');
+            photoUrl = existingCandidate.photo;
+          }
         } else {
           console.log('Photo is neither file upload nor valid URL string, keeping existing photo');
+          photoUrl = existingCandidate.photo;
         }
       } catch (error) {
         console.error('Photo upload error:', error);
-        // Don't throw error, just keep existing photo
-        console.log('Keeping existing photo due to upload error');
+        photoUrl = existingCandidate.photo; // Keep existing photo on error
       }
     } else {
       console.log('No photo provided, keeping existing photo');
@@ -324,9 +340,9 @@ export class CandidateService {
     const candidate = await this.prisma.candidate.update({
       where: { id },
       data: {
-        name,
-        email,
-        studentId,
+        Candidate_Name: Candidate_Name,
+        Candidate_Email: Candidate_Email,
+        Candidate_StudentId: Candidate_StudentId,
         positionId,
         departmentId,
         courseId,
@@ -337,20 +353,20 @@ export class CandidateService {
         position: {
           select: {
             id: true,
-            title: true,
+            Position_Title: true,
           },
         },
         department: {
           select: {
             id: true,
-            name: true,
+            Department_Name: true,
           },
         },
         course: {
           select: {
             id: true,
-            name: true,
-            code: true,
+            Course_Name: true,
+            Course_Code: true,
           },
         },
       },
@@ -379,25 +395,23 @@ export class CandidateService {
       throw new NotFoundException('Candidate not found');
     }
 
-    // Check if candidate has related data
-    if (candidate._count.votes > 0 || candidate._count.electionCandidates > 0) {
-      throw new ConflictException('Cannot delete candidate with related votes or election assignments');
+    // Check if candidate is already soft-deleted
+    if (candidate.isDeleted) {
+      throw new NotFoundException('Candidate has already been deleted');
     }
 
-    // Delete photo file if exists
-    if (candidate.photo) {
-      const photoFilename = candidate.photo.split('/').pop();
-      if (photoFilename) {
-        await this.fileUploadService.deleteFile(photoFilename, 'image');
-      }
-    }
-
-    await this.prisma.candidate.delete({
+    // SOFT DELETE: Mark as deleted but preserve data
+    // We allow deletion even with related data since soft delete preserves everything
+    await this.prisma.candidate.update({
       where: { id },
+      data: {
+        isDeleted: true,
+        deletedAt: new Date()
+      }
     });
 
     return {
-      message: 'Candidate deleted successfully!',
+      message: 'Candidate moved to trash successfully!',
     };
   }
 } 

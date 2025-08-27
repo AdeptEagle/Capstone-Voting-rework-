@@ -7,8 +7,8 @@ async function checkAdmins() {
     const admins = await prisma.admin.findMany({
       select: {
         id: true,
-        username: true,
-        email: true,
+        Admin_Username: true,
+        Admin_Email: true,
         role: true
       }
     });

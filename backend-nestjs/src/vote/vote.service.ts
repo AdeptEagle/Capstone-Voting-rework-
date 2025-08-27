@@ -6,6 +6,8 @@ import { TimezoneService } from '../services/timezone.service';
 import { VotingGateway } from '../websocket/voting.gateway';
 import { AuditService } from '../services/audit.service';
 
+// Vote service for handling all voting operations and analytics
+
 @Injectable()
 export class VoteService {
   constructor(
@@ -22,27 +24,27 @@ export class VoteService {
         voter: {
           select: {
             id: true,
-            name: true,
-            studentId: true,
+            Voter_Name: true,
+            Voter_StudentId: true,
           },
         },
         candidate: {
           select: {
             id: true,
-            name: true,
-            studentId: true,
+            Candidate_Name: true,
+            Candidate_StudentId: true,
           },
         },
         election: {
           select: {
             id: true,
-            title: true,
+            Election_Title: true,
           },
         },
         position: {
           select: {
             id: true,
-            title: true,
+            Position_Title: true,
           },
         },
       },
@@ -56,27 +58,27 @@ export class VoteService {
         voter: {
           select: {
             id: true,
-            name: true,
-            studentId: true,
+            Voter_Name: true,
+            Voter_StudentId: true,
           },
         },
         candidate: {
           select: {
             id: true,
-            name: true,
-            studentId: true,
+            Candidate_Name: true,
+            Candidate_StudentId: true,
           },
         },
         election: {
           select: {
             id: true,
-            title: true,
+            Election_Title: true,
           },
         },
         position: {
           select: {
             id: true,
-            title: true,
+            Position_Title: true,
           },
         },
       },
@@ -94,7 +96,10 @@ export class VoteService {
 
     // Check if election exists and is active
     const election = await this.prisma.election.findUnique({
-      where: { id: electionId },
+      where: { 
+        id: electionId,
+        isDeleted: false
+      },
     });
 
     if (!election) {
@@ -215,27 +220,27 @@ export class VoteService {
         voter: {
           select: {
             id: true,
-            name: true,
-            studentId: true,
+            Voter_Name: true,
+            Voter_StudentId: true,
           },
         },
         candidate: {
           select: {
             id: true,
-            name: true,
-            studentId: true,
+            Candidate_Name: true,
+            Candidate_StudentId: true,
           },
         },
         election: {
           select: {
             id: true,
-            title: true,
+            Election_Title: true,
           },
         },
         position: {
           select: {
             id: true,
-            title: true,
+            Position_Title: true,
               voteLimit: true,
             },
           },
@@ -305,10 +310,10 @@ export class VoteService {
         isFinalVoteForPosition,
         isLockedOut: allPositionsCompleted,
         confirmation: {
-          voterName: vote.voter.name,
-          candidateName: vote.candidate.name,
-          positionTitle: vote.position.title,
-          electionTitle: vote.election.title,
+          voterName: vote.voter.Voter_Name,
+          candidateName: vote.candidate.Candidate_Name,
+          positionTitle: vote.position.Position_Title,
+          electionTitle: vote.election.Election_Title,
           votedAt: vote.createdAt,
           voteId: vote.id,
           remainingVotes: voteLimit - updatedVoteCount,
@@ -330,10 +335,10 @@ export class VoteService {
 
       // Create confirmation object
       const confirmation = {
-        voterName: vote.voter.name,
-        candidateName: vote.candidate.name,
-        positionTitle: vote.position.title,
-        electionTitle: vote.election.title,
+        voterName: vote.voter.Voter_Name,
+        candidateName: vote.candidate.Candidate_Name,
+        positionTitle: vote.position.Position_Title,
+        electionTitle: vote.election.Election_Title,
         votedAt: vote.createdAt,
         voteId: vote.id,
         verificationCode: vote.verificationCode,
@@ -374,10 +379,10 @@ export class VoteService {
         isFinalVoteForPosition,
         isLockedOut: allPositionsCompleted,
         confirmation: {
-          voterName: vote.voter.name,
-          candidateName: vote.candidate.name,
-          positionTitle: vote.position.title,
-          electionTitle: vote.election.title,
+          voterName: vote.voter.Voter_Name,
+          candidateName: vote.candidate.Candidate_Name,
+          positionTitle: vote.position.Position_Title,
+          electionTitle: vote.election.Election_Title,
           votedAt: vote.createdAt,
           voteId: vote.id,
           remainingVotes: voteLimit - updatedVoteCount,
@@ -397,7 +402,10 @@ export class VoteService {
 
     // Check if election exists and is active
     const election = await this.prisma.election.findUnique({
-      where: { id: electionId },
+      where: { 
+        id: electionId,
+        isDeleted: false
+      },
     });
 
     if (!election) {
@@ -509,10 +517,10 @@ export class VoteService {
     return {
       canVote: true,
       confirmation: {
-        voterName: voter.name,
-        candidateName: candidate.name,
-        positionTitle: position.title,
-        electionTitle: election.title,
+        voterName: voter.Voter_Name,
+        candidateName: candidate.Candidate_Name,
+        positionTitle: position.Position_Title,
+        electionTitle: election.Election_Title,
         currentVoteCount,
         voteLimit,
         remainingVotes: voteLimit - currentVoteCount,
@@ -578,27 +586,27 @@ export class VoteService {
         voter: {
           select: {
             id: true,
-            name: true,
-            studentId: true,
+            Voter_Name: true,
+            Voter_StudentId: true,
           },
         },
         candidate: {
           select: {
             id: true,
-            name: true,
-            studentId: true,
+            Candidate_Name: true,
+            Candidate_StudentId: true,
           },
         },
         election: {
           select: {
             id: true,
-            title: true,
+            Election_Title: true,
           },
         },
         position: {
           select: {
             id: true,
-            title: true,
+            Position_Title: true,
           },
         },
       },
@@ -612,27 +620,27 @@ export class VoteService {
         voter: {
           select: {
             id: true,
-            name: true,
-            studentId: true,
+            Voter_Name: true,
+            Voter_StudentId: true,
           },
         },
         candidate: {
           select: {
             id: true,
-            name: true,
-            studentId: true,
+            Candidate_Name: true,
+            Candidate_StudentId: true,
           },
         },
         election: {
           select: {
             id: true,
-            title: true,
+            Election_Title: true,
           },
         },
         position: {
           select: {
             id: true,
-            title: true,
+            Position_Title: true,
           },
         },
       },
@@ -646,14 +654,14 @@ export class VoteService {
         candidate: {
           select: {
             id: true,
-            name: true,
-            studentId: true,
+            Candidate_Name: true,
+            Candidate_StudentId: true,
           },
         },
         position: {
           select: {
             id: true,
-            title: true,
+            Position_Title: true,
             voteLimit: true,
           },
         },
@@ -667,7 +675,7 @@ export class VoteService {
         position: {
           select: {
             id: true,
-            title: true,
+            Position_Title: true,
             voteLimit: true,
           },
         },
@@ -745,20 +753,20 @@ export class VoteService {
         voter: {
           select: {
             id: true,
-            name: true,
-            studentId: true,
-            email: true,
+            Voter_Name: true,
+            Voter_StudentId: true,
+            Voter_Email: true,
             department: {
               select: {
                 id: true,
-                name: true,
+                Department_Name: true,
               },
             },
             course: {
               select: {
                 id: true,
-                name: true,
-                code: true,
+                Course_Name: true,
+                Course_Code: true,
               },
             },
           },
@@ -766,26 +774,26 @@ export class VoteService {
         candidate: {
           select: {
             id: true,
-            name: true,
-            studentId: true,
-            email: true,
+            Candidate_Name: true,
+            Candidate_StudentId: true,
+            Candidate_Email: true,
             position: {
               select: {
                 id: true,
-                title: true,
+                Position_Title: true,
               },
             },
             department: {
               select: {
                 id: true,
-                name: true,
+                Department_Name: true,
               },
             },
             course: {
               select: {
                 id: true,
-                name: true,
-                code: true,
+                Course_Name: true,
+                Course_Code: true,
               },
             },
           },
@@ -793,8 +801,8 @@ export class VoteService {
         election: {
           select: {
             id: true,
-            title: true,
-            description: true,
+            Election_Title: true,
+            Election_Description: true,
             startDate: true,
             endDate: true,
             isActive: true,
@@ -803,8 +811,8 @@ export class VoteService {
         position: {
           select: {
             id: true,
-            title: true,
-            description: true,
+            Position_Title: true,
+            Position_Description: true,
             voteLimit: true,
           },
         },
@@ -816,21 +824,24 @@ export class VoteService {
 
     // Get election details
     const election = await this.prisma.election.findUnique({
-      where: { id: electionId },
+      where: { 
+        id: electionId,
+        isDeleted: false
+      },
       include: {
-        admin: {
-          select: {
-            id: true,
-            username: true,
-            email: true,
-          },
-        },
+                 admin: {
+           select: {
+             id: true,
+             Admin_Username: true,
+             Admin_Email: true,
+           },
+         },
         electionPositions: {
           include: {
             position: {
               select: {
                 id: true,
-                title: true,
+                Position_Title: true,
                 voteLimit: true,
               },
             },
@@ -841,8 +852,8 @@ export class VoteService {
             candidate: {
               select: {
                 id: true,
-                name: true,
-                studentId: true,
+                Candidate_Name: true,
+                Candidate_StudentId: true,
                 positionId: true,
               },
             },
@@ -888,8 +899,8 @@ export class VoteService {
       votesByPosition[positionId].candidateVotes[candidateId].voteCount++;
       votesByPosition[positionId].candidateVotes[candidateId].voters.push({
         id: vote.voter.id,
-        name: vote.voter.name,
-        studentId: vote.voter.studentId,
+        name: vote.voter.Voter_Name,
+        studentId: vote.voter.Voter_StudentId,
         votedAt: vote.createdAt,
       });
     });
@@ -922,24 +933,24 @@ export class VoteService {
     // Get vote timeline
     const voteTimeline = votes.map(vote => ({
       voteId: vote.id,
-      voterName: vote.voter.name,
-      candidateName: vote.candidate.name,
-      positionTitle: vote.position.title,
+      voterName: vote.voter.Voter_Name,
+      candidateName: vote.candidate.Candidate_Name,
+      positionTitle: vote.position.Position_Title,
       votedAt: vote.createdAt,
     })).sort((a, b) => new Date(a.votedAt).getTime() - new Date(b.votedAt).getTime());
 
     return {
-      election: {
-        id: election.id,
-        title: election.title,
-        description: election.description,
-        startDate: election.startDate,
-        endDate: election.endDate,
-        isActive: election.isActive,
-        createdBy: election.admin,
-        positions: election.electionPositions.map(ep => ep.position),
-        candidates: election.electionCandidates.map(ec => ec.candidate),
-      },
+             election: {
+         id: election.id,
+         title: election.Election_Title,
+         description: election.Election_Description,
+         startDate: election.startDate,
+         endDate: election.endDate,
+         isActive: election.isActive,
+         createdBy: election.admin,
+         positions: election.electionPositions.map(ep => ep.position),
+         candidates: election.electionCandidates.map(ec => ec.candidate),
+       },
       statistics: {
         totalVotes,
         uniqueVoters,
@@ -974,31 +985,31 @@ export class VoteService {
         totalVoteSessions: uniqueVoters,
         voteTimeline,
       },
-      audit: {
-        voteRecords: votes.map(vote => ({
-          voteId: vote.id,
-          voter: {
-            id: vote.voter.id,
-            name: vote.voter.name,
-            studentId: vote.voter.studentId,
-            email: vote.voter.email,
-            department: vote.voter.department,
-            course: vote.voter.course,
-          },
-          candidate: {
-            id: vote.candidate.id,
-            name: vote.candidate.name,
-            studentId: vote.candidate.studentId,
-            email: vote.candidate.email,
-            position: vote.candidate.position,
-            department: vote.candidate.department,
-            course: vote.candidate.course,
-          },
-          position: vote.position,
-          election: vote.election,
-          votedAt: vote.createdAt,
-        })),
-      },
+               audit: {
+           voteRecords: votes.map(vote => ({
+             voteId: vote.id,
+             voter: {
+               id: vote.voter.id,
+               name: vote.voter.Voter_Name,
+               studentId: vote.voter.Voter_StudentId,
+               email: vote.voter.Voter_Email,
+               department: vote.voter.department,
+               course: vote.voter.course,
+             },
+             candidate: {
+               id: vote.candidate.id,
+               name: vote.candidate.Candidate_Name,
+               studentId: vote.candidate.Candidate_StudentId,
+               email: vote.candidate.Candidate_Email,
+               position: vote.candidate.position,
+               department: vote.candidate.department,
+               course: vote.candidate.course,
+             },
+             position: vote.position,
+             election: vote.election,
+             votedAt: vote.createdAt,
+           })),
+         },
     };
   }
 
@@ -1007,39 +1018,39 @@ export class VoteService {
     const votes = await this.prisma.vote.findMany({
       where: { electionId },
       include: {
-        voter: {
-          select: {
-            id: true,
-            name: true,
-            studentId: true,
-            department: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-          },
-        },
-        candidate: {
-          select: {
-            id: true,
-            name: true,
-            studentId: true,
-            department: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-          },
-        },
-        position: {
-          select: {
-            id: true,
-            title: true,
-            voteLimit: true,
-          },
-        },
+                 voter: {
+           select: {
+             id: true,
+             Voter_Name: true,
+             Voter_StudentId: true,
+             department: {
+               select: {
+                 id: true,
+                 Department_Name: true,
+               },
+             },
+           },
+         },
+                 candidate: {
+           select: {
+             id: true,
+             Candidate_Name: true,
+             Candidate_StudentId: true,
+             department: {
+               select: {
+                 id: true,
+                 Department_Name: true,
+               },
+             },
+           },
+         },
+         position: {
+           select: {
+             id: true,
+             Position_Title: true,
+             voteLimit: true,
+           },
+         },
       },
     });
 
@@ -1049,8 +1060,8 @@ export class VoteService {
         voters: {
           select: {
             id: true,
-            name: true,
-            studentId: true,
+            Voter_Name: true,
+            Voter_StudentId: true,
           },
         },
       },
@@ -1064,7 +1075,7 @@ export class VoteService {
       departmentResults[dept.id] = {
         department: {
           id: dept.id,
-          name: dept.name,
+          name: dept.Department_Name,
         },
         totalVoters: dept.voters.length,
         totalVotes: 0,
@@ -1078,7 +1089,7 @@ export class VoteService {
     // Process votes and group by department
     votes.forEach(vote => {
       const departmentId = vote.voter.department?.id || 'unknown';
-      const departmentName = vote.voter.department?.name || 'Unknown Department';
+             const departmentName = vote.voter.department?.Department_Name || 'Unknown Department';
       
       if (!departmentResults[departmentId]) {
         departmentResults[departmentId] = {
@@ -1102,8 +1113,8 @@ export class VoteService {
       if (!deptResult.voterDetails.find(v => v.id === vote.voter.id)) {
         deptResult.voterDetails.push({
           id: vote.voter.id,
-          name: vote.voter.name,
-          studentId: vote.voter.studentId,
+          name: vote.voter.Voter_Name,
+          studentId: vote.voter.Voter_StudentId,
         });
       }
 
@@ -1130,8 +1141,8 @@ export class VoteService {
       deptResult.candidates[candidateId].totalVotes++;
       deptResult.candidates[candidateId].voters.push({
         id: vote.voter.id,
-        name: vote.voter.name,
-        studentId: vote.voter.studentId,
+        name: vote.voter.Voter_Name,
+        studentId: vote.voter.Voter_StudentId,
       });
 
       // Group candidates by position
@@ -1197,7 +1208,10 @@ export class VoteService {
 
     // Check if election exists
     const election = await this.prisma.election.findUnique({
-      where: { id: electionId },
+      where: { 
+        id: electionId,
+        isDeleted: false
+      },
     });
 
     if (!election) {
@@ -1211,7 +1225,7 @@ export class VoteService {
         position: {
           select: {
             id: true,
-            title: true,
+            Position_Title: true,
             voteLimit: true,
             displayOrder: true,
           },
@@ -1238,6 +1252,7 @@ export class VoteService {
         },
       });
 
+      // Get position details from the include
       const position = electionPosition.position;
       const voteLimit = position.voteLimit || 1;
       const isCompleted = positionVoteCount >= voteLimit;
@@ -1251,7 +1266,7 @@ export class VoteService {
 
       votingStatus.push({
         positionId: position.id,
-        positionTitle: position.title,
+        positionTitle: position.Position_Title,
         voteLimit,
         votesCast: positionVoteCount,
         remainingVotes,
@@ -1267,13 +1282,13 @@ export class VoteService {
     return {
       voter: {
         id: voter.id,
-        name: voter.name,
-        studentId: voter.studentId,
+        name: voter.Voter_Name,
+        studentId: voter.Voter_StudentId,
         hasVoted: voter.hasVoted,
       },
       election: {
         id: election.id,
-        title: election.title,
+        title: election.Election_Title,
         isActive: election.isActive,
       },
       votingStatus: {
@@ -1293,11 +1308,11 @@ export class VoteService {
 
   async getRealTimeStats() {
     try {
-      // Get all votes for active elections
+      // Get all votes for active and paused elections
       const activeVotes = await this.prisma.vote.findMany({
         where: {
           election: {
-            status: 'active'
+            status: { in: ['active', 'paused'] }
           }
         },
         select: {
@@ -1316,11 +1331,11 @@ export class VoteService {
       const uniqueVoters = new Set(activeVotes.map(vote => vote.voterId)).size;
       const candidatesWithVotes = new Set(activeVotes.map(vote => vote.candidateId)).size;
 
-      // Get positions count for active elections
+      // Get positions count for active and paused elections
       const totalPositions = await this.prisma.electionPosition.count({
         where: {
           election: {
-            status: 'active'
+            status: { in: ['active', 'paused'] }
           }
         }
       });
@@ -1346,20 +1361,49 @@ export class VoteService {
 
   async getVoteTimeline() {
     try {
-      // Get votes from the last 24 hours for active elections
+      // Get votes from the last 24 hours for active and paused elections
       const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
-      const timelineData = await this.prisma.$queryRaw`
-        SELECT 
-          TO_CHAR(v.created_at, 'HH24:00') as hour,
-          COUNT(*) as voteCount
-        FROM votes v
-        INNER JOIN elections e ON v.election_id = e.id
-        WHERE e.status = 'active'
-        AND v.created_at >= ${twentyFourHoursAgo}
-        GROUP BY TO_CHAR(v.created_at, 'HH24:00')
-        ORDER BY hour
-      `;
+      // Get all votes from the last 24 hours for active and paused elections
+      const votes = await this.prisma.vote.findMany({
+        where: {
+          createdAt: {
+            gte: twentyFourHoursAgo
+          },
+          election: {
+            status: { in: ['active', 'paused'] }
+          }
+        },
+        select: {
+          createdAt: true
+        }
+      });
+
+      // Group votes by hour
+      const timelineData = [];
+      const hourMap = new Map();
+
+      votes.forEach(vote => {
+        const hour = vote.createdAt.getHours();
+        const hourKey = `${hour.toString().padStart(2, '0')}:00`;
+        
+        if (hourMap.has(hourKey)) {
+          hourMap.set(hourKey, hourMap.get(hourKey) + 1);
+        } else {
+          hourMap.set(hourKey, 1);
+        }
+      });
+
+      // Convert to array format
+      for (const [hour, voteCount] of hourMap) {
+        timelineData.push({
+          hour,
+          voteCount
+        });
+      }
+
+      // Sort by hour
+      timelineData.sort((a, b) => a.hour.localeCompare(b.hour));
 
       return timelineData;
     } catch (error) {
@@ -1375,7 +1419,7 @@ export class VoteService {
         by: ['electionId', 'positionId', 'candidateId'],
         where: {
           election: {
-            status: 'active'
+            status: { in: ['active', 'paused'] } // Include both active and paused elections
           }
         },
         _count: {
@@ -1388,24 +1432,32 @@ export class VoteService {
       for (const result of activeElectionResults) {
         const position = await this.prisma.position.findUnique({
           where: { id: result.positionId },
-          select: { title: true, voteLimit: true }
+          select: { Position_Title: true, voteLimit: true }
         });
 
         const candidate = await this.prisma.candidate.findUnique({
           where: { id: result.candidateId },
-          select: { name: true, photo: true }
+          select: { Candidate_Name: true, photo: true }
         });
 
         if (position && candidate) {
           results.push({
             positionId: result.positionId,
-            positionName: position.title,
+            positionName: position.Position_Title,
             voteLimit: position.voteLimit,
             candidateId: result.candidateId,
-            candidateName: candidate.name,
+            candidateName: candidate.Candidate_Name,
             photoUrl: candidate.photo,
             voteCount: result._count.id
           });
+        }
+      }
+
+      // Emit real-time results update via WebSocket
+      if (results.length > 0) {
+        const electionId = activeElectionResults[0]?.electionId;
+        if (electionId) {
+          this.votingGateway.emitResultsUpdate(electionId, results);
         }
       }
 
@@ -1437,8 +1489,8 @@ export class VoteService {
         message: 'Voter status reset successfully',
         voter: {
           id: voter.id,
-          name: voter.name,
-          studentId: voter.studentId,
+          name: voter.Voter_Name,
+          studentId: voter.Voter_StudentId,
           hasVoted: false
         }
       };

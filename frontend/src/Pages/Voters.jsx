@@ -1,23 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { getVoters, createVoter, updateVoter, deleteVoter, getDepartments, getCoursesByDepartment } from '../services/api';
+import io from 'socket.io-client';
 
 const Voters = () => {
   const [voters, setVoters] = useState([]);
   const [filteredVoters, setFilteredVoters] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [editingVoter, setEditingVoter] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showActualPassword, setShowActualPassword] = useState(false);
+  const [actualPassword, setActualPassword] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const [departments, setDepartments] = useState([]);
   const [courses, setCourses] = useState([]);
   const [loadingCourses, setLoadingCourses] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+  const [socket, setSocket] = useState(null);
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    studentId: '',
+    Voter_Name: '',
+    Voter_Email: '',
+    Voter_StudentId: '',
     password: '',
     departmentId: '',
     courseId: ''
@@ -26,6 +32,108 @@ const Voters = () => {
   useEffect(() => {
     fetchVoters();
     fetchDepartments();
+  }, []);
+
+  // WebSocket connection and event listeners
+  useEffect(() => {
+    console.log('Setting up WebSocket connection...');
+    
+    // Use default namespace (no custom namespace)
+    const newSocket = io('http://localhost:3001', {
+      withCredentials: true,
+      transports: ['websocket', 'polling'],
+      timeout: 20000,
+      forceNew: true,
+    });
+    
+    console.log('🔌 Attempting connection with default namespace...');
+
+    // Connection event handlers
+    newSocket.on('connect', () => {
+      console.log('✅ Connected to WebSocket server with ID:', newSocket.id);
+      console.log('🔌 WebSocket connection established successfully');
+    });
+
+    newSocket.on('connect_error', (error) => {
+      console.error('❌ WebSocket connection error:', error);
+      console.error('Connection details:', {
+        url: 'http://localhost:3001',
+        namespace: '/voting',
+        error: error.message
+      });
+    });
+
+    newSocket.on('disconnect', (reason) => {
+      console.log('🔌 Disconnected from WebSocket server. Reason:', reason);
+    });
+
+    // Listen for voter registration events
+    newSocket.on('voter-registered', (data) => {
+      console.log('🎉 New voter registered event received:', data);
+      console.log('🔄 Refreshing voters list...');
+      // Refresh the voters list to show the new voter
+      fetchVoters();
+      setSuccess('New voter registered! List updated automatically.');
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccess(''), 3000);
+    });
+
+    // Listen for voter updates
+    newSocket.on('voter-updated', (data) => {
+      console.log('📝 Voter updated event received:', data);
+      console.log('🔄 Refreshing voters list...');
+      fetchVoters();
+      setSuccess('Voter updated! List refreshed automatically.');
+      setTimeout(() => setSuccess(''), 3000);
+    });
+
+    // Listen for voter deletions
+    newSocket.on('voter-deleted', (data) => {
+      console.log('🗑️ Voter deleted event received:', data);
+      console.log('🔄 Refreshing voters list...');
+      fetchVoters();
+      setSuccess('Voter deleted! List refreshed automatically.');
+      setTimeout(() => setSuccess(''), 3000);
+    });
+
+    // Listen for general admin actions
+    newSocket.on('admin-action', (data) => {
+      console.log('⚙️ Admin action event received:', data);
+      if (data.action === 'voter-management') {
+        console.log('🔄 Refreshing voters list due to admin action...');
+        fetchVoters();
+        setSuccess('Voter list updated due to admin action.');
+        setTimeout(() => setSuccess(''), 3000);
+      }
+    });
+
+    // Test event to verify connection
+    newSocket.on('connected', (data) => {
+      console.log('🎯 Server connection confirmation received:', data);
+    });
+
+    // Test event listener
+    newSocket.on('test-event', (data) => {
+      console.log('🧪 Test event received:', data);
+      setSuccess('Test WebSocket event received! Connection is working.');
+      setTimeout(() => setSuccess(''), 3000);
+    });
+
+    // Test response listener
+    newSocket.on('test-response', (data) => {
+      console.log('🧪 Test response received:', data);
+    });
+
+    setSocket(newSocket);
+
+    // Cleanup on unmount
+    return () => {
+      console.log('🧹 Cleaning up WebSocket connection...');
+      if (newSocket.connected) {
+        newSocket.disconnect();
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -148,7 +256,6 @@ const Voters = () => {
         name: voter.name,
         email: voter.email,
         studentId: voter.studentId,
-        hasVoted: voter.hasVoted,
         departmentId: voter.departmentId || voter.department?.id || '',
         courseId: voter.courseId || voter.course?.id || ''
       });
@@ -162,10 +269,13 @@ const Voters = () => {
         name: '',
         email: '',
         studentId: '',
-        hasVoted: false,
+        password: '',
         departmentId: '',
         courseId: ''
       });
+      setShowPassword(false);
+      setShowActualPassword(false);
+      setActualPassword('');
       setCourses([]);
     }
     setShowModal(true);
@@ -180,13 +290,15 @@ const Voters = () => {
       name: '',
       email: '',
       studentId: '',
-      hasVoted: false,
+      password: '',
       departmentId: '',
       courseId: ''
     });
-    setCourses([]);
-    setSuccess('');
+    setShowPassword(false);
+    setShowActualPassword(false);
+    setActualPassword('');
     setError('');
+    setSuccess('');
   };
 
   const handleChange = (e) => {
@@ -216,19 +328,40 @@ const Voters = () => {
     e.preventDefault();
     setError('');
     
+    // Validate required fields
+    if (!formData.departmentId) {
+      setError('Please select a department');
+      return;
+    }
+    
+    if (!formData.courseId) {
+      setError('Please select a course');
+      return;
+    }
+    
     // Student ID format validation for both new and edited voters
     const idPattern = /^\d{4}-\d{5}$/;
-    if (!idPattern.test(formData.studentId)) {
+          if (!idPattern.test(formData.Voter_StudentId)) {
       setError('Student ID must be in the format YYYY-NNNNN (e.g., 2024-00001)');
       return;
     }
     
     try {
+      // Prepare data to send - only include fields that the backend DTO expects
+      const dataToSend = {
+        Voter_Name: formData.Voter_Name,
+        Voter_Email: formData.Voter_Email,
+        Voter_StudentId: formData.Voter_StudentId,
+        password: formData.password || formData.Voter_StudentId, // Use provided password or Student ID as default
+        departmentId: formData.departmentId || undefined,
+        courseId: formData.courseId || undefined
+      };
+      
       if (editingVoter) {
-        await updateVoter(editingVoter.id, formData);
+        await updateVoter(editingVoter.id, dataToSend);
         setSuccess('Voter updated successfully!');
       } else {
-        const response = await createVoter(formData);
+        const response = await createVoter(dataToSend);
         if (response.defaultPassword) {
           setSuccess(`Voter created successfully! Default password is: ${response.defaultPassword}`);
         } else {
@@ -250,12 +383,87 @@ const Voters = () => {
     if (window.confirm('Are you sure you want to delete this voter?')) {
       try {
         await deleteVoter(id);
+        
+        // Show success message about trash bin
+        setSuccessMessage('Voter has been moved to the trash bin. You can restore it later or permanently delete it from the Trash Bin page.');
+        
         fetchVoters();
         setSuccess('Voter deleted successfully!');
+        
+        // Clear success message after 8 seconds
+        setTimeout(() => setSuccessMessage(''), 8000);
       } catch (error) {
         console.error('Error deleting voter:', error);
         setError('Failed to delete voter');
       }
+    }
+  };
+
+  const handleEdit = (voter) => {
+    setEditingVoter(voter);
+    setFormData({
+      name: voter.name,
+      email: voter.email,
+      studentId: voter.studentId,
+      password: '••••••••', // Show asterisks by default
+      departmentId: voter.departmentId || '',
+      courseId: voter.courseId || ''
+    });
+    setShowPassword(false);
+    setShowActualPassword(false);
+    setActualPassword(''); // Reset actual password
+    setShowModal(true);
+  };
+
+  // Function to fetch voter's actual password
+  const fetchVoterPassword = async (voterId) => {
+    try {
+      const response = await fetch(`http://localhost:3001/voters/${voterId}/password`);
+      if (response.ok) {
+        const data = await response.json();
+        // Set the actual password based on backend response
+        if (data.hasCustomPassword) {
+          setActualPassword('Custom Password Set');
+        } else {
+          setActualPassword(data.defaultPassword);
+        }
+      } else {
+        // Fallback: use student ID as password (common default)
+        setActualPassword(editingVoter.studentId);
+      }
+    } catch (error) {
+      console.error('Error fetching password:', error);
+      // Fallback: use student ID as password
+      setActualPassword(editingVoter.studentId);
+    }
+  };
+
+  // Function to reset password to student ID
+  const resetPasswordToStudentId = async () => {
+    try {
+      const response = await fetch(`http://localhost:3001/voters/${editingVoter.id}/reset-password`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setFormData(prev => ({
+          ...prev,
+          password: data.newPassword
+        }));
+        setActualPassword(data.newPassword);
+        setShowPassword(true);
+        setShowActualPassword(true);
+        setSuccess('Password reset to Student ID successfully!');
+      } else {
+        setError('Failed to reset password');
+      }
+    } catch (error) {
+      console.error('Error resetting password:', error);
+      setError('Failed to reset password');
     }
   };
 
@@ -282,12 +490,64 @@ const Voters = () => {
             <button className="btn btn-custom-blue" onClick={() => handleShowModal()}>
               Add Voter
             </button>
+            <button 
+              className="btn btn-outline-info ms-2" 
+              onClick={() => {
+                console.log('🧪 Test button clicked');
+                console.log('🔌 Socket state:', {
+                  exists: !!socket,
+                  connected: socket?.connected,
+                  id: socket?.id,
+                  readyState: socket?.readyState
+                });
+                
+                if (socket && socket.connected) {
+                  console.log('🧪 Sending test WebSocket request...');
+                  socket.emit('test-websocket');
+                  
+                  // Also test direct event emission
+                  setTimeout(() => {
+                    console.log('🧪 Testing direct event emission...');
+                    socket.emit('test-websocket');
+                  }, 1000);
+                } else {
+                  console.error('❌ WebSocket not connected');
+                  console.error('Socket details:', socket);
+                  setError('WebSocket not connected');
+                }
+              }}
+              title="Test WebSocket Connection"
+            >
+              <i className="fas fa-wifi me-1"></i>
+              Test WebSocket
+            </button>
           </div>
         </div>
       </div>
 
       {error && <div className="alert alert-danger">{error}</div>}
       {success && <div className="alert alert-success">{success}</div>}
+      
+      {/* Success Message for Trash Bin */}
+      {successMessage && (
+        <div className="alert alert-success alert-dismissible fade show mb-3" role="alert">
+          <i className="fas fa-trash-alt me-2"></i>
+          {successMessage}
+          <div className="mt-2">
+            <a href="/trash-bin?tab=voters" className="btn btn-sm btn-outline-success me-2">
+              <i className="fas fa-trash me-1"></i>
+              Go to Trash Bin
+            </a>
+            <button
+              type="button"
+              className="btn btn-sm btn-outline-secondary"
+              onClick={() => setSuccessMessage('')}
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Search and Filter Section */}
       <div className="card mb-3">
@@ -411,18 +671,22 @@ const Voters = () => {
                         )}
                       </td>
                       <td>
-                        <button 
-                          className="btn btn-sm btn-outline-primary me-2"
-                          onClick={() => handleShowModal(voter)}
-                        >
-                          Edit
-                        </button>
-                        <button 
-                          className="btn btn-sm btn-outline-danger"
-                          onClick={() => handleDelete(voter.id)}
-                        >
-                          Delete
-                        </button>
+                        <div className="voter-actions">
+                          <button 
+                            className="btn btn-sm btn-outline-primary me-2 action-btn-icon"
+                            onClick={() => handleShowModal(voter)}
+                            title="Edit Voter"
+                          >
+                            <i className="fas fa-edit"></i>
+                          </button>
+                          <button 
+                            className="btn btn-sm btn-outline-danger action-btn-icon"
+                            onClick={() => handleDelete(voter.id)}
+                            title="Delete Voter"
+                          >
+                            <i className="fas fa-trash"></i>
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -468,7 +732,7 @@ const Voters = () => {
                       type="text"
                       className="form-control"
                       name="name"
-                      value={formData.name}
+                      value={formData.Voter_Name}
                       onChange={handleChange}
                       required
                     />
@@ -480,7 +744,7 @@ const Voters = () => {
                       type="email"
                       className="form-control"
                       name="email"
-                      value={formData.email}
+                      value={formData.Voter_Email}
                       onChange={handleChange}
                       required
                     />
@@ -492,22 +756,85 @@ const Voters = () => {
                       type="text"
                       className="form-control"
                       name="studentId"
-                      value={formData.studentId}
+                      value={formData.Voter_StudentId}
                       onChange={handleChange}
                       required
                     />
                   </div>
                   
+                  {!editingVoter && (
+                    <div className="mb-3">
+                      <label className="form-label">Password</label>
+                      <div className="input-group">
+                        <input
+                          type={showPassword ? "text" : "password"}
+                          className="form-control"
+                          name="password"
+                          value={formData.password}
+                          onChange={handleChange}
+                          placeholder="Leave blank to use Student ID as default password"
+                        />
+                        <span className="input-group-text">
+                          <i className={`fas ${showPassword ? 'fa-eye-slash' : 'fa-eye'}`} onClick={() => setShowPassword(!showPassword)}></i>
+                        </span>
+                      </div>
+                      <small className="form-text text-muted">
+                        If left blank, the Student ID will be used as the default password
+                      </small>
+                    </div>
+                  )}
+
+                  {/* Password Management Section for Editing */}
+                  {editingVoter && (
+                    <div className="mb-3">
+                      <label className="form-label">Password Management</label>
+                      <div className="d-flex gap-2 mb-2">
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-outline-info"
+                          onClick={() => {
+                            if (!actualPassword) {
+                              fetchVoterPassword(editingVoter.id);
+                            }
+                            setShowActualPassword(!showActualPassword);
+                          }}
+                        >
+                          <i className={`fas ${showActualPassword ? 'fa-eye-slash' : 'fa-eye'} me-1`}></i>
+                          {showActualPassword ? 'Hide' : 'Reveal'} Actual Password
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-outline-warning"
+                          onClick={resetPasswordToStudentId}
+                        >
+                          <i className="fas fa-key me-1"></i>
+                          Reset to Student ID
+                        </button>
+                      </div>
+                      
+                      {showActualPassword && actualPassword && (
+                        <div className="alert alert-info">
+                          <strong>Current Password:</strong> {actualPassword}
+                        </div>
+                      )}
+                      
+                      <small className="form-text text-muted">
+                        Use these tools to manage the voter's password. The actual password is hidden by default for security.
+                      </small>
+                    </div>
+                  )}
+                  
                   <div className="mb-3">
                     <label className="form-label">
                       <i className="fas fa-university me-2"></i>
-                      Department (Optional)
+                      Department <span className="text-danger">*</span>
                     </label>
                     <select
                       className="form-control"
                       name="departmentId"
                       value={formData.departmentId}
                       onChange={handleChange}
+                      required
                     >
                       <option value="">Select a department</option>
                       {departments.map(department => (
@@ -521,7 +848,7 @@ const Voters = () => {
                   <div className="mb-3">
                     <label className="form-label">
                       <i className="fas fa-graduation-cap me-2"></i>
-                      Course (Optional)
+                      Course <span className="text-danger">*</span>
                     </label>
                     <select
                       className="form-control"
@@ -529,6 +856,7 @@ const Voters = () => {
                       value={formData.courseId}
                       onChange={handleChange}
                       disabled={!formData.departmentId || loadingCourses}
+                      required
                     >
                       <option value="">
                         {!formData.departmentId 
@@ -546,21 +874,7 @@ const Voters = () => {
                     </select>
                   </div>
                   
-                  <div className="mb-3">
-                    <div className="form-check">
-                      <input
-                        type="checkbox"
-                        className="form-check-input"
-                        name="hasVoted"
-                        checked={formData.hasVoted}
-                        onChange={handleChange}
-                        id="hasVoted"
-                      />
-                      <label className="form-check-label" htmlFor="hasVoted">
-                        Has voted
-                      </label>
-                    </div>
-                  </div>
+                  {/* hasVoted field removed - managed by backend */}
                 </div>
                 <div className="modal-footer">
                   <button

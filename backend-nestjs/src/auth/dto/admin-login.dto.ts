@@ -8,7 +8,7 @@ export class AdminLoginDto {
   })
   @IsString()
   @IsNotEmpty()
-  username: string;
+  Admin_Username: string;
 
   @ApiProperty({
     description: 'Admin password',

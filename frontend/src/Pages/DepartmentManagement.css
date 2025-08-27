@@ -103,10 +103,6 @@
   font-weight: 800;
   margin: 0 0 0.5rem 0;
   letter-spacing: -1px;
-  background: linear-gradient(135deg, var(--primary-navy), var(--accent-steel));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
 }
 
 .department-title i {

@@ -5,17 +5,17 @@ export class CreateCourseDto {
   @ApiProperty({ description: 'Course name', example: 'Computer Programming' })
   @IsString()
   @MinLength(2)
-  name: string;
+  Course_Name: string;
 
   @ApiProperty({ description: 'Course code', example: 'CS101' })
   @IsString()
   @MinLength(2)
-  code: string;
+  Course_Code: string;
 
   @ApiProperty({ description: 'Course description', example: 'Introduction to Computer Programming', required: false })
   @IsString()
   @IsOptional()
-  description?: string;
+  Course_Description?: string;
 
   @ApiProperty({ description: 'Department ID', example: 'CCS' })
   @IsString()

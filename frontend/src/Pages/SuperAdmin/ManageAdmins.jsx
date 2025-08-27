@@ -9,7 +9,15 @@ const ManageAdmins = () => {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingAdmin, setEditingAdmin] = useState(null);
-  const [formData, setFormData] = useState({ id: '', username: '', email: '', password: '', role: 'admin' });
+  const [formData, setFormData] = useState({ 
+    Admin_Username: '', 
+    Admin_Email: '', 
+    password: '', 
+    confirmPassword: '',
+    role: 'ADMIN' 
+  });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [authError, setAuthError] = useState('');
   const navigate = useNavigate();
@@ -49,15 +57,50 @@ const ManageAdmins = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validate password confirmation for new admins
+    if (!editingAdmin && formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+    
+    // Validate password length
+    if (!editingAdmin && formData.password.length < 6) {
+      setError('Password must be at least 6 characters long');
+      return;
+    }
+    
     try {
       if (editingAdmin) {
-        await updateAdmin(editingAdmin.id, formData);
+        // For editing, only send fields that the backend expects
+        const updateData = {
+          Admin_Username: formData.Admin_Username,
+          Admin_Email: formData.Admin_Email,
+          role: formData.role
+        };
+        
+        // Only include password if it was changed
+        if (formData.password) {
+          updateData.password = formData.password;
+        }
+        
+        await updateAdmin(editingAdmin.id, updateData);
       } else {
-        await createAdmin(formData);
+        // For creating new admin, only send fields that the backend DTO expects
+        const createData = {
+          Admin_Username: formData.Admin_Username,
+          Admin_Email: formData.Admin_Email,
+          password: formData.password,
+          role: formData.role
+        };
+        
+        await createAdmin(createData);
       }
       setShowModal(false);
       setEditingAdmin(null);
-      setFormData({ id: '', username: '', password: '', role: 'admin' });
+      setFormData({ Admin_Username: '', Admin_Email: '', password: '', confirmPassword: '', role: 'ADMIN' });
+      setShowPassword(false);
+      setShowConfirmPassword(false);
       fetchAdmins();
     } catch (error) {
       console.error('Error saving admin:', error);
@@ -67,7 +110,15 @@ const ManageAdmins = () => {
 
   const handleEdit = (admin) => {
     setEditingAdmin(admin);
-    setFormData({ id: admin.id, username: admin.username, email: admin.email || '', password: '', role: admin.role });
+    setFormData({ 
+      username: admin.username, 
+      email: admin.email || '', 
+      password: '', 
+      confirmPassword: '',
+      role: admin.role 
+    });
+    setShowPassword(false);
+    setShowConfirmPassword(false);
     setShowModal(true);
   };
 
@@ -85,7 +136,15 @@ const ManageAdmins = () => {
 
   const openModal = () => {
     setEditingAdmin(null);
-    setFormData({ id: '', username: '', email: '', password: '', role: 'admin' });
+    setFormData({ 
+      username: '', 
+      email: '', 
+      password: '', 
+      confirmPassword: '', 
+      role: 'ADMIN' 
+    });
+    setShowPassword(false);
+    setShowConfirmPassword(false);
     setShowModal(true);
   };
 
@@ -176,7 +235,10 @@ const ManageAdmins = () => {
                   <th>Email</th>
                   <th>Role</th>
                   <th>Created At</th>
-                  <th>Actions</th>
+                  <th>
+                    <i className="fas fa-cogs me-1"></i>
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -186,26 +248,30 @@ const ManageAdmins = () => {
                     <td>{admin.username}</td>
                     <td>{admin.email || 'N/A'}</td>
                     <td>
-                      <span className={`badge ${admin.role === 'superadmin' ? 'bg-danger' : 'bg-primary'}`}>
+                      <span className={`badge ${admin.role === 'SUPERADMIN' ? 'bg-danger' : 'bg-primary'}`}>
                         {admin.role}
                       </span>
                     </td>
                     <td>{new Date(admin.created_at).toLocaleDateString()}</td>
                     <td>
-                      <button
-                        className="btn btn-sm btn-outline-primary me-2"
-                        onClick={() => handleEdit(admin)}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        className="btn btn-sm btn-outline-danger"
-                        onClick={() => handleDelete(admin.id)}
-                        disabled={admin.role === 'superadmin'}
-                      >
-                        Delete
-                      </button>
-                    </td>
+                       <div className="admin-actions">
+                         <button
+                           className="action-btn-icon edit-btn"
+                           onClick={() => handleEdit(admin)}
+                           title="Edit Admin"
+                         >
+                           <i className="fas fa-edit"></i>
+                         </button>
+                         <button
+                           className="action-btn-icon delete-btn"
+                           onClick={() => handleDelete(admin.id)}
+                           disabled={admin.role === 'SUPERADMIN'}
+                           title="Delete Admin"
+                         >
+                           <i className="fas fa-trash"></i>
+                         </button>
+                       </div>
+                     </td>
                   </tr>
                 ))}
               </tbody>
@@ -231,26 +297,13 @@ const ManageAdmins = () => {
               </div>
               <form onSubmit={handleSubmit}>
                 <div className="modal-body">
-                  {!editingAdmin && (
-                    <div className="mb-3">
-                      <label className="form-label">ID</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        value={formData.id}
-                        onChange={(e) => setFormData({ ...formData, id: e.target.value })}
-                        required
-                        placeholder="e.g. admin-001"
-                      />
-                    </div>
-                  )}
                   <div className="mb-3">
                     <label className="form-label">Username</label>
                     <input
                       type="text"
                       className="form-control"
-                      value={formData.username}
-                      onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                      value={formData.Admin_Username}
+                      onChange={(e) => setFormData({ ...formData, Admin_Username: e.target.value })}
                       required
                     />
                   </div>
@@ -259,23 +312,55 @@ const ManageAdmins = () => {
                     <input
                       type="email"
                       className="form-control"
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      value={formData.Admin_Email}
+                      onChange={(e) => setFormData({ ...formData, Admin_Email: e.target.value })}
                       required
                       placeholder="admin@votingsystem.com"
                     />
                   </div>
                   <div className="mb-3">
-                    <label className="form-label">Password</label>
-                    <input
-                      type="password"
-                      className="form-control"
-                      value={formData.password}
-                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                      required={!editingAdmin}
-                      placeholder={editingAdmin ? "Leave blank to keep current password" : ""}
-                    />
+                    <label className="form-label">Password {!editingAdmin && <span className="text-danger">*</span>}</label>
+                    <div className="input-group">
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        className="form-control"
+                        value={formData.password}
+                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                        required={!editingAdmin}
+                        placeholder={editingAdmin ? "Leave blank to keep current password" : ""}
+                      />
+                      <button
+                        type="button"
+                        className="btn btn-outline-secondary"
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
+                        <i className={`fas fa-${showPassword ? 'eye-slash' : 'eye'}`}></i>
+                      </button>
+                    </div>
                   </div>
+                  
+                  {!editingAdmin && (
+                    <div className="mb-3">
+                      <label className="form-label">Confirm Password <span className="text-danger">*</span></label>
+                      <div className="input-group">
+                        <input
+                          type={showConfirmPassword ? "text" : "password"}
+                          className="form-control"
+                          value={formData.confirmPassword}
+                          onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                          required
+                          placeholder="Confirm your password"
+                        />
+                        <button
+                          type="button"
+                          className="btn btn-outline-secondary"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        >
+                          <i className={`fas fa-${showConfirmPassword ? 'eye-slash' : 'eye'}`}></i>
+                        </button>
+                      </div>
+                    </div>
+                  )}
                   <div className="mb-3">
                     <label className="form-label">Role</label>
                     <select
@@ -284,8 +369,8 @@ const ManageAdmins = () => {
                       onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                       required
                     >
-                      <option value="admin">Admin</option>
-                      <option value="superadmin">Super Admin</option>
+                      <option value="ADMIN">Admin</option>
+                      <option value="SUPERADMIN">Super Admin</option>
                     </select>
                   </div>
                 </div>

@@ -8,14 +8,14 @@ export class UserRegisterDto {
   })
   @IsString()
   @IsNotEmpty()
-  name: string;
+  Voter_Name: string;
 
   @ApiProperty({
     description: 'User email address',
     example: 'john.doe@example.com',
   })
   @IsEmail()
-  email: string;
+  Voter_Email: string;
 
   @ApiProperty({
     description: 'Student ID (format: YYYY-NNNNN, e.g., 2024-00001)',
@@ -25,7 +25,7 @@ export class UserRegisterDto {
   @IsNotEmpty()
   @MinLength(10)
   @Matches(/^\d{4}-\d{5}$/, { message: 'Student ID must be in format YYYY-NNNNN (e.g., 2024-00001)' })
-  studentId: string;
+  Voter_StudentId: string;
 
   @ApiProperty({
     description: 'User password',

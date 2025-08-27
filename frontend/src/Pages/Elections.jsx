@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getElections, getPositions, getCandidates, createElection, updateElection, deleteElection, startElection, pauseElection, stopElection, resumeElection, endElection, getElectionPositions, createPosition, createCandidate, getDepartments } from '../services/api';
+import { getElections, getPositions, getCandidates, createElection, updateElection, deleteElection, startElection, pauseElection, stopElection, resumeElection, endElection, getElectionPositions, createPosition, createCandidate, getDepartments, addPositionToElection, addCandidateToElection, hasActiveElections, getActiveElectionInfo, getElectionCandidates, getUnassignedCandidates, assignCandidateToElection, removeCandidateFromElection } from '../services/api';
 import './Elections.css';
+import Button from 'react-bootstrap/Button'; // Added missing import for Button
 
 const Elections = () => {
   const [elections, setElections] = useState([]);
@@ -17,12 +18,14 @@ const Elections = () => {
   const [editingElection, setEditingElection] = useState(null);
   const [updatingElection, setUpdatingElection] = useState(null);
   const [loadingPositions, setLoadingPositions] = useState(false);
+  const [activeTab, setActiveTab] = useState('active'); // 'active' or 'ended'
+  const [activeElectionInfo, setActiveElectionInfo] = useState({ hasActive: false, activeCount: 0, activeElections: [] });
   const navigate = useNavigate();
 
   // Enhanced form state for creating elections with positions and candidates
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
+    Election_Title: '',
+    Election_Description: '',
     startDate: '',
     endDate: '',
     positionIds: [],
@@ -38,6 +41,8 @@ const Elections = () => {
   const [tempPositions, setTempPositions] = useState([]);
   const [tempCandidates, setTempCandidates] = useState([]);
   const [existingCandidates, setExistingCandidates] = useState([]);
+  const [electionCandidates, setElectionCandidates] = useState([]);
+  const [unassignedCandidates, setUnassignedCandidates] = useState([]);
   const [loadingCandidates, setLoadingCandidates] = useState(false);
   const [departments, setDepartments] = useState([]);
 
@@ -48,16 +53,18 @@ const Elections = () => {
   const fetchElectionsData = async () => {
     try {
       setLoading(true);
-      const [elections, positions, departmentsData] = await Promise.all([
+      const [elections, positions, departmentsData, activeInfo] = await Promise.all([
         getElections(),
         getPositions(),
-        getDepartments()
+        getDepartments(),
+        getActiveElectionInfo()
       ]);
 
       console.log('Fetched elections:', elections); // Debug log
       setElections(elections || []);
       setPositions(positions || []);
       setDepartments(departmentsData || []);
+      setActiveElectionInfo(activeInfo || { hasActive: false, activeCount: 0, activeElections: [] });
     } catch (error) {
       console.error('Error fetching elections data:', error);
       setError('Failed to load elections data');
@@ -73,6 +80,30 @@ const Elections = () => {
       setError('');
       setSuccess('');
 
+      // Validate dates before processing
+      if (!formData.startDate || !formData.endDate) {
+        setError('Please select both start and end dates');
+        setLoading(false);
+        return;
+      }
+
+      // Validate that dates are valid
+      const startDate = new Date(formData.startDate);
+      const endDate = new Date(formData.endDate);
+      
+      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+        setError('Please enter valid start and end dates');
+        setLoading(false);
+        return;
+      }
+
+      // Validate that end date is after start date
+      if (endDate <= startDate) {
+        setError('End date must be after start date');
+        setLoading(false);
+        return;
+      }
+
       // First, create any new positions
       const createdPositions = [];
       for (const position of tempPositions) {
@@ -85,8 +116,8 @@ const Elections = () => {
             
             const newPosition = await createPosition({
               id: position.id,
-              title: position.title,
-              description: position.description || '',
+              Position_Title: position.title,
+              Position_Description: position.description || '',
               voteLimit: position.voteLimit,
               displayOrder: position.displayOrder
             });
@@ -111,6 +142,7 @@ const Elections = () => {
             candidateData.append('studentId', candidate.studentId || '');
             candidateData.append('positionId', candidate.positionId);
             candidateData.append('departmentId', candidate.departmentId || '');
+            candidateData.append('courseId', candidate.courseId || ''); // Add required courseId
             candidateData.append('manifesto', candidate.manifesto || '');
             
             if (candidate.photoFile) {
@@ -125,22 +157,42 @@ const Elections = () => {
         }
       }
 
-      // Finally, create the election with all position IDs (existing + new)
+      // Create the election with only the basic fields (matching the DTO)
+      const electionData = {
+        Election_Title: formData.Election_Title,
+        Election_Description: formData.Election_Description,
+        startDate: new Date(formData.startDate).toISOString(),
+        endDate: new Date(formData.endDate).toISOString()
+      };
+
+      console.log('Creating election with data:', electionData);
+      const createdElection = await createElection(electionData);
+      
+      // Now add positions to the election
       const allPositionIds = [
         ...formData.positionIds,
         ...createdPositions.map(p => p.id)
       ];
 
-      const electionData = {
-        title: formData.title,
-        description: formData.description,
-        startDate: new Date(formData.startDate).toISOString(),
-        endDate: new Date(formData.endDate).toISOString(),
-        positionIds: allPositionIds,
-        candidateIds: formData.selectedCandidateIds
-      };
+      // Add existing and new positions to the election
+      for (const positionId of allPositionIds) {
+        try {
+          await addPositionToElection(createdElection.election.id, { positionId });
+        } catch (error) {
+          console.error(`Error adding position ${positionId} to election:`, error);
+          // Continue with other positions even if one fails
+        }
+      }
 
-      await createElection(electionData);
+      // Add candidates to the election
+      for (const candidateId of formData.selectedCandidateIds) {
+        try {
+          await addCandidateToElection(createdElection.election.id, { candidateId });
+        } catch (error) {
+          console.error(`Error adding candidate ${candidateId} to election:`, error);
+          // Continue with other candidates even if one fails
+        }
+      }
       
       setSuccess('Election created successfully with all positions and candidates!');
       setShowCreateModal(false);
@@ -162,6 +214,30 @@ const Elections = () => {
       setUpdatingElection(editingElection.id);
       setError('');
       setSuccess('');
+
+      // Validate dates before processing
+      if (!formData.startDate || !formData.endDate) {
+        setError('Please select both start and end dates');
+        setUpdatingElection(null);
+        return;
+      }
+
+      // Validate that dates are valid
+      const startDate = new Date(formData.startDate);
+      const endDate = new Date(formData.endDate);
+      
+      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+        setError('Please enter valid start and end dates');
+        setUpdatingElection(null);
+        return;
+      }
+
+      // Validate that end date is after start date
+      if (endDate <= startDate) {
+        setError('End date must be after start date');
+        setUpdatingElection(null);
+        return;
+      }
 
       const electionData = {
         ...formData,
@@ -194,12 +270,12 @@ const Elections = () => {
       setError('');
       setSuccess('');
 
-      await startElection(electionId);
+      const result = await startElection(electionId);
       
-      setSuccess('Election started successfully!');
+      setSuccess(result.message || 'Election started successfully!');
       await fetchElectionsData();
       
-      setTimeout(() => setSuccess(''), 3000);
+      setTimeout(() => setSuccess(''), 5000);
     } catch (error) {
       console.error('Error starting election:', error);
       setError(error.response?.data?.error || 'Failed to start election');
@@ -312,14 +388,25 @@ const Elections = () => {
 
       await deleteElection(deletingElection.id);
       
-      setSuccess(`Ballot "${electionTitle}" deleted successfully!`);
+      setSuccess(
+        <div>
+          Ballot "{electionTitle}" moved to trash successfully! 
+          <Button 
+            variant="link" 
+            className="p-0 ms-2" 
+            onClick={() => window.location.href = '/trash-bin?tab=elections'}
+          >
+            Go to Trash Bin
+          </Button>
+        </div>
+      );
       await fetchElectionsData();
       
       setShowDeleteModal(false);
       setDeletingElection(null);
       setDeleteConfirmation('');
       
-      setTimeout(() => setSuccess(''), 3000);
+      setTimeout(() => setSuccess(''), 5000);
     } catch (error) {
       console.error('Error deleting election:', error);
       setError(error.response?.data?.error || 'Failed to delete election');
@@ -350,8 +437,8 @@ const Elections = () => {
       await updateElection(electionId, {
         title: election.title,
         description: election.description,
-        startTime: election.startTime,
-        endTime: election.endTime,
+        startDate: election.startDate,
+        endDate: election.endDate,
         status: newStatus
       });
 
@@ -383,8 +470,8 @@ const Elections = () => {
       await updateElection(electionId, {
         title: election.title,
         description: election.description,
-        startTime: election.startTime,
-        endTime: election.endTime,
+        startDate: election.startDate,
+        endDate: election.endDate,
         status: 'draft'
       });
 
@@ -404,19 +491,25 @@ const Elections = () => {
       setEditingElection(election);
       setError(''); // Clear any previous errors
       setLoadingPositions(true);
+      setLoadingCandidates(true);
       
       // Set initial form data while loading positions
       setFormData({
         title: election.title || '',
         description: election.description || '',
-        startTime: election.startTime ? election.startTime.slice(0, 16) : '', // Format for datetime-local input
-        endTime: election.endTime ? election.endTime.slice(0, 16) : '',
+        startDate: election.startDate ? election.startDate.slice(0, 16) : '', // Format for datetime-local input
+        endDate: election.endDate ? election.endDate.slice(0, 16) : '',
         positionIds: [] // Start with empty array
       });
       setShowEditModal(true);
       
-      // Fetch the positions for this specific election
-      const electionPositions = await getElectionPositions(election.id);
+      // Fetch the positions and candidates for this specific election
+      const [electionPositions, electionCandidatesData, unassignedCandidatesData] = await Promise.all([
+        getElectionPositions(election.id),
+        getElectionCandidates(election.id),
+        getUnassignedCandidates(election.id)
+      ]);
+      
       const positionIds = electionPositions.map(pos => pos.id);
       
       // Update form data with fetched positions
@@ -424,12 +517,17 @@ const Elections = () => {
         ...prev,
         positionIds: positionIds
       }));
+      
+      // Set candidates data
+      setElectionCandidates(electionCandidatesData || []);
+      setUnassignedCandidates(unassignedCandidatesData || []);
     } catch (error) {
-      console.error('Error fetching election positions:', error);
-      setError('Failed to load election positions. Please try again.');
+      console.error('Error fetching election data:', error);
+      setError('Failed to load election data. Please try again.');
       // Don't close the modal, let user see the error
     } finally {
       setLoadingPositions(false);
+      setLoadingCandidates(false);
     }
   };
 
@@ -445,8 +543,8 @@ const Elections = () => {
     setFormData({
       title: '',
       description: '',
-      startTime: '',
-      endTime: '',
+      startDate: '',
+      endDate: '',
       positionIds: [],
       // New fields for dynamic position/candidate creation
       newPositions: [],
@@ -493,14 +591,58 @@ const Elections = () => {
     }
   };
 
+  // Candidate management functions for edit modal
+  const handleAssignCandidate = async (candidateId) => {
+    try {
+      await assignCandidateToElection(editingElection.id, candidateId);
+      
+      // Refresh candidate data
+      const [electionCandidatesData, unassignedCandidatesData] = await Promise.all([
+        getElectionCandidates(editingElection.id),
+        getUnassignedCandidates(editingElection.id)
+      ]);
+      
+      setElectionCandidates(electionCandidatesData || []);
+      setUnassignedCandidates(unassignedCandidatesData || []);
+      
+      setSuccess('Candidate assigned successfully!');
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (error) {
+      console.error('Error assigning candidate:', error);
+      setError('Failed to assign candidate. Please try again.');
+    }
+  };
+
+  const handleRemoveCandidate = async (candidateId) => {
+    try {
+      await removeCandidateFromElection(editingElection.id, candidateId);
+      
+      // Refresh candidate data
+      const [electionCandidatesData, unassignedCandidatesData] = await Promise.all([
+        getElectionCandidates(editingElection.id),
+        getUnassignedCandidates(editingElection.id)
+      ]);
+      
+      setElectionCandidates(electionCandidatesData || []);
+      setUnassignedCandidates(unassignedCandidatesData || []);
+      
+      setSuccess('Candidate removed successfully!');
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (error) {
+      console.error('Error removing candidate:', error);
+      setError('Failed to remove candidate. Please try again.');
+    }
+  };
+
   const addCandidateToPosition = (positionId) => {
     const newCandidate = {
-      id: crypto.randomUUID(),
+      id: crypto.randomUUID ? crypto.randomUUID() : Date.now().toString() + Math.random().toString(36).substr(2, 9),
       name: '',
       email: '',
       studentId: '',
       positionId: positionId,
       departmentId: '',
+      courseId: '', // Add required courseId field
       manifesto: '',
       photoFile: null,
       isNew: true
@@ -593,7 +735,7 @@ const Elections = () => {
   };
 
   const nextStep = () => {
-    if (currentStep === 1 && (!formData.title || !formData.startTime || !formData.endTime)) {
+          if (currentStep === 1 && (!formData.Election_Title || !formData.startDate || !formData.endDate)) {
       setError('Please fill in all required fields');
       return;
     }
@@ -648,6 +790,14 @@ const Elections = () => {
         setError('Please select at least one candidate or add new candidates');
         return;
       }
+      
+      // Validate new candidates have required fields
+      for (const candidate of tempCandidates) {
+        if (!candidate.name || !candidate.departmentId || !candidate.courseId) {
+          setError(`Candidate ${candidate.name || 'Unknown'} is missing required fields (Name, Department, and Course)`);
+          return;
+        }
+      }
     }
     
     setCurrentStep(currentStep + 1);
@@ -695,17 +845,34 @@ const Elections = () => {
     }
   };
 
-  const getStatusActions = (election) => {
+  // Helper functions to categorize elections
+  const getActiveElections = () => {
+    return elections.filter(election => {
+      const status = election.status || 'draft';
+      return status !== 'ended';
+    });
+  };
+
+  const getEndedElections = () => {
+    return elections.filter(election => {
+      const status = election.status || 'draft';
+      return status === 'ended';
+    });
+  };
+
+  const renderElectionActions = (election) => {
+    const { status } = election;
     const actions = [];
-    
-    // If status is null/undefined, treat as 'draft' (default status)
-    const status = election.status || 'draft';
-    
-    // If status is null/undefined, show a fix button
-    if (!election.status) {
+
+    // Check if this election can be started (grayed out if another election is active)
+    const canStartElection = !activeElectionInfo.hasActive || 
+      activeElectionInfo.activeElections.some(active => active.id === election.id);
+
+    // Add fix status button for invalid statuses
+    if (!['draft', 'active', 'paused', 'stopped', 'ended'].includes(status)) {
       actions.push(
         <button
-          key="fix-status"
+          key="fix"
           className="btn btn-warning btn-sm me-2"
           onClick={() => handleFixStatus(election.id)}
           disabled={updatingElection === election.id}
@@ -725,9 +892,10 @@ const Elections = () => {
         actions.push(
           <button
             key="start"
-            className="btn btn-success btn-sm me-2"
+            className={`btn btn-sm me-2 ${canStartElection ? 'btn-success' : 'btn-secondary'}`}
             onClick={() => handleStartElection(election.id)}
-            disabled={updatingElection === election.id}
+            disabled={updatingElection === election.id || !canStartElection}
+            title={!canStartElection ? 'Another ballot is currently active. End or pause the active ballot first.' : 'Start this ballot'}
           >
             {updatingElection === election.id ? (
               <i className="fas fa-spinner fa-spin me-1"></i>
@@ -878,8 +1046,8 @@ const Elections = () => {
             <button
               className="btn btn-custom-blue"
               onClick={openCreateModal}
-              disabled={elections.some(e => e.status !== 'ended')}
-              title={elections.some(e => e.status !== 'ended') ? "End the current election first" : ""}
+              disabled={getActiveElections().length > 0}
+              title={getActiveElections().length > 0 ? "End the current election first" : ""}
             >
               <i className="fas fa-plus me-2"></i>
               Create Ballot with Positions & Candidates
@@ -891,6 +1059,23 @@ const Elections = () => {
               <i className="fas fa-history me-2"></i>
               View History
             </button>
+            <button
+              className="btn btn-outline-info ms-2"
+              onClick={() => {
+                console.log('🧪 [Elections] Test WebSocket button clicked');
+                if (elections.length > 0) {
+                  const election = elections[0];
+                  console.log('🧪 [Elections] Testing with election:', election.id);
+                  // You can add a test WebSocket emit here if needed
+                } else {
+                  console.log('🧪 [Elections] No elections available for testing');
+                }
+              }}
+              title="Test WebSocket Election Updates"
+            >
+              <i className="fas fa-wifi me-2"></i>
+              Test WebSocket
+            </button>
           </div>
         </div>
       </div>
@@ -901,130 +1086,255 @@ const Elections = () => {
 
       {/* Admin Guide for Single Election Policy */}
       {(() => {
-        const currentElection = elections.length > 0 ? elections[0] : null;
-        if (currentElection) {
+        const activeElections = getActiveElections();
+        const currentlyActive = activeElections.filter(e => e.status === 'active');
+        
+        if (currentlyActive.length > 0) {
           return (
-            <div className="alert alert-warning mb-3">
-              <i className="fas fa-exclamation-triangle me-2"></i>
-              <strong>Reminder:</strong> Only one active election allowed. End current election to create a new one.
-            </div>
+                         <div className="alert alert-info mb-3">
+               <div className="d-flex align-items-start">
+                 <i className="fas fa-info-circle me-2 mt-1"></i>
+                 <div>
+                   <div className="mb-1">
+                     <strong>Active Election Policy:</strong> Only one election can be active at a time.
+                   </div>
+                   {currentlyActive.length > 0 && (
+                     <div className="mb-1">
+                       <strong>Currently Active:</strong> {currentlyActive.map(e => e.title).join(', ')}
+                     </div>
+                   )}
+                   <small className="text-muted">
+                     Starting a new election will automatically pause any currently active elections.
+                   </small>
+                 </div>
+               </div>
+             </div>
           );
         }
         return null;
       })()}
 
-      {/* Elections List */}
-      <div className="elections-list">
-        {elections.length > 0 ? (
-          elections.map((election) => (
-            <div key={election.id} className="election-card">
-              <div className="election-header">
-                <div className="election-title">
-                  <h3>{election.title || 'Untitled Election'}</h3>
-                  <span className={`status-badge badge bg-${getStatusColor(election.status)}`}>
-                    <i className={`${getStatusIcon(election.status)} me-1`}></i>
-                    {(election.status || 'pending').charAt(0).toUpperCase() + (election.status || 'pending').slice(1)}
-                    {/* Debug: Show raw status */}
-                    <small className="ms-1">({election.status || 'null'})</small>
-                  </span>
-                </div>
-                <div className="election-meta">
-                  <small className="text-muted">
-                    Created by {election.createdByUsername || 'Unknown'}
-                  </small>
-                </div>
-              </div>
-
-              <div className="election-content">
-                <p className="election-description">{election.description || 'No description available'}</p>
-                
-                <div className="election-details">
-                  <div className="detail-row">
-                    <span className="detail-label">Start Time:</span>
-                    <span className="detail-value">{election.startTime ? formatDateTime(election.startTime) : 'Not set'}</span>
-                  </div>
-                  <div className="detail-row">
-                    <span className="detail-label">End Time:</span>
-                    <span className="detail-value">{election.endTime ? formatDateTime(election.endTime) : 'Not set'}</span>
-                  </div>
-                  {election.positionCount > 0 && (
-                    <div className="detail-row">
-                      <span className="detail-label">Positions:</span>
-                      <span className="detail-value">{election.positionCount} position{election.positionCount !== 1 ? 's' : ''}</span>
-                    </div>
-                  )}
-                </div>
-
-                <div className="election-actions">
-                  <div className="status-actions">
-                    {getStatusActions(election)}
-                    {getStatusActions(election).length === 0 && (
-                      <span className="text-muted">
-                        <i className="fas fa-info-circle me-1"></i>
-                        No actions available for status: {election.status || 'pending'}
-                      </span>
-                    )}
-                  </div>
-                  
-                  <div className="management-actions">
-                    {election.status !== 'ended' && (
-                      <>
-                        <button
-                          className="btn btn-outline-primary btn-sm me-2"
-                          onClick={() => openEditModal(election)}
-                          disabled={updatingElection === election.id}
-                        >
-                          <i className="fas fa-edit me-1"></i>
-                          Edit
-                        </button>
-                        <button
-                          className="btn btn-outline-danger btn-sm"
-                          onClick={() => handleDeleteElection(election.id)}
-                          disabled={updatingElection === election.id}
-                        >
-                          {updatingElection === election.id ? (
-                            <i className="fas fa-spinner fa-spin me-1"></i>
-                          ) : (
-                            <i className="fas fa-trash me-1"></i>
-                          )}
-                          Delete
-                        </button>
-                      </>
-                    )}
-                    {election.status === 'ended' && (
-                      <div className="d-flex align-items-center">
-                        <span className="text-success me-3">
-                          <i className="fas fa-check-circle me-1"></i>
-                          Completed
-                        </span>
-                        <button
-                          className="btn btn-outline-primary btn-sm"
-                          onClick={() => navigate('/admin/election-history')}
-                        >
-                          <i className="fas fa-history me-1"></i>
-                          View History
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))
-        ) : (
-          <div className="no-elections">
-            <i className="fas fa-vote-yea"></i>
-            <h3>No Elections Found</h3>
-            <p>Create your first election to get started</p>
+      {/* Tabbed Elections Interface */}
+      <div className="elections-tabs-container">
+        <ul className="nav nav-tabs elections-tabs" role="tablist">
+          <li className="nav-item" role="presentation">
             <button
-              className="btn btn-primary"
-              onClick={openCreateModal}
+              className={`nav-link ${activeTab === 'active' ? 'active' : ''}`}
+              onClick={() => setActiveTab('active')}
+              type="button"
+              role="tab"
             >
-              <i className="fas fa-plus me-2"></i>
-              Create Ballot with Positions & Candidates
+              <i className="fas fa-play-circle me-2"></i>
+              Active Ballots
+              <span className="badge bg-primary ms-2">{getActiveElections().length}</span>
             </button>
+          </li>
+          <li className="nav-item" role="presentation">
+            <button
+              className={`nav-link ${activeTab === 'ended' ? 'active' : ''}`}
+              onClick={() => setActiveTab('ended')}
+              type="button"
+              role="tab"
+            >
+              <i className="fas fa-check-circle me-2"></i>
+              Ended/Saved Ballots
+              <span className="badge bg-secondary ms-2">{getEndedElections().length}</span>
+            </button>
+          </li>
+        </ul>
+
+        {/* Tab Content */}
+        <div className="tab-content">
+          {/* Active Ballots Tab */}
+          <div className={`tab-pane fade ${activeTab === 'active' ? 'show active' : ''}`} role="tabpanel">
+            <div className="elections-list">
+              {getActiveElections().length > 0 ? (
+                getActiveElections().map((election) => (
+                  <div key={election.id} className={`election-card ${election.status === 'active' ? 'active-election' : ''}`}>
+                    <div className="election-header">
+                      <div className="election-title">
+                        <h3>{election.title || 'Untitled Election'}</h3>
+                        <span className={`status-badge badge bg-${getStatusColor(election.status)}`}>
+                          <i className={`${getStatusIcon(election.status)} me-1`}></i>
+                          {(election.status || 'pending').charAt(0).toUpperCase() + (election.status || 'pending').slice(1)}
+                          {/* Debug: Show raw status */}
+                          <small className="ms-1">({election.status || 'null'})</small>
+                        </span>
+                        {election.status === 'active' && (
+                          <span className="badge bg-success ms-2">
+                            <i className="fas fa-star me-1"></i>
+                            Currently Active
+                          </span>
+                        )}
+                      </div>
+                      <div className="election-meta">
+                        <small className="text-muted">
+                          Created by {election.admin?.username || 'Unknown'}
+                        </small>
+                      </div>
+                    </div>
+
+                    <div className="election-content">
+                      <p className="election-description">{election.description || 'No description available'}</p>
+                      
+                      <div className="election-details">
+                        <div className="detail-row">
+                          <span className="detail-label">Start Time:</span>
+                          <span className="detail-value">{election.startDate ? formatDateTime(election.startDate) : 'Not set'}</span>
+                        </div>
+                        <div className="detail-row">
+                          <span className="detail-label">End Time:</span>
+                          <span className="detail-value">{election.endDate ? formatDateTime(election.endDate) : 'Not set'}</span>
+                        </div>
+                        {election.positionCount > 0 && (
+                          <div className="detail-row">
+                            <span className="detail-label">Positions:</span>
+                            <span className="detail-value">{election.positionCount} position{election.positionCount !== 1 ? 's' : ''}</span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="election-actions">
+                        <div className="status-actions">
+                          {renderElectionActions(election)}
+                          {renderElectionActions(election).length === 0 && (
+                            <span className="text-muted">
+                              <i className="fas fa-info-circle me-1"></i>
+                              No actions available for status: {election.status || 'pending'}
+                            </span>
+                          )}
+                        </div>
+                        
+                        <div className="management-actions">
+                          {election.status !== 'ended' && (
+                            <>
+                              <button
+                                className="btn btn-outline-primary btn-sm me-2"
+                                onClick={() => openEditModal(election)}
+                                disabled={updatingElection === election.id}
+                              >
+                                <i className="fas fa-edit me-1"></i>
+                                Edit
+                              </button>
+                              <button
+                                className="btn btn-outline-danger btn-sm"
+                                onClick={() => handleDeleteElection(election.id)}
+                                disabled={updatingElection === election.id}
+                              >
+                                {updatingElection === election.id ? (
+                                  <i className="fas fa-spinner fa-spin me-1"></i>
+                                ) : (
+                                  <i className="fas fa-trash me-1"></i>
+                                )}
+                                Delete
+                              </button>
+                            </>
+                          )}
+                          {election.status === 'ended' && (
+                            <div className="d-flex align-items-center">
+                              <span className="text-success me-3">
+                                <i className="fas fa-check-circle me-1"></i>
+                                Completed
+                              </span>
+                              <button
+                                className="btn btn-outline-primary btn-sm"
+                                onClick={() => navigate('/admin/election-history')}
+                              >
+                                <i className="fas fa-history me-1"></i>
+                                View History
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="no-elections">
+                  <i className="fas fa-vote-yea"></i>
+                  <h3>No Active Elections Found</h3>
+                  <p>Create your first election to get started</p>
+                  <button
+                    className="btn btn-primary"
+                    onClick={openCreateModal}
+                  >
+                    <i className="fas fa-plus me-2"></i>
+                    Create Ballot with Positions & Candidates
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
-        )}
+
+          {/* Ended Ballots Tab */}
+          <div className={`tab-pane fade ${activeTab === 'ended' ? 'show active' : ''}`} role="tabpanel">
+            <div className="elections-list">
+              {getEndedElections().length > 0 ? (
+                getEndedElections().map((election) => (
+                  <div key={election.id} className="election-card ended-election">
+                    <div className="election-header">
+                      <div className="election-title">
+                        <h3>{election.title || 'Untitled Election'}</h3>
+                        <span className={`status-badge badge bg-${getStatusColor(election.status)}`}>
+                          <i className={`${getStatusIcon(election.status)} me-1`}></i>
+                          {(election.status || 'ended').charAt(0).toUpperCase() + (election.status || 'ended').slice(1)}
+                        </span>
+                      </div>
+                      <div className="election-meta">
+                        <small className="text-muted">
+                          Created by {election.admin?.username || 'Unknown'}
+                        </small>
+                      </div>
+                    </div>
+
+                    <div className="election-content">
+                      <p className="election-description">{election.description || 'No description available'}</p>
+                      
+                      <div className="election-dates">
+                        <div className="date-item">
+                          <i className="fas fa-calendar-plus me-2"></i>
+                          <strong>Start:</strong> {formatDateTime(election.startDate)}
+                        </div>
+                        <div className="date-item">
+                          <i className="fas fa-calendar-check me-2"></i>
+                          <strong>End:</strong> {formatDateTime(election.endDate)}
+                        </div>
+                      </div>
+
+                      <div className="election-stats">
+                        <div className="stat-item">
+                          <i className="fas fa-users me-2"></i>
+                          <strong>Positions:</strong> {election.positions?.length || 0}
+                        </div>
+                        <div className="stat-item">
+                          <i className="fas fa-user-tie me-2"></i>
+                          <strong>Candidates:</strong> {election.candidates?.length || 0}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="election-actions">
+                      <button
+                        className="btn btn-outline-primary btn-sm"
+                        onClick={() => navigate('/admin/election-history')}
+                      >
+                        <i className="fas fa-history me-1"></i>
+                        View Results
+                      </button>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="no-elections">
+                  <i className="fas fa-archive"></i>
+                  <h3>No Ended Elections Found</h3>
+                  <p>Completed elections will appear here</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Enhanced Create Election Modal with Multi-Step Form */}
@@ -1062,8 +1372,8 @@ const Elections = () => {
                     <input
                       type="text"
                       className="form-control"
-                      value={formData.title}
-                      onChange={(e) => setFormData({...formData, title: e.target.value})}
+                      value={formData.Election_Title}
+                      onChange={(e) => setFormData({...formData, Election_Title: e.target.value})}
                         placeholder="e.g., Student Council Election 2024"
                       required
                     />
@@ -1073,8 +1383,8 @@ const Elections = () => {
                     <textarea
                       className="form-control"
                       rows="3"
-                      value={formData.description}
-                      onChange={(e) => setFormData({...formData, description: e.target.value})}
+                      value={formData.Election_Description}
+                      onChange={(e) => setFormData({...formData, Election_Description: e.target.value})}
                         placeholder="Describe the purpose and scope of this election..."
                       required
                     />
@@ -1086,8 +1396,8 @@ const Elections = () => {
                         <input
                           type="datetime-local"
                           className="form-control"
-                          value={formData.startTime}
-                          onChange={(e) => setFormData({...formData, startTime: e.target.value})}
+                          value={formData.startDate}
+                          onChange={(e) => setFormData({...formData, startDate: e.target.value})}
                           required
                         />
                       </div>
@@ -1098,8 +1408,8 @@ const Elections = () => {
                         <input
                           type="datetime-local"
                           className="form-control"
-                          value={formData.endTime}
-                          onChange={(e) => setFormData({...formData, endTime: e.target.value})}
+                          value={formData.endDate}
+                          onChange={(e) => setFormData({...formData, endDate: e.target.value})}
                           required
                         />
                       </div>
@@ -1139,8 +1449,8 @@ const Elections = () => {
                                 }
                               }}
                             />
-                            <label className="form-check-label" htmlFor={`create-position-${position.id}`}>
-                                {position.title} (Vote Limit: {position.voteLimit})
+                                                          <label className="form-check-label" htmlFor={`create-position-${position.id}`}>
+                                {position.Position_Title} (Vote Limit: {position.voteLimit})
                             </label>
                           </div>
                         ))
@@ -1150,108 +1460,7 @@ const Elections = () => {
                     </div>
                     </div>
 
-                                          <div className="mb-4">
-                        <div className="d-flex justify-content-between align-items-center mb-3">
-                          <h6>
-                            <i className="fas fa-plus me-2"></i>
-                            Add New Positions
-                          </h6>
-                          <button
-                            type="button"
-                            className="btn btn-sm btn-outline-primary"
-                            onClick={addNewPosition}
-                          >
-                            <i className="fas fa-plus me-1"></i>
-                            Add Position
-                          </button>
-                        </div>
-                        <div className="alert alert-info mb-3">
-                          <i className="fas fa-info-circle me-2"></i>
-                          <strong>Tip:</strong> Position IDs and names must be unique. Use descriptive names like "President", "Vice President", etc. Position IDs are typically short codes like "PRES", "VP", "SEC".
-                        </div>
-                      
-                                             {tempPositions.map((position, index) => (
-                         <div key={`temp-position-${index}`} className="card mb-3">
-                          <div className="card-body">
-                            <div className="d-flex justify-content-between align-items-start mb-3">
-                              <h6 className="card-title mb-0">New Position {index + 1}</h6>
-                              <button
-                                type="button"
-                                className="btn btn-sm btn-outline-danger"
-                                onClick={() => removeTempPosition(index)}
-                              >
-                                <i className="fas fa-trash"></i>
-                              </button>
-                            </div>
-                            <div className="row">
-                              <div className="col-md-6">
-                                <div className="mb-3">
-                                  <label className="form-label">Position ID *</label>
-                                  <input
-                                    type="text"
-                                    className="form-control"
-                                    value={position.id}
-                                    onChange={(e) => {
-                                      const value = e.target.value;
-                                      updateTempPosition(index, 'id', value);
-                                    }}
-                                    onBlur={(e) => {
-                                      // Convert to uppercase on blur for consistency
-                                      const value = e.target.value.toUpperCase();
-                                      if (value !== position.id) {
-                                        updateTempPosition(index, 'id', value);
-                                      }
-                                    }}
-                                    placeholder="e.g., PRES, VP, SEC"
-                                    required
-                                  />
-                                  <small className="text-muted">Type normally, will convert to uppercase when you leave the field</small>
-                                </div>
-                              </div>
-                              <div className="col-md-6">
-                                <div className="mb-3">
-                                  <label className="form-label">Position Name *</label>
-                                  <input
-                                    type="text"
-                                    className="form-control"
-                                    value={position.title}
-                                                                          onChange={(e) => updateTempPosition(index, 'title', e.target.value)}
-                                    placeholder="e.g., President, Vice President"
-                                    required
-                                  />
-                                </div>
-                              </div>
-                            </div>
-                            <div className="row">
-                              <div className="col-md-6">
-                                <div className="mb-3">
-                                  <label className="form-label">Vote Limit</label>
-                                  <input
-                                    type="number"
-                                    className="form-control"
-                                    min="1"
-                                    value={position.voteLimit}
-                                    onChange={(e) => updateTempPosition(index, 'voteLimit', parseInt(e.target.value))}
-                                  />
-                                </div>
-                              </div>
-                              <div className="col-md-6">
-                                <div className="mb-3">
-                                  <label className="form-label">Display Order</label>
-                                  <input
-                                    type="number"
-                                    className="form-control"
-                                    min="0"
-                                    value={position.displayOrder}
-                                    onChange={(e) => updateTempPosition(index, 'displayOrder', parseInt(e.target.value))}
-                                  />
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+
                   </div>
                 )}
 
@@ -1305,57 +1514,118 @@ const Elections = () => {
                           <span className="text-muted">Loading existing candidates...</span>
                         </div>
                       ) : getFilteredCandidates().length > 0 ? (
-                        <div className="candidate-selection-grid">
-                          {getFilteredCandidates().map(candidate => (
-                            <div key={candidate.id} className={`candidate-selection-card ${formData.selectedCandidateIds.includes(candidate.id) ? 'selected' : ''}`}>
-                              <div className="form-check">
-                                <input
-                                  type="checkbox"
-                                  className="form-check-input"
-                                  id={`candidate-${candidate.id}`}
-                                  checked={formData.selectedCandidateIds.includes(candidate.id)}
-                                  onChange={(e) => handleCandidateSelection(candidate.id, e.target.checked)}
-                                />
-                                <label className="form-check-label" htmlFor={`candidate-${candidate.id}`}>
-                                  <div className="candidate-card-header">
-                                    <div className="candidate-photo-container">
-                                      {candidate.photoUrl && candidate.photoUrl.trim() !== '' ? (
-                                        <img 
-                                          src={candidate.photoUrl} 
-                                          alt={candidate.name}
-                                          className="candidate-photo"
-                                          onError={(e) => {
-                                            e.target.style.display = 'none';
-                                            e.target.nextSibling.style.display = 'flex';
-                                          }}
-                                          onLoad={(e) => {
-                                            // Ensure image fits properly
-                                            e.target.style.maxWidth = '100%';
-                                            e.target.style.maxHeight = '100%';
-                                            e.target.style.objectFit = 'cover';
-                                            e.target.style.objectPosition = 'center';
-                                          }}
+                        <div>
+                          {/* Group candidates by position */}
+                          {(() => {
+                            const candidatesByPosition = {};
+                            getFilteredCandidates().forEach(candidate => {
+                              if (!candidatesByPosition[candidate.positionId]) {
+                                candidatesByPosition[candidate.positionId] = {
+                                  positionName: candidate.position?.Position_Title || 'Unknown Position',
+                                  candidates: []
+                                };
+                              }
+                              candidatesByPosition[candidate.positionId].candidates.push(candidate);
+                            });
+
+                            return Object.entries(candidatesByPosition).map(([positionId, positionData]) => (
+                              <div key={positionId} className="mb-4">
+                                <div className="position-header mb-3">
+                                  <h6 className="text-primary mb-2">
+                                    <i className="fas fa-user-tie me-2"></i>
+                                    {positionData.positionName}
+                                  </h6>
+                                  <div className="d-flex justify-content-between align-items-center">
+                                    <span className="text-muted small">
+                                      {positionData.candidates.length} candidate{positionData.candidates.length !== 1 ? 's' : ''} available
+                                    </span>
+                                    <div className="position-actions">
+                                      <button
+                                        type="button"
+                                        className="btn btn-sm btn-outline-success me-2"
+                                        onClick={() => {
+                                          positionData.candidates.forEach(candidate => {
+                                            if (!formData.selectedCandidateIds.includes(candidate.id)) {
+                                              handleCandidateSelection(candidate.id, true);
+                                            }
+                                          });
+                                        }}
+                                      >
+                                        <i className="fas fa-check-double me-1"></i>
+                                        Add All
+                                      </button>
+                                      <button
+                                        type="button"
+                                        className="btn btn-sm btn-outline-danger"
+                                        onClick={() => {
+                                          positionData.candidates.forEach(candidate => {
+                                            if (formData.selectedCandidateIds.includes(candidate.id)) {
+                                              handleCandidateSelection(candidate.id, false);
+                                            }
+                                          });
+                                        }}
+                                      >
+                                        <i className="fas fa-times me-1"></i>
+                                        Remove All
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="candidate-selection-grid">
+                                  {positionData.candidates.map(candidate => (
+                                    <div key={candidate.id} className={`candidate-selection-card ${formData.selectedCandidateIds.includes(candidate.id) ? 'selected' : ''}`}>
+                                      <div className="form-check">
+                                        <input
+                                          type="checkbox"
+                                          className="form-check-input"
+                                          id={`candidate-${candidate.id}`}
+                                          checked={formData.selectedCandidateIds.includes(candidate.id)}
+                                          onChange={(e) => handleCandidateSelection(candidate.id, e.target.checked)}
                                         />
-                                      ) : null}
-                                      <div className="candidate-photo-placeholder" style={{ display: candidate.photoUrl && candidate.photoUrl.trim() !== '' ? 'none' : 'flex' }}>
-                                        <i className="fas fa-user"></i>
+                                        <label className="form-check-label" htmlFor={`candidate-${candidate.id}`}>
+                                          <div className="candidate-card-header">
+                                            <div className="candidate-photo-container">
+                                              {candidate.photoUrl && candidate.photoUrl.trim() !== '' ? (
+                                                <img 
+                                                  src={candidate.photoUrl} 
+                                                  alt={candidate.name}
+                                                  className="candidate-photo"
+                                                  onError={(e) => {
+                                                    e.target.style.display = 'none';
+                                                    e.target.nextSibling.style.display = 'flex';
+                                                  }}
+                                                  onLoad={(e) => {
+                                                    // Ensure image fits properly
+                                                    e.target.style.maxWidth = '100%';
+                                                    e.target.style.maxHeight = '100%';
+                                                    e.target.style.objectFit = 'cover';
+                                                    e.target.style.objectPosition = 'center';
+                                                  }}
+                                                />
+                                              ) : null}
+                                              <div className="candidate-photo-placeholder" style={{ display: candidate.photoUrl && candidate.photoUrl.trim() !== '' ? 'none' : 'flex' }}>
+                                                <i className="fas fa-user"></i>
+                                              </div>
+                                            </div>
+                                          </div>
+                                          <div className="candidate-card-body">
+                                            <div className="candidate-info">
+                                              <div className="candidate-name">
+                                                {candidate.name}
+                                              </div>
+                                              <div className="candidate-position">
+                                                {candidate.position?.title || 'Unknown Position'}
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </label>
                                       </div>
                                     </div>
-                                  </div>
-                                  <div className="candidate-card-body">
-                                    <div className="candidate-info">
-                                      <div className="candidate-name">
-                                        {candidate.name}
-                                      </div>
-                                      <div className="candidate-position">
-                                        {candidate.positionName}
-                                      </div>
-                                    </div>
-                                  </div>
-                                </label>
+                                  ))}
+                                </div>
                               </div>
-                            </div>
-                          ))}
+                            ));
+                          })()}
                         </div>
                       ) : (
                         <div className="alert alert-info">
@@ -1456,6 +1726,25 @@ const Elections = () => {
                                                 accept="image/*"
                                                 onChange={(e) => handlePhotoChange(globalCandidateIndex, e.target.files[0])}
                                               />
+                                            </div>
+                                          </div>
+                                          <div className="col-md-6">
+                                            <div className="mb-3">
+                                              <label className="form-label">Course</label>
+                                              <select
+                                                className="form-select"
+                                                value={candidate.courseId}
+                                                onChange={(e) => updateTempCandidate(globalCandidateIndex, 'courseId', e.target.value)}
+                                              >
+                                                <option value="">Select a course</option>
+                                                {departments.map(department => 
+                                                  department.courses?.map(course => (
+                                                    <option key={course.id} value={course.id}>
+                                                      {course.name}
+                                                    </option>
+                                                  ))
+                                                ).flat().filter(Boolean)}
+                                              </select>
                                             </div>
                                           </div>
                                         </div>
@@ -1579,8 +1868,8 @@ const Elections = () => {
                     <input
                       type="text"
                       className="form-control"
-                      value={formData.title}
-                      onChange={(e) => setFormData({...formData, title: e.target.value})}
+                      value={formData.Election_Title}
+                      onChange={(e) => setFormData({...formData, Election_Title: e.target.value})}
                       required
                     />
                   </div>
@@ -1589,8 +1878,8 @@ const Elections = () => {
                     <textarea
                       className="form-control"
                       rows="3"
-                      value={formData.description}
-                      onChange={(e) => setFormData({...formData, description: e.target.value})}
+                      value={formData.Election_Description}
+                      onChange={(e) => setFormData({...formData, Election_Description: e.target.value})}
                       required
                     />
                   </div>
@@ -1601,8 +1890,8 @@ const Elections = () => {
                         <input
                           type="datetime-local"
                           className="form-control"
-                          value={formData.startTime}
-                          onChange={(e) => setFormData({...formData, startTime: e.target.value})}
+                          value={formData.startDate}
+                          onChange={(e) => setFormData({...formData, startDate: e.target.value})}
                           required
                         />
                       </div>
@@ -1613,8 +1902,8 @@ const Elections = () => {
                         <input
                           type="datetime-local"
                           className="form-control"
-                          value={formData.endTime}
-                          onChange={(e) => setFormData({...formData, endTime: e.target.value})}
+                          value={formData.endDate}
+                          onChange={(e) => setFormData({...formData, endDate: e.target.value})}
                           required
                         />
                       </div>
@@ -1654,7 +1943,7 @@ const Elections = () => {
                                 }}
                               />
                               <label className="form-check-label" htmlFor={`edit-position-${position.id}`}>
-                                {position.title}
+                                {position.Position_Title}
                               </label>
                             </div>
                           ))
@@ -1665,6 +1954,87 @@ const Elections = () => {
                     )}
                     {!loadingPositions && formData.positionIds.length === 0 && (
                       <small className="text-danger">Please select at least one position</small>
+                    )}
+                  </div>
+
+                  {/* Candidate Management Section */}
+                  <div className="mb-3">
+                    <label className="form-label">Candidates Management</label>
+                    {loadingCandidates ? (
+                      <div className="text-center py-3">
+                        <div className="spinner-border spinner-border-sm text-primary me-2" role="status">
+                          <span className="visually-hidden">Loading...</span>
+                        </div>
+                        <span className="text-muted">Loading candidates...</span>
+                      </div>
+                    ) : (
+                      <div className="candidate-management">
+                        {/* Assigned Candidates */}
+                        <div className="mb-3">
+                          <h6 className="text-success">
+                            <i className="fas fa-check-circle me-2"></i>
+                            Assigned Candidates ({electionCandidates.length})
+                          </h6>
+                          {electionCandidates.length > 0 ? (
+                            <div className="assigned-candidates-list">
+                              {electionCandidates.map(candidate => (
+                                <div key={candidate.id} className="candidate-item d-flex justify-content-between align-items-center p-2 border rounded mb-2">
+                                  <div>
+                                    <strong>{candidate.name}</strong>
+                                    <br />
+                                    <small className="text-muted">
+                                      {candidate.positionName} • {candidate.studentId}
+                                    </small>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    className="btn btn-sm btn-outline-danger"
+                                    onClick={() => handleRemoveCandidate(candidate.id)}
+                                    title="Remove from election"
+                                  >
+                                    <i className="fas fa-times"></i>
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="text-muted">No candidates assigned to this election.</p>
+                          )}
+                        </div>
+
+                        {/* Unassigned Candidates */}
+                        <div className="mb-3">
+                          <h6 className="text-warning">
+                            <i className="fas fa-users me-2"></i>
+                            Available Candidates ({unassignedCandidates.length})
+                          </h6>
+                          {unassignedCandidates.length > 0 ? (
+                            <div className="unassigned-candidates-list">
+                              {unassignedCandidates.map(candidate => (
+                                <div key={candidate.id} className="candidate-item d-flex justify-content-between align-items-center p-2 border rounded mb-2">
+                                  <div>
+                                    <strong>{candidate.name}</strong>
+                                    <br />
+                                    <small className="text-muted">
+                                      {candidate.positionName} • {candidate.studentId}
+                                    </small>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    className="btn btn-sm btn-outline-success"
+                                    onClick={() => handleAssignCandidate(candidate.id)}
+                                    title="Add to election"
+                                  >
+                                    <i className="fas fa-plus"></i>
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="text-muted">No available candidates to assign.</p>
+                          )}
+                        </div>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -1704,34 +2074,35 @@ const Elections = () => {
         <div className="modal fade show" style={{ display: 'block' }} tabIndex="-1">
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
-              <div className="modal-header bg-danger text-white">
+              <div className="modal-header bg-warning text-dark">
                 <h5 className="modal-title">
-                  <i className="fas fa-exclamation-triangle me-2"></i>
-                  Delete Ballot
+                  <i className="fas fa-trash me-2"></i>
+                  Move Ballot to Trash
                 </h5>
                 <button
                   type="button"
-                  className="btn-close btn-close-white"
+                  className="btn-close"
                   onClick={cancelDeleteElection}
                 ></button>
               </div>
               <div className="modal-body">
-                <div className="alert alert-danger">
+                <div className="alert alert-warning">
                   <h6 className="alert-heading">
-                    <i className="fas fa-exclamation-triangle me-2"></i>
-                    Warning: This action cannot be undone!
+                    <i className="fas fa-info-circle me-2"></i>
+                    Move to Trash Bin
                   </h6>
                   <p className="mb-0">
-                    You are about to permanently delete the ballot <strong>"{deletingElection.title}"</strong>.
+                    You are about to move the ballot <strong>"{deletingElection.title}"</strong> to the trash bin.
                   </p>
                 </div>
                 
-                <p>This will permanently remove:</p>
-                <ul className="text-danger">
-                  <li>All election data</li>
-                  <li>All votes cast by voters</li>
-                  <li>All candidate assignments</li>
-                  <li>All position assignments</li>
+                <p>The ballot will be moved to the trash bin where:</p>
+                <ul className="text-muted">
+                  <li>All election data will be preserved</li>
+                  <li>All votes cast by voters will be kept</li>
+                  <li>All candidate assignments will be maintained</li>
+                  <li>All position assignments will be retained</li>
+                  <li>You can restore it later or permanently delete it</li>
                 </ul>
                 
                 <div className="mb-3">
@@ -1763,7 +2134,7 @@ const Elections = () => {
                 </button>
                 <button
                   type="button"
-                  className="btn btn-danger"
+                  className="btn btn-warning"
                   onClick={confirmDeleteElection}
                   disabled={deleteConfirmation !== deletingElection.title || updatingElection === deletingElection.id}
                 >
@@ -1772,7 +2143,7 @@ const Elections = () => {
                   ) : (
                     <i className="fas fa-trash me-1"></i>
                   )}
-                  Delete Ballot
+                  Move to Trash
                 </button>
               </div>
             </div>

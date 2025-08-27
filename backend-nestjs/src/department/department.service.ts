@@ -16,8 +16,8 @@ export class DepartmentService {
         admin: {
           select: {
             id: true,
-            username: true,
-            email: true,
+            Admin_Username: true,
+            Admin_Email: true,
           },
         },
         _count: {
@@ -32,11 +32,11 @@ export class DepartmentService {
   }
 
   async createDepartment(createDepartmentDto: CreateDepartmentDto, adminId: string) {
-    const { name, description, customId } = createDepartmentDto;
+    const { Department_Name, Department_Description, customId } = createDepartmentDto;
 
     // Check if department with this name already exists
     const existingDepartment = await this.prisma.department.findFirst({
-      where: { name },
+      where: { Department_Name: Department_Name },
     });
 
     if (existingDepartment) {
@@ -60,16 +60,16 @@ export class DepartmentService {
     const department = await this.prisma.department.create({
       data: {
         id: departmentId,
-        name,
-        description,
+        Department_Name: Department_Name,
+        Department_Description: Department_Description,
         createdBy: adminId,
       },
       include: {
         admin: {
           select: {
             id: true,
-            username: true,
-            email: true,
+            Admin_Username: true,
+            Admin_Email: true,
           },
         },
       },
@@ -88,8 +88,8 @@ export class DepartmentService {
         admin: {
           select: {
             id: true,
-            username: true,
-            email: true,
+            Admin_Username: true,
+            Admin_Email: true,
           },
         },
         _count: {
@@ -110,7 +110,7 @@ export class DepartmentService {
   }
 
   async updateDepartment(id: string, updateDepartmentDto: UpdateDepartmentDto) {
-    const { name, description } = updateDepartmentDto;
+    const { Department_Name, Department_Description } = updateDepartmentDto;
 
     // Check if department exists
     const existingDepartment = await this.prisma.department.findUnique({
@@ -122,10 +122,10 @@ export class DepartmentService {
     }
 
     // Check if name is already taken by another department
-    if (name && name !== existingDepartment.name) {
+    if (Department_Name && Department_Name !== existingDepartment.Department_Name) {
       const conflictingDepartment = await this.prisma.department.findFirst({
         where: {
-          name,
+          Department_Name: Department_Name,
           NOT: { id },
         },
       });
@@ -138,15 +138,15 @@ export class DepartmentService {
     const department = await this.prisma.department.update({
       where: { id },
       data: {
-        name,
-        description,
+        Department_Name: Department_Name,
+        Department_Description: Department_Description,
       },
       include: {
         admin: {
           select: {
             id: true,
-            username: true,
-            email: true,
+            Admin_Username: true,
+            Admin_Email: true,
           },
         },
       },
@@ -176,17 +176,25 @@ export class DepartmentService {
       throw new NotFoundException('Department not found');
     }
 
-    // Check if department has related data
-    if (department._count.courses > 0 || department._count.voters > 0 || department._count.candidates > 0) {
-      throw new ConflictException('Cannot delete department with related courses, voters, or candidates');
+    // Check if department is already soft-deleted
+    if (department.isDeleted) {
+      throw new NotFoundException('Department has already been deleted');
     }
 
-    await this.prisma.department.delete({
+    // SOFT DELETE: Mark as deleted but preserve data
+    // We allow deletion even with related data since soft delete preserves everything
+
+    // SOFT DELETE: Mark as deleted but preserve data
+    await this.prisma.department.update({
       where: { id },
+      data: {
+        isDeleted: true,
+        deletedAt: new Date()
+      }
     });
 
     return {
-      message: 'Department deleted successfully!',
+      message: 'Department moved to trash successfully!',
     };
   }
 
@@ -205,8 +213,8 @@ export class DepartmentService {
         admin: {
           select: {
             id: true,
-            username: true,
-            email: true,
+            Admin_Username: true,
+            Admin_Email: true,
           },
         },
         _count: {
@@ -232,9 +240,9 @@ export class DepartmentService {
       where: { departmentId: id },
       select: {
         id: true,
-        name: true,
-        email: true,
-        studentId: true,
+        Voter_Name: true,
+        Voter_Email: true,
+        Voter_StudentId: true,
         hasVoted: true,
         createdAt: true,
         updatedAt: true,
@@ -257,14 +265,14 @@ export class DepartmentService {
         position: {
           select: {
             id: true,
-            title: true,
+            Position_Title: true,
           },
         },
         course: {
           select: {
             id: true,
-            name: true,
-            code: true,
+            Course_Name: true,
+            Course_Code: true,
           },
         },
       },

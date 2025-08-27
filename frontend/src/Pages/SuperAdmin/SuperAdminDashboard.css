@@ -5,9 +5,18 @@
   min-height: 100vh;
 }
 
+/* Force flat background on dashboard header - Maximum specificity */
+.superadmin-dashboard .dashboard-header-pro,
+.superadmin-dashboard div.dashboard-header-pro,
+.superadmin-dashboard .dashboard-header-pro.dashboard-header-pro {
+  background: #ffffff !important;
+  background: var(--white) !important;
+  background: white !important;
+}
+
 /* Unified Professional Dashboard Header */
 .dashboard-header-pro {
-  background: linear-gradient(135deg, var(--white) 0%, var(--light-gray) 100%);
+  background: var(--white) !important;
   border-radius: 0 0 16px 16px;
   box-shadow: 0 4px 16px rgba(29, 53, 87, 0.08);
   padding: 2rem 2rem 2rem 2rem;
@@ -31,10 +40,6 @@
   font-weight: 800;
   margin: 0 0 0.5rem 0;
   letter-spacing: -1px;
-  background: linear-gradient(135deg, var(--primary-navy), var(--accent-steel));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
 }
 
 .dashboard-subtitle-pro {

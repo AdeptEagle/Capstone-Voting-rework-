@@ -7,6 +7,15 @@
   z-index: 1;
 }
 
+/* Force flat background on dashboard header - Maximum specificity */
+.admin-dashboard .dashboard-header-pro,
+.admin-dashboard div.dashboard-header-pro,
+.admin-dashboard .dashboard-header-pro.dashboard-header-pro {
+  background: #ffffff !important;
+  background: var(--white) !important;
+  background: white !important;
+}
+
 /* Remove any potential white overlays */
 .admin-dashboard * {
   background-color: inherit;
@@ -22,7 +31,7 @@
 
 /* Unified Professional Dashboard Header */
 .dashboard-header-pro {
-  background: linear-gradient(135deg, var(--white) 0%, var(--light-gray) 100%);
+  background: var(--white) !important;
   border-radius: 16px;
   box-shadow: 0 8px 32px rgba(29, 53, 87, 0.08);
   padding: 2.5rem 2rem 2rem 2rem;
@@ -43,10 +52,6 @@
   font-weight: 800;
   margin: 0 0 0.5rem 0;
   letter-spacing: -1px;
-  background: linear-gradient(135deg, var(--primary-navy), var(--accent-steel));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
 }
 .dashboard-subtitle-pro {
   color: var(--text-muted);
@@ -131,10 +136,6 @@
   font-weight: 800;
   margin: 0 0 0.5rem 0;
   color: var(--primary-navy);
-  background: linear-gradient(135deg, var(--primary-navy), var(--accent-steel));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
 }
 
 .stat-content p {

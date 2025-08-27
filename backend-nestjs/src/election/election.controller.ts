@@ -1,12 +1,16 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Request } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Request, HttpException, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ElectionService } from './election.service';
 import { CreateElectionDto, UpdateElectionDto, AddPositionDto, AddCandidateDto } from './dto';
+import { PrismaService } from '../prisma/prisma.service';
 
 @ApiTags('Election')
 @Controller('elections')
 export class ElectionController {
-  constructor(private readonly electionService: ElectionService) {}
+  constructor(
+    private readonly electionService: ElectionService,
+    private readonly prisma: PrismaService
+  ) {}
 
   @Get()
   @ApiOperation({ summary: 'Get all elections' })
@@ -22,14 +26,59 @@ export class ElectionController {
     return this.electionService.getActiveElections();
   }
 
+  @Get('active/check')
+  @ApiOperation({ summary: 'Check if there are any active elections' })
+  @ApiResponse({ status: 200, description: 'Active election status' })
+  async hasActiveElections() {
+    return this.electionService.hasActiveElections();
+  }
+
+  @Get('active/info')
+  @ApiOperation({ summary: 'Get detailed information about active elections' })
+  @ApiResponse({ status: 200, description: 'Active election information' })
+  async getActiveElectionInfo() {
+    return this.electionService.getActiveElectionInfo();
+  }
+
+  @Get('history')
+  @ApiOperation({ summary: 'Get election history - comprehensive data for ended elections' })
+  @ApiResponse({ status: 200, description: 'Election history retrieved successfully' })
+  async getElectionHistory() {
+    return this.electionService.getElectionHistory();
+  }
+
   @Post()
   @ApiOperation({ summary: 'Create a new election' })
   @ApiResponse({ status: 201, description: 'Election created successfully' })
   @ApiResponse({ status: 409, description: 'Election already exists' })
   async createElection(@Body() createElectionDto: CreateElectionDto, @Request() req: any) {
-    // For now, use the existing superadmin ID. In production, get from JWT token
-    const adminId = 'SUPERADMIN-1'; // This should come from req.user.id when auth is implemented
-    return this.electionService.createElection(createElectionDto, adminId);
+    try {
+      // Find the first available superadmin from the database
+      const superadmin = await this.prisma.admin.findFirst({
+        where: { role: 'SUPERADMIN' },
+        select: { id: true, Admin_Username: true, role: true }
+      });
+
+      if (!superadmin) {
+        throw new HttpException(
+          'No superadmin found in the system. Please create a superadmin first.',
+          HttpStatus.INTERNAL_SERVER_ERROR
+        );
+      }
+
+      console.log(`🔧 [ElectionController] Using superadmin: ${superadmin.Admin_Username} (${superadmin.id})`);
+      
+      return this.electionService.createElection(createElectionDto, superadmin.id);
+    } catch (error) {
+      console.error('❌ [ElectionController] Error creating election:', error);
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException(
+        'Failed to create election. Please try again.',
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
   }
 
   @Get(':id')
@@ -49,11 +98,37 @@ export class ElectionController {
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Delete election' })
-  @ApiResponse({ status: 200, description: 'Election deleted successfully' })
+  @ApiOperation({ summary: 'Delete election (soft delete - moves to trash)' })
+  @ApiResponse({ status: 200, description: 'Election moved to trash successfully' })
   @ApiResponse({ status: 404, description: 'Election not found' })
   async deleteElection(@Param('id') id: string) {
     return this.electionService.deleteElection(id);
+  }
+
+  // ===== TRASH MANAGEMENT ENDPOINTS =====
+
+  @Get('trash/deleted')
+  @ApiOperation({ summary: 'Get all deleted elections' })
+  @ApiResponse({ status: 200, description: 'List of deleted elections' })
+  async getDeletedElections() {
+    return this.electionService.getDeletedElections();
+  }
+
+  @Post('trash/restore/:id')
+  @ApiOperation({ summary: 'Restore deleted election' })
+  @ApiResponse({ status: 200, description: 'Election restored successfully' })
+  @ApiResponse({ status: 404, description: 'Election not found' })
+  async restoreElection(@Param('id') id: string) {
+    return this.electionService.restoreElection(id);
+  }
+
+  @Delete('trash/permanent/:id')
+  @ApiOperation({ summary: 'Permanently delete election (cannot be undone)' })
+  @ApiResponse({ status: 200, description: 'Election permanently deleted' })
+  @ApiResponse({ status: 404, description: 'Election not found' })
+  @ApiResponse({ status: 409, description: 'Cannot delete election with voting history' })
+  async permanentlyDeleteElection(@Param('id') id: string) {
+    return this.electionService.permanentlyDeleteElection(id);
   }
 
   @Put(':id/activate')
@@ -183,12 +258,5 @@ export class ElectionController {
   @ApiResponse({ status: 404, description: 'Candidate not found in election' })
   async removeCandidateFromElection(@Param('id') id: string, @Param('candidateId') candidateId: string) {
     return this.electionService.removeCandidateFromElection(id, candidateId);
-  }
-
-  @Get('history')
-  @ApiOperation({ summary: 'Get election history - comprehensive data for ended elections' })
-  @ApiResponse({ status: 200, description: 'Election history retrieved successfully' })
-  async getElectionHistory() {
-    return this.electionService.getElectionHistory();
   }
 } 

@@ -8,7 +8,7 @@ export class RequestPasswordResetDto {
   })
   @IsEmail()
   @IsNotEmpty()
-  email: string;
+  ResetToken_Email: string;
 
   @ApiProperty({
     description: 'Type of user (voter or admin)',

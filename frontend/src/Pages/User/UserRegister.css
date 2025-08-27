@@ -254,27 +254,66 @@
 }
 
 /* Input field styles */
-.user-register-field input {
-  padding: 1rem 1.2rem;
-  border: 2px solid #e2e8f0;
-  border-radius: 12px;
-  font-size: 1rem;
-  background: #f7fafc;
-  transition: all 0.3s ease;
-  font-weight: 500;
+.user-register-field input[type="email"],
+.user-register-field input[type="text"] {
   width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #e1e5e9;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  background: #fff;
+  position: relative;
 }
 
-.user-register-field input:focus {
-  border-color: #667eea;
+.user-register-field input[type="password"],
+.user-register-field input[type="text"] {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #e1e5e9;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  background: #fff;
+  position: relative;
+}
+
+.user-register-field input[type="email"]:focus,
+.user-register-field input[type="text"]:focus,
+.user-register-field input[type="password"]:focus {
   outline: none;
-  background: white;
+  border-color: #667eea;
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-  transform: translateY(-1px);
 }
 
 .user-register-field input::placeholder {
   color: #a0aec0;
+}
+
+/* Password toggle icon styling */
+.user-register-field {
+  position: relative;
+}
+
+.password-toggle-icon {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: #6b7280;
+  font-size: 18px;
+  transition: color 0.3s ease;
+  z-index: 10;
+  user-select: none;
+}
+
+.password-toggle-icon:hover {
+  color: #667eea;
+}
+
+.password-toggle-icon:active {
+  transform: translateY(-50%) scale(0.95);
 }
 
 /* Responsive adjustments for dropdowns */

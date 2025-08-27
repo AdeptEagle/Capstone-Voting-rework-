@@ -52,6 +52,20 @@
   border-color: #ced4da;
 }
 
+.input-group-text i {
+  cursor: pointer;
+  color: #6b7280;
+  transition: color 0.3s ease;
+}
+
+.input-group-text i:hover {
+  color: #007bff;
+}
+
+.input-group-text i:active {
+  transform: scale(0.95);
+}
+
 .form-control:focus {
   border-color: #80bdff;
   box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);

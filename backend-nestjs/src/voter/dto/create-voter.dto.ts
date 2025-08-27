@@ -4,30 +4,28 @@ import { ApiProperty } from '@nestjs/swagger';
 export class CreateVoterDto {
   @ApiProperty({ description: 'Voter name' })
   @IsString()
-  name: string;
+  Voter_Name: string;
 
   @ApiProperty({ description: 'Voter email' })
   @IsEmail()
-  email: string;
+  Voter_Email: string;
 
   @ApiProperty({ description: 'Student ID (format: YYYY-NNNNN, e.g., 2024-00001)', example: '2024-00001' })
   @IsString()
   @MinLength(10)
   @Matches(/^\d{4}-\d{5}$/, { message: 'Student ID must be in format YYYY-NNNNN (e.g., 2024-00001)' })
-  studentId: string;
+  Voter_StudentId: string;
 
   @ApiProperty({ description: 'Password' })
   @IsString()
   @MinLength(6)
   password: string;
 
-  @ApiProperty({ description: 'Department ID (optional)' })
-  @IsOptional()
+  @ApiProperty({ description: 'Department ID (required)' })
   @IsString()
-  departmentId?: string;
+  departmentId: string;
 
-  @ApiProperty({ description: 'Course ID (optional)' })
-  @IsOptional()
+  @ApiProperty({ description: 'Course ID (required)' })
   @IsString()
-  courseId?: string;
+  courseId: string;
 } 

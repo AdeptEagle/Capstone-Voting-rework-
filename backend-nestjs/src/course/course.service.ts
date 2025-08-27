@@ -16,14 +16,14 @@ export class CourseService {
         department: {
           select: {
             id: true,
-            name: true,
+            Department_Name: true,
           },
         },
         admin: {
           select: {
             id: true,
-            username: true,
-            email: true,
+            Admin_Username: true,
+            Admin_Email: true,
           },
         },
         _count: {
@@ -37,7 +37,7 @@ export class CourseService {
   }
 
   async createCourse(createCourseDto: CreateCourseDto, adminId: string) {
-    const { name, code, description, departmentId, customId } = createCourseDto;
+    const { Course_Name, Course_Code, Course_Description, departmentId, customId } = createCourseDto;
 
     // Check if department exists
     const department = await this.prisma.department.findUnique({
@@ -50,7 +50,7 @@ export class CourseService {
 
     // Check if course with this code already exists
     const existingCourse = await this.prisma.course.findFirst({
-      where: { code },
+      where: { Course_Code: Course_Code },
     });
 
     if (existingCourse) {
@@ -74,9 +74,9 @@ export class CourseService {
     const course = await this.prisma.course.create({
       data: {
         id: courseId,
-        name,
-        code,
-        description,
+        Course_Name: Course_Name,
+        Course_Code: Course_Code,
+        Course_Description: Course_Description,
         departmentId,
         createdBy: adminId,
       },
@@ -84,14 +84,14 @@ export class CourseService {
         department: {
           select: {
             id: true,
-            name: true,
+            Department_Name: true,
           },
         },
         admin: {
           select: {
             id: true,
-            username: true,
-            email: true,
+            Admin_Username: true,
+            Admin_Email: true,
           },
         },
       },
@@ -110,14 +110,14 @@ export class CourseService {
         department: {
           select: {
             id: true,
-            name: true,
+            Department_Name: true,
           },
         },
         admin: {
           select: {
             id: true,
-            username: true,
-            email: true,
+            Admin_Username: true,
+            Admin_Email: true,
           },
         },
         _count: {
@@ -137,7 +137,7 @@ export class CourseService {
   }
 
   async updateCourse(id: string, updateCourseDto: UpdateCourseDto) {
-    const { name, code, description, departmentId } = updateCourseDto;
+    const { Course_Name, Course_Code, Course_Description, departmentId } = updateCourseDto;
 
     // Check if course exists
     const existingCourse = await this.prisma.course.findUnique({
@@ -160,10 +160,10 @@ export class CourseService {
     }
 
     // Check if code is already taken by another course
-    if (code && code !== existingCourse.code) {
+    if (Course_Code && Course_Code !== existingCourse.Course_Code) {
       const conflictingCourse = await this.prisma.course.findFirst({
         where: {
-          code,
+          Course_Code: Course_Code,
           NOT: { id },
         },
       });
@@ -177,23 +177,23 @@ export class CourseService {
     const course = await this.prisma.course.update({
       where: { id },
       data: {
-        name,
-        code,
-        description,
+        Course_Name: Course_Name,
+        Course_Code: Course_Code,
+        Course_Description: Course_Description,
         departmentId,
       },
       include: {
         department: {
           select: {
             id: true,
-            name: true,
+            Department_Name: true,
           },
         },
         admin: {
           select: {
             id: true,
-            username: true,
-            email: true,
+            Admin_Username: true,
+            Admin_Email: true,
           },
         },
       },
@@ -222,17 +222,25 @@ export class CourseService {
       throw new NotFoundException('Course not found');
     }
 
-    // Check if course has related data
-    if (course._count.voters > 0 || course._count.candidates > 0) {
-      throw new ConflictException('Cannot delete course with related voters or candidates');
+    // Check if course is already soft-deleted
+    if (course.isDeleted) {
+      throw new NotFoundException('Course has already been deleted');
     }
 
-    await this.prisma.course.delete({
+    // SOFT DELETE: Mark as deleted but preserve data
+    // We allow deletion even with related data since soft delete preserves everything
+
+    // SOFT DELETE: Mark as deleted but preserve data
+    await this.prisma.course.update({
       where: { id },
+      data: {
+        isDeleted: true,
+        deletedAt: new Date()
+      }
     });
 
     return {
-      message: 'Course deleted successfully!',
+      message: 'Course moved to trash successfully!',
     };
   }
 
@@ -252,8 +260,8 @@ export class CourseService {
         admin: {
           select: {
             id: true,
-            username: true,
-            email: true,
+            Admin_Username: true,
+            Admin_Email: true,
           },
         },
         _count: {
@@ -279,9 +287,9 @@ export class CourseService {
       where: { courseId: id },
       select: {
         id: true,
-        name: true,
-        email: true,
-        studentId: true,
+        Voter_Name: true,
+        Voter_Email: true,
+        Voter_StudentId: true,
         hasVoted: true,
         createdAt: true,
         updatedAt: true,
@@ -304,13 +312,13 @@ export class CourseService {
         position: {
           select: {
             id: true,
-            title: true,
+            Position_Title: true,
           },
         },
         department: {
           select: {
             id: true,
-            name: true,
+            Department_Name: true,
           },
         },
       },

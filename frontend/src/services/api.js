@@ -103,7 +103,10 @@ const handleAuthError = (error) => {
 // Positions API Functions
 export const getPositions = async () => {
   try {
-    const response = await api.get('/positions');
+    // Add cache-busting parameter to prevent stale data
+    const response = await api.get('/positions', {
+      params: { _t: Date.now() }
+    });
     return response.data;
   } catch (error) {
     console.error('Error fetching positions:', error);
@@ -147,7 +150,10 @@ export const deletePosition = async (id) => {
 // Candidates API Functions
 export const getCandidates = async () => {
   try {
-    const response = await api.get('/candidates');
+    // Add cache-busting parameter to prevent stale data
+    const response = await api.get('/candidates', {
+      params: { _t: Date.now() }
+    });
     return response.data;
   } catch (error) {
     console.error('Error fetching candidates:', error);
@@ -343,10 +349,20 @@ export const getElection = async (id) => {
 
 export const getElectionPositions = async (id) => {
   try {
-    const response = await api.get(`/elections/${id}/positions`);
+    const response = await api.get(`/election-assignments/election/${id}/positions`);
     return response.data;
   } catch (error) {
     console.error('Error fetching election positions:', error);
+    throw error;
+  }
+};
+
+export const getElectionBallot = async (electionId) => {
+  try {
+    const response = await api.get(`/election-assignments/election/${electionId}/ballot`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching election ballot:', error);
     throw error;
   }
 };
@@ -357,6 +373,26 @@ export const createElection = async (election) => {
     return response.data;
   } catch (error) {
     console.error('Error creating election:', error);
+    throw error;
+  }
+};
+
+export const addPositionToElection = async (electionId, positionData) => {
+  try {
+    const response = await api.post(`/elections/${electionId}/positions`, positionData);
+    return response.data;
+  } catch (error) {
+    console.error('Error adding position to election:', error);
+    throw error;
+  }
+};
+
+export const addCandidateToElection = async (electionId, candidateData) => {
+  try {
+    const response = await api.post(`/elections/${electionId}/candidates`, candidateData);
+    return response.data;
+  } catch (error) {
+    console.error('Error adding candidate to election:', error);
     throw error;
   }
 };
@@ -431,12 +467,63 @@ export const deleteElection = async (id) => {
   }
 };
 
+// Election Trash Management
+export const getDeletedElections = async () => {
+  try {
+    const response = await api.get('/elections/trash/deleted');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching deleted elections:', error);
+    throw error;
+  }
+};
+
+export const restoreElection = async (id) => {
+  try {
+    const response = await api.post(`/elections/trash/restore/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error restoring election:', error);
+    throw error;
+  }
+};
+
+export const permanentlyDeleteElection = async (id) => {
+  try {
+    const response = await api.delete(`/elections/trash/permanent/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error permanently deleting election:', error);
+    throw error;
+  }
+};
+
 export const getActiveElection = async () => {
   try {
     const response = await api.get('/elections/active');
     return response.data;
   } catch (error) {
     console.error('Error fetching active election:', error);
+    throw error;
+  }
+};
+
+export const hasActiveElections = async () => {
+  try {
+    const response = await api.get('/elections/active/check');
+    return response.data;
+  } catch (error) {
+    console.error('Error checking active elections:', error);
+    throw error;
+  }
+};
+
+export const getActiveElectionInfo = async () => {
+  try {
+    const response = await api.get('/elections/active/info');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching active election info:', error);
     throw error;
   }
 };
@@ -526,7 +613,7 @@ export const getAssignedElectionPositions = async (electionId) => {
 
 export const getElectionCandidates = async (electionId) => {
   try {
-    const response = await api.get(`/votes/ballot/candidates/${electionId}`);
+    const response = await api.get(`/election-assignments/election/${electionId}/candidates`);
     return response.data;
   } catch (error) {
     console.error('Error fetching election candidates:', error);
@@ -634,7 +721,10 @@ export const testElectionCandidatesTable = async () => {
 // Departments API Functions
 export const getDepartments = async () => {
   try {
-    const response = await api.get('/departments');
+    // Add cache-busting parameter to prevent stale data
+    const response = await api.get('/departments', {
+      params: { _t: Date.now() }
+    });
     return response.data;
   } catch (error) {
     console.error('Error fetching departments:', error);
@@ -726,7 +816,10 @@ export const getDepartmentCandidates = async (id) => {
 // Courses API Functions
 export const getCourses = async () => {
   try {
-    const response = await api.get('/courses');
+    // Add cache-busting parameter to prevent stale data
+    const response = await api.get('/courses', {
+      params: { _t: Date.now() }
+    });
     return response.data;
   } catch (error) {
     console.error('Error fetching courses:', error);

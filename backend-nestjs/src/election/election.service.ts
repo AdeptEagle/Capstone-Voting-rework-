@@ -16,12 +16,13 @@ export class ElectionService {
 
   async getAllElections() {
     return this.prisma.election.findMany({
+      where: { isDeleted: false },
       include: {
         admin: {
           select: {
             id: true,
-            username: true,
-            email: true,
+            Admin_Username: true,
+            Admin_Email: true,
           },
         },
         electionPositions: {
@@ -29,7 +30,7 @@ export class ElectionService {
             position: {
               select: {
                 id: true,
-                title: true,
+                Position_Title: true,
               },
             },
           },
@@ -39,8 +40,8 @@ export class ElectionService {
             candidate: {
               select: {
                 id: true,
-                name: true,
-                studentId: true,
+                Candidate_Name: true,
+                Candidate_StudentId: true,
               },
             },
           },
@@ -55,15 +56,18 @@ export class ElectionService {
     });
   }
 
-  async getElectionById(id: string) {
+  async getElectionById(id: string, includeDeleted: boolean = false) {
     const election = await this.prisma.election.findUnique({
-      where: { id },
+      where: { 
+        id,
+        ...(includeDeleted ? {} : { isDeleted: false })
+      },
       include: {
         admin: {
           select: {
             id: true,
-            username: true,
-            email: true,
+            Admin_Username: true,
+            Admin_Email: true,
           },
         },
         electionPositions: {
@@ -71,7 +75,7 @@ export class ElectionService {
             position: {
               select: {
                 id: true,
-                title: true,
+                Position_Title: true,
               },
             },
           },
@@ -81,8 +85,8 @@ export class ElectionService {
             candidate: {
               select: {
                 id: true,
-                name: true,
-                studentId: true,
+                Candidate_Name: true,
+                Candidate_StudentId: true,
               },
             },
           },
@@ -104,11 +108,11 @@ export class ElectionService {
   }
 
   async createElection(createElectionDto: CreateElectionDto, adminId: string) {
-    const { title, description, startDate, endDate, isActive } = createElectionDto;
+    const { Election_Title, Election_Description, startDate, endDate, isActive } = createElectionDto;
 
     // Check if election with same title already exists
     const existingElection = await this.prisma.election.findFirst({
-      where: { title },
+      where: { Election_Title: Election_Title },
     });
 
     if (existingElection) {
@@ -121,30 +125,30 @@ export class ElectionService {
     const election = await this.prisma.election.create({
       data: {
         id: customId,
-        title,
-        description,
+        Election_Title: Election_Title,
+        Election_Description: Election_Description,
         startDate: new Date(startDate),
         endDate: new Date(endDate),
         isActive: isActive || false,
         status: 'draft', // Explicitly set status to draft
         createdBy: adminId,
       },
-      include: {
-        admin: {
-          select: {
-            id: true,
-            username: true,
-            email: true,
-          },
-        },
-      },
+             include: {
+         admin: {
+           select: {
+             id: true,
+             Admin_Username: true,
+             Admin_Email: true,
+           },
+         },
+       },
     });
 
     // Emit real-time election creation
     this.votingGateway.emitElectionCreated({
       id: election.id,
-      title: election.title,
-      description: election.description,
+      title: election.Election_Title,
+      description: election.Election_Description,
       startDate: election.startDate,
       endDate: election.endDate,
       isActive: election.isActive,
@@ -157,8 +161,8 @@ export class ElectionService {
       message: 'Election created successfully!',
       election: {
         id: election.id,
-        title: election.title,
-        description: election.description,
+        title: election.Election_Title,
+        description: election.Election_Description,
         startDate: election.startDate,
         endDate: election.endDate,
         isActive: election.isActive,
@@ -197,11 +201,24 @@ export class ElectionService {
         admin: {
           select: {
             id: true,
-            username: true,
-            email: true,
+            Admin_Username: true,
+            Admin_Email: true,
           },
         },
       },
+    });
+
+    // Emit real-time election update event
+    this.votingGateway.emitElectionUpdated({
+      id: updatedElection.id,
+      title: updatedElection.Election_Title,
+      description: updatedElection.Election_Description,
+      status: updatedElection.status,
+      startDate: updatedElection.startDate,
+      endDate: updatedElection.endDate,
+      isActive: updatedElection.isActive,
+      updatedAt: updatedElection.updatedAt,
+      admin: updatedElection.admin,
     });
 
     return {
@@ -219,12 +236,160 @@ export class ElectionService {
       throw new NotFoundException('Election not found');
     }
 
-    await this.prisma.election.delete({
+    // Check if election is already soft-deleted
+    if (election.isDeleted) {
+      throw new NotFoundException('Election has already been deleted');
+    }
+
+    // SOFT DELETE: Mark as deleted but preserve data
+    await this.prisma.election.update({
       where: { id },
+      data: {
+        isDeleted: true,
+        deletedAt: new Date()
+      }
+    });
+
+    // Emit real-time election deletion event
+    this.votingGateway.emitElectionStatusUpdate(id, 'deleted', {
+      id: id,
+      message: 'Election moved to trash',
+      timestamp: new Date().toISOString(),
     });
 
     return {
-      message: 'Election deleted successfully!',
+      message: 'Election moved to trash successfully!',
+    };
+  }
+
+  async getDeletedElections() {
+    return this.prisma.election.findMany({
+      where: { isDeleted: true },
+      include: {
+        admin: {
+          select: {
+            id: true,
+            Admin_Username: true,
+            Admin_Email: true,
+          },
+        },
+        electionPositions: {
+          include: {
+            position: {
+              select: {
+                id: true,
+                Position_Title: true,
+              },
+            },
+          },
+        },
+        electionCandidates: {
+          include: {
+            candidate: {
+              select: {
+                id: true,
+                Candidate_Name: true,
+                Candidate_StudentId: true,
+              },
+            },
+          },
+        },
+        votes: {
+          select: {
+            id: true,
+            createdAt: true,
+          },
+        },
+      },
+    });
+  }
+
+  async restoreElection(id: string) {
+    const election = await this.prisma.election.findUnique({
+      where: { id },
+    });
+
+    if (!election) {
+      throw new NotFoundException('Election not found');
+    }
+
+    if (!election.isDeleted) {
+      throw new NotFoundException('Election is not deleted');
+    }
+
+    const restoredElection = await this.prisma.election.update({
+      where: { id },
+      data: {
+        isDeleted: false,
+        deletedAt: null
+      }
+    });
+
+    return {
+      message: 'Election restored successfully!',
+      election: restoredElection,
+    };
+  }
+
+  async permanentlyDeleteElection(id: string) {
+    const election = await this.prisma.election.findUnique({
+      where: { id },
+      include: {
+        _count: {
+          select: {
+            votes: true,
+            electionPositions: true,
+            electionCandidates: true,
+            auditLogs: true,
+          },
+        },
+      },
+    });
+
+    if (!election) {
+      throw new NotFoundException('Election not found');
+    }
+
+    if (!election.isDeleted) {
+      throw new NotFoundException('Election must be soft-deleted before permanent deletion');
+    }
+
+    // Check if election has votes (prevent deletion if votes exist)
+    if (election._count.votes > 0) {
+      throw new ConflictException('Cannot permanently delete election with voting history. Votes must be preserved for audit purposes.');
+    }
+
+    // Use a transaction to ensure all related data is deleted properly
+    await this.prisma.$transaction(async (tx) => {
+      // First delete audit logs
+      if (election._count.auditLogs > 0) {
+        await tx.auditLog.deleteMany({
+          where: { electionId: id }
+        });
+      }
+
+      // Then delete election candidates
+      if (election._count.electionCandidates > 0) {
+        await tx.electionCandidate.deleteMany({
+          where: { electionId: id }
+        });
+      }
+
+      // Then delete election positions
+      if (election._count.electionPositions > 0) {
+        await tx.electionPosition.deleteMany({
+          where: { electionId: id }
+        });
+      }
+
+      // Finally delete the election
+      await tx.election.delete({
+        where: { id }
+      });
+    });
+
+    return {
+      message: 'Election permanently deleted!',
     };
   }
 
@@ -243,6 +408,16 @@ export class ElectionService {
         isActive: true,
         status: 'active'
       },
+    });
+
+    // Emit real-time election status update
+    this.votingGateway.emitElectionStatusUpdate(id, 'active', {
+      id: updatedElection.id,
+      title: updatedElection.Election_Title,
+      status: updatedElection.status,
+      startDate: updatedElection.startDate,
+      endDate: updatedElection.endDate,
+      updatedAt: updatedElection.updatedAt,
     });
 
     return {
@@ -266,6 +441,16 @@ export class ElectionService {
         isActive: false,
         status: 'draft'
       },
+    });
+
+    // Emit real-time election status update
+    this.votingGateway.emitElectionStatusUpdate(id, 'draft', {
+      id: updatedElection.id,
+      title: updatedElection.Election_Title,
+      status: updatedElection.status,
+      startDate: updatedElection.startDate,
+      endDate: updatedElection.endDate,
+      updatedAt: updatedElection.updatedAt,
     });
 
     return {
@@ -308,6 +493,40 @@ export class ElectionService {
       throw new ConflictException('Cannot start ballot: Election has already ended');
     }
 
+    // WORKAROUND: Check if there are other active elections and pause them
+    const otherActiveElections = await this.prisma.election.findMany({
+      where: {
+        id: { not: id },
+        status: 'active',
+        isDeleted: false
+      }
+    });
+
+    // Pause all other active elections
+    if (otherActiveElections.length > 0) {
+      await Promise.all(
+        otherActiveElections.map(async (otherElection) => {
+          await this.prisma.election.update({
+            where: { id: otherElection.id },
+            data: {
+              isActive: false,
+              status: 'paused'
+            }
+          });
+
+          // Emit real-time status update for paused elections
+          this.votingGateway.emitElectionStatusUpdate(otherElection.id, 'paused', {
+            id: otherElection.id,
+            title: otherElection.Election_Title,
+            status: 'paused',
+            startDate: otherElection.startDate,
+            endDate: otherElection.endDate,
+            updatedAt: new Date(),
+          });
+        })
+      );
+    }
+
     const updatedElection = await this.prisma.election.update({
       where: { id },
       data: { 
@@ -319,20 +538,26 @@ export class ElectionService {
     // Emit real-time election status update
     this.votingGateway.emitElectionStatusUpdate(id, 'active', {
       id: updatedElection.id,
-      title: updatedElection.title,
+      title: updatedElection.Election_Title,
       status: updatedElection.status,
       startDate: updatedElection.startDate,
       endDate: updatedElection.endDate,
       updatedAt: updatedElection.updatedAt,
     });
 
+    const pausedCount = otherActiveElections.length;
+    const message = pausedCount > 0 
+      ? `Ballot started successfully! ${pausedCount} other active ballot(s) have been automatically paused.`
+      : 'Ballot started successfully! Voting is now open.';
+
     return {
-      message: 'Ballot started successfully! Voting is now open.',
+      message,
       election: updatedElection,
       ballotInfo: {
         positions: election.electionPositions.length,
         candidates: election.electionCandidates.length,
-        status: 'active'
+        status: 'active',
+        otherElectionsPaused: pausedCount
       }
     };
   }
@@ -362,7 +587,7 @@ export class ElectionService {
     // Emit real-time election status update
     this.votingGateway.emitElectionStatusUpdate(id, 'paused', {
       id: updatedElection.id,
-      title: updatedElection.title,
+      title: updatedElection.Election_Title,
       status: updatedElection.status,
       startDate: updatedElection.startDate,
       endDate: updatedElection.endDate,
@@ -400,7 +625,7 @@ export class ElectionService {
     // Emit real-time election status update
     this.votingGateway.emitElectionStatusUpdate(id, 'active', {
       id: updatedElection.id,
-      title: updatedElection.title,
+      title: updatedElection.Election_Title,
       status: updatedElection.status,
       startDate: updatedElection.startDate,
       endDate: updatedElection.endDate,
@@ -438,7 +663,7 @@ export class ElectionService {
     // Emit real-time election status update
     this.votingGateway.emitElectionStatusUpdate(id, 'stopped', {
       id: updatedElection.id,
-      title: updatedElection.title,
+      title: updatedElection.Election_Title,
       status: updatedElection.status,
       startDate: updatedElection.startDate,
       endDate: updatedElection.endDate,
@@ -496,7 +721,7 @@ export class ElectionService {
     // Emit real-time election status update
     this.votingGateway.emitElectionStatusUpdate(id, 'ended', {
       id: updatedElection.id,
-      title: updatedElection.title,
+      title: updatedElection.Election_Title,
       status: updatedElection.status,
       startDate: updatedElection.startDate,
       endDate: updatedElection.endDate,
@@ -523,7 +748,10 @@ export class ElectionService {
 
   async getBallotStatus(id: string) {
     const election = await this.prisma.election.findUnique({
-      where: { id },
+      where: { 
+        id,
+        isDeleted: false
+      },
       include: {
         electionPositions: {
           include: {
@@ -559,7 +787,7 @@ export class ElectionService {
     const ballotInfo = {
       election: {
         id: election.id,
-        title: election.title,
+        title: election.Election_Title,
         status: election.status,
         isActive: election.isActive,
         startDate: election.startDate,
@@ -588,13 +816,16 @@ export class ElectionService {
 
   async getActiveElections() {
     return this.prisma.election.findMany({
-      where: { isActive: true },
+      where: { 
+        isActive: true,
+        isDeleted: false
+      },
       include: {
         admin: {
           select: {
             id: true,
-            username: true,
-            email: true,
+            Admin_Username: true,
+            Admin_Email: true,
           },
         },
         electionPositions: {
@@ -602,7 +833,7 @@ export class ElectionService {
             position: {
               select: {
                 id: true,
-                title: true,
+                Position_Title: true,
               },
             },
           },
@@ -612,14 +843,50 @@ export class ElectionService {
             candidate: {
               select: {
                 id: true,
-                name: true,
-                studentId: true,
+                Candidate_Name: true,
+                Candidate_StudentId: true,
               },
             },
           },
         },
       },
     });
+  }
+
+  async hasActiveElections() {
+    const activeCount = await this.prisma.election.count({
+      where: { 
+        status: 'active',
+        isDeleted: false
+      }
+    });
+    
+    return {
+      hasActive: activeCount > 0,
+      activeCount
+    };
+  }
+
+  async getActiveElectionInfo() {
+    const activeElections = await this.prisma.election.findMany({
+      where: { 
+        status: 'active',
+        isDeleted: false
+      },
+      select: {
+        id: true,
+        Election_Title: true,
+        status: true,
+        startDate: true,
+        endDate: true
+      }
+    });
+    
+    return {
+      hasActive: activeElections.length > 0,
+      activeCount: activeElections.length,
+      activeElections
+    };
   }
 
   // ===== AUTOMATIC VOTE LOCKOUT SYSTEM =====
@@ -631,6 +898,7 @@ export class ElectionService {
     const expiredElections = await this.prisma.election.findMany({
       where: {
         status: 'active',
+        isDeleted: false,
         endDate: {
           lte: now, // Less than or equal to current Philippine time
         },
@@ -678,7 +946,7 @@ export class ElectionService {
           }
         });
 
-        console.log(`🕐 Auto-ended election: ${election.title} (ID: ${election.id})`);
+        console.log(`🕐 Auto-ended election: ${election.Election_Title} (ID: ${election.id})`);
         console.log(`   Total votes: ${totalVotes}, Unique voters: ${uniqueVoters.length}`);
       } catch (error) {
         console.error(`❌ Error auto-ending election ${election.id}:`, error);
@@ -693,7 +961,10 @@ export class ElectionService {
 
   async getElectionTimeStatus(id: string) {
     const election = await this.prisma.election.findUnique({
-      where: { id },
+      where: { 
+        id,
+        isDeleted: false
+      },
     });
 
     if (!election) {
@@ -707,7 +978,7 @@ export class ElectionService {
     const timeStatus = {
       election: {
         id: election.id,
-        title: election.title,
+        title: election.Election_Title,
         status: election.status,
       },
       timezone: this.timezoneService.getPhilippineTimezoneInfo(),
@@ -746,9 +1017,12 @@ export class ElectionService {
   async addPositionToElection(electionId: string, addPositionDto: AddPositionDto) {
     const { positionId } = addPositionDto;
 
-    // Check if election exists
+    // Check if election exists and is not soft-deleted
     const election = await this.prisma.election.findUnique({
-      where: { id: electionId },
+      where: { 
+        id: electionId,
+        isDeleted: false
+      },
     });
 
     if (!election) {
@@ -791,7 +1065,7 @@ export class ElectionService {
         position: {
           select: {
             id: true,
-            title: true,
+            Position_Title: true,
           },
         },
       },
@@ -806,9 +1080,12 @@ export class ElectionService {
   async addCandidateToElection(electionId: string, addCandidateDto: AddCandidateDto) {
     const { candidateId } = addCandidateDto;
 
-    // Check if election exists
+    // Check if election exists and is not soft-deleted
     const election = await this.prisma.election.findUnique({
-      where: { id: electionId },
+      where: { 
+        id: electionId,
+        isDeleted: false
+      },
     });
 
     if (!election) {
@@ -851,8 +1128,8 @@ export class ElectionService {
         candidate: {
           select: {
             id: true,
-            name: true,
-            studentId: true,
+            Candidate_Name: true,
+            Candidate_StudentId: true,
             positionId: true,
           },
         },
@@ -925,16 +1202,17 @@ export class ElectionService {
 
   async getElectionHistory() {
     try {
-      // Get all ended elections with comprehensive data
+      // Get all ended elections with comprehensive data (excluding soft-deleted ones)
       const endedElections = await this.prisma.election.findMany({
         where: {
-          status: 'ended'
+          status: 'ended',
+          isDeleted: false
         },
         include: {
           admin: {
             select: {
               id: true,
-              username: true,
+              Admin_Username: true,
               role: true
             }
           },
@@ -943,8 +1221,8 @@ export class ElectionService {
               position: {
                 select: {
                   id: true,
-                  title: true,
-                  description: true,
+                  Position_Title: true,
+                  Position_Description: true,
                   voteLimit: true
                 }
               }
@@ -952,30 +1230,30 @@ export class ElectionService {
           },
           electionCandidates: {
             include: {
-              candidate: {
-                select: {
-                  id: true,
-                  name: true,
-                  email: true,
-                  studentId: true,
-                  photo: true,
-                  manifesto: true,
+                              candidate: {
+                  select: {
+                    id: true,
+                    Candidate_Name: true,
+                    Candidate_Email: true,
+                    Candidate_StudentId: true,
+                    photo: true,
+                    manifesto: true,
                   position: {
                     select: {
                       id: true,
-                      title: true
+                      Position_Title: true
                     }
                   },
                   department: {
                     select: {
                       id: true,
-                      name: true
+                      Department_Name: true
                     }
                   },
                   course: {
                     select: {
                       id: true,
-                      name: true
+                      Course_Name: true
                     }
                   }
                 }
@@ -1028,7 +1306,7 @@ export class ElectionService {
             const candidate = election.electionCandidates.find(ec => ec.candidateId === result.candidateId);
             
             if (position && candidate) {
-              const positionTitle = position.position.title;
+              const positionTitle = position.position.Position_Title;
               if (!resultsByPosition[positionTitle]) {
                 resultsByPosition[positionTitle] = {
                   positionId: result.positionId,
@@ -1038,17 +1316,17 @@ export class ElectionService {
                 };
               }
               
-              resultsByPosition[positionTitle].candidates.push({
-                candidateId: result.candidateId,
-                candidateName: candidate.candidate.name,
-                candidateEmail: candidate.candidate.email,
-                candidateStudentId: candidate.candidate.studentId,
-                candidatePhoto: candidate.candidate.photo,
-                candidateManifesto: candidate.candidate.manifesto,
-                candidateDepartment: candidate.candidate.department?.name || 'N/A',
-                candidateCourse: candidate.candidate.course?.name || 'N/A',
-                voteCount: result._count.id
-              });
+                             resultsByPosition[positionTitle].candidates.push({
+                 candidateId: result.candidateId,
+                 candidateName: candidate.candidate.Candidate_Name,
+                 candidateEmail: candidate.candidate.Candidate_Email,
+                 candidateStudentId: candidate.candidate.Candidate_StudentId,
+                 candidatePhoto: candidate.candidate.photo,
+                 candidateManifesto: candidate.candidate.manifesto,
+                 candidateDepartment: candidate.candidate.department?.Department_Name || 'N/A',
+                 candidateCourse: candidate.candidate.course?.Course_Name || 'N/A',
+                 voteCount: result._count.id
+               });
             }
           }
 
@@ -1076,15 +1354,15 @@ export class ElectionService {
 
           return {
             electionId: election.id,
-            title: election.title,
-            description: election.description,
+            title: election.Election_Title,
+            description: election.Election_Description,
             status: election.status,
             startDate: election.startDate,
             endDate: election.endDate,
             startDateFormatted: formatDate(election.startDate),
             endDateFormatted: formatDate(election.endDate),
             durationInMinutes,
-            createdBy: election.admin.username,
+            createdBy: election.admin.Admin_Username,
             adminRole: election.admin.role,
             createdAt: election.createdAt,
             updatedAt: election.updatedAt,
@@ -1101,20 +1379,20 @@ export class ElectionService {
             totalCandidates: election.electionCandidates.length,
             positions: election.electionPositions.map(ep => ({
               positionId: ep.position.id,
-              title: ep.position.title,
-              description: ep.position.description,
+              title: ep.position.Position_Title,
+              description: ep.position.Position_Description,
               voteLimit: ep.position.voteLimit
             })),
             candidates: election.electionCandidates.map(ec => ({
               candidateId: ec.candidate.id,
-              name: ec.candidate.name,
-              email: ec.candidate.email,
-              studentId: ec.candidate.studentId,
+              name: ec.candidate.Candidate_Name,
+              email: ec.candidate.Candidate_Email,
+              studentId: ec.candidate.Candidate_StudentId,
               photo: ec.candidate.photo,
               manifesto: ec.candidate.manifesto,
-              position: ec.candidate.position.title,
-              department: ec.candidate.department?.name || 'N/A',
-              course: ec.candidate.course?.name || 'N/A'
+              position: ec.candidate.position.Position_Title,
+              department: ec.candidate.department?.Department_Name || 'N/A',
+              course: ec.candidate.course?.Course_Name || 'N/A'
             })),
             
             // Detailed results by position

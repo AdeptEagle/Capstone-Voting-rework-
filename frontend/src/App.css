@@ -448,7 +448,6 @@ main {
 .dashboard-header-pro,
 .dashboard-header,
 .user-dashboard-header {
-  background: linear-gradient(135deg, var(--white) 0%, var(--light-gray) 100%) !important;
   position: relative;
   z-index: 2;
 }

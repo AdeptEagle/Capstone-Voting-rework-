@@ -5,12 +5,12 @@ export class CreatePositionDto {
   @ApiProperty({ description: 'Position title', example: 'Student Council President' })
   @IsString()
   @MinLength(2)
-  title: string;
+  Position_Title: string;
 
   @ApiProperty({ description: 'Position description', example: 'Leader of the student council', required: false })
   @IsString()
   @IsOptional()
-  description?: string;
+  Position_Description?: string;
 
   @ApiProperty({ description: 'Vote limit for this position', example: 1, default: 1, minimum: 1, maximum: 10 })
   @IsInt()

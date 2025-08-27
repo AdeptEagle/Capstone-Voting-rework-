@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { adminLogin } from '../services/api';
-import { storeRole } from '../services/auth';
+import { storeRole, clearUserData } from '../services/auth';
 import './AdminLogin.css';
 
 const AdminLogin = () => {
@@ -9,6 +9,7 @@ const AdminLogin = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -18,14 +19,15 @@ const AdminLogin = () => {
     try {
       const res = await adminLogin(username, password);
       
-      // Store role temporarily for navigation (will be cleared on logout)
+      // Clear any existing data and store role securely
+      clearUserData();
       storeRole(res.admin.role);
       
       setLoading(false);
       if (res.admin.role === 'SUPERADMIN') {
         navigate('/superadmin');
       } else {
-        navigate('/admin');
+        navigate('/admin/dashboard');
       }
     } catch (err) {
       setLoading(false);
@@ -92,13 +94,22 @@ const AdminLogin = () => {
           </div>
           <div className="admin-login-field">
             <label htmlFor="password">Password</label>
-            <input
-              type="password"
-              id="password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              required
-            />
+            <div className="password-input-group">
+              <input
+                type={showPassword ? "text" : "password"}
+                id="password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                required
+              />
+              <button
+                type="button"
+                className="password-toggle-btn"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                <i className={`fas fa-${showPassword ? 'eye-slash' : 'eye'}`}></i>
+              </button>
+            </div>
             <div className="forgot-password-link">
               <button
                 type="button"

@@ -5,12 +5,12 @@ export class CreateDepartmentDto {
   @ApiProperty({ description: 'Department name', example: 'Computer Science' })
   @IsString()
   @MinLength(2)
-  name: string;
+  Department_Name: string;
 
   @ApiProperty({ description: 'Department description', example: 'Department of Computer Science and Engineering', required: false })
   @IsString()
   @IsOptional()
-  description?: string;
+  Department_Description?: string;
 
   @ApiProperty({ description: 'Custom department ID (optional)', example: 'CCS', required: false })
   @IsString()

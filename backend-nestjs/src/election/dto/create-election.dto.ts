@@ -4,12 +4,12 @@ import { ApiProperty } from '@nestjs/swagger';
 export class CreateElectionDto {
   @ApiProperty({ description: 'Election title' })
   @IsString()
-  title: string;
+  Election_Title: string;
 
   @ApiProperty({ description: 'Election description' })
   @IsOptional()
   @IsString()
-  description?: string;
+  Election_Description?: string;
 
   @ApiProperty({ description: 'Election start date' })
   @IsDateString()
