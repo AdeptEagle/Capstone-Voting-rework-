@@ -13,8 +13,21 @@ function generateId(): string {
 // Helper function to generate student ID
 function generateStudentId(): string {
   const year = Math.floor(Math.random() * 4) + 2020; // Random year between 2020-2023
-  const randomNum = Math.floor(Math.random() * 9000) + 1000; // Random 4-digit number
+  const randomNum = Math.floor(Math.random() * 90000) + 10000; // Random 5-digit number
   return `${year}-${randomNum}`;
+}
+
+// Set to track used student IDs to avoid duplicates
+const usedStudentIds = new Set<string>();
+
+// Helper function to generate unique student ID
+function generateUniqueStudentId(): string {
+  let studentId: string;
+  do {
+    studentId = generateStudentId();
+  } while (usedStudentIds.has(studentId));
+  usedStudentIds.add(studentId);
+  return studentId;
 }
 
 async function main() {
@@ -275,7 +288,7 @@ async function main() {
         id: generateId(),
         Candidate_Name: 'John Michael Santos',
         Candidate_Email: 'john.santos@student.edu',
-        Candidate_StudentId: generateStudentId(),
+        Candidate_StudentId: generateUniqueStudentId(),
         manifesto: 'I will promote technology innovation and digital literacy among students.',
         positionId: positions[0].id,
         departmentId: departments[0].id,
@@ -287,7 +300,7 @@ async function main() {
         id: generateId(),
         Candidate_Name: 'Maria Clara Reyes',
         Candidate_Email: 'maria.reyes@student.edu',
-        Candidate_StudentId: generateStudentId(),
+        Candidate_StudentId: generateUniqueStudentId(),
         manifesto: 'I will advocate for better computer lab facilities and coding workshops.',
         positionId: positions[0].id,
         departmentId: departments[0].id,
@@ -299,7 +312,7 @@ async function main() {
         id: generateId(),
         Candidate_Name: 'Carlos Antonio Cruz',
         Candidate_Email: 'carlos.cruz@student.edu',
-        Candidate_StudentId: generateStudentId(),
+        Candidate_StudentId: generateUniqueStudentId(),
         manifesto: 'I will work towards establishing industry partnerships for internships.',
         positionId: positions[1].id,
         departmentId: departments[0].id,
@@ -312,7 +325,7 @@ async function main() {
         id: generateId(),
         Candidate_Name: 'Ana Sofia Mendoza',
         Candidate_Email: 'ana.mendoza@student.edu',
-        Candidate_StudentId: generateStudentId(),
+        Candidate_StudentId: generateUniqueStudentId(),
         manifesto: 'I will push for better engineering workshop facilities and safety protocols.',
         positionId: positions[0].id,
         departmentId: departments[1].id,
@@ -324,7 +337,7 @@ async function main() {
         id: generateId(),
         Candidate_Name: 'Luis Miguel Torres',
         Candidate_Email: 'luis.torres@student.edu',
-        Candidate_StudentId: generateStudentId(),
+        Candidate_StudentId: generateUniqueStudentId(),
         manifesto: 'I will organize engineering competitions and innovation challenges.',
         positionId: positions[2].id,
         departmentId: departments[1].id,

@@ -1,4 +1,4 @@
-import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
+﻿import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateVoterDto, UpdateVoterDto } from './dto';
 import * as bcrypt from 'bcryptjs';
@@ -62,7 +62,7 @@ export class VoterService {
 
   async getVoterByStudentId(studentId: string) {
     const voter = await this.prisma.voter.findUnique({
-      where: { Voter_StudentId: studentId }, // Use Voter_StudentId field
+      where: { Voter_StudentId: studentId },
       include: {
         department: {
           select: {
@@ -95,7 +95,7 @@ export class VoterService {
       where: {
         OR: [
           { Voter_Email: Voter_Email },
-          { Voter_StudentId: Voter_StudentId }, // Check if student ID already exists
+          { Voter_StudentId: Voter_StudentId },
         ],
       },
     });
@@ -117,8 +117,6 @@ export class VoterService {
       Voter_Email: Voter_Email,
       password: hashedPassword,
     };
-
-    // departmentId and courseId are now required fields, no need for conditional logic
 
     const voter = await this.prisma.voter.create({
       data: voterData,
