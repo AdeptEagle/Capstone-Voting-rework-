@@ -1,4 +1,3 @@
-/* Standardized Container and Card Spacing */
 .positions-container {
   padding: 0 0 2rem 0;
   background-color: #f8f9fa;
@@ -32,7 +31,6 @@
   padding: 0.75rem 1rem;
 }
 
-/* Search and Sort Styles */
 .sortable-header {
   user-select: none;
   transition: background-color 0.2s ease;
@@ -57,7 +55,6 @@
   box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
 }
 
-/* Search results counter */
 .text-muted {
   font-size: 0.875rem;
 } 

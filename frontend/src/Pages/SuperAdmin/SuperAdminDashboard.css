@@ -1,348 +1,230 @@
-/* SuperAdminDashboard.css */
-.superadmin-dashboard {
-  padding: 0;
-  background-color: var(--background-off-white);
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap');
+
+/* Dashboard Container */
+.dashboard-container {
+  padding: 2rem;
+  font-family: "Inter", sans-serif;
+  background-color: #f1f5f9;
   min-height: 100vh;
 }
 
-/* Force flat background on dashboard header - Maximum specificity */
-.superadmin-dashboard .dashboard-header-pro,
-.superadmin-dashboard div.dashboard-header-pro,
-.superadmin-dashboard .dashboard-header-pro.dashboard-header-pro {
-  background: #ffffff !important;
-  background: var(--white) !important;
-  background: white !important;
-}
-
-/* Unified Professional Dashboard Header */
-.dashboard-header-pro {
-  background: var(--white) !important;
-  border-radius: 0 0 16px 16px;
-  box-shadow: 0 4px 16px rgba(29, 53, 87, 0.08);
-  padding: 2rem 2rem 2rem 2rem;
+/* Header */
+.dashboard-header {
   margin-bottom: 2rem;
-  display: flex;
-  flex-direction: column;
-  border: 1px solid rgba(69, 123, 157, 0.1);
-  border-top: none;
+  text-align: center;
 }
-
-.dashboard-header-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  flex-wrap: wrap;
-}
-
-.dashboard-title-pro {
-  color: var(--primary-navy);
-  font-size: 2.5rem;
+.dashboard-header h2 {
   font-weight: 800;
-  margin: 0 0 0.5rem 0;
-  letter-spacing: -1px;
+  color: #1e293b;
+}
+.dashboard-header p {
+  font-size: 0.95rem;
+  color: #64748b;
 }
 
-.dashboard-subtitle-pro {
-  color: var(--text-muted);
-  font-size: 1.1rem;
+/* Cards Grid */
+.stat-cards-grid,
+.action-cards-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1.5rem;
+}
+
+/* Stat & Action Cards */
+.stat-card,
+.action-card {
+  flex: 1 1 180px;
+  max-width: 200px;
+  min-height: 150px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(10px);
+  border-radius: 1rem;
+  padding: 1.8rem 1rem;
+  text-align: center;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+.stat-card:hover,
+.action-card:hover {
+  transform: translateY(-5px) scale(1.03);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
+}
+
+/* Icons */
+.stat-icon {
+  font-size: 2.2rem;
+  margin-bottom: 0.8rem;
+}
+
+/* Text */
+.stat-card h3,
+.action-card p {
+  font-size: 1.8rem;
+  font-weight: 700;
   margin: 0;
+}
+.stat-card p,
+.action-card p {
+  font-size: 1rem;
   font-weight: 500;
 }
 
-.dashboard-header-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
+/* Gradient Colors */
+.stat-card.admin,
+.action-card.admin {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+}
+.stat-card.position,
+.action-card.position {
+  background: linear-gradient(135deg, #f97316, #ea580c);
+  color: white;
+}
+.stat-card.candidate,
+.action-card.candidate {
+  background: linear-gradient(135deg, #22c55e, #15803d);
+  color: white;
+}
+.stat-card.voter,
+.action-card.voter {
+  background: linear-gradient(135deg, #9333ea, #7e22ce);
+  color: white;
+}
+.stat-card.vote,
+.action-card.vote {
+  background: linear-gradient(135deg, #e11d48, #be123c);
+  color: white;
 }
 
-/* Stat Cards */
-.stat-card {
-  background: linear-gradient(135deg, var(--white) 0%, var(--light-gray) 100%);
-  border-radius: 16px;
-  padding: 1.5rem;
-  box-shadow: 0 8px 32px rgba(29, 53, 87, 0.08);
-  border: 1px solid rgba(69, 123, 157, 0.1);
-  transition: all 0.3s ease;
-  height: 100%;
-  position: relative;
+/* Quick Actions Section */
+.quick-actions {
+  margin-top: 3rem;
+  text-align: center;
+}
+.quick-actions h4 {
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  color: #1e293b;
+}
+
+/* Election Status Dashboard */
+.election-status {
+  margin-top: 3rem;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  background-color: #ffffff;
+  padding: 2rem;
+  border-radius: 1rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+}
+.election-status h4 {
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 1.5rem;
+}
+.status-card {
+  width: 100%;
+  max-width: 800px;
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
   overflow: hidden;
 }
-
-.stat-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: linear-gradient(90deg, var(--primary-navy), var(--accent-steel));
-}
-
-.stat-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 16px 48px rgba(29, 53, 87, 0.15);
-}
-
-.stat-icon {
-  width: 70px;
-  height: 70px;
-  border-radius: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 1rem;
-  font-size: 28px;
-  color: var(--text-white);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-  transition: all 0.3s ease;
-}
-
-.stat-card:hover .stat-icon {
-  transform: scale(1.1);
-}
-
-.admin-icon {
-  background: linear-gradient(135deg, var(--primary-navy), var(--accent-steel));
-}
-
-.position-icon {
-  background: linear-gradient(135deg, #6b7280, #4b5563);
-}
-
-.candidate-icon {
-  background: linear-gradient(135deg, #059669, #047857);
-}
-
-.voter-icon {
-  background: linear-gradient(135deg, #2563eb, #1d4ed8);
-}
-
-.vote-icon {
-  background: linear-gradient(135deg, #d97706, #b45309);
-}
-
-.stat-content h3 {
-  font-size: 2.5rem;
-  font-weight: 800;
-  margin: 0 0 0.5rem 0;
-  color: var(--primary-navy);
-  line-height: 1;
-}
-
-.stat-content p {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  margin: 0;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-/* Action Buttons */
-.action-btn {
-  background: white;
-  color: var(--text-dark);
-  border: 2px solid transparent;
-  padding: 1rem 2rem;
-  border-radius: 12px;
-  font-weight: 600;
-  font-size: 0.875rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  box-shadow: 0 4px 12px rgba(29, 53, 87, 0.08);
-}
-
-.action-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(29, 53, 87, 0.15);
-  color: var(--text-dark);
-  text-decoration: none;
-}
-
-/* Specific button color overrides for better contrast */
-.btn-primary.action-btn {
-  background: linear-gradient(135deg, #4f46e5, #6366f1);
-  color: white;
-  border-color: #4f46e5;
-}
-
-.btn-primary.action-btn:hover {
-  background: linear-gradient(135deg, #4338ca, #5855eb);
-  color: white;
-}
-
-.btn-success.action-btn {
-  background: linear-gradient(135deg, #059669, #10b981);
-  color: white;
-  border-color: #059669;
-}
-
-.btn-success.action-btn:hover {
-  background: linear-gradient(135deg, #047857, #0d9488);
-  color: white;
-}
-
-.btn-info.action-btn {
-  background: linear-gradient(135deg, #0891b2, #06b6d4);
-  color: white;
-  border-color: #0891b2;
-}
-
-.btn-info.action-btn:hover {
-  background: linear-gradient(135deg, #0e7490, #0891b2);
-  color: white;
-}
-
-.btn-warning.action-btn {
-  background: linear-gradient(135deg, #d97706, #f59e0b);
-  color: white;
-  border-color: #d97706;
-}
-
-.btn-warning.action-btn:hover {
-  background: linear-gradient(135deg, #b45309, #d97706);
-  color: white;
-}
-
-/* Status Items */
-.status-item {
+.status-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.75rem 0;
-  border-bottom: 1px solid var(--light-gray);
-}
-
-.status-item:last-child {
-  border-bottom: none;
-}
-
-.status-label {
+  padding: 1rem 1.5rem;
+  background-color: #f3f4f6;
   font-weight: 600;
-  color: var(--text-muted);
+}
+.status-header i {
+  margin-right: 0.5rem;
+  color: #3b82f6;
+}
+.refresh-btn {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  padding: 0.4rem 0.8rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+.refresh-btn:hover {
+  background: #2563eb;
+}
+.status-body {
+  padding: 1.5rem;
+  text-align: center;
+  font-weight: 500;
+}
+.status-body .no-election {
+  color: #b45309;
+  background: #fef3c7;
+  padding: 1rem;
+  border-radius: 0.75rem;
+  font-weight: 600;
 }
 
-.status-value {
-  font-weight: 700;
-  color: var(--primary-navy);
+/* Active Election Status Styles */
+.active-election-details {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
-/* Activity Items */
-.activity-item {
+/* --- MODIFICATION START --- */
+.active-election-details h5 {
+  font-weight: 800; /* Bolder font weight */
+  font-size: 1.5rem; /* Larger font size */
+  color: #1e293b;
+  text-align: left;
+  margin-bottom: 1rem; /* Increase margin for more separation */
+  text-transform: uppercase; /* Use uppercase for emphasis */
+  letter-spacing: 1px; /* Add slight letter spacing */
+}
+/* --- MODIFICATION END --- */
+
+.status-item {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 0.75rem 0;
-  border-bottom: 1px solid var(--light-gray);
+  gap: 10px;
+  color: #4b5563;
+  text-align: left;
 }
-
-.activity-item:last-child {
-  border-bottom: none;
-}
-
-.activity-item i {
-  color: var(--primary-navy);
-  font-size: 1.1rem;
-}
-
-.activity-item span {
-  font-weight: 600;
-  color: var(--text-dark);
-}
-
-.activity-item small {
-  color: var(--text-muted);
-  font-size: 0.875rem;
-}
-
-/* Card Styles */
-.card {
-  background: linear-gradient(135deg, var(--white) 0%, var(--light-gray) 100%);
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(29, 53, 87, 0.08);
-  border: 1px solid rgba(69, 123, 157, 0.1);
-  overflow: hidden;
-}
-
-.card-header {
-  background: linear-gradient(135deg, var(--primary-navy), var(--accent-steel));
-  color: white;
-  padding: 1.5rem 2rem;
-  border-bottom: none;
-}
-
-.card-header h5 {
+.status-item p {
   margin: 0;
-  font-weight: 700;
-  font-size: 1.25rem;
+  font-size: 1rem;
 }
 
-.card-body {
-  padding: 2rem;
+.status-item i {
+  font-size: 1.2rem;
+  color: #3b82f6;
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-  .superadmin-dashboard {
-    padding: 0;
-  }
-  
-  .dashboard-header-pro {
-    padding: 1.5rem 1rem;
-    margin-bottom: 1.5rem;
-  }
-  
-  .dashboard-title-pro {
-    font-size: 2rem;
-  }
-  
-  .stat-card {
-    padding: 1rem;
-  }
-  
-  .action-btn {
-    padding: 0.75rem 1.5rem;
-    font-size: 0.8rem;
-  }
+/* Progress Bar */
+.progress-bar-container {
+  background-color: #e2e8f0;
+  height: 10px;
+  border-radius: 5px;
+  overflow: hidden;
+  margin-top: 0.5rem;
 }
 
-/* Loading Spinner */
-.spinner-border {
-  width: 3rem;
-  height: 3rem;
+.progress-bar {
+  background: linear-gradient(90deg, #22c55e, #15803d);
+  height: 100%;
+  transition: width 0.5s ease-in-out;
 }
 
-/* Alert Styles */
-.alert {
-  border-radius: 12px;
-  border: none;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  margin-bottom: 2rem;
+.progress-text {
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  color: #64748b;
+  font-weight: 500;
 }
-
-/* Additional Card Styles */
-.superadmin-dashboard .card {
-  margin-bottom: 2rem;
-  transition: all 0.3s ease;
-}
-
-.superadmin-dashboard .card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 40px rgba(29, 53, 87, 0.12);
-}
-
-.superadmin-dashboard .card-header {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.superadmin-dashboard .card-body {
-  background: var(--white);
-}
-
-.superadmin-dashboard .card:first-child {
-  margin-top: 0;
-} 

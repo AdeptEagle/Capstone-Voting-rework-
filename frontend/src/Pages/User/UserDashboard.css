@@ -1,4 +1,3 @@
-/* UserDashboard.css */
 .user-dashboard-container {
   max-width: 800px;
   margin: 40px auto;
@@ -11,7 +10,6 @@
   z-index: 1;
 }
 
-/* Ensure proper background inheritance */
 .user-dashboard {
   background-color: var(--background-off-white) !important;
   min-height: 100vh;
@@ -221,7 +219,6 @@
   font-size: 0.9rem;
 }
 
-/* Election Information Section */
 .election-info-section {
   margin-bottom: 2rem;
 }
