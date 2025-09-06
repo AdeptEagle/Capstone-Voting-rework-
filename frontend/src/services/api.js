@@ -30,8 +30,8 @@ api.interceptors.response.use(
       // Don't redirect if we're already on a login page to avoid infinite loops
       const currentPath = window.location.pathname;
       if (!currentPath.includes('/login') && !currentPath.includes('/register')) {
-        const role = localStorage.getItem('role') || 'user';
-        if (role === 'admin' || role === 'SUPERADMIN') {
+        // Check current path to determine appropriate redirect
+        if (currentPath.includes('/admin') || currentPath.includes('/superadmin')) {
           window.location.href = '/admin-login';
         } else {
           window.location.href = '/user-login';
@@ -46,8 +46,9 @@ api.interceptors.response.use(
       localStorage.removeItem('token');
       localStorage.removeItem('role');
       
-      const role = localStorage.getItem('role') || 'user';
-      if (role === 'admin' || role === 'SUPERADMIN') {
+      // Check current path to determine appropriate redirect
+      const currentPath = window.location.pathname;
+      if (currentPath.includes('/admin') || currentPath.includes('/superadmin')) {
         window.location.href = '/admin-login';
       } else {
         window.location.href = '/user-login';
@@ -88,8 +89,9 @@ const handleAuthError = (error) => {
     localStorage.removeItem('token');
     localStorage.removeItem('role');
     
-    const role = localStorage.getItem('role') || 'user';
-    if (role === 'admin' || role === 'SUPERADMIN') {
+    // Check current path to determine appropriate redirect
+    const currentPath = window.location.pathname;
+    if (currentPath.includes('/admin') || currentPath.includes('/superadmin')) {
       window.location.href = '/admin-login';
     } else {
       window.location.href = '/user-login';

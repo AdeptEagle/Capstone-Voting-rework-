@@ -8,7 +8,7 @@ services:
     environment:
       - NODE_ENV=development
       - DATABASE_URL=postgresql://postgres:password@db:5432/voting_system
-      - JWT_SECRET=your-super-secret-jwt-key-change-in-production
+      - JWT_SECRET=voting-system-jwt-secret-key-2024
     depends_on:
       - db
     volumes:

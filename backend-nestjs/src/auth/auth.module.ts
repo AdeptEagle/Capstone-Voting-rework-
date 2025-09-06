@@ -12,7 +12,7 @@ import { VotingGateway } from '../websocket/voting.gateway';
   imports: [
     PassportModule,
     JwtModule.register({
-      secret: process.env.JWT_SECRET || 'your-secret-key',
+      secret: process.env.JWT_SECRET || 'voting-system-jwt-secret-key-2024',
       signOptions: { expiresIn: '24h' },
     }),
   ],

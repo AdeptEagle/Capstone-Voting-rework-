@@ -17,7 +17,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         ExtractJwt.fromAuthHeaderAsBearerToken(),
       ]),
       ignoreExpiration: false,
-      secretOrKey: process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this-in-production',
+      secretOrKey: process.env.JWT_SECRET || 'voting-system-jwt-secret-key-2024',
     });
   }
 
@@ -29,7 +29,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
     return {
       userId: payload.sub,
-      studentId: payload.studentId,
+      studentId: payload.studentId || null, // Handle admin tokens that don't have studentId
       username: payload.username,
       role: payload.role,
       type: payload.type,
