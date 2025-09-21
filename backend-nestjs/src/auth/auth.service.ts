@@ -87,7 +87,7 @@ export class AuthService {
 
         return {
           isAuthenticated: true,
-          role: 'user',
+          role: 'USER',
           user: {
             id: voter.id,
             Voter_Name: voter.Voter_Name,

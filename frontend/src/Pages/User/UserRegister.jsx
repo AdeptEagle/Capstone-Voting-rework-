@@ -321,11 +321,11 @@ const UserRegister = () => {
           {success && <div className="user-register-success">{success}</div>}
 
           <div className="user-register-field">
-            <label htmlFor="name">Full Name *</label>
+            <label htmlFor="Voter_Name">Full Name *</label>
             <input
               type="text"
-              id="name"
-              name="name"
+              id="Voter_Name"
+              name="Voter_Name"
               value={formData.Voter_Name}
               onChange={handleChange}
               placeholder="Enter your full name"
@@ -335,11 +335,11 @@ const UserRegister = () => {
           </div>
 
           <div className="user-register-field">
-            <label htmlFor="email">Email Address *</label>
+            <label htmlFor="Voter_Email">Email Address *</label>
             <input
               type="email"
-              id="email"
-              name="email"
+              id="Voter_Email"
+              name="Voter_Email"
               value={formData.Voter_Email}
               onChange={handleChange}
               placeholder="Enter your email address"
@@ -349,11 +349,11 @@ const UserRegister = () => {
           </div>
 
           <div className="user-register-field">
-            <label htmlFor="studentId">Student ID *</label>
+            <label htmlFor="Voter_StudentId">Student ID *</label>
             <input
               type="text"
-              id="studentId"
-              name="studentId"
+              id="Voter_StudentId"
+              name="Voter_StudentId"
               value={formData.Voter_StudentId}
               onChange={handleChange}
               placeholder="YYYY-NNNNN (e.g., 2022-00222)"

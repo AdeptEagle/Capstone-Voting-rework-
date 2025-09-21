@@ -26,7 +26,7 @@ const VoteTraceability = () => {
   // Check if user is admin or superadmin
   const currentUser = checkCurrentUser();
   const userRole = currentUser.role;
-  const isAdmin = userRole === 'admin' || userRole === 'superadmin';
+  const isAdmin = userRole === 'ADMIN' || userRole === 'SUPERADMIN';
 
   useEffect(() => {
     const fetchData = async () => {

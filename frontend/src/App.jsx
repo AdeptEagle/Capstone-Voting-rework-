@@ -72,8 +72,8 @@ function UserRoute({ children }) {
     return <Navigate to="/user-login" />;
   }
   
-  if (currentUser.role !== 'user') {
-    console.log('UserRoute: Role mismatch, expected "user", got:', currentUser.role);
+  if (currentUser.role !== 'USER') {
+    console.log('UserRoute: Role mismatch, expected "USER", got:', currentUser.role);
     return <Navigate to="/user-login" />;
   }
   

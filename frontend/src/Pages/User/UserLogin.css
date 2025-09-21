@@ -268,6 +268,44 @@
   text-align: center;
   font-size: 0.9rem;
   font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  animation: slideIn 0.3s ease-out;
+}
+
+.user-login-error .error-content {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  justify-content: center;
+}
+
+.user-login-error .error-close-btn {
+  background: none;
+  border: none;
+  color: #e53e3e;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+  margin-left: 0.5rem;
+  transition: background-color 0.2s ease;
+}
+
+.user-login-error .error-close-btn:hover {
+  background-color: rgba(229, 62, 62, 0.1);
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .divider-or {

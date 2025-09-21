@@ -177,12 +177,12 @@ const Sidebar = ({ isOpen, onToggle }) => {
     try {
       await logout();
       // Redirect to appropriate login page based on role
-      const redirectUrl = userRole === 'user' ? '/user-login' : '/admin-login';
+      const redirectUrl = userRole === 'USER' ? '/user-login' : '/admin-login';
       window.location.href = redirectUrl;
     } catch (error) {
       console.error('Logout failed:', error);
       // Still redirect even if logout fails
-      const redirectUrl = userRole === 'user' ? '/user-login' : '/admin-login';
+      const redirectUrl = userRole === 'USER' ? '/user-login' : '/admin-login';
       window.location.href = redirectUrl;
     }
   };
@@ -243,7 +243,7 @@ const Sidebar = ({ isOpen, onToggle }) => {
           <h3 className="admin-name">{userName}</h3>
           <div className="role-badge">
             <i className="fas fa-circle"></i>
-            <span>{userRole === 'user' ? 'VOTER' : userRole?.toUpperCase() || 'USER'}</span>
+            <span>{userRole === 'USER' ? 'VOTER' : userRole?.toUpperCase() || 'USER'}</span>
           </div>
         </div>
 

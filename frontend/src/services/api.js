@@ -19,17 +19,28 @@ api.interceptors.response.use(
     
     // Handle authentication errors (401/403)
     if (error.response?.status === 401 || error.response?.status === 403) {
-      console.log('Authentication error detected, redirecting to login');
-      // Clear local data and redirect to appropriate login
-      localStorage.removeItem('role');
-      localStorage.removeItem('userId');
-      localStorage.removeItem('username');
-      localStorage.removeItem('email');
-      localStorage.removeItem('token');
+      console.log('Authentication error detected');
       
-      // Don't redirect if we're already on a login page to avoid infinite loops
+      // NEVER redirect if we're on a login page - let the component handle the error
       const currentPath = window.location.pathname;
-      if (!currentPath.includes('/login') && !currentPath.includes('/register')) {
+      const isOnLoginPage = currentPath.includes('/login') || 
+                           currentPath.includes('/register') || 
+                           currentPath.includes('/user-login') || 
+                           currentPath.includes('/admin-login');
+      
+      if (isOnLoginPage) {
+        console.log('On login page - NOT redirecting, letting component handle error');
+        // Just return the error, don't redirect
+        return Promise.reject(error);
+      } else {
+        console.log('Not on login page, redirecting to login');
+        // Clear local data and redirect to appropriate login
+        localStorage.removeItem('role');
+        localStorage.removeItem('userId');
+        localStorage.removeItem('username');
+        localStorage.removeItem('email');
+        localStorage.removeItem('token');
+        
         // Check current path to determine appropriate redirect
         if (currentPath.includes('/admin') || currentPath.includes('/superadmin')) {
           window.location.href = '/admin-login';
@@ -241,6 +252,26 @@ export const getAvailableVoters = async () => {
     return response.data;
   } catch (error) {
     console.error('Error fetching available voters:', error);
+    throw error;
+  }
+};
+
+export const getVoterPassword = async (id) => {
+  try {
+    const response = await api.get(`/voters/${id}/password`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching voter password:', error);
+    throw error;
+  }
+};
+
+export const resetVoterPassword = async (id) => {
+  try {
+    const response = await api.put(`/voters/${id}/reset-password`);
+    return response.data;
+  } catch (error) {
+    console.error('Error resetting voter password:', error);
     throw error;
   }
 };
@@ -553,7 +584,7 @@ export const userRegister = async (userData) => {
 
 export const userLogin = async (studentId, password) => {
   try {
-    const response = await api.post('/auth/user/login', { studentId, password });
+    const response = await api.post('/auth/user/login', { Voter_StudentId: studentId, password });
     return response.data;
   } catch (error) {
     console.error('Error during user login:', error);

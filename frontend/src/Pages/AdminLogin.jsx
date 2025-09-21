@@ -12,8 +12,36 @@ const AdminLogin = () => {
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
+
   const handleSubmit = async (e) => {
+    // Aggressively prevent any form submission behavior
     e.preventDefault();
+    e.stopPropagation();
+    if (e.stopImmediatePropagation) {
+      e.stopImmediatePropagation();
+    }
+    
+    // Prevent any default form behavior
+    if (e && e.preventDefault) {
+      e.preventDefault();
+    }
+    
+    // Return false to prevent any form submission
+    if (e && e.returnValue !== undefined) {
+      e.returnValue = false;
+    }
+    
+    // Basic validation before submitting
+    if (!username.trim()) {
+      setError('Please enter your username.');
+      return;
+    }
+    
+    if (!password.trim()) {
+      setError('Please enter your password.');
+      return;
+    }
+    
     setError('');
     setLoading(true);
     try {
@@ -30,9 +58,32 @@ const AdminLogin = () => {
         navigate('/admin/dashboard');
       }
     } catch (err) {
+      console.error('Admin login error:', err);
       setLoading(false);
-      setError(err.response?.data?.message || 'Login failed');
+      
+      // Provide more specific error messages
+      let errorMessage = 'Login failed. Please try again.';
+      
+      if (err.response?.status === 401) {
+        errorMessage = 'Invalid username or password. Please check your credentials and try again.';
+      } else if (err.response?.status === 400) {
+        errorMessage = err.response?.data?.message || 'Invalid input. Please check your credentials.';
+      } else if (err.response?.status === 500) {
+        errorMessage = 'Server error. Please try again later.';
+      } else if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      }
+      
+      setError(errorMessage);
+      
+      // Clear error after 10 seconds
+      setTimeout(() => {
+        setError('');
+      }, 10000);
     }
+    
+    // Return false to prevent any form submission
+    return false;
   };
 
   return (
@@ -81,7 +132,22 @@ const AdminLogin = () => {
       <div className="admin-login-right-panel">
         <form className="admin-login-form card-shadow" onSubmit={handleSubmit}>
           <h2>Admin Login</h2>
-          {error && <div className="admin-login-error">{error}</div>}
+          {error && (
+            <div className="admin-login-error" style={{display: 'block', visibility: 'visible', opacity: 1}}>
+              <div className="error-content">
+                <i className="fas fa-exclamation-triangle me-2"></i>
+                {error}
+              </div>
+              <button
+                type="button"
+                className="error-close-btn"
+                onClick={() => setError('')}
+                title="Dismiss error"
+              >
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+          )}
           <div className="admin-login-field">
             <label htmlFor="username">Username</label>
             <input

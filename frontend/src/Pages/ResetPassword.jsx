@@ -71,7 +71,7 @@ const ResetPassword = () => {
       
       // Redirect after 2 seconds
       setTimeout(() => {
-        if (userType === 'admin') {
+        if (userType === 'ADMIN') {
           navigate('/admin-login');
         } else {
           navigate('/user-login');
@@ -86,7 +86,7 @@ const ResetPassword = () => {
   };
 
   const handleBackToLogin = () => {
-    if (userType === 'admin') {
+    if (userType === 'ADMIN') {
       navigate('/admin-login');
     } else {
       navigate('/user-login');

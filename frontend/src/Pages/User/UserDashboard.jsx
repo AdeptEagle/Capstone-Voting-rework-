@@ -44,19 +44,15 @@ const UserDashboard = () => {
         
         if (response.ok) {
           const data = await response.json();
-          console.log('Auth status response:', data);
           
           if (data.isAuthenticated && data.user) {
             setUser(data.user);
             setHasVoted(data.user.hasVoted);
-            console.log('User data set:', data.user);
           } else {
-            console.log('Not authenticated, redirecting to login');
             navigate('/user-login');
             return;
           }
         } else {
-          console.log('Auth status check failed, redirecting to login');
           navigate('/user-login');
           return;
         }
@@ -266,7 +262,7 @@ const UserDashboard = () => {
   }
 
   // Final safety check - if we still don't have user data, show a simple message
-  if (!user || !user.name) {
+  if (!user || !user.Voter_Name) {
     return (
       <div className="user-dashboard-container">
         <div className="user-dashboard-loading">
@@ -282,8 +278,8 @@ const UserDashboard = () => {
   return (
     <div className="user-dashboard-container">
       <div className="user-dashboard-header">
-        <h2>Welcome, {user.name}!</h2>
-        <p>Your Student ID: <strong>{user.studentId}</strong></p>
+        <h2>Welcome, {user.Voter_Name}!</h2>
+        <p>Your Student ID: <strong>{user.Voter_StudentId}</strong></p>
         
         {/* WebSocket Test Button */}
         <div className="d-flex justify-content-end mt-2">

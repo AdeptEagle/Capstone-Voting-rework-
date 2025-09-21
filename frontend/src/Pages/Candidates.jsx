@@ -376,7 +376,7 @@ const Candidates = () => {
   };
 
   // User view: modern candidate cards grouped by position
-  if (role === 'user') {
+  if (role === 'USER') {
     // Check if user can view candidates (has active election)
     if (!canViewCandidates) {
       return <ElectionStatusMessage type="candidates" />;
@@ -613,7 +613,7 @@ const Candidates = () => {
                 <div className="modal-footer">
                   <div className="d-flex justify-content-between w-100">
                     {/* Admin Actions - Only for Admins */}
-                    {(role === 'admin' || role === 'superadmin') && (
+                    {(role === 'ADMIN' || role === 'SUPERADMIN') && (
                       <div className="modal-actions">
                         <button 
                           className="btn btn-outline-primary me-2"

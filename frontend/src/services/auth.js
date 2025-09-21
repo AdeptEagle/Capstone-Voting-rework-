@@ -63,7 +63,7 @@ function verifyRoleHash(hash, expectedRole) {
 
 // Get role from hash
 function getRoleFromHash(hash) {
-  const roles = ['ADMIN', 'SUPERADMIN', 'user'];
+  const roles = ['ADMIN', 'SUPERADMIN', 'USER'];
   for (const role of roles) {
     if (verifyRoleHash(hash, role)) {
       return role;

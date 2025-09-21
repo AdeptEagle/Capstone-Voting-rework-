@@ -345,6 +345,8 @@ export class VoterService {
       select: {
         id: true,
         Voter_StudentId: true,
+        Voter_Name: true,
+        Voter_Email: true,
         password: true,
       },
     });
@@ -353,11 +355,19 @@ export class VoterService {
       throw new NotFoundException('Voter not found');
     }
 
-    // For security, we don't return the actual hashed password
-    // Instead, we return a message indicating the password status
+    // Check if the current password is the default (student ID)
+    const isDefaultPassword = await bcrypt.compare(voter.Voter_StudentId, voter.password);
+    
     return {
       message: 'Password retrieved successfully',
-      hasCustomPassword: voter.password !== voter.Voter_StudentId,
+      voter: {
+        id: voter.id,
+        studentId: voter.Voter_StudentId,
+        name: voter.Voter_Name,
+        email: voter.Voter_Email,
+      },
+      currentPassword: isDefaultPassword ? voter.Voter_StudentId : 'Custom Password Set',
+      isDefaultPassword: isDefaultPassword,
       defaultPassword: voter.Voter_StudentId,
     };
   }

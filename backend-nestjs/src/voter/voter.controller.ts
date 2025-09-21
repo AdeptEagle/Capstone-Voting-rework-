@@ -1,10 +1,14 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { VoterService } from './voter.service';
 import { CreateVoterDto, UpdateVoterDto } from './dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
 
 @ApiTags('Voter')
 @Controller('voters')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class VoterController {
   constructor(private readonly voterService: VoterService) {}
 
@@ -72,6 +76,7 @@ export class VoterController {
   }
 
   @Get(':id/password')
+  @Roles('ADMIN', 'SUPERADMIN')
   @ApiOperation({ summary: 'Get voter password (Admin only)' })
   @ApiResponse({ status: 200, description: 'Voter password retrieved' })
   @ApiResponse({ status: 404, description: 'Voter not found' })
@@ -81,9 +86,11 @@ export class VoterController {
   }
 
   @Put(':id/reset-password')
+  @Roles('ADMIN', 'SUPERADMIN')
   @ApiOperation({ summary: 'Reset voter password to student ID' })
   @ApiResponse({ status: 200, description: 'Password reset successfully' })
   @ApiResponse({ status: 404, description: 'Voter not found' })
+  @ApiResponse({ status: 403, description: 'Access denied' })
   async resetVoterPassword(@Param('id') id: string) {
     return this.voterService.resetVoterPassword(id);
   }

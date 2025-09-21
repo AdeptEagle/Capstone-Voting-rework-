@@ -14,6 +14,7 @@ const UserLogin = () => {
   const [socket, setSocket] = useState(null);
   const navigate = useNavigate();
 
+
   // WebSocket connection setup
   useEffect(() => {
     console.log('🔌 [UserLogin] Setting up WebSocket connection...');
@@ -82,16 +83,45 @@ const UserLogin = () => {
   }, []);
 
   const handleSubmit = async (e) => {
+    // Aggressively prevent any form submission behavior
     e.preventDefault();
+    e.stopPropagation();
+    if (e.stopImmediatePropagation) {
+      e.stopImmediatePropagation();
+    }
+    
+    // Prevent any default form behavior
+    if (e && e.preventDefault) {
+      e.preventDefault();
+    }
+    
+    // Return false to prevent any form submission
+    if (e && e.returnValue !== undefined) {
+      e.returnValue = false;
+    }
+    
+    // Basic validation before submitting
+    if (!studentId.trim()) {
+      setError('Please enter your Student ID.');
+      return;
+    }
+    
+    if (!password.trim()) {
+      setError('Please enter your password.');
+      return;
+    }
+    
+    // Clear any previous errors
     setError('');
     setLoading(true);
+    
     try {
       const res = await userLogin(studentId, password);
       
       // Clear any existing data and store user data securely
       clearUserData();
-      storeUserData(res.voter, 'user');
-      storeRole('user');
+      storeUserData(res.voter, 'USER');
+      storeRole('USER');
       
       // Store userId in localStorage for fallback access
       if (res.voter && res.voter.id) {
@@ -99,18 +129,36 @@ const UserLogin = () => {
         console.log('User ID stored in localStorage:', res.voter.id);
       }
       
-      console.log('User login successful, role: user');
-      
-      // Debug: Check if role was stored correctly
-      const storedRole = getStoredRole();
-      console.log('Stored role after login:', storedRole);
-      
       setLoading(false);
       navigate('/user/dashboard');
     } catch (err) {
+      console.error('Login error:', err);
+      console.error('Error response:', err.response);
       setLoading(false);
-      setError(err.response?.data?.message || 'Login failed');
+      
+      // Provide more specific error messages
+      let errorMessage = 'Login failed. Please try again.';
+      
+      if (err.response?.status === 401) {
+        errorMessage = 'Invalid Student ID or password. Please check your credentials and try again.';
+      } else if (err.response?.status === 400) {
+        errorMessage = err.response?.data?.message || 'Invalid input. Please check your Student ID format (YYYY-NNNNN).';
+      } else if (err.response?.status === 500) {
+        errorMessage = 'Server error. Please try again later.';
+      } else if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      }
+      
+      setError(errorMessage);
+      
+      // Clear error after 10 seconds
+      setTimeout(() => {
+        setError('');
+      }, 10000);
     }
+    
+    // Return false to prevent any form submission
+    return false;
   };
 
   return (
@@ -192,7 +240,22 @@ const UserLogin = () => {
             </button>
           </div>
           
-          {error && <div className="user-login-error">{error}</div>}
+          {error && (
+            <div className="user-login-error" style={{display: 'block', visibility: 'visible', opacity: 1}}>
+              <div className="error-content">
+                <i className="fas fa-exclamation-triangle me-2"></i>
+                {error}
+              </div>
+              <button
+                type="button"
+                className="error-close-btn"
+                onClick={() => setError('')}
+                title="Dismiss error"
+              >
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+          )}
           <div className="user-login-field">
             <label htmlFor="studentId">Student ID</label>
             <input

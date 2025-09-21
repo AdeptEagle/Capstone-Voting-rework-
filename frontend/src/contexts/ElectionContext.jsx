@@ -133,7 +133,7 @@ export const ElectionProvider = ({ children }) => {
   }, []);
   
   const isAdmin = useMemo(() => {
-    return userRole === 'admin' || userRole === 'superadmin';
+    return userRole === 'ADMIN' || userRole === 'SUPERADMIN';
   }, [userRole]);
 
   const value = useMemo(() => ({

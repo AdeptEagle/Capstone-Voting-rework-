@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getVoters, createVoter, updateVoter, deleteVoter, getDepartments, getCoursesByDepartment } from '../services/api';
+import { getVoters, createVoter, updateVoter, deleteVoter, getDepartments, getCoursesByDepartment, getVoterPassword, resetVoterPassword } from '../services/api';
 import io from 'socket.io-client';
 
 const Voters = () => {
@@ -421,49 +421,28 @@ const Voters = () => {
   // Function to fetch voter's actual password
   const fetchVoterPassword = async (voterId) => {
     try {
-      const response = await fetch(`http://localhost:3001/voters/${voterId}/password`);
-      if (response.ok) {
-        const data = await response.json();
-        // Set the actual password based on backend response
-        if (data.hasCustomPassword) {
-          setActualPassword('Custom Password Set');
-        } else {
-          setActualPassword(data.defaultPassword);
-        }
-      } else {
-        // Fallback: use student ID as password (common default)
-        setActualPassword(editingVoter.Voter_StudentId);
-      }
+      const data = await getVoterPassword(voterId);
+      // Set the actual password based on backend response
+      setActualPassword(data.currentPassword);
     } catch (error) {
       console.error('Error fetching password:', error);
       // Fallback: use student ID as password
-              setActualPassword(editingVoter.Voter_StudentId);
+      setActualPassword(editingVoter.Voter_StudentId);
     }
   };
 
   // Function to reset password to student ID
   const resetPasswordToStudentId = async () => {
     try {
-      const response = await fetch(`http://localhost:3001/voters/${editingVoter.id}/reset-password`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setFormData(prev => ({
-          ...prev,
-          password: data.newPassword
-        }));
-        setActualPassword(data.newPassword);
-        setShowPassword(true);
-        setShowActualPassword(true);
-        setSuccess('Password reset to Student ID successfully!');
-      } else {
-        setError('Failed to reset password');
-      }
+      const data = await resetVoterPassword(editingVoter.id);
+      setFormData(prev => ({
+        ...prev,
+        password: data.newPassword
+      }));
+      setActualPassword(data.newPassword);
+      setShowPassword(true);
+      setShowActualPassword(true);
+      setSuccess('Password reset to Student ID successfully!');
     } catch (error) {
       console.error('Error resetting password:', error);
       setError('Failed to reset password');
@@ -734,7 +713,7 @@ const Voters = () => {
                     <input
                       type="text"
                       className="form-control"
-                      name="name"
+                      name="Voter_Name"
                       value={formData.Voter_Name}
                       onChange={handleChange}
                       required
@@ -746,7 +725,7 @@ const Voters = () => {
                     <input
                       type="email"
                       className="form-control"
-                      name="email"
+                      name="Voter_Email"
                       value={formData.Voter_Email}
                       onChange={handleChange}
                       required
@@ -758,7 +737,7 @@ const Voters = () => {
                     <input
                       type="text"
                       className="form-control"
-                      name="studentId"
+                      name="Voter_StudentId"
                       value={formData.Voter_StudentId}
                       onChange={handleChange}
                       required
