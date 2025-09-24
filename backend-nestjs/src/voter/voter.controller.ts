@@ -94,4 +94,34 @@ export class VoterController {
   async resetVoterPassword(@Param('id') id: string) {
     return this.voterService.resetVoterPassword(id);
   }
+
+  @Get(':id/history')
+  @Roles('ADMIN', 'SUPERADMIN')
+  @ApiOperation({ summary: 'Get detailed voter history' })
+  @ApiResponse({ status: 200, description: 'Voter history retrieved successfully' })
+  @ApiResponse({ status: 404, description: 'Voter not found' })
+  @ApiResponse({ status: 403, description: 'Access denied' })
+  async getVoterHistory(@Param('id') id: string) {
+    return this.voterService.getVoterHistory(id);
+  }
+
+  @Get(':id/ballot-history')
+  @Roles('ADMIN', 'SUPERADMIN')
+  @ApiOperation({ summary: 'Get voter ballot participation history' })
+  @ApiResponse({ status: 200, description: 'Ballot history retrieved successfully' })
+  @ApiResponse({ status: 404, description: 'Voter not found' })
+  @ApiResponse({ status: 403, description: 'Access denied' })
+  async getVoterBallotHistory(@Param('id') id: string) {
+    return this.voterService.getVoterBallotHistory(id);
+  }
+
+  @Get(':id/voting-details')
+  @Roles('ADMIN', 'SUPERADMIN')
+  @ApiOperation({ summary: 'Get detailed voting information for a voter' })
+  @ApiResponse({ status: 200, description: 'Voting details retrieved successfully' })
+  @ApiResponse({ status: 404, description: 'Voter not found' })
+  @ApiResponse({ status: 403, description: 'Access denied' })
+  async getVoterVotingDetails(@Param('id') id: string) {
+    return this.voterService.getVoterVotingDetails(id);
+  }
 } 

@@ -1,53 +1,43 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getVoters } from '../../services/api';
-import { useElection } from '../../contexts/ElectionContext';
+import { getAvailableBallots, getUserBallotHistory } from '../../services/api';
 import io from 'socket.io-client';
 import './UserDashboard.css';
 
 const UserDashboard = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [hasVoted, setHasVoted] = useState(false);
   const [socket, setSocket] = useState(null);
-  const socketRef = useRef(null); // Use ref to track socket connection
-  const [electionData, setElectionData] = useState({
-    activeElection: null,
-    hasActiveElection: false,
-    canVote: false,
-    canViewResults: false,
-    hasAnyElection: false,
-    loading: true
-  });
+  const socketRef = useRef(null);
   const [notification, setNotification] = useState(null);
   const navigate = useNavigate();
   const notificationTimeoutRef = useRef(null);
   
-  // Enable ElectionContext to get real-time election data
-  const { activeElection, canVote, hasActiveElection, canViewResults, hasAnyElection, loading: electionLoading, triggerImmediateRefresh } = useElection();
+  // Ballot-focused state
+  const [availableBallots, setAvailableBallots] = useState([]);
+  const [votingHistory, setVotingHistory] = useState([]);
+  const [ballotsLoading, setBallotsLoading] = useState(true);
+  const [activeBallotsCount, setActiveBallotsCount] = useState(0);
+  const [votedBallotsCount, setVotedBallotsCount] = useState(0);
 
   useEffect(() => {
     console.log('UserDashboard useEffect triggered');
     
-    // Don't trigger election refresh here - let ElectionContext handle it
-    // triggerImmediateRefresh();
-    // if (forceRefresh) {
-    //   forceRefresh();
-    // }
-    
-    // Fetch user info from server since token is in HTTP-only cookie
-    const fetchUserInfo = async () => {
+    // Fetch user info and ballot data
+    const fetchDashboardData = async () => {
       try {
-        const response = await fetch('http://localhost:3001/auth/status', {
-          credentials: 'include' // Include HTTP-only cookies
+        setBallotsLoading(true);
+        
+        // Fetch user info from server since token is in HTTP-only cookie
+        const userResponse = await fetch('http://localhost:3001/auth/status', {
+          credentials: 'include'
         });
         
-        if (response.ok) {
-          const data = await response.json();
+        if (userResponse.ok) {
+          const userData = await userResponse.json();
           
-          if (data.isAuthenticated && data.user) {
-            setUser(data.user);
-            setHasVoted(data.user.hasVoted);
+          if (userData.isAuthenticated && userData.user) {
+            setUser(userData.user);
           } else {
             navigate('/user-login');
             return;
@@ -56,17 +46,53 @@ const UserDashboard = () => {
           navigate('/user-login');
           return;
         }
+        
+        // Fetch available ballots
+        let ballots = [];
+        try {
+          ballots = await getAvailableBallots();
+          setAvailableBallots(ballots);
+        } catch (error) {
+          console.error('Error fetching ballots:', error);
+          setAvailableBallots([]);
+        }
+        
+        // Fetch voting history
+        let history = [];
+        try {
+          history = await getUserBallotHistory();
+          setVotingHistory(history);
+        } catch (error) {
+          console.error('Error fetching voting history:', error);
+          setVotingHistory([]);
+        }
+        
+        // Calculate statistics
+        const activeCount = ballots.filter(ballot => ballot.Ballot_IsActive).length;
+        const votedCount = history.filter(h => h.UserBallotHistory_IsCompleted).length;
+        
+        setActiveBallotsCount(activeCount);
+        setVotedBallotsCount(votedCount);
+        
       } catch (error) {
-        console.error('Error fetching user info:', error);
-        navigate('/user-login');
-        return;
+        console.error('Error fetching dashboard data:', error);
+        setNotification({
+          type: 'error',
+          message: 'Failed to load dashboard data. Please refresh the page.'
+        });
+        // Set default values to prevent blue page
+        setAvailableBallots([]);
+        setVotingHistory([]);
+        setActiveBallotsCount(0);
+        setVotedBallotsCount(0);
       } finally {
         setLoading(false);
+        setBallotsLoading(false);
       }
     };
 
-    fetchUserInfo();
-  }, [navigate]); // Remove triggerImmediateRefresh and forceRefresh dependencies
+    fetchDashboardData();
+  }, [navigate]);
 
   // WebSocket connection setup
   useEffect(() => {
@@ -115,29 +141,19 @@ const UserDashboard = () => {
       console.log('🧪 [UserDashboard] Test response received:', data);
     });
 
-    // Election status update listeners
-    newSocket.on('election-status-updated', (data) => {
-      console.log('🗳️ [UserDashboard] Election status updated:', data);
-      // Update local election data when status changes
-      setElectionData(prev => ({
-        ...prev,
-        activeElection: data.data,
-        hasActiveElection: data.status === 'active',
-        canVote: data.status === 'active',
-        canViewResults: data.status === 'ended',
-        loading: false
-      }));
+    // Ballot status update listeners
+    newSocket.on('ballot-status-updated', (data) => {
+      console.log('🗳️ [UserDashboard] Ballot status updated:', data);
       
       // Show notification to user about status change
       const statusMessages = {
-        'active': '🗳️ Voting is now OPEN! You can cast your vote.',
-        'paused': '⏸️ Voting has been PAUSED temporarily.',
-        'stopped': '⏹️ Voting has been STOPPED.',
-        'ended': '✅ Voting has ENDED. Results are now available.',
-        'draft': '📝 Election is in DRAFT mode.'
+        'active': '🗳️ New ballot is now OPEN for voting!',
+        'paused': '⏸️ Ballot voting has been PAUSED temporarily.',
+        'ended': '✅ Ballot voting has ENDED. Results are now available.',
+        'draft': '📝 Ballot is in DRAFT mode.'
       };
       
-      const message = statusMessages[data.status] || `Election status changed to: ${data.status}`;
+      const message = statusMessages[data.status] || `Ballot status changed to: ${data.status}`;
       setNotification({
         type: 'info',
         message: message,
@@ -151,34 +167,18 @@ const UserDashboard = () => {
       notificationTimeoutRef.current = setTimeout(() => setNotification(null), 5000);
     });
 
-    // Listen for new elections being created
-    newSocket.on('election-created', (data) => {
-      console.log('🆕 [UserDashboard] New election created:', data);
-      // Refresh election data
-      triggerImmediateRefresh();
+    // Listen for new ballots being created
+    newSocket.on('ballot-created', (data) => {
+      console.log('🆕 [UserDashboard] New ballot created:', data);
+      // Refresh ballot data
+      window.location.reload(); // Simple refresh for now
     });
 
-    // Listen for election updates
-    newSocket.on('election-updated', (data) => {
-      console.log('🔄 [UserDashboard] Election updated:', data);
-      // Refresh election data
-      triggerImmediateRefresh();
-    });
-
-    // Listen for election deletions
-    newSocket.on('election-status-updated', (data) => {
-      if (data.status === 'deleted') {
-        console.log('🗑️ [UserDashboard] Election deleted:', data);
-        // Clear local election data when election is deleted
-        setElectionData(prev => ({
-          ...prev,
-          activeElection: null,
-          hasActiveElection: false,
-          canVote: false,
-          canViewResults: false,
-          loading: false
-        }));
-      }
+    // Listen for ballot updates
+    newSocket.on('ballot-updated', (data) => {
+      console.log('🔄 [UserDashboard] Ballot updated:', data);
+      // Refresh ballot data
+      window.location.reload(); // Simple refresh for now
     });
 
     setSocket(newSocket);
@@ -227,23 +227,26 @@ const UserDashboard = () => {
   console.log('UserDashboard render state:', { 
     loading, 
     user, 
-    hasVoted, 
-    electionData,
-    activeElection,
-    canVote,
-    hasActiveElection,
-    canViewResults,
-    hasAnyElection,
-    electionLoading
+    availableBallots,
+    votingHistory,
+    ballotsLoading
   });
 
-  if (loading || electionLoading) {
+  if (loading) {
     return (
-      <div className="user-dashboard-loading">
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
+      <div className="user-dashboard-container">
+        <div className="dashboard-header">
+          <div className="welcome-section">
+            <h1>Loading...</h1>
+            <p className="user-info">Setting up your dashboard</p>
+          </div>
         </div>
-        <p className="mt-2">Loading your dashboard...</p>
+        <div className="loading-state">
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+          <p>Loading your dashboard...</p>
+        </div>
       </div>
     );
   }
@@ -277,61 +280,48 @@ const UserDashboard = () => {
 
   return (
     <div className="user-dashboard-container">
-      <div className="user-dashboard-header">
-        <h2>Welcome, {user.Voter_Name}!</h2>
-        <p>Your Student ID: <strong>{user.Voter_StudentId}</strong></p>
+      {/* Header Section */}
+      <div className="dashboard-header">
+        <div className="welcome-section">
+          <h1>Welcome back, {user.Voter_Name}!</h1>
+          <p className="user-info">Student ID: <strong>{user.Voter_StudentId}</strong></p>
+        </div>
         
-        {/* WebSocket Test Button */}
-        <div className="d-flex justify-content-end mt-2">
-          <button
-            type="button"
-            className="btn btn-outline-info btn-sm me-2"
-            onClick={() => {
-              console.log('🧪 [UserDashboard] Test button clicked');
-              console.log('🔌 Socket state:', {
-                exists: !!socketRef.current,
-                connected: socketRef.current?.connected,
-                id: socketRef.current?.id,
-                readyState: socketRef.current?.readyState
-              });
-              if (socketRef.current && socketRef.current.connected) {
-                console.log('🧪 [UserDashboard] Sending test WebSocket request...');
-                socketRef.current.emit('test-websocket');
-              } else {
-                console.error('❌ [UserDashboard] WebSocket not connected');
-              }
-            }}
-            title="Test WebSocket Connection"
-          >
-            <i className="fas fa-wifi me-1"></i>
-            Test WebSocket
-          </button>
+        {/* Statistics Cards */}
+        <div className="stats-grid">
+          <div className="stat-card">
+            <div className="stat-icon">
+              <i className="fas fa-vote-yea"></i>
+            </div>
+            <div className="stat-content">
+              <h3>{activeBallotsCount}</h3>
+              <p>Active Ballots</p>
+            </div>
+          </div>
           
-          {/* Debug Election Context Button */}
-          <button
-            type="button"
-            className="btn btn-outline-warning btn-sm"
-            onClick={() => {
-              console.log('🔍 [UserDashboard] Debug Election Context');
-              console.log('Current context values:', {
-                activeElection,
-                canVote,
-                hasActiveElection,
-                canViewResults,
-                hasAnyElection,
-                electionLoading
-              });
-              console.log('🔍 [UserDashboard] This should help identify why voting section is missing');
-            }}
-            title="Debug Election Context"
-          >
-            <i className="fas fa-bug me-1"></i>
-            Debug Context
-          </button>
+          <div className="stat-card">
+            <div className="stat-icon">
+              <i className="fas fa-check-circle"></i>
+            </div>
+            <div className="stat-content">
+              <h3>{votedBallotsCount}</h3>
+              <p>Votes Cast</p>
+            </div>
+          </div>
+          
+          <div className="stat-card">
+            <div className="stat-icon">
+              <i className="fas fa-history"></i>
+            </div>
+            <div className="stat-content">
+              <h3>{votingHistory.length}</h3>
+              <p>Total Participated</p>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Real-time Election Status Notifications */}
+      {/* Notifications */}
       {notification && (
         <div className={`alert alert-${notification.type === 'error' ? 'danger' : notification.type} alert-dismissible fade show`} role="alert">
           <i className="fas fa-bell me-2"></i>
@@ -345,107 +335,166 @@ const UserDashboard = () => {
         </div>
       )}
 
-      {/* Main Election Status Section */}
-      <div className="election-status-section">
-        {hasActiveElection && activeElection ? (
-          <div className="active-election-card">
-            <div className="election-header">
-              <h3>🗳️ Active Election</h3>
-              <span className="election-status-badge active">VOTING OPEN</span>
-            </div>
-            <div className="election-details">
-              <h4>{activeElection.title}</h4>
-              <p>{activeElection.description}</p>
-              <div className="election-meta">
-                <span><i className="fas fa-calendar me-2"></i>Started: {new Date(activeElection.startDate).toLocaleDateString()}</span>
-                <span><i className="fas fa-clock me-2"></i>Ends: {new Date(activeElection.endDate).toLocaleDateString()}</span>
+      {/* Main Content Grid */}
+      <div className="dashboard-content">
+        {/* Available Ballots Section */}
+        <div className="ballots-section">
+          <div className="section-header">
+            <h2><i className="fas fa-vote-yea me-2"></i>Available Ballots</h2>
+            <button 
+              className="btn btn-outline-primary btn-sm"
+              onClick={() => navigate('/user/ballot-selection')}
+            >
+              View All
+            </button>
+          </div>
+          
+          {ballotsLoading ? (
+            <div className="loading-state">
+              <div className="spinner-border text-primary" role="status">
+                <span className="visually-hidden">Loading...</span>
               </div>
+              <p>Loading ballots...</p>
             </div>
-            
-            {canVote && !hasVoted && (
-              <div className="voting-actions">
-                <button
-                  className="btn btn-primary btn-lg"
-                  onClick={() => navigate('/user/vote')}
-                >
-                  <i className="fas fa-vote-yea me-2"></i>
-                  Cast Your Vote Now
-                </button>
-                <p className="voting-note">Voting is currently open. Make sure to cast your vote before the deadline!</p>
-              </div>
-            )}
-            
-            {hasVoted && (
-              <div className="voted-status">
-                <div className="voted-icon">
-                  <i className="fas fa-check-circle text-success"></i>
+          ) : availableBallots.length > 0 ? (
+            <div className="ballots-grid">
+              {availableBallots.slice(0, 3).map((ballot) => {
+                const hasVoted = votingHistory.some(h => 
+                  h.UserBallotHistory_BallotId === ballot.id && 
+                  h.UserBallotHistory_IsCompleted
+                );
+                const status = ballot.Ballot_IsActive ? 'active' : 
+                               ballot.Ballot_Status === 'ENDED' ? 'ended' : 'upcoming';
+                
+                return (
+                  <div key={ballot.id} className={`ballot-card ${status}`}>
+                    <div className="ballot-header">
+                      <h4>{ballot.Ballot_Title}</h4>
+                      <span className={`status-badge ${status}`}>
+                        {status === 'active' ? 'Voting Open' : 
+                         status === 'ended' ? 'Ended' : 'Upcoming'}
+                      </span>
+                    </div>
+                    <p className="ballot-description">{ballot.Ballot_Description}</p>
+                    <div className="ballot-meta">
+                      <span><i className="fas fa-calendar me-1"></i>
+                        {new Date(ballot.Ballot_StartDate).toLocaleDateString()}
+                      </span>
+                      <span><i className="fas fa-clock me-1"></i>
+                        {new Date(ballot.Ballot_EndDate).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <div className="ballot-actions">
+                      {hasVoted ? (
+                        <button 
+                          className="btn btn-outline-success"
+                          onClick={() => navigate(`/user/ballot-results/${ballot.id}`)}
+                        >
+                          <i className="fas fa-chart-bar me-1"></i>
+                          View Results
+                        </button>
+                      ) : status === 'active' ? (
+                        <button 
+                          className="btn btn-primary"
+                          onClick={() => navigate(`/user/vote/${ballot.id}`)}
+                        >
+                          <i className="fas fa-vote-yea me-1"></i>
+                          Vote Now
+                        </button>
+                      ) : (
+                        <button 
+                          className="btn btn-outline-secondary"
+                          disabled
+                        >
+                          <i className="fas fa-clock me-1"></i>
+                          {status === 'ended' ? 'Voting Ended' : 'Not Started'}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="empty-state">
+              <i className="fas fa-inbox"></i>
+              <h3>No Ballots Available</h3>
+              <p>There are currently no ballots available for voting.</p>
+            </div>
+          )}
+        </div>
+
+        {/* Voting History Section */}
+        <div className="history-section">
+          <div className="section-header">
+            <h2><i className="fas fa-history me-2"></i>Recent Activity</h2>
+            <button 
+              className="btn btn-outline-primary btn-sm"
+              onClick={() => navigate('/user/voting-history')}
+            >
+              View All
+            </button>
+          </div>
+          
+          {votingHistory.length > 0 ? (
+            <div className="history-list">
+              {votingHistory.slice(0, 3).map((history) => (
+                <div key={history.id} className="history-item">
+                  <div className="history-icon">
+                    <i className="fas fa-check-circle text-success"></i>
+                  </div>
+                  <div className="history-content">
+                    <h5>{history.ballot?.Ballot_Title}</h5>
+                    <p>Voted on {new Date(history.UserBallotHistory_VotedAt).toLocaleDateString()}</p>
+                  </div>
+                  <button 
+                    className="btn btn-outline-primary btn-sm"
+                    onClick={() => navigate(`/user/ballot-results/${history.UserBallotHistory_BallotId}`)}
+                  >
+                    View Results
+                  </button>
                 </div>
-                <h5>You have already voted!</h5>
-                <p>Thank you for participating in the election.</p>
-                <button
-                  className="btn btn-outline-primary"
-                  onClick={() => navigate('/user/results')}
-                >
-                  <i className="fas fa-chart-bar me-2"></i>
-                  View Results
-                </button>
-              </div>
-            )}
-          </div>
-        ) : hasAnyElection ? (
-          <div className="no-active-election-card">
-            <div className="no-election-icon">
-              <i className="fas fa-clock"></i>
+              ))}
             </div>
-            <h3>No Active Election</h3>
-            <p>There is currently no active election for voting.</p>
-            <div className="no-election-actions">
-              <button
-                className="btn btn-outline-primary"
-                onClick={() => navigate('/user/candidates')}
-              >
-                <i className="fas fa-users me-2"></i>
-                View Candidates
-              </button>
-              <button
-                className="btn btn-outline-info"
-                onClick={() => navigate('/user/results')}
-              >
-                <i className="fas fa-chart-bar me-2"></i>
-                View Previous Results
-              </button>
+          ) : (
+            <div className="empty-state">
+              <i className="fas fa-history"></i>
+              <h3>No Voting History</h3>
+              <p>You haven't participated in any ballots yet.</p>
             </div>
-          </div>
-        ) : (
-          <div className="no-election-card">
-            <div className="no-election-icon">
-              <i className="fas fa-info-circle"></i>
-            </div>
-            <h3>No Elections Available</h3>
-            <p>There are no elections set up at the moment.</p>
-            <div className="no-election-actions">
-              <button
-                className="btn btn-outline-primary"
-                onClick={() => navigate('/user/candidates')}
-              >
-                <i className="fas fa-users me-2"></i>
-                View Candidates
-              </button>
-            </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Quick Actions Section */}
       <div className="quick-actions-section">
-        <h3>Quick Actions</h3>
+        <h3><i className="fas fa-bolt me-2"></i>Quick Actions</h3>
         <div className="quick-actions-grid">
+          <button
+            className="btn btn-primary quick-action-btn"
+            onClick={() => navigate('/user/ballot-selection')}
+          >
+            <i className="fas fa-list-alt"></i>
+            <span>All Ballots</span>
+            <small>Browse all available ballots</small>
+          </button>
+          
+          <button
+            className="btn btn-outline-primary quick-action-btn"
+            onClick={() => navigate('/user/voting-history')}
+          >
+            <i className="fas fa-history"></i>
+            <span>Voting History</span>
+            <small>View your participation</small>
+          </button>
+          
           <button
             className="btn btn-outline-primary quick-action-btn"
             onClick={() => navigate('/user/candidates')}
           >
             <i className="fas fa-users"></i>
-            <span>View Candidates</span>
+            <span>Candidates</span>
+            <small>Meet the candidates</small>
           </button>
           
           <button
@@ -453,56 +502,11 @@ const UserDashboard = () => {
             onClick={() => navigate('/user/results')}
           >
             <i className="fas fa-chart-bar"></i>
-            <span>View Results</span>
+            <span>Results</span>
+            <small>View election results</small>
           </button>
-          
-          {canVote && !hasVoted && hasActiveElection && (
-            <button
-              className="btn btn-primary quick-action-btn"
-              onClick={() => navigate('/user/vote')}
-            >
-              <i className="fas fa-vote-yea"></i>
-              <span>Vote Now</span>
-            </button>
-          )}
-          
-          {hasVoted && (
-            <button
-              className="btn btn-success quick-action-btn"
-              onClick={() => navigate('/user/results')}
-            >
-              <i className="fas fa-check-circle"></i>
-              <span>View Results</span>
-            </button>
-          )}
         </div>
       </div>
-
-      {/* Election Information Section */}
-      {activeElection && (
-        <div className="election-info-section">
-          <h3>Election Information</h3>
-          <div className="election-info-grid">
-            <div className="info-card">
-              <i className="fas fa-calendar-alt"></i>
-              <h5>Election Period</h5>
-              <p>From {new Date(activeElection.startDate).toLocaleDateString()} to {new Date(activeElection.endDate).toLocaleDateString()}</p>
-            </div>
-            
-            <div className="info-card">
-              <i className="fas fa-users"></i>
-              <h5>Positions</h5>
-              <p>Multiple positions available for voting</p>
-            </div>
-            
-            <div className="info-card">
-              <i className="fas fa-shield-alt"></i>
-              <h5>Security</h5>
-              <p>Your vote is secure and anonymous</p>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

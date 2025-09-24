@@ -979,7 +979,7 @@ const Candidates = () => {
                     <input
                       type="text"
                       className="form-control"
-                      name="name"
+                      name="Candidate_Name"
                       value={formData.Candidate_Name}
                       onChange={handleChange}
                       required
@@ -990,7 +990,7 @@ const Candidates = () => {
                     <input
                       type="email"
                       className="form-control"
-                      name="email"
+                      name="Candidate_Email"
                       value={formData.Candidate_Email}
                       onChange={handleChange}
                       required
@@ -1001,7 +1001,7 @@ const Candidates = () => {
                     <input
                       type="text"
                       className="form-control"
-                      name="studentId"
+                      name="Candidate_StudentId"
                       value={formData.Candidate_StudentId}
                       onChange={handleChange}
                       required

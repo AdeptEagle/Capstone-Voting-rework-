@@ -104,6 +104,30 @@ const Elections = () => {
         return;
       }
 
+      // Validate positions are selected
+      const validationPositionIds = [
+        ...formData.positionIds,
+        ...tempPositions.filter(p => p.isNew).map(p => p.id)
+      ];
+      
+      if (validationPositionIds.length === 0) {
+        setError('At least one position must be selected or created');
+        setLoading(false);
+        return;
+      }
+
+      // Validate candidates are selected
+      const validationCandidateIds = [
+        ...formData.selectedCandidateIds,
+        ...tempCandidates.filter(c => c.isNew).map(c => c.id)
+      ];
+
+      if (validationCandidateIds.length === 0) {
+        setError('At least one candidate must be selected or created');
+        setLoading(false);
+        return;
+      }
+
       // First, create any new positions
       const createdPositions = [];
       for (const position of tempPositions) {

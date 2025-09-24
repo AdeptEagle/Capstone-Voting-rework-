@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getVoters, createVoter, updateVoter, deleteVoter, getDepartments, getCoursesByDepartment, getVoterPassword, resetVoterPassword } from '../services/api';
 import io from 'socket.io-client';
 
 const Voters = () => {
+  const navigate = useNavigate();
   const [voters, setVoters] = useState([]);
   const [filteredVoters, setFilteredVoters] = useState([]);
   const [showModal, setShowModal] = useState(false);
@@ -418,6 +420,10 @@ const Voters = () => {
     setShowModal(true);
   };
 
+  const handleViewHistory = (voterId) => {
+    navigate(`/admin/voter-history/${voterId}`);
+  };
+
   // Function to fetch voter's actual password
   const fetchVoterPassword = async (voterId) => {
     try {
@@ -654,6 +660,13 @@ const Voters = () => {
                       </td>
                       <td>
                         <div className="voter-actions">
+                          <button 
+                            className="btn btn-sm btn-outline-info me-2 action-btn-icon"
+                            onClick={() => handleViewHistory(voter.id)}
+                            title="View Voter History"
+                          >
+                            <i className="fas fa-history"></i>
+                          </button>
                           <button 
                             className="btn btn-sm btn-outline-primary me-2 action-btn-icon"
                             onClick={() => handleShowModal(voter)}

@@ -201,9 +201,9 @@ const UserRegister = () => {
       
       // Store user data and role (token is in HTTP-only cookie)
       const { voter } = response.data;
-      console.log('Registration successful, storing role as "user"');
-      storeRole('user');
-      storeUserData(voter, 'user');
+      console.log('Registration successful, storing role as "USER"');
+      storeRole('USER');
+      storeUserData(voter, 'USER');
       
       // Debug: Check if role was stored correctly
       const storedRole = getStoredRole();
@@ -221,12 +221,14 @@ const UserRegister = () => {
       // Check if the error is actually a success (user created but response had issues)
       if (err.response?.status === 400 && err.response?.data?.error?.includes('successfully')) {
         setSuccess('Registration successful! Redirecting to dashboard...');
-        storeRole('user');
+        storeRole('USER');
         setTimeout(() => {
           navigate('/user/dashboard');
         }, 2000);
       } else {
-        setError(err.response?.data?.error || 'Registration failed. Please try again.');
+        // Display the detailed error message from the backend
+        const errorMessage = err.response?.data?.message || err.response?.data?.error || 'Registration failed. Please try again.';
+        setError(errorMessage);
       }
     } finally {
       setLoading(false);

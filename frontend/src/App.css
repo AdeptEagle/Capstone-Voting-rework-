@@ -151,7 +151,7 @@ main {
 }
 
 .btn-custom-orange {
-  background: linear-gradient(135deg, var(--warning-orange) 0%, #F59E0B 100%);
+  background: var(--warning-orange);
   color: var(--text-white);
   border: none;
   border-radius: 8px;
@@ -161,7 +161,7 @@ main {
   box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25);
 }
 .btn-custom-orange:hover {
-  background: linear-gradient(135deg, #F59E0B 0%, var(--warning-orange) 100%);
+  background: #F59E0B;
   transform: translateY(-2px);
   box-shadow: 0 6px 16px rgba(245, 158, 11, 0.35);
   color: var(--text-white);
@@ -169,7 +169,7 @@ main {
 
 /* Table */
 .table-header-custom {
-  background: linear-gradient(135deg, var(--primary-navy) 0%, var(--accent-steel) 100%);
+  background: var(--primary-navy);
   font-weight: 600;
   color: var(--text-white);
   border-bottom: 2px solid var(--accent-steel);
@@ -196,7 +196,7 @@ main {
 
 /* Hero Section */
 .hero-section {
-  background: linear-gradient(135deg, var(--primary-navy), var(--accent-steel));
+  background: var(--primary-navy);
   color: var(--text-white);
   padding: 4rem 1.5rem;
   border-radius: 12px;

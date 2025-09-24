@@ -50,7 +50,8 @@ const Sidebar = ({ isOpen, onToggle }) => {
     }
     return {
       main: true,
-      elections: true,
+      ballots: true,
+      elections: false,
       management: true,
       voting: true,
       advanced: false
@@ -62,6 +63,7 @@ const Sidebar = ({ isOpen, onToggle }) => {
       // Create a completely new object to ensure state update
       const newState = {
         main: prev.main,
+        ballots: prev.ballots,
         elections: prev.elections,
         management: prev.management,
         voting: prev.voting,
@@ -82,9 +84,9 @@ const Sidebar = ({ isOpen, onToggle }) => {
           main: [
             { path: '/superadmin', label: 'Dashboard', icon: 'fas fa-tachometer-alt' }
           ],
-          elections: [
-            { path: '/admin/elections', label: 'Active Elections', icon: 'fas fa-vote-yea' },
-            { path: '/admin/election-history', label: 'Election History', icon: 'fas fa-history' }
+          ballots: [
+            { path: '/admin/ballot-management', label: 'Ballot Management', icon: 'fas fa-list-alt' },
+            { path: '/admin/ballot-traceability', label: 'Ballot Traceability', icon: 'fas fa-search' }
           ],
           management: [
             { path: '/admin/positions', label: 'Positions', icon: 'fas fa-user-tie' },
@@ -104,9 +106,9 @@ const Sidebar = ({ isOpen, onToggle }) => {
           main: [
             { path: '/admin/dashboard', label: 'Dashboard', icon: 'fas fa-tachometer-alt' }
           ],
-          elections: [
-            { path: '/admin/elections', label: 'Active Elections', icon: 'fas fa-vote-yea' },
-            { path: '/admin/election-history', label: 'Election History', icon: 'fas fa-history' }
+          ballots: [
+            { path: '/admin/ballot-management', label: 'Ballot Management', icon: 'fas fa-list-alt' },
+            { path: '/admin/ballot-traceability', label: 'Ballot Traceability', icon: 'fas fa-search' }
           ],
           management: [
             { path: '/admin/positions', label: 'Positions', icon: 'fas fa-user-tie' },
@@ -121,29 +123,15 @@ const Sidebar = ({ isOpen, onToggle }) => {
           ]
         };
       default: // User role
-        const userItems = {
+        return {
           main: [
             { path: '/user/dashboard', label: 'Dashboard', icon: 'fas fa-home' }
           ],
-          voting: []
+          voting: [
+            { path: '/user/ballot-selection', label: 'Available Ballots', icon: 'fas fa-list-alt' },
+            { path: '/user/voting-history', label: 'Voting History', icon: 'fas fa-history' }
+          ]
         };
-        
-        // Only show Vote if there's an active election
-        if (canVote) {
-          userItems.voting.push({ path: '/user/vote', label: 'Cast Vote', icon: 'fas fa-vote-yea' });
-        }
-        
-        // Only show Candidates if there are elections
-        if (canViewCandidates) {
-          userItems.voting.push({ path: '/user/candidates', label: 'View Candidates', icon: 'fas fa-users' });
-        }
-        
-        // Only show Results if there are elections
-        if (canViewResults) {
-          userItems.voting.push({ path: '/user/results', label: 'View Results', icon: 'fas fa-chart-bar' });
-        }
-        
-        return userItems;
     }
   };
 
@@ -191,12 +179,7 @@ const Sidebar = ({ isOpen, onToggle }) => {
     // Check if items exists and is an array
     if (!items || !Array.isArray(items) || items.length === 0) return null;
     
-    const isExpanded = expandedSections[sectionKey] || false;
-    
-    // Prevent rendering if section state is undefined
-    if (expandedSections[sectionKey] === undefined) {
-      return null;
-    }
+    const isExpanded = expandedSections[sectionKey] !== undefined ? expandedSections[sectionKey] : true;
     
     return (
       <div className="nav-section">
@@ -249,19 +232,19 @@ const Sidebar = ({ isOpen, onToggle }) => {
 
         <div className="sidebar-nav">
           {/* Main Section */}
-          {renderNavSection('main', navItems.main || [], 'Main', 'fas fa-home')}
+          {renderNavSection('main', navItems.main || [], 'MAIN', 'fas fa-home')}
           
-          {/* Elections Section */}
-          {renderNavSection('elections', navItems.elections || [], 'Elections', 'fas fa-vote-yea')}
+          {/* Ballots Section */}
+          {renderNavSection('ballots', navItems.ballots || [], 'BALLOTS', 'fas fa-list-alt')}
           
           {/* Management Section */}
-          {renderNavSection('management', navItems.management || [], 'Management', 'fas fa-cogs')}
+          {renderNavSection('management', navItems.management || [], 'MANAGEMENT', 'fas fa-cogs')}
           
           {/* Voting Section (for users) */}
-          {renderNavSection('voting', navItems.voting || [], 'Voting', 'fas fa-vote-yea')}
+          {renderNavSection('voting', navItems.voting || [], 'VOTING', 'fas fa-vote-yea')}
           
           {/* Advanced Section */}
-          {renderNavSection('advanced', navItems.advanced || [], 'Advanced', 'fas fa-tools')}
+          {renderNavSection('advanced', navItems.advanced || [], 'ADVANCED', 'fas fa-tools')}
         </div>
 
         <div className="sidebar-footer">

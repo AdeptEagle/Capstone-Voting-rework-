@@ -6,15 +6,23 @@ import SuperAdminDashboard from './Pages/SuperAdmin/SuperAdminDashboard';
 import ManageAdmins from './Pages/SuperAdmin/ManageAdmins';
 import AdminDashboard from './Pages/Admin/AdminDashboard';
 import VoteTraceability from './Pages/Admin/VoteTraceability';
+import BallotManagement from './Pages/Admin/BallotManagement';
+import BallotDetails from './Pages/Admin/BallotDetails';
+import BallotTraceability from './Pages/Admin/BallotTraceability';
 import UserDashboard from './Pages/User/UserDashboard';
 import Positions from './Pages/Positions';
 import Candidates from './Pages/Candidates';
 import Voters from './Pages/Voters';
+import VoterHistory from './Pages/Admin/VoterHistory';
 import Results from './Pages/Results';
 import Elections from './Pages/Elections';
 import ElectionHistory from './Pages/ElectionHistory';
 import UserRegister from './Pages/User/UserRegister';
 import Vote from './Pages/User/Vote';
+import BallotSelection from './Pages/User/BallotSelection';
+import BallotVote from './Pages/User/BallotVote';
+import BallotResults from './Pages/User/BallotResults';
+import VotingHistory from './Pages/User/VotingHistory';
 import AdminLogin from './Pages/AdminLogin';
 import UserLogin from './Pages/User/UserLogin';
 import ForgotPassword from './Pages/ForgotPassword';
@@ -184,6 +192,13 @@ function App() {
                 </AdminLayout>
               </AdminRoute>
             } />
+            <Route path="/admin/voter-history/:voterId" element={
+              <AdminRoute>
+                <AdminLayout>
+                  <VoterHistory />
+                </AdminLayout>
+              </AdminRoute>
+            } />
             <Route path="/admin/elections" element={
               <AdminRoute>
                 <AdminLayout>
@@ -202,6 +217,27 @@ function App() {
               <AdminRoute>
                 <AdminLayout>
                   <VoteTraceability />
+                </AdminLayout>
+              </AdminRoute>
+            } />
+            <Route path="/admin/ballot-management" element={
+              <AdminRoute>
+                <AdminLayout>
+                  <BallotManagement />
+                </AdminLayout>
+              </AdminRoute>
+            } />
+            <Route path="/admin/ballot-details/:ballotId" element={
+              <AdminRoute>
+                <AdminLayout>
+                  <BallotDetails />
+                </AdminLayout>
+              </AdminRoute>
+            } />
+            <Route path="/admin/ballot-traceability" element={
+              <AdminRoute>
+                <AdminLayout>
+                  <BallotTraceability />
                 </AdminLayout>
               </AdminRoute>
             } />
@@ -253,6 +289,34 @@ function App() {
               <UserRoute>
                 <UserLayout>
                   <Results />
+                </UserLayout>
+              </UserRoute>
+            } />
+            <Route path="/user/ballot-selection" element={
+              <UserRoute>
+                <UserLayout>
+                  <BallotSelection />
+                </UserLayout>
+              </UserRoute>
+            } />
+            <Route path="/user/vote/:ballotId" element={
+              <UserRoute>
+                <UserLayout>
+                  <BallotVote />
+                </UserLayout>
+              </UserRoute>
+            } />
+            <Route path="/user/ballot-results/:ballotId" element={
+              <UserRoute>
+                <UserLayout>
+                  <BallotResults />
+                </UserLayout>
+              </UserRoute>
+            } />
+            <Route path="/user/voting-history" element={
+              <UserRoute>
+                <UserLayout>
+                  <VotingHistory />
                 </UserLayout>
               </UserRoute>
             } />

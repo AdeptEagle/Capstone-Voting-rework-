@@ -28,7 +28,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     }
 
     return {
-      userId: payload.sub,
+      id: payload.sub, // Controllers expect req.user.id
+      userId: payload.sub, // Keep for backward compatibility
       studentId: payload.studentId || null, // Handle admin tokens that don't have studentId
       username: payload.username,
       role: payload.role,

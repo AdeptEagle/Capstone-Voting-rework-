@@ -90,18 +90,25 @@ export class VoterService {
   async createVoter(createVoterDto: CreateVoterDto) {
     const { Voter_Email, Voter_StudentId, password, ...rest } = createVoterDto;
 
-    // Check if voter already exists
-    const existingVoter = await this.prisma.voter.findFirst({
-      where: {
-        OR: [
-          { Voter_Email: Voter_Email },
-          { Voter_StudentId: Voter_StudentId },
-        ],
-      },
+    // Check for specific conflicts with detailed error messages
+    const existingEmail = await this.prisma.voter.findUnique({
+      where: { Voter_Email: Voter_Email },
     });
 
-    if (existingVoter) {
-      throw new ConflictException('Voter with this email or student ID already exists');
+    const existingStudentId = await this.prisma.voter.findUnique({
+      where: { Voter_StudentId: Voter_StudentId },
+    });
+
+    if (existingEmail && existingStudentId) {
+      throw new ConflictException(`Account creation failed: Both email address "${Voter_Email}" and student ID "${Voter_StudentId}" are already registered. Please use different credentials or contact support if you believe this is an error.`);
+    }
+
+    if (existingEmail) {
+      throw new ConflictException(`Account creation failed: Email address "${Voter_Email}" is already registered. Please use a different email address or contact support if you believe this is an error.`);
+    }
+
+    if (existingStudentId) {
+      throw new ConflictException(`Account creation failed: Student ID "${Voter_StudentId}" is already registered. Please use a different student ID or contact support if you believe this is an error.`);
     }
 
     // Hash password
@@ -118,24 +125,25 @@ export class VoterService {
       password: hashedPassword,
     };
 
-    const voter = await this.prisma.voter.create({
-      data: voterData,
-      include: {
-        department: {
-          select: {
-            id: true,
-            Department_Name: true,
+    try {
+      const voter = await this.prisma.voter.create({
+        data: voterData,
+        include: {
+          department: {
+            select: {
+              id: true,
+              Department_Name: true,
+            },
+          },
+          course: {
+            select: {
+              id: true,
+              Course_Name: true,
+              Course_Code: true,
+            },
           },
         },
-        course: {
-          select: {
-            id: true,
-            Course_Name: true,
-            Course_Code: true,
-          },
-        },
-      },
-    });
+      });
 
     // Emit real-time voter registration
     console.log('🔌 Emitting voter-registered WebSocket event...');
@@ -175,20 +183,50 @@ export class VoterService {
       console.error('❌ Error emitting admin-action event:', error);
     }
 
-    return {
-      message: 'Voter created successfully!',
-      voter: {
-        id: voter.id,
-        studentId: voter.Voter_StudentId,
-        name: voter.Voter_Name,
-        email: voter.Voter_Email,
-        hasVoted: voter.hasVoted,
-        department: voter.department,
-        course: voter.course,
-        createdAt: voter.createdAt,
-        updatedAt: voter.updatedAt,
-      },
-    };
+      return {
+        message: 'Voter created successfully!',
+        voter: {
+          id: voter.id,
+          studentId: voter.Voter_StudentId,
+          name: voter.Voter_Name,
+          email: voter.Voter_Email,
+          hasVoted: voter.hasVoted,
+          department: voter.department,
+          course: voter.course,
+          createdAt: voter.createdAt,
+          updatedAt: voter.updatedAt,
+        },
+      };
+    } catch (error) {
+      console.error('❌ Error creating voter:', error);
+      
+      // Handle specific database constraint violations
+      if (error.code === 'P2002') {
+        const field = error.meta?.target?.[0];
+        if (field === 'Voter_Email') {
+          throw new ConflictException(`Account creation failed: Email address "${Voter_Email}" is already registered. Please use a different email address or contact support if you believe this is an error.`);
+        } else if (field === 'Voter_StudentId') {
+          throw new ConflictException(`Account creation failed: Student ID "${Voter_StudentId}" is already registered. Please use a different student ID or contact support if you believe this is an error.`);
+        } else {
+          throw new ConflictException(`Account creation failed: The provided information conflicts with an existing account. Please check your details and try again.`);
+        }
+      }
+      
+      // Handle foreign key constraint violations
+      if (error.code === 'P2003') {
+        const field = error.meta?.field_name;
+        if (field === 'departmentId') {
+          throw new ConflictException(`Account creation failed: Invalid department selected. Please select a valid department.`);
+        } else if (field === 'courseId') {
+          throw new ConflictException(`Account creation failed: Invalid course selected. Please select a valid course.`);
+        } else {
+          throw new ConflictException(`Account creation failed: Invalid reference data. Please check your department and course selections.`);
+        }
+      }
+      
+      // Handle other database errors
+      throw new ConflictException(`Account creation failed: ${error.message || 'An unexpected error occurred. Please try again or contact support.'}`);
+    }
   }
 
   async updateVoter(id: string, updateVoterDto: UpdateVoterDto) {
@@ -414,6 +452,285 @@ export class VoterService {
         studentId: updatedVoter.Voter_StudentId,
         name: updatedVoter.Voter_Name,
         email: updatedVoter.Voter_Email,
+      },
+    };
+  }
+
+  async getVoterHistory(voterId: string) {
+    const voter = await this.prisma.voter.findUnique({
+      where: { id: voterId },
+      include: {
+        department: {
+          select: {
+            id: true,
+            Department_Name: true,
+          },
+        },
+        course: {
+          select: {
+            id: true,
+            Course_Name: true,
+            Course_Code: true,
+          },
+        },
+        ballotHistory: {
+          include: {
+            ballot: {
+              select: {
+                id: true,
+                Ballot_Title: true,
+                Ballot_Description: true,
+                Ballot_Status: true,
+                Ballot_IsActive: true,
+                Ballot_StartDate: true,
+                Ballot_EndDate: true,
+                Ballot_CreatedAt: true,
+              },
+            },
+          },
+          orderBy: {
+            UserBallotHistory_VotedAt: 'desc',
+          },
+        },
+        votes: {
+          include: {
+            candidate: {
+              select: {
+                id: true,
+                Candidate_Name: true,
+                Candidate_StudentId: true,
+              },
+            },
+            position: {
+              select: {
+                id: true,
+                Position_Title: true,
+              },
+            },
+            election: {
+              select: {
+                id: true,
+                Election_Title: true,
+              },
+            },
+          },
+          orderBy: {
+            createdAt: 'desc',
+          },
+        },
+      },
+    });
+
+    if (!voter) {
+      throw new NotFoundException('Voter not found');
+    }
+
+    return {
+      voter: {
+        id: voter.id,
+        name: voter.Voter_Name,
+        email: voter.Voter_Email,
+        studentId: voter.Voter_StudentId,
+        hasVoted: voter.hasVoted,
+        department: voter.department,
+        course: voter.course,
+        createdAt: voter.createdAt,
+        updatedAt: voter.updatedAt,
+      },
+      ballotHistory: voter.ballotHistory,
+      voteHistory: voter.votes,
+      statistics: {
+        totalBallotsParticipated: voter.ballotHistory.filter(h => h.UserBallotHistory_IsCompleted).length,
+        totalVotesCast: voter.votes.length,
+        lastVotedAt: voter.ballotHistory.length > 0 ? voter.ballotHistory[0].UserBallotHistory_VotedAt : null,
+        participationRate: voter.ballotHistory.length > 0 ? 
+          (voter.ballotHistory.filter(h => h.UserBallotHistory_IsCompleted).length / voter.ballotHistory.length) * 100 : 0,
+      },
+    };
+  }
+
+  async getVoterBallotHistory(voterId: string) {
+    const voter = await this.prisma.voter.findUnique({
+      where: { id: voterId },
+      select: {
+        id: true,
+        Voter_Name: true,
+        Voter_StudentId: true,
+        ballotHistory: {
+          include: {
+            ballot: {
+              include: {
+                ballotPositions: {
+                  include: {
+                    position: {
+                      select: {
+                        id: true,
+                        Position_Title: true,
+                      },
+                    },
+                  },
+                },
+                ballotCandidates: {
+                  include: {
+                    candidate: {
+                      select: {
+                        id: true,
+                        Candidate_Name: true,
+                        Candidate_StudentId: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          orderBy: {
+            UserBallotHistory_VotedAt: 'desc',
+          },
+        },
+      },
+    });
+
+    if (!voter) {
+      throw new NotFoundException('Voter not found');
+    }
+
+    return {
+      voter: {
+        id: voter.id,
+        name: voter.Voter_Name,
+        studentId: voter.Voter_StudentId,
+      },
+      ballotHistory: voter.ballotHistory.map(history => ({
+        ballot: {
+          id: history.ballot.id,
+          title: history.ballot.Ballot_Title,
+          description: history.ballot.Ballot_Description,
+          status: history.ballot.Ballot_Status,
+          isActive: history.ballot.Ballot_IsActive,
+          startDate: history.ballot.Ballot_StartDate,
+          endDate: history.ballot.Ballot_EndDate,
+          positions: history.ballot.ballotPositions.map(bp => ({
+            id: bp.position.id,
+            title: bp.position.Position_Title,
+            isRequired: bp.BallotPosition_IsRequired,
+          })),
+          candidates: history.ballot.ballotCandidates.map(bc => ({
+            id: bc.candidate.id,
+            name: bc.candidate.Candidate_Name,
+            studentId: bc.candidate.Candidate_StudentId,
+            positionId: bc.BallotCandidate_PositionId,
+          })),
+        },
+        participation: {
+          votedAt: history.UserBallotHistory_VotedAt,
+          voteCount: history.UserBallotHistory_VoteCount,
+          isCompleted: history.UserBallotHistory_IsCompleted,
+          lastAccessed: history.UserBallotHistory_LastAccessed,
+        },
+      })),
+    };
+  }
+
+  async getVoterVotingDetails(voterId: string) {
+    const voter = await this.prisma.voter.findUnique({
+      where: { id: voterId },
+      include: {
+        ballotHistory: {
+          include: {
+            ballot: {
+              select: {
+                id: true,
+                Ballot_Title: true,
+                Ballot_Status: true,
+                Ballot_IsActive: true,
+                Ballot_StartDate: true,
+                Ballot_EndDate: true,
+              },
+            },
+          },
+        },
+        votes: {
+          include: {
+            candidate: {
+              select: {
+                id: true,
+                Candidate_Name: true,
+                Candidate_StudentId: true,
+              },
+            },
+            position: {
+              select: {
+                id: true,
+                Position_Title: true,
+              },
+            },
+            election: {
+              select: {
+                id: true,
+                Election_Title: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!voter) {
+      throw new NotFoundException('Voter not found');
+    }
+
+    // Group votes by ballot/election
+    const votingDetails = voter.ballotHistory.map(history => {
+      const ballotVotes = voter.votes.filter(vote => 
+        vote.electionId === 'ELEC-12' // Assuming ballot votes use this election ID
+      );
+
+      return {
+        ballot: {
+          id: history.ballot.id,
+          title: history.ballot.Ballot_Title,
+          status: history.ballot.Ballot_Status,
+          isActive: history.ballot.Ballot_IsActive,
+          startDate: history.ballot.Ballot_StartDate,
+          endDate: history.ballot.Ballot_EndDate,
+        },
+        participation: {
+          votedAt: history.UserBallotHistory_VotedAt,
+          voteCount: history.UserBallotHistory_VoteCount,
+          isCompleted: history.UserBallotHistory_IsCompleted,
+          lastAccessed: history.UserBallotHistory_LastAccessed,
+        },
+        votes: ballotVotes.map(vote => ({
+          id: vote.id,
+          candidate: {
+            id: vote.candidate.id,
+            name: vote.candidate.Candidate_Name,
+            studentId: vote.candidate.Candidate_StudentId,
+          },
+          position: {
+            id: vote.position.id,
+            title: vote.position.Position_Title,
+          },
+          votedAt: vote.createdAt,
+        })),
+      };
+    });
+
+    return {
+      voter: {
+        id: voter.id,
+        name: voter.Voter_Name,
+        studentId: voter.Voter_StudentId,
+        email: voter.Voter_Email,
+      },
+      votingDetails,
+      summary: {
+        totalBallotsParticipated: voter.ballotHistory.filter(h => h.UserBallotHistory_IsCompleted).length,
+        totalVotesCast: voter.votes.length,
+        lastVotedAt: voter.ballotHistory.length > 0 ? voter.ballotHistory[0].UserBallotHistory_VotedAt : null,
+        participationRate: voter.ballotHistory.length > 0 ? 
+          (voter.ballotHistory.filter(h => h.UserBallotHistory_IsCompleted).length / voter.ballotHistory.length) * 100 : 0,
       },
     };
   }

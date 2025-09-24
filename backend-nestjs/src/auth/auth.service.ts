@@ -138,7 +138,7 @@ export class AuthService {
     res.cookie('access_token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production', // HTTPS only in production
-      sameSite: 'strict',
+      sameSite: 'lax', // Changed from 'strict' to 'lax' to allow cross-origin requests
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
       path: '/',
     });
@@ -196,7 +196,7 @@ export class AuthService {
     res.cookie('access_token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production', // HTTPS only in production
-      sameSite: 'strict',
+      sameSite: 'lax', // Changed from 'strict' to 'lax' to allow cross-origin requests
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
       path: '/',
     });
@@ -225,18 +225,25 @@ export class AuthService {
   }, res: Response) {
     const { Voter_Name, Voter_Email, Voter_StudentId, password, departmentId, courseId } = userRegisterDto;
 
-    // Check if voter already exists
-    const existingVoter = await this.prisma.voter.findFirst({
-      where: {
-        OR: [
-          { Voter_Email: Voter_Email },
-          { Voter_StudentId: Voter_StudentId },
-        ],
-      },
+    // Check for specific conflicts with detailed error messages
+    const existingEmail = await this.prisma.voter.findUnique({
+      where: { Voter_Email: Voter_Email },
     });
 
-    if (existingVoter) {
-      throw new ConflictException('User already exists');
+    const existingStudentId = await this.prisma.voter.findUnique({
+      where: { Voter_StudentId: Voter_StudentId },
+    });
+
+    if (existingEmail && existingStudentId) {
+      throw new ConflictException(`Account creation failed: Both email address "${Voter_Email}" and student ID "${Voter_StudentId}" are already registered. Please use different credentials or contact support if you believe this is an error.`);
+    }
+
+    if (existingEmail) {
+      throw new ConflictException(`Account creation failed: Email address "${Voter_Email}" is already registered. Please use a different email address or contact support if you believe this is an error.`);
+    }
+
+    if (existingStudentId) {
+      throw new ConflictException(`Account creation failed: Student ID "${Voter_StudentId}" is already registered. Please use a different student ID or contact support if you believe this is an error.`);
     }
 
     // Generate custom ID
@@ -263,23 +270,24 @@ export class AuthService {
     }
 
     // Create voter
-    const voter = await this.prisma.voter.create({
-      data: voterData,
-      include: {
-        department: {
-          select: {
-            id: true,
-            Department_Name: true,
+    try {
+      const voter = await this.prisma.voter.create({
+        data: voterData,
+        include: {
+          department: {
+            select: {
+              id: true,
+              Department_Name: true,
+            },
+          },
+          course: {
+            select: {
+              id: true,
+              Course_Name: true,
+            },
           },
         },
-        course: {
-          select: {
-            id: true,
-            Course_Name: true,
-          },
-        },
-      },
-    });
+      });
 
     // Emit real-time voter registration event
     console.log('🔌 [AuthService] Emitting voter-registered WebSocket event...');
@@ -319,23 +327,53 @@ export class AuthService {
     res.cookie('access_token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production', // HTTPS only in production
-      sameSite: 'strict',
+      sameSite: 'lax', // Changed from 'strict' to 'lax' to allow cross-origin requests
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
       path: '/',
     });
 
-    return {
-      message: 'User registration successful',
-      voter: {
-        id: voter.id,
-        name: voter.Voter_Name,
-        email: voter.Voter_Email,
-        studentId: voter.Voter_StudentId,
-        hasVoted: voter.hasVoted,
-        department: voter.department,
-        course: voter.course,
-      },
-    };
+      return {
+        message: 'User registration successful',
+        voter: {
+          id: voter.id,
+          name: voter.Voter_Name,
+          email: voter.Voter_Email,
+          studentId: voter.Voter_StudentId,
+          hasVoted: voter.hasVoted,
+          department: voter.department,
+          course: voter.course,
+        },
+      };
+    } catch (error) {
+      console.error('❌ Error creating voter in userRegister:', error);
+      
+      // Handle specific database constraint violations
+      if (error.code === 'P2002') {
+        const field = error.meta?.target?.[0];
+        if (field === 'Voter_Email') {
+          throw new ConflictException(`Account creation failed: Email address "${Voter_Email}" is already registered. Please use a different email address or contact support if you believe this is an error.`);
+        } else if (field === 'Voter_StudentId') {
+          throw new ConflictException(`Account creation failed: Student ID "${Voter_StudentId}" is already registered. Please use a different student ID or contact support if you believe this is an error.`);
+        } else {
+          throw new ConflictException(`Account creation failed: The provided information conflicts with an existing account. Please check your details and try again.`);
+        }
+      }
+      
+      // Handle foreign key constraint violations
+      if (error.code === 'P2003') {
+        const field = error.meta?.field_name;
+        if (field === 'departmentId') {
+          throw new ConflictException(`Account creation failed: Invalid department selected. Please select a valid department.`);
+        } else if (field === 'courseId') {
+          throw new ConflictException(`Account creation failed: Invalid course selected. Please select a valid course.`);
+        } else {
+          throw new ConflictException(`Account creation failed: Invalid reference data. Please check your department and course selections.`);
+        }
+      }
+      
+      // Handle other database errors
+      throw new ConflictException(`Account creation failed: ${error.message || 'An unexpected error occurred. Please try again or contact support.'}`);
+    }
   }
 
   async requestPasswordReset(requestPasswordResetDto: { ResetToken_Email: string; userType: 'voter' | 'admin' }) {
@@ -512,7 +550,7 @@ export class AuthService {
     res.clearCookie('access_token', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: 'lax', // Changed from 'strict' to 'lax' to allow cross-origin requests
       path: '/',
     });
 

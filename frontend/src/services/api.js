@@ -21,6 +21,18 @@ api.interceptors.response.use(
     if (error.response?.status === 401 || error.response?.status === 403) {
       console.log('Authentication error detected');
       
+      // Check if this is a validation error rather than an auth error
+      const isValidationError = error.response?.data?.message && 
+                               (error.response.data.message.includes('validation') ||
+                                error.response.data.message.includes('required') ||
+                                error.response.data.message.includes('must be') ||
+                                error.response.data.statusCode === 400);
+      
+      if (isValidationError) {
+        console.log('Validation error, not redirecting');
+        return Promise.reject(error);
+      }
+      
       // NEVER redirect if we're on a login page - let the component handle the error
       const currentPath = window.location.pathname;
       const isOnLoginPage = currentPath.includes('/login') || 
@@ -272,6 +284,37 @@ export const resetVoterPassword = async (id) => {
     return response.data;
   } catch (error) {
     console.error('Error resetting voter password:', error);
+    throw error;
+  }
+};
+
+// Voter History API Functions
+export const getVoterHistory = async (id) => {
+  try {
+    const response = await api.get(`/voters/${id}/history`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching voter history:', error);
+    throw error;
+  }
+};
+
+export const getVoterBallotHistory = async (id) => {
+  try {
+    const response = await api.get(`/voters/${id}/ballot-history`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching voter ballot history:', error);
+    throw error;
+  }
+};
+
+export const getVoterVotingDetails = async (id) => {
+  try {
+    const response = await api.get(`/voters/${id}/voting-details`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching voter voting details:', error);
     throw error;
   }
 };
@@ -952,6 +995,159 @@ export const getCourseCandidates = async (id) => {
     return response.data;
   } catch (error) {
     console.error('Error fetching course candidates:', error);
+    throw error;
+  }
+};
+
+// Ballot API Functions
+export const getBallots = async (filters = {}) => {
+  try {
+    const response = await api.get('/ballots', { params: filters });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching ballots:', error);
+    throw error;
+  }
+};
+
+export const getAvailableBallots = async () => {
+  try {
+    const response = await api.get(`/ballots/available`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching available ballots:', error);
+    throw error;
+  }
+};
+
+export const getBallotById = async (id) => {
+  try {
+    const response = await api.get(`/ballots/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching ballot:', error);
+    throw error;
+  }
+};
+
+export const getUserBallotHistory = async () => {
+  try {
+    const response = await api.get(`/ballots/user-history`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching user ballot history:', error);
+    throw error;
+  }
+};
+
+export const createBallot = async (ballotData) => {
+  try {
+    const response = await api.post('/ballots', ballotData);
+    return response.data;
+  } catch (error) {
+    console.error('Error creating ballot:', error);
+    throw error;
+  }
+};
+
+export const updateBallot = async (id, ballotData) => {
+  try {
+    const response = await api.patch(`/ballots/${id}`, ballotData);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating ballot:', error);
+    throw error;
+  }
+};
+
+export const deleteBallot = async (id) => {
+  try {
+    const response = await api.delete(`/ballots/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error deleting ballot:', error);
+    throw error;
+  }
+};
+
+export const activateBallot = async (id) => {
+  try {
+    const response = await api.post(`/ballots/${id}/activate`);
+    return response.data;
+  } catch (error) {
+    console.error('Error activating ballot:', error);
+    throw error;
+  }
+};
+
+export const pauseBallot = async (id) => {
+  try {
+    const response = await api.post(`/ballots/${id}/pause`);
+    return response.data;
+  } catch (error) {
+    console.error('Error pausing ballot:', error);
+    throw error;
+  }
+};
+
+export const endBallot = async (id) => {
+  try {
+    const response = await api.post(`/ballots/${id}/end`);
+    return response.data;
+  } catch (error) {
+    console.error('Error ending ballot:', error);
+    throw error;
+  }
+};
+
+// Ballot Results API Functions
+export const getBallotsWithResults = async () => {
+  try {
+    const response = await api.get('/ballots/results');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching ballots with results:', error);
+    throw error;
+  }
+};
+
+export const getBallotResults = async (ballotId) => {
+  try {
+    const response = await api.get(`/ballots/${ballotId}/results`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching ballot results:', error);
+    throw error;
+  }
+};
+
+export const getLiveBallotResults = async (ballotId) => {
+  try {
+    const response = await api.get(`/ballots/${ballotId}/results/live`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching live ballot results:', error);
+    throw error;
+  }
+};
+
+export const refreshBallotResults = async (ballotId) => {
+  try {
+    const response = await api.post(`/ballots/${ballotId}/results/refresh`);
+    return response.data;
+  } catch (error) {
+    console.error('Error refreshing ballot results:', error);
+    throw error;
+  }
+};
+
+// Ballot Voting API Functions
+export const createBallotVote = async (voteData) => {
+  try {
+    const response = await api.post('/ballots/cast-vote', voteData);
+    return response.data;
+  } catch (error) {
+    console.error('Error creating ballot vote:', error);
     throw error;
   }
 };
