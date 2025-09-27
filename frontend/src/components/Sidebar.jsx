@@ -96,8 +96,6 @@ const Sidebar = ({ isOpen, onToggle }) => {
           ],
           advanced: [
             { path: '/superadmin/manage-admins', label: 'Manage Admins', icon: 'fas fa-user-shield' },
-            { path: '/admin/results', label: 'Results', icon: 'fas fa-chart-bar' },
-            { path: '/admin/vote-traceability', label: 'Vote Traceability', icon: 'fas fa-search' },
             { path: '/trash-bin', label: 'Trash Bin', icon: 'fas fa-trash' }
           ]
         };
@@ -117,8 +115,6 @@ const Sidebar = ({ isOpen, onToggle }) => {
             { path: '/admin/department-management', label: 'Department Management', icon: 'fas fa-university' }
           ],
           advanced: [
-            { path: '/admin/results', label: 'Results', icon: 'fas fa-chart-bar' },
-            { path: '/admin/vote-traceability', label: 'Vote Traceability', icon: 'fas fa-search' },
             { path: '/trash-bin', label: 'Trash Bin', icon: 'fas fa-trash' }
           ]
         };

@@ -139,6 +139,64 @@ export class BallotResultsService {
       throw new NotFoundException('Results will be available after the specified date');
     }
 
+    // If results don't exist, calculate them
+    if (!ballot.results) {
+      console.log('No results found, calculating results for ballot:', ballotId);
+      try {
+        await this.calculateBallotResults(ballotId);
+        console.log('Results calculation completed for ballot:', ballotId);
+      } catch (error) {
+        console.error('Error calculating results for ballot:', ballotId, error);
+        throw error;
+      }
+      
+      // Fetch the ballot again with the newly calculated results
+      return this.prisma.ballot.findUnique({
+        where: { id: ballotId },
+        include: {
+          results: {
+            include: {
+              resultDetails: {
+                include: {
+                  candidate: {
+                    include: {
+                      position: true,
+                      department: true,
+                      course: true,
+                    },
+                  },
+                  position: true,
+                },
+                orderBy: [
+                  { BallotResultDetails_PositionId: 'asc' },
+                  { BallotResultDetails_Rank: 'asc' },
+                ],
+              },
+            },
+          },
+          ballotPositions: {
+            include: {
+              position: true,
+            },
+            orderBy: {
+              BallotPosition_DisplayOrder: 'asc',
+            },
+          },
+          ballotCandidates: {
+            include: {
+              candidate: true,
+            },
+          },
+          _count: {
+            select: {
+              votes: true,
+              userHistory: true,
+            },
+          },
+        },
+      });
+    }
+
     return ballot;
   }
 
@@ -193,6 +251,8 @@ export class BallotResultsService {
   }
 
   async calculateBallotResults(ballotId: string) {
+    console.log('🔍 Starting ballot results calculation for:', ballotId);
+    
     const ballot = await this.prisma.ballot.findUnique({
       where: { id: ballotId },
       include: {
@@ -223,6 +283,10 @@ export class BallotResultsService {
     if (!ballot) {
       throw new NotFoundException('Ballot not found');
     }
+    
+    console.log(`📊 Found ${ballot.votes.length} votes for ballot ${ballotId}`);
+    console.log(`📊 Found ${ballot.ballotPositions.length} positions for ballot ${ballotId}`);
+    console.log(`📊 Found ${ballot.ballotCandidates.length} candidates for ballot ${ballotId}`);
 
     // Calculate total votes and voters
     const totalVotes = ballot.votes.length;
@@ -310,6 +374,7 @@ export class BallotResultsService {
         });
       }
 
+      console.log('✅ Ballot results calculation completed successfully for:', ballotId);
       return ballotResults;
     });
   }

@@ -115,9 +115,6 @@ export class BallotController {
     return this.ballotService.getUserBallotHistory(userId);
   }
 
-  @Get(':id/results')
-  getBallotResults(@Param('id') id: string) {
-    return this.ballotService.getBallotResults(id);
-  }
+  // Results endpoint moved to BallotResultsController to avoid conflicts
 
 }

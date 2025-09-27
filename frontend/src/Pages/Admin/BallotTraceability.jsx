@@ -171,6 +171,58 @@ const BallotTraceability = () => {
     };
   };
 
+  const getLeadingCandidates = () => {
+    if (!selectedBallot || !selectedBallot.ballotPositions) return [];
+
+    return selectedBallot.ballotPositions.map(bp => {
+      const positionId = bp.position.id;
+      const positionTitle = bp.position.Position_Title;
+      
+      // Get all votes for this position
+      const positionVotes = votes.filter(vote => vote.positionId === positionId);
+      const totalVotesForPosition = positionVotes.length;
+
+      // Count votes by candidate for this position
+      const candidateVotes = {};
+      positionVotes.forEach(vote => {
+        const candidateId = vote.candidateId;
+        const candidateName = getCandidateName(candidateId);
+        
+        if (!candidateVotes[candidateId]) {
+          candidateVotes[candidateId] = {
+            name: candidateName,
+            votes: 0
+          };
+        }
+        candidateVotes[candidateId].votes++;
+      });
+
+      // Find the leading candidate
+      const candidates = Object.entries(candidateVotes);
+      const sortedCandidates = candidates.sort(([,a], [,b]) => b.votes - a.votes);
+      const leadingCandidate = sortedCandidates[0];
+
+      return {
+        positionId,
+        positionTitle,
+        leadingCandidate: leadingCandidate && leadingCandidate[1].votes > 0 ? {
+          name: leadingCandidate[1].name,
+          votes: leadingCandidate[1].votes,
+          percentage: totalVotesForPosition > 0 ? 
+            Math.round((leadingCandidate[1].votes / totalVotesForPosition) * 100) : 0
+        } : null,
+        totalVotes: totalVotesForPosition,
+        allCandidates: sortedCandidates.map(([id, data]) => ({
+          id,
+          name: data.name,
+          votes: data.votes,
+          percentage: totalVotesForPosition > 0 ? 
+            Math.round((data.votes / totalVotesForPosition) * 100) : 0
+        }))
+      };
+    });
+  };
+
   if (loading && ballots.length === 0) {
     return (
       <div className="ballot-traceability-container">
@@ -211,6 +263,7 @@ const BallotTraceability = () => {
 
   const filteredVotes = getFilteredVotes();
   const statistics = getVoteStatistics();
+  const leadingCandidates = getLeadingCandidates();
 
   return (
     <div className="ballot-traceability-container">
@@ -297,58 +350,55 @@ const BallotTraceability = () => {
             </div>
           </div>
 
-          {/* Filters */}
-          <div className="filters-section">
-            <h2>Filter Votes</h2>
-            <div className="filters-grid">
-              <div className="filter-group">
-                <label>Search Voter</label>
-                <div className="search-box">
-                  <i className="fas fa-search"></i>
-                  <input
-                    type="text"
-                    placeholder="Search by name or student ID..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
+          {/* Vote Details with Filters */}
+          <div className="votes-section">
+            <div className="votes-header">
+              <h2>Vote Details ({filteredVotes.length} votes)</h2>
+              <div className="filters-grid">
+                <div className="filter-group">
+                  <label>Search Voter</label>
+                  <div className="search-box">
+                    <i className="fas fa-search"></i>
+                    <input
+                      type="text"
+                      placeholder="Search by name or student ID..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                  </div>
+                </div>
+                
+                <div className="filter-group">
+                  <label>Filter by Position</label>
+                  <select 
+                    value={filterPosition} 
+                    onChange={(e) => setFilterPosition(e.target.value)}
+                  >
+                    <option value="all">All Positions</option>
+                    {selectedBallot.ballotPositions?.map(bp => (
+                      <option key={bp.position.id} value={bp.position.id}>
+                        {bp.position.Position_Title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div className="filter-group">
+                  <label>Filter by Candidate</label>
+                  <select 
+                    value={filterCandidate} 
+                    onChange={(e) => setFilterCandidate(e.target.value)}
+                  >
+                    <option value="all">All Candidates</option>
+                    {selectedBallot.ballotCandidates?.map(bc => (
+                      <option key={bc.candidate.id} value={bc.candidate.id}>
+                        {bc.candidate.Candidate_Name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
-              
-              <div className="filter-group">
-                <label>Filter by Position</label>
-                <select 
-                  value={filterPosition} 
-                  onChange={(e) => setFilterPosition(e.target.value)}
-                >
-                  <option value="all">All Positions</option>
-                  {selectedBallot.ballotPositions?.map(bp => (
-                    <option key={bp.position.id} value={bp.position.id}>
-                      {bp.position.Position_Title}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              
-              <div className="filter-group">
-                <label>Filter by Candidate</label>
-                <select 
-                  value={filterCandidate} 
-                  onChange={(e) => setFilterCandidate(e.target.value)}
-                >
-                  <option value="all">All Candidates</option>
-                  {selectedBallot.ballotCandidates?.map(bc => (
-                    <option key={bc.candidate.id} value={bc.candidate.id}>
-                      {bc.candidate.Candidate_Name}
-                    </option>
-                  ))}
-                </select>
-              </div>
             </div>
-          </div>
-
-          {/* Vote Details Table */}
-          <div className="votes-section">
-            <h2>Vote Details ({filteredVotes.length} votes)</h2>
             
             {filteredVotes.length === 0 ? (
               <div className="no-votes">
@@ -391,6 +441,42 @@ const BallotTraceability = () => {
           {/* Vote Analysis */}
           <div className="analysis-section">
             <h2>Vote Analysis</h2>
+            
+            {/* Leading Candidates Table */}
+            <div className="leading-candidates-section">
+              <h3>Leading Candidates by Position</h3>
+              <div className="leading-table-container">
+                <table className="leading-table">
+                  <thead>
+                    <tr>
+                      <th>Position</th>
+                      <th>Leading Candidate</th>
+                      <th>Votes</th>
+                      <th>Percentage</th>
+                      <th>Total Votes</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {leadingCandidates.map(position => (
+                      <tr key={position.positionId}>
+                        <td className="position-name">{position.positionTitle}</td>
+                        <td className="candidate-name">
+                          {position.leadingCandidate ? position.leadingCandidate.name : 'No votes yet'}
+                        </td>
+                        <td className="vote-count">
+                          {position.leadingCandidate ? position.leadingCandidate.votes : 0}
+                        </td>
+                        <td className="percentage">
+                          {position.leadingCandidate ? `${position.leadingCandidate.percentage}%` : '0%'}
+                        </td>
+                        <td className="total-votes">{position.totalVotes}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
             <div className="analysis-grid">
               <div className="analysis-card">
                 <h3>Votes by Position</h3>
@@ -426,4 +512,6 @@ const BallotTraceability = () => {
 };
 
 export default BallotTraceability;
+
+
 

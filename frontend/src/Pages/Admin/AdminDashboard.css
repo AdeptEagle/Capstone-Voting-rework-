@@ -1,7 +1,7 @@
 /* AdminDashboard.css */
 .admin-dashboard {
   padding: 0 0 2rem 0;
-  background-color: var(--background-off-white);
+  background-color: #f1f5f9;
   min-height: 100vh;
   position: relative;
   z-index: 1;

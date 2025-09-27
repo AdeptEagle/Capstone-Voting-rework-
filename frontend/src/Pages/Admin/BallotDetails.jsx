@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { 
   getBallotById, 
   getBallotResults,
@@ -13,6 +13,7 @@ import './BallotDetails.css';
 const BallotDetails = () => {
   const { ballotId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   
   const [ballot, setBallot] = useState(null);
   const [results, setResults] = useState(null);
@@ -23,18 +24,34 @@ const BallotDetails = () => {
 
   useEffect(() => {
     fetchBallotData();
-  }, [ballotId]);
+    
+    // Check for tab query parameter
+    const urlParams = new URLSearchParams(location.search);
+    const tab = urlParams.get('tab');
+    if (tab && ['overview', 'positions', 'results', 'settings'].includes(tab)) {
+      setActiveTab(tab);
+    }
+  }, [ballotId, location.search]);
 
   const fetchBallotData = async () => {
     try {
       setLoading(true);
       const [ballotData, resultsData] = await Promise.all([
         getBallotById(ballotId),
-        getBallotResults(ballotId).catch(() => null) // Results might not exist yet
+        getBallotResults(ballotId).catch((error) => {
+          console.log('Results fetch failed (this is normal if results are not available):', error);
+          return null; // Results might not exist yet
+        })
       ]);
       
       setBallot(ballotData);
       setResults(resultsData);
+      
+      // Debug the results data
+      console.log('Results data received:', resultsData);
+      console.log('Results type:', typeof resultsData);
+      console.log('Results results property:', resultsData?.results);
+      console.log('Results results length:', resultsData?.results?.length);
     } catch (error) {
       console.error('Error fetching ballot data:', error);
       setError('Failed to load ballot details. Please try again.');
@@ -118,9 +135,9 @@ const BallotDetails = () => {
   };
 
   const getPositionResults = (positionId) => {
-    if (!results || !results.resultDetails) return [];
+    if (!results || !results.results?.resultDetails) return [];
     
-    return results.resultDetails
+    return results.results.resultDetails
       .filter(detail => detail.BallotResultDetails_PositionId === positionId)
       .sort((a, b) => a.BallotResultDetails_Rank - b.BallotResultDetails_Rank);
   };
@@ -198,67 +215,6 @@ const BallotDetails = () => {
           )}
         </div>
         
-        <div className="ballot-actions">
-          {ballotStatus.status === 'upcoming' && (
-            <button 
-              className="btn btn-success"
-              onClick={() => handleBallotAction('activate')}
-            >
-              <i className="fas fa-play"></i>
-              Activate Ballot
-            </button>
-          )}
-
-          {ballotStatus.status === 'active' && (
-            <>
-              <button 
-                className="btn btn-warning"
-                onClick={() => handleBallotAction('pause')}
-              >
-                <i className="fas fa-pause"></i>
-                Pause Ballot
-              </button>
-              <button 
-                className="btn btn-danger"
-                onClick={() => handleBallotAction('end')}
-              >
-                <i className="fas fa-stop"></i>
-                End Ballot
-              </button>
-            </>
-          )}
-
-          {ballotStatus.status === 'paused' && (
-            <button 
-              className="btn btn-success"
-              onClick={() => handleBallotAction('activate')}
-            >
-              <i className="fas fa-play"></i>
-              Resume Ballot
-            </button>
-          )}
-
-          {ballotStatus.status !== 'ended' && (
-            <button 
-              className="btn btn-outline"
-              onClick={() => navigate(`/admin/ballot-edit/${ballotId}`)}
-              title="Edit ballot"
-            >
-              <i className="fas fa-edit"></i>
-              Edit Ballot
-            </button>
-          )}
-
-          <button 
-            className={`btn btn-danger ${ballotStatus.status === 'ended' ? 'disabled' : ''}`}
-            onClick={() => ballotStatus.status !== 'ended' && handleDeleteBallot()}
-            disabled={ballotStatus.status === 'ended'}
-            title={ballotStatus.status === 'ended' ? 'Cannot delete ended ballot' : 'Delete ballot'}
-          >
-            <i className="fas fa-trash"></i>
-            Delete Ballot
-          </button>
-        </div>
       </div>
 
       {error && (
@@ -317,65 +273,162 @@ const BallotDetails = () => {
       <div className="tab-content">
         {activeTab === 'overview' && (
           <div className="overview-tab">
-            <div className="overview-grid">
+            <div className="overview-content">
+              {/* Ballot Information Card */}
               <div className="info-card">
-                <h3>Ballot Information</h3>
-                <div className="info-list">
-                  <div className="info-item">
-                    <i className="fas fa-calendar-alt"></i>
-                    <span>Start Date: {formatDate(ballot.Ballot_StartDate)}</span>
-                  </div>
-                  <div className="info-item">
-                    <i className="fas fa-calendar-check"></i>
-                    <span>End Date: {formatDate(ballot.Ballot_EndDate)}</span>
-                  </div>
-                  <div className="info-item">
-                    <i className="fas fa-users"></i>
-                    <span>Positions: {ballot.ballotPositions?.length || 0}</span>
-                  </div>
-                  <div className="info-item">
-                    <i className="fas fa-user-tie"></i>
-                    <span>Candidates: {ballot.ballotCandidates?.length || 0}</span>
-                  </div>
+                <div className="info-card-header">
+                  <h3>Ballot Information</h3>
                 </div>
-              </div>
-
-              <div className="info-card">
-                <h3>Voting Rules</h3>
-                <div className="info-list">
-                  <div className="info-item">
-                    <i className="fas fa-vote-yea"></i>
-                    <span>Max Votes Per User: {ballot.Ballot_MaxVotesPerUser}</span>
-                  </div>
-                  <div className="info-item">
-                    <i className="fas fa-repeat"></i>
-                    <span>Allow Multiple Votes: {ballot.Ballot_AllowMultipleVotes ? 'Yes' : 'No'}</span>
-                  </div>
-                  <div className="info-item">
-                    <i className="fas fa-check-double"></i>
-                    <span>Require All Positions: {ballot.Ballot_RequireAllPositions ? 'Yes' : 'No'}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="info-card">
-                <h3>Results Settings</h3>
-                <div className="info-list">
-                  <div className="info-item">
-                    <i className="fas fa-eye"></i>
-                    <span>Show Results: {ballot.Ballot_ShowResults ? 'Yes' : 'No'}</span>
-                  </div>
-                  <div className="info-item">
-                    <i className="fas fa-broadcast-tower"></i>
-                    <span>Live Results: {ballot.Ballot_ShowLiveResults ? 'Yes' : 'No'}</span>
-                  </div>
-                  {ballot.Ballot_ShowResultsAfter && (
-                    <div className="info-item">
-                      <i className="fas fa-clock"></i>
-                      <span>Show After: {formatDate(ballot.Ballot_ShowResultsAfter)}</span>
+                <div className="info-card-content">
+                  <div className="info-grid">
+                    <div className="info-column">
+                      <div className="info-field">
+                        <p className="info-label">Start Date</p>
+                        <p className="info-value">{formatDate(ballot.Ballot_StartDate)}</p>
+                      </div>
+                      <div className="info-field">
+                        <p className="info-label">End Date</p>
+                        <p className="info-value">{formatDate(ballot.Ballot_EndDate)}</p>
+                      </div>
                     </div>
-                  )}
+                    <div className="info-column">
+                      <div className="info-field">
+                        <p className="info-label">Positions</p>
+                        <p className="info-value">{ballot.ballotPositions?.length || 0}</p>
+                      </div>
+                      <div className="info-field">
+                        <p className="info-label">Candidates</p>
+                        <p className="info-value">{ballot.ballotCandidates?.length || 0}</p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
+              </div>
+
+              {/* Voting Rules Card */}
+              <div className="info-card">
+                <div className="info-card-header">
+                  <h3>Voting Rules</h3>
+                </div>
+                <div className="info-card-content">
+                  <div className="info-grid">
+                    <div className="info-column">
+                      <div className="info-field">
+                        <p className="info-label">Max Votes Per User</p>
+                        <p className="info-value">{ballot.Ballot_MaxVotesPerUser}</p>
+                      </div>
+                      <div className="info-field">
+                        <p className="info-label">Allow Multiple Votes</p>
+                        <p className="info-value">{ballot.Ballot_AllowMultipleVotes ? 'Yes' : 'No'}</p>
+                      </div>
+                    </div>
+                    <div className="info-column">
+                      <div className="info-field">
+                        <p className="info-label">Require All Positions</p>
+                        <p className="info-value">{ballot.Ballot_RequireAllPositions ? 'Yes' : 'No'}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Results Settings Card */}
+              <div className="info-card">
+                <div className="info-card-header">
+                  <h3>Results Settings</h3>
+                </div>
+                <div className="info-card-content">
+                  <div className="info-grid">
+                    <div className="info-column">
+                      <div className="info-field">
+                        <p className="info-label">Show Results</p>
+                        <p className="info-value">{ballot.Ballot_ShowResults ? 'Yes' : 'No'}</p>
+                      </div>
+                      <div className="info-field">
+                        <p className="info-label">Live Results</p>
+                        <p className="info-value">{ballot.Ballot_ShowLiveResults ? 'Yes' : 'No'}</p>
+                      </div>
+                    </div>
+                    {ballot.Ballot_ShowResultsAfter && (
+                      <div className="info-column">
+                        <div className="info-field">
+                          <p className="info-label">Show After</p>
+                          <p className="info-value">{formatDate(ballot.Ballot_ShowResultsAfter)}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="action-buttons-section">
+                {ballotStatus.status === 'upcoming' && (
+                  <button 
+                    className="btn btn-success action-btn"
+                    onClick={() => handleBallotAction('activate')}
+                  >
+                    <i className="fas fa-play"></i>
+                    Activate Ballot
+                  </button>
+                )}
+
+                {ballotStatus.status === 'active' && (
+                  <>
+                    <button 
+                      className="btn btn-warning action-btn"
+                      onClick={() => handleBallotAction('pause')}
+                    >
+                      <i className="fas fa-pause"></i>
+                      Pause Ballot
+                    </button>
+                    <button 
+                      className="btn btn-danger action-btn"
+                      onClick={() => handleBallotAction('end')}
+                    >
+                      <i className="fas fa-stop"></i>
+                      End Ballot
+                    </button>
+                  </>
+                )}
+
+                {ballotStatus.status === 'paused' && (
+                  <>
+                    <button 
+                      className="btn btn-success action-btn"
+                      onClick={() => handleBallotAction('activate')}
+                    >
+                      <i className="fas fa-play"></i>
+                      Resume Ballot
+                    </button>
+                    <button 
+                      className="btn btn-danger action-btn"
+                      onClick={() => handleBallotAction('end')}
+                    >
+                      <i className="fas fa-stop"></i>
+                      End Ballot
+                    </button>
+                  </>
+                )}
+                
+                {ballotStatus.status !== 'ended' && (
+                  <button 
+                    className="btn btn-primary action-btn"
+                    onClick={() => navigate(`/admin/ballot-edit/${ballotId}`)}
+                  >
+                    <i className="fas fa-edit"></i>
+                    Edit Ballot
+                  </button>
+                )}
+                
+                <button 
+                  className={`btn btn-danger action-btn ${ballotStatus.status === 'ended' ? 'disabled' : ''}`}
+                  onClick={() => ballotStatus.status !== 'ended' && handleDeleteBallot()}
+                  disabled={ballotStatus.status === 'ended'}
+                >
+                  <i className="fas fa-trash"></i>
+                  Delete Ballot
+                </button>
               </div>
             </div>
           </div>
@@ -388,9 +441,14 @@ const BallotDetails = () => {
                 <div key={ballotPosition.position.id} className="position-card">
                   <div className="position-header">
                     <h3>{ballotPosition.position.Position_Title}</h3>
-                    <span className="vote-limit">
-                      Vote Limit: {ballotPosition.position.voteLimit || 1}
-                    </span>
+                    <div className="position-header-right">
+                      <span className="vote-limit-text">
+                        Vote Limit: {ballotPosition.position.voteLimit || 1}
+                      </span>
+                      <span className="status-badge active">
+                        Active
+                      </span>
+                    </div>
                   </div>
                   
                   {ballotPosition.position.Position_Description && (
@@ -400,10 +458,10 @@ const BallotDetails = () => {
                   )}
 
                   <div className="candidates-list">
-                    <h4>Candidates ({ballot.ballotCandidates?.filter(bc => bc.candidate.positionId === ballotPosition.position.id).length || 0})</h4>
+                    <h4>Candidates ({ballot.ballotCandidates?.filter(bc => bc.BallotCandidate_PositionId === ballotPosition.position.id).length || 0})</h4>
                     <div className="candidates-grid">
                       {ballot.ballotCandidates
-                        ?.filter(bc => bc.candidate.positionId === ballotPosition.position.id)
+                        ?.filter(bc => bc.BallotCandidate_PositionId === ballotPosition.position.id)
                         .map(bc => (
                           <div key={bc.candidate.id} className="candidate-item">
                             <div className="candidate-info">
@@ -434,15 +492,15 @@ const BallotDetails = () => {
               <div className="results-content">
                 <div className="results-summary">
                   <div className="summary-card">
-                    <h3>{results.BallotResults_TotalVotes}</h3>
+                    <h3>{results.results?.BallotResults_TotalVotes || 0}</h3>
                     <p>Total Votes</p>
                   </div>
                   <div className="summary-card">
-                    <h3>{results.BallotResults_TotalVoters}</h3>
+                    <h3>{results.results?.BallotResults_TotalVoters || 0}</h3>
                     <p>Total Voters</p>
                   </div>
                   <div className="summary-card">
-                    <h3>{results.BallotResults_VoterTurnout.toFixed(1)}%</h3>
+                    <h3>{results.results?.BallotResults_VoterTurnout ? results.results.BallotResults_VoterTurnout.toFixed(1) : '0.0'}%</h3>
                     <p>Voter Turnout</p>
                   </div>
                 </div>
@@ -473,7 +531,7 @@ const BallotDetails = () => {
                                     {result.BallotResultDetails_VoteCount} votes
                                   </span>
                                   <span className="vote-percentage">
-                                    {result.BallotResultDetails_Percentage.toFixed(1)}%
+                                    {result.BallotResultDetails_Percentage ? result.BallotResultDetails_Percentage.toFixed(1) : '0.0'}%
                                   </span>
                                 </div>
                               </div>
@@ -482,7 +540,7 @@ const BallotDetails = () => {
                                 <div 
                                   className="vote-fill"
                                   style={{ 
-                                    width: `${result.BallotResultDetails_Percentage}%`,
+                                    width: `${result.BallotResultDetails_Percentage || 0}%`,
                                     background: index === 0 
                                       ? 'linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%)'
                                       : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'

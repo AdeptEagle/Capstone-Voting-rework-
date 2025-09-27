@@ -2,7 +2,7 @@
 
 body {
   font-family: 'Inter', sans-serif;
-  background-color: var(--background-off-white);
+  background-color: #f1f5f9;
   color: var(--text-dark);
   margin: 0;
   overflow-x: hidden;
@@ -11,7 +11,7 @@ body {
 
 /* Ensure no white overlays on main content */
 main {
-  background-color: var(--background-off-white) !important;
+  background-color: #f1f5f9 !important;
 }
 
 /* Override any Bootstrap white backgrounds that might be causing issues */
@@ -429,21 +429,36 @@ main {
 }
 
 /* Ensure proper inheritance */
-.admin-dashboard,
-.user-dashboard,
-.superadmin-dashboard {
+.user-dashboard {
   background-color: var(--background-off-white) !important;
   min-height: 100vh;
   position: relative;
   z-index: 1;
 }
 
+.admin-dashboard {
+  background-color: #f1f5f9 !important;
+  min-height: 100vh;
+  position: relative;
+  z-index: 1;
+}
+
+.superadmin-dashboard {
+  background-color: #f1f5f9 !important;
+  min-height: 100vh;
+  position: relative;
+  z-index: 1;
+}
+
 /* Override any potential white overlays on dashboard containers */
-.dashboard-container,
-.admin-dashboard-container,
-.user-dashboard-container,
-.superadmin-dashboard-container {
+.dashboard-container {
   background-color: transparent !important;
+}
+
+.user-dashboard-container,
+.admin-dashboard-container,
+.superadmin-dashboard-container {
+  background: #f1f5f9 !important;
 }
 
 /* Ensure proper layering for all dashboard elements */

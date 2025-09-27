@@ -409,8 +409,8 @@ export class BallotService {
   async activateBallot(id: string, activatedBy: string) {
     const ballot = await this.getBallotById(id);
 
-    if (ballot.Ballot_Status !== BallotStatus.DRAFT && ballot.Ballot_Status !== BallotStatus.SCHEDULED) {
-      throw new BadRequestException('Only draft or scheduled ballots can be activated');
+    if (ballot.Ballot_Status !== BallotStatus.DRAFT && ballot.Ballot_Status !== BallotStatus.SCHEDULED && ballot.Ballot_Status !== BallotStatus.PAUSED) {
+      throw new BadRequestException('Only draft, scheduled, or paused ballots can be activated');
     }
 
     const now = new Date();
@@ -418,13 +418,23 @@ export class BallotService {
       throw new BadRequestException('Cannot activate ballot with end date in the past');
     }
 
+    // For paused ballots, preserve the original start date
+    // For draft/scheduled ballots, set start date to now
+    const updateData: any = {
+      Ballot_Status: BallotStatus.ACTIVE,
+      Ballot_IsActive: true,
+    };
+
+    if (ballot.Ballot_Status === BallotStatus.PAUSED) {
+      // For paused ballots, don't change the start date
+    } else {
+      // For draft/scheduled ballots, set start date to now
+      updateData.Ballot_StartDate = now;
+    }
+
     return this.prisma.ballot.update({
       where: { id },
-      data: {
-        Ballot_Status: BallotStatus.ACTIVE,
-        Ballot_IsActive: true,
-        Ballot_StartDate: now, // Set start date to now when activating
-      },
+      data: updateData,
     });
   }
 

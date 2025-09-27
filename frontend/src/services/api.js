@@ -17,6 +17,12 @@ api.interceptors.response.use(
   (error) => {
     console.error('API Error:', error);
     
+    // Handle "not found" errors (404) - don't treat as auth error
+    if (error.response?.status === 404) {
+      console.log('Not found error, not redirecting');
+      return Promise.reject(error);
+    }
+    
     // Handle authentication errors (401/403)
     if (error.response?.status === 401 || error.response?.status === 403) {
       console.log('Authentication error detected');
@@ -1113,10 +1119,19 @@ export const getBallotsWithResults = async () => {
 
 export const getBallotResults = async (ballotId) => {
   try {
+    console.log('Fetching ballot results for ballot:', ballotId);
     const response = await api.get(`/ballots/${ballotId}/results`);
+    console.log('Ballot results fetched successfully:', response.data);
+    console.log('Results property:', response.data.results);
+    console.log('Results length:', response.data.results?.length);
+    if (response.data.results && response.data.results.length > 0) {
+      console.log('First result:', response.data.results[0]);
+    }
     return response.data;
   } catch (error) {
     console.error('Error fetching ballot results:', error);
+    console.error('Error status:', error.response?.status);
+    console.error('Error message:', error.response?.data?.message);
     throw error;
   }
 };

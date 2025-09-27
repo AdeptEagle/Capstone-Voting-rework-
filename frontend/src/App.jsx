@@ -5,7 +5,6 @@ import Header from './components/Header';
 import SuperAdminDashboard from './Pages/SuperAdmin/SuperAdminDashboard';
 import ManageAdmins from './Pages/SuperAdmin/ManageAdmins';
 import AdminDashboard from './Pages/Admin/AdminDashboard';
-import VoteTraceability from './Pages/Admin/VoteTraceability';
 import BallotManagement from './Pages/Admin/BallotManagement';
 import BallotDetails from './Pages/Admin/BallotDetails';
 import BallotTraceability from './Pages/Admin/BallotTraceability';
@@ -14,7 +13,6 @@ import Positions from './Pages/Positions';
 import Candidates from './Pages/Candidates';
 import Voters from './Pages/Voters';
 import VoterHistory from './Pages/Admin/VoterHistory';
-import Results from './Pages/Results';
 import Elections from './Pages/Elections';
 import ElectionHistory from './Pages/ElectionHistory';
 import UserRegister from './Pages/User/UserRegister';
@@ -213,13 +211,6 @@ function App() {
                 </AdminLayout>
               </AdminRoute>
             } />
-            <Route path="/admin/vote-traceability" element={
-              <AdminRoute>
-                <AdminLayout>
-                  <VoteTraceability />
-                </AdminLayout>
-              </AdminRoute>
-            } />
             <Route path="/admin/ballot-management" element={
               <AdminRoute>
                 <AdminLayout>
@@ -238,13 +229,6 @@ function App() {
               <AdminRoute>
                 <AdminLayout>
                   <BallotTraceability />
-                </AdminLayout>
-              </AdminRoute>
-            } />
-            <Route path="/admin/results" element={
-              <AdminRoute>
-                <AdminLayout>
-                  <Results />
                 </AdminLayout>
               </AdminRoute>
             } />
@@ -285,13 +269,6 @@ function App() {
                 </UserLayout>
               </UserRoute>
             } />
-            <Route path="/user/results" element={
-              <UserRoute>
-                <UserLayout>
-                  <Results />
-                </UserLayout>
-              </UserRoute>
-            } />
             <Route path="/user/ballot-selection" element={
               <UserRoute>
                 <UserLayout>
@@ -325,11 +302,9 @@ function App() {
             <Route path="/dashboard" element={<Navigate to="/user/dashboard" />} />
             <Route path="/vote" element={<Navigate to="/user/vote" />} />
             <Route path="/candidates" element={<Navigate to="/user/candidates" />} />
-            <Route path="/results" element={<Navigate to="/user/results" />} />
             <Route path="/positions" element={<Navigate to="/admin/positions" />} />
             <Route path="/voters" element={<Navigate to="/admin/voters" />} />
             <Route path="/elections" element={<Navigate to="/admin/elections" />} />
-            <Route path="/vote-traceability" element={<Navigate to="/admin/vote-traceability" />} />
 
             {/* Catch all - redirect to appropriate login based on stored role */}
             <Route path="*" element={<CatchAllRedirect />} />

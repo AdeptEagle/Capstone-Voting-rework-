@@ -268,7 +268,7 @@ const BallotManagement = () => {
             <p>Total Ballots</p>
           </div>
           <div className="stat-icon blue">
-            <i className="fas fa-clipboard-list"></i>
+            <i className="fas fa-vote-yea"></i>
           </div>
         </div>
 
@@ -278,7 +278,7 @@ const BallotManagement = () => {
             <p>Active</p>
           </div>
           <div className="stat-icon green">
-            <i className="fas fa-check-circle"></i>
+            <i className="fas fa-play-circle"></i>
           </div>
         </div>
 
@@ -288,7 +288,7 @@ const BallotManagement = () => {
             <p>Upcoming</p>
           </div>
           <div className="stat-icon yellow">
-            <i className="fas fa-clock"></i>
+            <i className="fas fa-calendar-plus"></i>
           </div>
         </div>
 
@@ -298,7 +298,7 @@ const BallotManagement = () => {
             <p>Ended</p>
           </div>
           <div className="stat-icon red">
-            <i className="fas fa-times-circle"></i>
+            <i className="fas fa-stop-circle"></i>
           </div>
         </div>
       </div>
@@ -423,9 +423,6 @@ const BallotManagement = () => {
                     <tr key={ballot.id}>
                       <td>
                         <div className="ballot-info">
-                          <div className="ballot-icon">
-                            <i className="fas fa-vote-yea"></i>
-                          </div>
                           <div className="ballot-details">
                             <h4>{ballot.Ballot_Title}</h4>
                             <p>ID: {ballot.id}</p>
@@ -439,27 +436,33 @@ const BallotManagement = () => {
                       </td>
                       <td>{new Date(ballot.Ballot_StartDate).toLocaleDateString()}</td>
                       <td>{new Date(ballot.Ballot_EndDate).toLocaleDateString()}</td>
-                      <td>{ballot.participantCount || 0}</td>
+                      <td>{ballot._count?.userHistory || 0}</td>
                       <td>
                         <div className="table-actions">
                           <button 
-                            className="action-link"
+                            className="action-btn view-btn"
                             onClick={() => navigate(`/admin/ballot-details/${ballot.id}`)}
+                            title="View Ballot Details"
                           >
-                            View
+                            <i className="fas fa-eye"></i>
+                            <span>View</span>
                           </button>
                           <button 
-                            className="action-link secondary"
-                            onClick={() => navigate(`/user/ballot-results/${ballot.id}`)}
+                            className="action-btn results-btn"
+                            onClick={() => navigate(`/admin/ballot-details/${ballot.id}?tab=results`)}
+                            title="View Results"
                           >
-                            Results
+                            <i className="fas fa-chart-bar"></i>
+                            <span>Results</span>
                           </button>
                           {status.status !== 'ended' && (
                             <button 
-                              className="action-link primary"
+                              className="action-btn edit-btn"
                               onClick={() => handleEditBallot(ballot)}
+                              title="Edit Ballot"
                             >
-                              Edit
+                              <i className="fas fa-edit"></i>
+                              <span>Edit</span>
                             </button>
                           )}
                         </div>
