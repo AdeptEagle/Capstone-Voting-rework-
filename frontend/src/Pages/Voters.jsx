@@ -458,9 +458,7 @@ const Voters = () => {
   if (loading) {
     return (
       <div className="text-center py-5">
-        <div className="spinner-border" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
+        <div className="loading-text">Loading...</div>
       </div>
     );
   }

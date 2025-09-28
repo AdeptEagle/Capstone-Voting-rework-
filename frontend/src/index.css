@@ -195,4 +195,42 @@ main .bg-light {
   .overlay {
     display: none !important; /* Never show overlay on larger screens */
   }
+}
+
+/* Disable all spinning animations globally */
+.fa-spin,
+.fa-spinner,
+.spinner,
+[class*="spinner"],
+[class*="spin"],
+.spinner-border,
+.spinner-border-sm,
+.spinner-grow,
+.spinner-grow-sm {
+  animation: none !important;
+  transform: none !important;
+  display: none !important;
+}
+
+/* Disable any keyframe animations that might be spinning */
+@keyframes spin {
+  0% { transform: none; }
+  100% { transform: none; }
+}
+
+@keyframes spinner-border {
+  0% { transform: none; }
+  100% { transform: none; }
+}
+
+@keyframes spinner-grow {
+  0% { transform: none; }
+  100% { transform: none; }
+}
+
+/* Simple loading text styling - no spinners */
+.loading-text {
+  color: #666;
+  font-size: 0.9rem;
+  font-weight: 500;
 } 

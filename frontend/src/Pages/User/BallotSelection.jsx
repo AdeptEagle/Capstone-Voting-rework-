@@ -124,8 +124,7 @@ const BallotSelection = () => {
   if (loading) {
     return (
       <div className="ballot-selection-container">
-        <div className="loading-spinner">
-          <div className="spinner"></div>
+        <div className="loading-message">
           <p>Loading ballots...</p>
         </div>
       </div>

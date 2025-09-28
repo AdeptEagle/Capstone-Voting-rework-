@@ -226,8 +226,7 @@ const BallotTraceability = () => {
   if (loading && ballots.length === 0) {
     return (
       <div className="ballot-traceability-container">
-        <div className="loading-spinner">
-          <div className="spinner"></div>
+        <div className="loading-message">
           <p>Loading ballots...</p>
         </div>
       </div>

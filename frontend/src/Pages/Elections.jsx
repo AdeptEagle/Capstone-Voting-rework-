@@ -902,7 +902,7 @@ const Elections = () => {
           disabled={updatingElection === election.id}
         >
           {updatingElection === election.id ? (
-            <i className="fas fa-spinner fa-spin me-1"></i>
+            <span className="loading-text">Loading...</span>
           ) : (
             <i className="fas fa-wrench me-1"></i>
           )}
@@ -922,7 +922,7 @@ const Elections = () => {
             title={!canStartElection ? 'Another ballot is currently active. End or pause the active ballot first.' : 'Start this ballot'}
           >
             {updatingElection === election.id ? (
-              <i className="fas fa-spinner fa-spin me-1"></i>
+              <span className="loading-text">Loading...</span>
             ) : (
               <i className="fas fa-play me-1"></i>
             )}
@@ -940,7 +940,7 @@ const Elections = () => {
             disabled={updatingElection === election.id}
           >
             {updatingElection === election.id ? (
-              <i className="fas fa-spinner fa-spin me-1"></i>
+              <span className="loading-text">Loading...</span>
             ) : (
               <i className="fas fa-pause me-1"></i>
             )}
@@ -953,7 +953,7 @@ const Elections = () => {
             disabled={updatingElection === election.id}
           >
             {updatingElection === election.id ? (
-              <i className="fas fa-spinner fa-spin me-1"></i>
+              <span className="loading-text">Loading...</span>
             ) : (
               <i className="fas fa-stop me-1"></i>
             )}
@@ -971,7 +971,7 @@ const Elections = () => {
             disabled={updatingElection === election.id}
           >
             {updatingElection === election.id ? (
-              <i className="fas fa-spinner fa-spin me-1"></i>
+              <span className="loading-text">Loading...</span>
             ) : (
               <i className="fas fa-play me-1"></i>
             )}
@@ -984,7 +984,7 @@ const Elections = () => {
             disabled={updatingElection === election.id}
           >
             {updatingElection === election.id ? (
-              <i className="fas fa-spinner fa-spin me-1"></i>
+              <span className="loading-text">Loading...</span>
             ) : (
               <i className="fas fa-stop me-1"></i>
             )}
@@ -1002,7 +1002,7 @@ const Elections = () => {
             disabled={updatingElection === election.id}
           >
             {updatingElection === election.id ? (
-              <i className="fas fa-spinner fa-spin me-1"></i>
+              <span className="loading-text">Loading...</span>
             ) : (
               <i className="fas fa-play me-1"></i>
             )}
@@ -1015,7 +1015,7 @@ const Elections = () => {
             disabled={updatingElection === election.id}
           >
             {updatingElection === election.id ? (
-              <i className="fas fa-spinner fa-spin me-1"></i>
+              <span className="loading-text">Loading...</span>
             ) : (
               <i className="fas fa-check me-1"></i>
             )}
@@ -1049,9 +1049,7 @@ const Elections = () => {
   if (loading) {
     return (
       <div className="elections-loading">
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
+        <div className="loading-text">Loading...</div>
         <p className="mt-2">Loading elections...</p>
       </div>
     );
@@ -1237,7 +1235,7 @@ const Elections = () => {
                                 disabled={updatingElection === election.id}
                               >
                                 {updatingElection === election.id ? (
-                                  <i className="fas fa-spinner fa-spin me-1"></i>
+                                  <span className="loading-text">Loading...</span>
                                 ) : (
                                   <i className="fas fa-trash me-1"></i>
                                 )}
@@ -1523,9 +1521,7 @@ const Elections = () => {
                       
                       {loadingCandidates ? (
                         <div className="text-center py-3">
-                          <div className="spinner-border spinner-border-sm text-primary me-2" role="status">
-                            <span className="visually-hidden">Loading...</span>
-                          </div>
+                          <div className="loading-text">Loading...</div>
                           <span className="text-muted">Loading existing candidates...</span>
                         </div>
                       ) : getFilteredCandidates().length > 0 ? (
@@ -1844,7 +1840,7 @@ const Elections = () => {
                         disabled={loading}
                   >
                     {loading ? (
-                      <i className="fas fa-spinner fa-spin me-1"></i>
+                      <span className="loading-text">Loading...</span>
                     ) : (
                           <i className="fas fa-check me-1"></i>
                     )}
@@ -1928,9 +1924,7 @@ const Elections = () => {
                     <label className="form-label">Positions to Include</label>
                     {loadingPositions ? (
                       <div className="text-center py-3">
-                        <div className="spinner-border spinner-border-sm text-primary me-2" role="status">
-                          <span className="visually-hidden">Loading...</span>
-                        </div>
+                        <div className="loading-text">Loading...</div>
                         <span className="text-muted">Loading election positions...</span>
                       </div>
                     ) : (
@@ -1977,9 +1971,7 @@ const Elections = () => {
                     <label className="form-label">Candidates Management</label>
                     {loadingCandidates ? (
                       <div className="text-center py-3">
-                        <div className="spinner-border spinner-border-sm text-primary me-2" role="status">
-                          <span className="visually-hidden">Loading...</span>
-                        </div>
+                        <div className="loading-text">Loading...</div>
                         <span className="text-muted">Loading candidates...</span>
                       </div>
                     ) : (
@@ -2071,7 +2063,7 @@ const Elections = () => {
                     disabled={updatingElection === editingElection.id || formData.positionIds.length === 0 || loadingPositions}
                   >
                     {updatingElection === editingElection.id ? (
-                      <i className="fas fa-spinner fa-spin me-1"></i>
+                      <span className="loading-text">Loading...</span>
                     ) : (
                       <i className="fas fa-save me-1"></i>
                     )}
@@ -2154,7 +2146,7 @@ const Elections = () => {
                                      disabled={deleteConfirmation !== deletingElection.Election_Title || updatingElection === deletingElection.id}
                 >
                   {updatingElection === deletingElection.id ? (
-                    <i className="fas fa-spinner fa-spin me-1"></i>
+                    <span className="loading-text">Loading...</span>
                   ) : (
                     <i className="fas fa-trash me-1"></i>
                   )}

@@ -139,9 +139,16 @@ export class BallotResultsService {
       throw new NotFoundException('Results will be available after the specified date');
     }
 
-    // If results don't exist, calculate them
-    if (!ballot.results) {
-      console.log('No results found, calculating results for ballot:', ballotId);
+    // If results don't exist, have 0 votes, or actual vote count differs from stored results, calculate them
+    const actualVoteCount = ballot._count.votes;
+    const storedVoteCount = ballot.results?.BallotResults_TotalVotes || 0;
+    
+    if (!ballot.results || ballot.results.BallotResults_TotalVotes === 0 || actualVoteCount !== storedVoteCount) {
+      console.log(`Recalculating results for ballot ${ballotId}:`);
+      console.log(`  Actual votes: ${actualVoteCount}`);
+      console.log(`  Stored votes: ${storedVoteCount}`);
+      console.log(`  Results exist: ${!!ballot.results}`);
+      
       try {
         await this.calculateBallotResults(ballotId);
         console.log('Results calculation completed for ballot:', ballotId);

@@ -370,29 +370,7 @@
   color: white;
 }
 
-.loading-spinner {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 400px;
-  color: white;
-}
-
-.spinner {
-  width: 50px;
-  height: 50px;
-  border: 4px solid rgba(255, 255, 255, 0.3);
-  border-top: 4px solid white;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-bottom: 20px;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
+/* Removed spinner classes - no longer needed */
 
 .error-message {
   background: #ff6b6b;
@@ -531,5 +509,19 @@
   }
 }
 
+/* Loading message styling - no spinners */
+.loading-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  text-align: center;
+  color: #666;
+}
 
-
+.loading-message p {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 500;
+}

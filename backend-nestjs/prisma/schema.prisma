@@ -16,6 +16,7 @@ model Admin {
   createdAt      DateTime     @default(now()) @map("created_at")
   updatedAt      DateTime     @updatedAt @map("updated_at")
   ballots        Ballot[]
+  ballotTemplates BallotTemplate[]
   courses        Course[]
   departments    Department[]
   elections      Election[]
@@ -333,6 +334,22 @@ enum BallotStatus {
   PAUSED
   ENDED
   CANCELLED
+}
+
+model BallotTemplate {
+  id                    String   @id @db.VarChar(50)
+  BallotTemplate_Name   String   @map("ballot_template_name") @db.VarChar(255)
+  BallotTemplate_Description String? @map("ballot_template_description")
+  BallotTemplate_Data   Json     @map("ballot_template_data") // Stores template configuration
+  BallotTemplate_IsPublic Boolean @default(false) @map("ballot_template_is_public")
+  BallotTemplate_CreatedBy String @map("ballot_template_created_by")
+  BallotTemplate_CreatedAt DateTime @default(now()) @map("ballot_template_created_at")
+  BallotTemplate_UpdatedAt DateTime @updatedAt @map("ballot_template_updated_at")
+  BallotTemplate_DeletedAt DateTime? @map("ballot_template_deleted_at")
+  BallotTemplate_IsDeleted Boolean @default(false) @map("ballot_template_is_deleted")
+  createdByAdmin        Admin    @relation(fields: [BallotTemplate_CreatedBy], references: [id])
+
+  @@map("ballot_templates")
 }
 
 enum Role {

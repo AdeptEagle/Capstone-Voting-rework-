@@ -1056,6 +1056,16 @@ export const createBallot = async (ballotData) => {
   }
 };
 
+export const createBallotFromTemplate = async (templateId, ballotData) => {
+  try {
+    const response = await api.post(`/ballot-templates/${templateId}/create-ballot`, ballotData);
+    return response.data;
+  } catch (error) {
+    console.error('Error creating ballot from template:', error);
+    throw error;
+  }
+};
+
 export const updateBallot = async (id, ballotData) => {
   try {
     const response = await api.patch(`/ballots/${id}`, ballotData);

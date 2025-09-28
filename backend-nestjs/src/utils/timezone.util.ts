@@ -1,55 +1,48 @@
 /**
- * Timezone utility functions for Philippine Time (GMT+8)
+ * Utility functions for handling Philippine timezone (UTC+8) in the backend
  */
 
-export class TimezoneUtil {
-  private static readonly PHILIPPINES_TIMEZONE = 'Asia/Manila';
-  
-  /**
-   * Get current time in Philippine timezone
-   */
-  static getCurrentPhilippineTime(): Date {
-    return new Date(new Date().toLocaleString("en-US", { timeZone: TimezoneUtil.PHILIPPINES_TIMEZONE }));
-  }
-  
-  /**
-   * Convert any date to Philippine timezone
-   */
-  static toPhilippineTime(date: Date | string): Date {
-    const inputDate = typeof date === 'string' ? new Date(date) : date;
-    return new Date(inputDate.toLocaleString("en-US", { timeZone: TimezoneUtil.PHILIPPINES_TIMEZONE }));
-  }
-  
-  /**
-   * Check if a date is in the past relative to Philippine time
-   */
-  static isInPast(date: Date | string): boolean {
-    const checkDate = TimezoneUtil.toPhilippineTime(date);
-    const now = TimezoneUtil.getCurrentPhilippineTime();
-    return checkDate < now;
-  }
-  
-  /**
-   * Format date for Philippine timezone display
-   */
-  static formatPhilippineTime(date: Date | string): string {
-    const inputDate = typeof date === 'string' ? new Date(date) : date;
-    return inputDate.toLocaleString("en-PH", { 
-      timeZone: TimezoneUtil.PHILIPPINES_TIMEZONE,
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true
-    });
-  }
-  
-  /**
-   * Add minutes buffer to current Philippine time (useful for minimum start time)
-   */
-  static getPhilippineTimeWithBuffer(bufferMinutes: number = 5): Date {
-    const now = TimezoneUtil.getCurrentPhilippineTime();
-    return new Date(now.getTime() + (bufferMinutes * 60 * 1000));
-  }
-}
+/**
+ * Get current time in Philippine timezone
+ * @returns {Date} Current time in Philippine timezone
+ */
+export const getPhilippineTime = (): Date => {
+  const now = new Date();
+  // Get the timezone offset for Asia/Manila (UTC+8)
+  const philippineOffset = 8 * 60; // 8 hours in minutes
+  const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+  return new Date(utc + (philippineOffset * 60000));
+};
+
+/**
+ * Convert a date to Philippine timezone
+ * @param date - The date to convert
+ * @returns Date in Philippine timezone
+ */
+export const toPhilippineTime = (date: Date): Date => {
+  const philippineOffset = 8 * 60; // 8 hours in minutes
+  const utc = date.getTime() + (date.getTimezoneOffset() * 60000);
+  return new Date(utc + (philippineOffset * 60000));
+};
+
+/**
+ * Get a future date in Philippine timezone
+ * @param minutesFromNow - Minutes to add to current time
+ * @returns Future date in Philippine timezone
+ */
+export const getFuturePhilippineTime = (minutesFromNow: number = 1): Date => {
+  const philippineTime = getPhilippineTime();
+  return new Date(philippineTime.getTime() + minutesFromNow * 60000);
+};
+
+/**
+ * Check if a date is in the future relative to Philippine time
+ * @param date - The date to check
+ * @param bufferMinutes - Buffer time in minutes (default: 1)
+ * @returns True if the date is in the future
+ */
+export const isFuturePhilippineTime = (date: Date, bufferMinutes: number = 1): boolean => {
+  const philippineTime = getPhilippineTime();
+  const bufferTime = new Date(philippineTime.getTime() + bufferMinutes * 60000);
+  return date >= bufferTime;
+};

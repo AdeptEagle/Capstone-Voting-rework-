@@ -7,7 +7,25 @@ import './Sidebar.css';
 const Sidebar = ({ isOpen, onToggle }) => {
   const location = useLocation();
   const currentUser = checkCurrentUser();
-  const { canVote, canViewCandidates, canViewResults, hasActiveElection, hasAnyElection, hasEndedElection } = useElection();
+  
+  // Safely get election context with fallback
+  let electionContext = null;
+  try {
+    electionContext = useElection();
+  } catch (error) {
+    console.warn('ElectionContext not available:', error.message);
+    // Provide fallback values
+    electionContext = {
+      canVote: false,
+      canViewCandidates: false,
+      canViewResults: false,
+      hasActiveElection: false,
+      hasAnyElection: false,
+      hasEndedElection: false
+    };
+  }
+  
+  const { canVote, canViewCandidates, canViewResults, hasActiveElection, hasAnyElection, hasEndedElection } = electionContext;
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
 

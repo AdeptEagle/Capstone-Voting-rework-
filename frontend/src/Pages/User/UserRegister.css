@@ -223,7 +223,7 @@
   border: 2px solid #e1e5e9;
   border-top: 2px solid #3498db;
   border-radius: 50%;
-  animation: spin 1s linear infinite;
+  /* animation: spin 1s linear infinite; */
 }
 
 @keyframes spin {

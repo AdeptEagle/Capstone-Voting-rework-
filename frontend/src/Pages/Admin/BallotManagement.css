@@ -418,7 +418,7 @@
   border: 2px solid #e5e7eb;
   border-top: 2px solid #3b82f6;
   border-radius: 50%;
-  animation: spin 1s linear infinite;
+  /* animation: spin 1s linear infinite; */
   margin-bottom: 1rem;
 }
 
@@ -522,4 +522,361 @@
   .action-btn span {
     display: none;
   }
+}
+
+/* Create Options Modal Styles */
+.create-options-modal {
+  max-width: 700px;
+  border-radius: 16px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.create-options-modal .modal-header {
+  padding: 2rem 2rem 1rem 2rem;
+  border-bottom: 1px solid #e5e7eb;
+  background: #fafbfc;
+  border-radius: 16px 16px 0 0;
+}
+
+.create-options-modal .modal-header h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+}
+
+.modal-header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.go-back-btn {
+  width: 44px !important;
+  height: 44px !important;
+  border-radius: 50% !important;
+  background: #3b82f6 !important;
+  border: none !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  color: white !important;
+  font-size: 1.2rem !important;
+  font-weight: 600 !important;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3) !important;
+}
+
+.go-back-btn:hover {
+  background: #1d4ed8;
+  color: white;
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.4);
+}
+
+.create-options-modal .close-btn {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #f3f4f6;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #6b7280;
+  font-size: 1.1rem;
+}
+
+.create-options-modal .close-btn:hover {
+  background: #e5e7eb;
+  color: #374151;
+  transform: scale(1.05);
+}
+
+.create-options-modal .modal-body {
+  padding: 2rem;
+}
+
+.create-options-description {
+  text-align: center;
+  color: #6b7280;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+  line-height: 1.5;
+}
+
+.modal-hint {
+  text-align: center;
+  color: #9ca3af;
+  margin-bottom: 2rem;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.modal-hint i {
+  color: #6b7280;
+}
+
+.create-options {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.create-option-btn {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 2rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 16px;
+  background: white;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  text-align: left;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.create-option-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #3b82f6;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 0;
+}
+
+.create-option-btn:hover::before {
+  opacity: 0.05;
+}
+
+.create-option-btn:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 10px 25px rgba(59, 130, 246, 0.15);
+  transform: translateY(-3px);
+}
+
+.create-option-btn:active {
+  transform: translateY(-1px);
+}
+
+.option-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 16px;
+  background: #f3f4f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.75rem;
+  color: #6b7280;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+  transition: all 0.3s ease;
+}
+
+.create-option-btn:hover .option-icon {
+  background: #dbeafe;
+  color: #3b82f6;
+  transform: scale(1.05);
+}
+
+.option-content {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+}
+
+.option-content h3 {
+  margin: 0 0 0.75rem 0;
+  font-size: 1.375rem;
+  font-weight: 700;
+  color: #1f2937;
+  transition: color 0.3s ease;
+}
+
+.create-option-btn:hover .option-content h3 {
+  color: #1e40af;
+}
+
+.option-content p {
+  margin: 0;
+  color: #6b7280;
+  font-size: 1rem;
+  line-height: 1.5;
+  transition: color 0.3s ease;
+}
+
+.create-option-btn:hover .option-content p {
+  color: #4b5563;
+}
+
+/* Template Selector Modal Styles */
+.template-selector-modal {
+  max-width: 1000px;
+  max-height: 90vh;
+  border-radius: 16px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.template-selector-modal .modal-content {
+  padding: 0;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+/* Modal Overlay Enhancements */
+.modal-overlay {
+  background: rgba(0, 0, 0, 0.5);
+  transition: background-color 0.2s ease;
+}
+
+.modal-overlay:hover {
+  background: rgba(0, 0, 0, 0.6);
+}
+
+/* Prevent modal content from closing when clicked */
+.modal-content {
+  pointer-events: auto;
+  will-change: transform;
+}
+
+.modal-overlay {
+  pointer-events: auto;
+  will-change: background-color;
+}
+
+/* Performance optimizations */
+.create-option-btn,
+.template-card,
+.btn {
+  will-change: transform;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+/* Template info styling */
+.template-info {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 0.5rem 0;
+}
+
+.template-info h4 {
+  margin: 0 0 0.5rem 0;
+  color: #1e293b;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.template-info p {
+  margin: 0 0 0.75rem 0;
+  color: #64748b;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.template-positions {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 0.75rem;
+}
+
+.template-positions strong {
+  color: #374151;
+  font-size: 0.85rem;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.template-positions ul {
+  margin: 0;
+  padding-left: 1.2rem;
+  color: #4b5563;
+  font-size: 0.85rem;
+}
+
+.template-positions li {
+  margin-bottom: 0.25rem;
+}
+
+/* Responsive Design for Create Options */
+@media (max-width: 768px) {
+  .create-options-modal {
+    max-width: 95vw;
+    border-radius: 12px;
+  }
+  
+  .create-options-modal .modal-header {
+    padding: 1.5rem 1.5rem 1rem 1.5rem;
+  }
+  
+  .create-options-modal .close-btn {
+    top: 1rem;
+    right: 1rem;
+    width: 36px;
+    height: 36px;
+    font-size: 1rem;
+  }
+  
+  .create-options-modal .modal-body {
+    padding: 1.5rem;
+  }
+  
+  .create-options {
+    gap: 1rem;
+  }
+  
+  .create-option-btn {
+    padding: 1.5rem;
+    gap: 1rem;
+    border-radius: 12px;
+  }
+  
+  .option-icon {
+    width: 50px;
+    height: 50px;
+    font-size: 1.5rem;
+    border-radius: 12px;
+  }
+  
+  .option-content h3 {
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .option-content p {
+    font-size: 0.95rem;
+  }
+}
+
+/* Candidate Selector Modal */
+.candidate-selector-modal {
+  max-width: 900px;
+  width: 90%;
+  max-height: 90vh;
+}
+
+.candidate-selector-modal .modal-content {
+  padding: 0;
+  overflow: hidden;
 }

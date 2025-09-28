@@ -155,8 +155,7 @@ const BallotDetails = () => {
   if (loading) {
     return (
       <div className="ballot-details-container">
-        <div className="loading-spinner">
-          <div className="spinner"></div>
+        <div className="loading-message">
           <p>Loading ballot details...</p>
         </div>
       </div>

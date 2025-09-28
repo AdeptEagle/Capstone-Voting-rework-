@@ -117,4 +117,39 @@ export class BallotController {
 
   // Results endpoint moved to BallotResultsController to avoid conflicts
 
+  // Bulk Operations
+  @Post('bulk/activate')
+  @Roles('ADMIN', 'SUPERADMIN')
+  bulkActivateBallots(@Body('ballotIds') ballotIds: string[], @Request() req) {
+    return this.ballotService.bulkActivateBallots(ballotIds, req.user.id);
+  }
+
+  @Post('bulk/pause')
+  @Roles('ADMIN', 'SUPERADMIN')
+  bulkPauseBallots(@Body('ballotIds') ballotIds: string[], @Request() req) {
+    return this.ballotService.bulkPauseBallots(ballotIds, req.user.id);
+  }
+
+  @Post('bulk/end')
+  @Roles('ADMIN', 'SUPERADMIN')
+  bulkEndBallots(@Body('ballotIds') ballotIds: string[], @Request() req) {
+    return this.ballotService.bulkEndBallots(ballotIds, req.user.id);
+  }
+
+  @Post('bulk/delete')
+  @Roles('ADMIN', 'SUPERADMIN')
+  bulkDeleteBallots(@Body('ballotIds') ballotIds: string[], @Request() req) {
+    return this.ballotService.bulkDeleteBallots(ballotIds, req.user.id);
+  }
+
+  @Post('bulk/update-status')
+  @Roles('ADMIN', 'SUPERADMIN')
+  bulkUpdateBallotStatus(
+    @Body('ballotIds') ballotIds: string[],
+    @Body('status') status: string,
+    @Request() req
+  ) {
+    return this.ballotService.bulkUpdateBallotStatus(ballotIds, status as any, req.user.id);
+  }
+
 }

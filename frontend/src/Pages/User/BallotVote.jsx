@@ -49,6 +49,7 @@ const BallotVote = () => {
       if (hasVoted) {
         setError('You have already voted for this ballot. Redirecting to results...');
         setTimeout(() => {
+          console.log('BallotVote: Auto-redirecting to results with ballotId:', ballotId);
           navigate(`/user/ballot-results/${ballotId}`);
         }, 2000);
         return;
@@ -213,8 +214,7 @@ const BallotVote = () => {
   if (loading) {
     return (
       <div className="ballot-vote-container">
-        <div className="loading-spinner">
-          <div className="spinner"></div>
+        <div className="loading-message">
           <p>Loading ballot...</p>
         </div>
       </div>
@@ -248,7 +248,10 @@ const BallotVote = () => {
           <div className="navigation-options">
             <button 
               className="btn btn-primary"
-              onClick={() => navigate(`/user/ballot-results/${ballotId}`)}
+              onClick={() => {
+                console.log('BallotVote: Navigating to results with ballotId:', ballotId);
+                navigate(`/user/ballot-results/${ballotId}`);
+              }}
             >
               <i className="fas fa-chart-bar"></i>
               View Results
@@ -318,7 +321,7 @@ const BallotVote = () => {
             >
               {submitting ? (
                 <>
-                  <div className="spinner-small"></div>
+                  <div className="loading-text">Loading...</div>
                   Submitting...
                 </>
               ) : (

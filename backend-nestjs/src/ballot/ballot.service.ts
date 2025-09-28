@@ -3,7 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateBallotDto } from './dto/create-ballot.dto';
 import { UpdateBallotDto } from './dto/update-ballot.dto';
 import { BallotStatus } from '@prisma/client';
-// import { TimezoneUtil } from '../utils/timezone.util';
+import { getPhilippineTime, isFuturePhilippineTime, toPhilippineTime } from '../utils/timezone.util';
 
 @Injectable()
 export class BallotService {
@@ -471,6 +471,21 @@ export class BallotService {
     });
   }
 
+  async cancelBallot(id: string, cancelledBy: string) {
+    const ballot = await this.getBallotById(id);
+    if (ballot.Ballot_Status === BallotStatus.ENDED) {
+      throw new BadRequestException('Cannot cancel an already ended ballot');
+    }
+
+    return this.prisma.ballot.update({
+      where: { id },
+      data: {
+        Ballot_Status: BallotStatus.CANCELLED,
+        Ballot_IsActive: false,
+      },
+    });
+  }
+
   async getAvailableBallotsForUser(userId: string) {
     const now = new Date();
 
@@ -821,5 +836,306 @@ export class BallotService {
     const firstPart = Math.random().toString(36).substring(2, 6).toUpperCase();
     const secondPart = Math.random().toString(36).substring(2, 7).toUpperCase();
     return `${firstPart}-${secondPart}`;
+  }
+
+  // Bulk Operations
+  async bulkActivateBallots(ballotIds: string[], activatedBy: string) {
+    const results = [];
+    
+    for (const ballotId of ballotIds) {
+      try {
+        const result = await this.activateBallot(ballotId, activatedBy);
+        results.push({ ballotId, success: true, ballot: result });
+      } catch (error) {
+        results.push({ 
+          ballotId, 
+          success: false, 
+          error: error.message 
+        });
+      }
+    }
+    
+    return {
+      totalProcessed: ballotIds.length,
+      successful: results.filter(r => r.success).length,
+      failed: results.filter(r => !r.success).length,
+      results
+    };
+  }
+
+  async bulkPauseBallots(ballotIds: string[], pausedBy: string) {
+    const results = [];
+    
+    for (const ballotId of ballotIds) {
+      try {
+        const result = await this.pauseBallot(ballotId, pausedBy);
+        results.push({ ballotId, success: true, ballot: result });
+      } catch (error) {
+        results.push({ 
+          ballotId, 
+          success: false, 
+          error: error.message 
+        });
+      }
+    }
+    
+    return {
+      totalProcessed: ballotIds.length,
+      successful: results.filter(r => r.success).length,
+      failed: results.filter(r => !r.success).length,
+      results
+    };
+  }
+
+  async bulkEndBallots(ballotIds: string[], endedBy: string) {
+    const results = [];
+    
+    for (const ballotId of ballotIds) {
+      try {
+        const result = await this.endBallot(ballotId, endedBy);
+        results.push({ ballotId, success: true, ballot: result });
+      } catch (error) {
+        results.push({ 
+          ballotId, 
+          success: false, 
+          error: error.message 
+        });
+      }
+    }
+    
+    return {
+      totalProcessed: ballotIds.length,
+      successful: results.filter(r => r.success).length,
+      failed: results.filter(r => !r.success).length,
+      results
+    };
+  }
+
+  async bulkDeleteBallots(ballotIds: string[], deletedBy: string) {
+    const results = [];
+    
+    for (const ballotId of ballotIds) {
+      try {
+        const result = await this.deleteBallot(ballotId, deletedBy);
+        results.push({ ballotId, success: true, ballot: result });
+      } catch (error) {
+        results.push({ 
+          ballotId, 
+          success: false, 
+          error: error.message 
+        });
+      }
+    }
+    
+    return {
+      totalProcessed: ballotIds.length,
+      successful: results.filter(r => r.success).length,
+      failed: results.filter(r => !r.success).length,
+      results
+    };
+  }
+
+  async bulkUpdateBallotStatus(ballotIds: string[], status: BallotStatus, updatedBy: string) {
+    const results = [];
+    
+    for (const ballotId of ballotIds) {
+      try {
+        let result;
+        switch (status) {
+          case BallotStatus.ACTIVE:
+            result = await this.activateBallot(ballotId, updatedBy);
+            break;
+          case BallotStatus.PAUSED:
+            result = await this.pauseBallot(ballotId, updatedBy);
+            break;
+          case BallotStatus.ENDED:
+            result = await this.endBallot(ballotId, updatedBy);
+            break;
+          case BallotStatus.CANCELLED:
+            result = await this.cancelBallot(ballotId, updatedBy);
+            break;
+          default:
+            throw new BadRequestException(`Invalid status for bulk update: ${status}`);
+        }
+        results.push({ ballotId, success: true, ballot: result });
+      } catch (error) {
+        results.push({ 
+          ballotId, 
+          success: false, 
+          error: error.message 
+        });
+      }
+    }
+    
+    return {
+      totalProcessed: ballotIds.length,
+      successful: results.filter(r => r.success).length,
+      failed: results.filter(r => !r.success).length,
+      results
+    };
+  }
+
+  // Create ballot from template (without candidates)
+  async createBallotFromTemplate(ballotData: any, createdBy: string) {
+    console.log('🔍 Ballot Service - createBallotFromTemplate called');
+    console.log('📊 Ballot Data:', ballotData);
+    console.log('👤 Created By:', createdBy);
+    
+    // Debug the received data
+    console.log('📋 Ballot Data Debug:', {
+      title: ballotData.Ballot_Title,
+      description: ballotData.Ballot_Description,
+      startDate: ballotData.Ballot_StartDate,
+      endDate: ballotData.Ballot_EndDate,
+      positionIds: ballotData.positionIds,
+      candidateIds: ballotData.candidateIds,
+      requireAllPositions: ballotData.Ballot_RequireAllPositions,
+      showResults: ballotData.Ballot_ShowResults,
+      showLiveResults: ballotData.Ballot_ShowLiveResults
+    });
+    
+    const {
+      Ballot_Title,
+      Ballot_Description,
+      Ballot_StartDate,
+      Ballot_EndDate,
+      Ballot_RequireAllPositions,
+      Ballot_ShowResults,
+      Ballot_ShowResultsAfter,
+      Ballot_ShowLiveResults,
+      positionIds
+    } = ballotData;
+
+    // Validate required fields
+    if (!Ballot_Title || !Ballot_StartDate || !Ballot_EndDate) {
+      throw new BadRequestException('Title, start date, and end date are required');
+    }
+
+    // Parse dates as Philippine time (UTC+8)
+    // The frontend sends dates in Philippine time format, so we need to treat them as local time
+    const startDate = new Date(Ballot_StartDate);
+    const endDate = new Date(Ballot_EndDate);
+
+    console.log('🕐 Date Validation Debug:', {
+      originalStartDate: Ballot_StartDate,
+      originalEndDate: Ballot_EndDate,
+      parsedStartDate: startDate.toISOString(),
+      parsedEndDate: endDate.toISOString(),
+      startDatePhilippine: toPhilippineTime(startDate).toISOString(),
+      currentPhilippineTime: getPhilippineTime().toISOString(),
+      isStartDateValid: isFuturePhilippineTime(toPhilippineTime(startDate), 1)
+    });
+
+    // Validate dates
+    if (startDate >= endDate) {
+      console.log('❌ Date validation failed: Start date >= End date');
+      throw new BadRequestException('Start date must be before end date');
+    }
+
+    // Validate start date is in the future using Philippine time
+    // Convert the parsed date to Philippine time for comparison
+    const startDatePhilippine = toPhilippineTime(startDate);
+    if (!isFuturePhilippineTime(startDatePhilippine, 1)) {
+      const philippineTime = getPhilippineTime();
+      console.log('❌ Date validation failed: Start date not in future');
+      throw new BadRequestException(`Start date must be at least 1 minute in the future. Current Philippine time: ${philippineTime.toISOString()}, Start time: ${startDatePhilippine.toISOString()}`);
+    }
+    
+    console.log('✅ Date validation passed');
+
+    // Validate positions
+    if (!positionIds || !Array.isArray(positionIds) || positionIds.length === 0) {
+      throw new BadRequestException('At least one position must be selected');
+    }
+
+    // Create the ballot
+    console.log('🏗️ Creating ballot with data:', {
+      title: Ballot_Title,
+      description: Ballot_Description,
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString(),
+      showResultsAfter: Ballot_ShowResultsAfter ? new Date(Ballot_ShowResultsAfter).toISOString() : null,
+      requireAllPositions: Ballot_RequireAllPositions,
+      showResults: Ballot_ShowResults,
+      showLiveResults: Ballot_ShowLiveResults,
+      createdBy: createdBy
+    });
+    
+    const ballot = await this.prisma.ballot.create({
+      data: {
+        id: this.generateId(),
+        Ballot_Title,
+        Ballot_Description: Ballot_Description || '',
+        Ballot_StartDate: startDate,
+        Ballot_EndDate: endDate,
+        Ballot_RequireAllPositions: Ballot_RequireAllPositions !== false,
+        Ballot_ShowResults: Ballot_ShowResults !== false,
+        Ballot_ShowResultsAfter: Ballot_ShowResultsAfter ? new Date(Ballot_ShowResultsAfter) : null,
+        Ballot_ShowLiveResults: Ballot_ShowLiveResults !== false,
+        Ballot_Status: BallotStatus.DRAFT,
+        Ballot_IsActive: false,
+        Ballot_CreatedBy: createdBy,
+      },
+    });
+    
+    console.log('✅ Ballot created successfully:', ballot.id);
+
+    return ballot;
+  }
+
+  async checkAndAutoEndBallots() {
+    try {
+      console.log('🔍 Checking for expired ballots...');
+      
+      const now = new Date();
+      const expiredBallots = await this.prisma.ballot.findMany({
+        where: {
+          Ballot_Status: 'ACTIVE',
+          Ballot_EndDate: {
+            lt: now
+          },
+          Ballot_IsDeleted: false
+        },
+        include: {
+          _count: {
+            select: {
+              votes: true,
+              userHistory: true
+            }
+          }
+        }
+      });
+
+      console.log(`📊 Found ${expiredBallots.length} expired ballots`);
+
+      const autoEndedBallots = [];
+
+      for (const ballot of expiredBallots) {
+        try {
+          console.log(`🔄 Auto-ending ballot: ${ballot.Ballot_Title} (${ballot.id})`);
+          
+          const updatedBallot = await this.prisma.ballot.update({
+            where: { id: ballot.id },
+            data: {
+              Ballot_Status: BallotStatus.ENDED,
+              Ballot_IsActive: false
+            }
+          });
+
+          autoEndedBallots.push(updatedBallot);
+          console.log(`✅ Auto-ended ballot: ${ballot.Ballot_Title}`);
+        } catch (error) {
+          console.error(`❌ Error auto-ending ballot ${ballot.id}:`, error);
+        }
+      }
+
+      return {
+        autoEndedBallots,
+        totalChecked: expiredBallots.length
+      };
+    } catch (error) {
+      console.error('❌ Error checking for expired ballots:', error);
+      throw error;
+    }
   }
 }

@@ -387,7 +387,7 @@ const UserRegister = () => {
                 ))}
               </select>
               <i className="fas fa-chevron-down select-arrow"></i>
-              {loadingDepartments && <div className="loading-spinner"></div>}
+              {loadingDepartments && <div className="loading-text">Loading...</div>}
             </div>
             <small className="field-help">Choose your academic department</small>
           </div>
@@ -422,7 +422,7 @@ const UserRegister = () => {
               ))}
             </select>
               <i className="fas fa-chevron-down select-arrow"></i>
-              {loadingCourses && <div className="loading-spinner"></div>}
+              {loadingCourses && <div className="loading-text">Loading...</div>}
             </div>
             <small className="field-help">Choose your specific course/program</small>
           </div>

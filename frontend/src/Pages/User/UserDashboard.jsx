@@ -242,9 +242,7 @@ const UserDashboard = () => {
           </div>
         </div>
         <div className="loading-state">
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Loading...</span>
-          </div>
+          <div className="loading-text">Loading...</div>
           <p>Loading your dashboard...</p>
         </div>
       </div>
@@ -256,9 +254,7 @@ const UserDashboard = () => {
     console.log('No user data available, showing loading state');
     return (
       <div className="user-dashboard-loading">
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
+        <div className="loading-text">Loading...</div>
         <p className="mt-2">Loading user data...</p>
       </div>
     );
@@ -269,9 +265,7 @@ const UserDashboard = () => {
     return (
       <div className="user-dashboard-container">
         <div className="user-dashboard-loading">
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Loading...</span>
-          </div>
+          <div className="loading-text">Loading...</div>
           <p className="mt-2">Setting up your dashboard...</p>
         </div>
       </div>
@@ -351,9 +345,7 @@ const UserDashboard = () => {
           
           {ballotsLoading ? (
             <div className="loading-state">
-              <div className="spinner-border text-primary" role="status">
-                <span className="visually-hidden">Loading...</span>
-              </div>
+              <div className="loading-text">Loading...</div>
               <p>Loading ballots...</p>
             </div>
           ) : availableBallots.length > 0 ? (

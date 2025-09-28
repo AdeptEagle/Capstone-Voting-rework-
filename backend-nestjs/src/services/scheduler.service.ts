@@ -1,12 +1,16 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { ElectionService } from '../election/election.service';
+import { BallotService } from '../ballot/ballot.service';
 
 @Injectable()
 export class SchedulerService {
   private readonly logger = new Logger(SchedulerService.name);
 
-  constructor(private readonly electionService: ElectionService) {}
+  constructor(
+    private readonly electionService: ElectionService,
+    private readonly ballotService: BallotService
+  ) {}
 
   // Run every minute to check for expired elections
   @Cron(CronExpression.EVERY_MINUTE)
@@ -25,6 +29,26 @@ export class SchedulerService {
       }
     } catch (error) {
       this.logger.error('❌ Error in auto-end elections check:', error);
+    }
+  }
+
+  // Run every minute to check for expired ballots
+  @Cron(CronExpression.EVERY_MINUTE)
+  async handleAutoEndBallots() {
+    try {
+      this.logger.log('🕐 Checking for expired ballots...');
+      const result = await this.ballotService.checkAndAutoEndBallots();
+      
+      if (result.autoEndedBallots.length > 0) {
+        this.logger.log(`✅ Auto-ended ${result.autoEndedBallots.length} ballot(s)`);
+        result.autoEndedBallots.forEach(ballot => {
+          this.logger.log(`   📊 ${ballot.Ballot_Title}: ${ballot._count?.votes || 0} votes, ${ballot._count?.userHistory || 0} voters`);
+        });
+      } else {
+        this.logger.log('✅ No expired ballots found');
+      }
+    } catch (error) {
+      this.logger.error('❌ Error in auto-end ballots check:', error);
     }
   }
 

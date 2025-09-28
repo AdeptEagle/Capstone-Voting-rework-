@@ -16,6 +16,7 @@ import { ElectionAssignmentModule } from './election-assignment/election-assignm
 import { AuditModule } from './audit/audit.module';
 import { TrashModule } from './trash/trash.module';
 import { BallotModule } from './ballot/ballot.module';
+import { BallotTemplateModule } from './ballot-template/ballot-template.module';
 import { SchedulerService } from './services/scheduler.service';
 import { TimezoneService } from './services/timezone.service';
 import { TimezoneController } from './controllers/timezone.controller';
@@ -42,6 +43,7 @@ import { WebsocketModule } from './websocket/websocket.module';
     AuditModule,
     TrashModule,
     BallotModule,
+    BallotTemplateModule,
     WebsocketModule,
   ],
   controllers: [TimezoneController],

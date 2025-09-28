@@ -1,142 +1,157 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getBallotResults, getBallotById } from '../../services/api';
+import api from '../../services/api';
 import './BallotResults.css';
 
 const BallotResults = () => {
   const { ballotId } = useParams();
   const navigate = useNavigate();
-  
   const [ballot, setBallot] = useState(null);
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [autoRefresh, setAutoRefresh] = useState(true);
+  const [error, setError] = useState(null);
+  const [autoRefresh, setAutoRefresh] = useState(false);
 
   useEffect(() => {
-    fetchData();
+    fetchBallot();
+    fetchResults();
   }, [ballotId]);
 
   useEffect(() => {
-    // Set up auto-refresh if ballot is active
-    let refreshInterval;
-    if (autoRefresh && ballot && ballot.Ballot_Status === 'ACTIVE') {
-      refreshInterval = setInterval(() => {
+    let interval;
+    if (autoRefresh && ballot?.Ballot_Status === 'ACTIVE') {
+      interval = setInterval(() => {
         fetchResults();
-      }, 30000); // Refresh every 30 seconds
+      }, 5000); // Refresh every 5 seconds
     }
-
     return () => {
-      if (refreshInterval) {
-        clearInterval(refreshInterval);
-      }
+      if (interval) clearInterval(interval);
     };
-  }, [autoRefresh, ballot]);
+  }, [autoRefresh, ballot?.Ballot_Status]);
 
-  const fetchData = async () => {
+  const fetchBallot = async () => {
     try {
-      setLoading(true);
-      setError(''); // Clear any previous errors
-      const [ballotData, resultsData] = await Promise.all([
-        getBallotById(ballotId),
-        getBallotResults(ballotId)
-      ]);
-      
-      setBallot(ballotData);
-      setResults(resultsData);
-    } catch (error) {
-      console.error('Error fetching ballot data:', error);
-      setError('Failed to load ballot results. Please try again.');
-    } finally {
-      setLoading(false);
+      const response = await api.get(`/ballots/${ballotId}`);
+      setBallot(response.data);
+    } catch (err) {
+      console.error('Error fetching ballot:', err);
+      setError('Failed to load ballot information');
     }
   };
 
   const fetchResults = async () => {
     try {
-      setError(''); // Clear any previous errors
-      const resultsData = await getBallotResults(ballotId);
-      setResults(resultsData);
-    } catch (error) {
-      console.error('Error fetching results:', error);
-      // Don't set error for refresh failures to avoid flickering
+      setLoading(true);
+      const response = await api.get(`/ballots/${ballotId}/results`);
+      setResults(response.data);
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching results:', err);
+      setError('Failed to load results');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getBallotStatus = () => {
+    if (!ballot) return { status: 'loading', text: 'Loading...', color: 'gray' };
+    
+    const now = new Date();
+    const startDate = new Date(ballot.Ballot_StartDate);
+    const endDate = new Date(ballot.Ballot_EndDate);
+    
+    if (now < startDate) {
+      return { status: 'scheduled', text: 'Scheduled', color: 'blue' };
+    } else if (now >= startDate && now <= endDate) {
+      return { status: 'active', text: 'Active', color: 'green' };
+    } else {
+      return { status: 'ended', text: 'Ended', color: 'red' };
     }
   };
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
-      month: 'short',
+      month: 'long',
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
     });
   };
 
-  const getBallotStatus = () => {
-    if (!ballot) return { status: 'unknown', color: 'gray', text: 'Unknown' };
+  const getPositionResults = () => {
+    console.log('BallotResults: getPositionResults called');
+    console.log('BallotResults: results data:', results);
     
-    const now = new Date();
-    const startDate = new Date(ballot.Ballot_StartDate);
-    const endDate = new Date(ballot.Ballot_EndDate);
-
-    if (now < startDate) {
-      return { status: 'upcoming', color: 'blue', text: 'Upcoming' };
-    } else if (now > endDate) {
-      return { status: 'ended', color: 'gray', text: 'Ended' };
-    } else {
-      return { status: 'active', color: 'green', text: 'Active' };
+    if (!results || !results.results || !results.results.resultDetails || !Array.isArray(results.results.resultDetails)) {
+      console.log('BallotResults: No results data or resultDetails is not an array');
+      return [];
     }
-  };
-
-  const getPositionResults = (positionId) => {
-    if (!results || !results.results) return [];
     
-    const positionResult = results.results.find(
-      result => result.positionId === positionId
-    );
+    // Group result details by position
+    const positionGroups = {};
     
-    if (!positionResult) return [];
+    results.results.resultDetails.forEach(detail => {
+      const positionId = detail.BallotResultDetails_PositionId;
+      if (!positionGroups[positionId]) {
+        positionGroups[positionId] = {
+          positionId: positionId,
+          positionTitle: detail.position?.Position_Title || 'Unknown Position',
+          candidates: []
+        };
+      }
+      
+      positionGroups[positionId].candidates.push({
+        candidateId: detail.BallotResultDetails_CandidateId,
+        candidateName: detail.candidate?.Candidate_Name || 'Unknown Candidate',
+        voteCount: detail.BallotResultDetails_VoteCount,
+        percentage: detail.BallotResultDetails_Percentage,
+        rank: detail.BallotResultDetails_Rank
+      });
+    });
     
-    return positionResult.candidates.map((candidate, index) => ({
-      candidateId: candidate.candidateId,
-      candidateName: candidate.candidateName,
-      voteCount: candidate.voteCount,
-      percentage: positionResult.totalVotes > 0 
-        ? (candidate.voteCount / positionResult.totalVotes) * 100 
-        : 0,
-      rank: index + 1
-    }));
+    // Convert to array and sort by position display order
+    const positionResults = Object.values(positionGroups);
+    positionResults.sort((a, b) => {
+      const aOrder = results.ballotPositions?.find(p => p.BallotPosition_PositionId === a.positionId)?.BallotPosition_DisplayOrder || 0;
+      const bOrder = results.ballotPositions?.find(p => p.BallotPosition_PositionId === b.positionId)?.BallotPosition_DisplayOrder || 0;
+      return aOrder - bOrder;
+    });
+    
+    console.log('BallotResults: Position results:', positionResults);
+    return positionResults;
   };
 
   const getCandidateName = (candidateId) => {
-    if (!results || !results.results) return 'Unknown Candidate';
-    
-    for (const positionResult of results.results) {
-      const candidate = positionResult.candidates.find(
-        c => c.candidateId === candidateId
-      );
-      if (candidate) return candidate.candidateName;
+    if (!results || !results.results || !results.results.resultDetails || !Array.isArray(results.results.resultDetails)) {
+      console.log('BallotResults: getCandidateName - No results data or resultDetails is not an array');
+      return 'Unknown Candidate';
     }
     
-    return 'Unknown Candidate';
+    const candidateDetail = results.results.resultDetails.find(
+      detail => detail.BallotResultDetails_CandidateId === candidateId
+    );
+    
+    return candidateDetail?.candidate?.Candidate_Name || 'Unknown Candidate';
   };
 
   const getPositionTitle = (positionId) => {
-    if (!results || !results.results) return 'Unknown Position';
+    if (!results || !results.results || !results.results.resultDetails || !Array.isArray(results.results.resultDetails)) {
+      console.log('BallotResults: getPositionTitle - No results data or resultDetails is not an array');
+      return 'Unknown Position';
+    }
     
-    const positionResult = results.results.find(
-      result => result.positionId === positionId
+    const positionDetail = results.results.resultDetails.find(
+      detail => detail.BallotResultDetails_PositionId === positionId
     );
     
-    return positionResult ? positionResult.positionTitle : 'Unknown Position';
+    return positionDetail?.position?.Position_Title || 'Unknown Position';
   };
 
   if (loading) {
     return (
       <div className="ballot-results-container">
-        <div className="loading-spinner">
-          <div className="spinner"></div>
+        <div className="loading-message">
           <p>Loading results...</p>
         </div>
       </div>
@@ -147,23 +162,11 @@ const BallotResults = () => {
     return (
       <div className="ballot-results-container">
         <div className="error-message">
-          <i className="fas fa-exclamation-triangle"></i>
-          <span>{error}</span>
-          <button onClick={fetchData} className="retry-btn">
-            <i className="fas fa-redo"></i>
-            Retry
+          <h3>Error</h3>
+          <p>{error}</p>
+          <button onClick={fetchResults} className="btn btn-primary">
+            Try Again
           </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (!ballot) {
-    return (
-      <div className="ballot-results-container">
-        <div className="error-message">
-          <i className="fas fa-exclamation-triangle"></i>
-          <span>Ballot not found</span>
         </div>
       </div>
     );
@@ -172,8 +175,7 @@ const BallotResults = () => {
   if (!results) {
     return (
       <div className="ballot-results-container">
-        <div className="loading-spinner">
-          <div className="spinner"></div>
+        <div className="loading-message">
           <p>Loading results...</p>
         </div>
       </div>
@@ -181,7 +183,13 @@ const BallotResults = () => {
   }
 
   const ballotStatus = getBallotStatus();
-  const positionIds = results?.results?.map(result => result.positionId) || [];
+  console.log('BallotResults: About to access results.results, results:', results);
+  console.log('BallotResults: results.results type:', typeof results?.results);
+  console.log('BallotResults: results.results is array:', Array.isArray(results?.results));
+  
+  const positionIds = (results?.results && Array.isArray(results.results)) 
+    ? results.results.map(result => result.positionId) 
+    : [];
 
   return (
     <div className="ballot-results-container">
@@ -226,7 +234,7 @@ const BallotResults = () => {
             <i className="fas fa-vote-yea"></i>
           </div>
           <div className="summary-content">
-            <h3>{results.results?.reduce((total, position) => total + position.totalVotes, 0) || 0}</h3>
+            <h3>{results.results?.BallotResults_TotalVotes || 0}</h3>
             <p>Total Votes</p>
           </div>
         </div>
@@ -236,7 +244,7 @@ const BallotResults = () => {
             <i className="fas fa-users"></i>
           </div>
           <div className="summary-content">
-            <h3>{results.totalParticipants || 0}</h3>
+            <h3>{results.results?.BallotResults_TotalVoters || 0}</h3>
             <p>Total Voters</p>
           </div>
         </div>
@@ -246,7 +254,7 @@ const BallotResults = () => {
             <i className="fas fa-percentage"></i>
           </div>
           <div className="summary-content">
-            <h3>{results.totalParticipants ? ((results.results?.reduce((total, position) => total + position.totalVotes, 0) || 0) / results.totalParticipants * 100).toFixed(1) : 0}%</h3>
+            <h3>{results.results?.BallotResults_VoterTurnout?.toFixed(1) || '0.0'}%</h3>
             <p>Voter Turnout</p>
           </div>
         </div>
@@ -265,7 +273,7 @@ const BallotResults = () => {
       <div className="position-results">
         <h2>Results by Position</h2>
         
-        {!results || !results.results || results.results.length === 0 ? (
+        {!results || !results.results || !results.results.resultDetails || !Array.isArray(results.results.resultDetails) || results.results.resultDetails.length === 0 ? (
           <div className="no-results">
             <i className="fas fa-chart-bar"></i>
             <h3>No Results Yet</h3>
@@ -273,54 +281,49 @@ const BallotResults = () => {
           </div>
         ) : (
           <div className="results-list">
-            {results.results.map((positionResult) => {
-              const positionResults = getPositionResults(positionResult.positionId);
-              const positionTitle = positionResult.positionTitle;
-              
-              return (
-                <div key={positionResult.positionId} className="position-result-card">
-                  <h3>{positionTitle}</h3>
-                  
-                  <div className="candidates-results">
-                    {positionResults.map((result, index) => (
-                      <div 
-                        key={result.candidateId}
-                        className={`candidate-result ${index === 0 ? 'winner' : ''}`}
-                      >
-                        <div className="candidate-rank">
-                          <span className="rank-number">#{result.rank}</span>
-                          {index === 0 && <i className="fas fa-crown winner-crown"></i>}
-                        </div>
-                        
-                        <div className="candidate-info">
-                          <h4>{result.candidateName}</h4>
-                          <div className="vote-stats">
-                            <span className="vote-count">
-                              {result.voteCount} votes
-                            </span>
-                            <span className="vote-percentage">
-                              {result.percentage.toFixed(1)}%
-                            </span>
-                          </div>
-                        </div>
-                        
-                        <div className="vote-bar">
-                          <div 
-                            className="vote-fill"
-                            style={{ 
-                              width: `${result.percentage}%`,
-                              background: index === 0 
-                                ? 'linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%)'
-                                : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-                            }}
-                          ></div>
+            {getPositionResults().map((positionResult) => (
+              <div key={positionResult.positionId} className="position-result-card">
+                <h3>{positionResult.positionTitle}</h3>
+                
+                <div className="candidates-results">
+                  {positionResult.candidates.map((result, index) => (
+                    <div 
+                      key={result.candidateId}
+                      className={`candidate-result ${index === 0 ? 'winner' : ''}`}
+                    >
+                      <div className="candidate-rank">
+                        <span className="rank-number">#{result.rank}</span>
+                        {index === 0 && <i className="fas fa-crown winner-crown"></i>}
+                      </div>
+                      
+                      <div className="candidate-info">
+                        <h4>{result.candidateName}</h4>
+                        <div className="vote-stats">
+                          <span className="vote-count">
+                            {result.voteCount} votes
+                          </span>
+                          <span className="vote-percentage">
+                            {result.percentage.toFixed(1)}%
+                          </span>
                         </div>
                       </div>
-                    ))}
-                  </div>
+                      
+                      <div className="vote-bar">
+                        <div 
+                          className="vote-fill"
+                          style={{ 
+                            width: `${result.percentage}%`,
+                            background: index === 0 
+                              ? 'linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%)'
+                              : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                          }}
+                        ></div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              );
-            })}
+              </div>
+            ))}
           </div>
         )}
       </div>
@@ -349,4 +352,3 @@ const BallotResults = () => {
 };
 
 export default BallotResults;
-

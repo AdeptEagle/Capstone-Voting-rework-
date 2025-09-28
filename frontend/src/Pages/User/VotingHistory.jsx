@@ -106,8 +106,7 @@ const VotingHistory = () => {
   if (loading) {
     return (
       <div className="voting-history-container">
-        <div className="loading-spinner">
-          <div className="spinner"></div>
+        <div className="loading-message">
           <p>Loading voting history...</p>
         </div>
       </div>
