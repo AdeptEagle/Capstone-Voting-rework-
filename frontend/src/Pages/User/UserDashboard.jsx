@@ -416,6 +416,75 @@ const UserDashboard = () => {
           )}
         </div>
 
+        {/* Upcoming Ballots Section */}
+        <div className="upcoming-ballots-section">
+          <div className="section-header">
+            <h3><i className="fas fa-calendar-plus me-2"></i>Upcoming Ballots</h3>
+            <button 
+              className="btn btn-outline-primary"
+              onClick={() => navigate('/user/ballot-selection')}
+            >
+              View All
+            </button>
+          </div>
+          
+          {ballotsLoading ? (
+            <div className="loading-state">
+              <div className="loading-text">Loading...</div>
+              <p>Loading upcoming ballots...</p>
+            </div>
+          ) : availableBallots.filter(ballot => 
+            !ballot.Ballot_IsActive && ballot.Ballot_Status !== 'ENDED'
+          ).length > 0 ? (
+            <div className="ballots-grid">
+              {availableBallots
+                .filter(ballot => !ballot.Ballot_IsActive && ballot.Ballot_Status !== 'ENDED')
+                .slice(0, 3)
+                .map((ballot) => {
+                  const hasVoted = votingHistory.some(h => 
+                    h.UserBallotHistory_BallotId === ballot.id && 
+                    h.UserBallotHistory_IsCompleted
+                  );
+                  
+                  return (
+                    <div key={ballot.id} className="ballot-card upcoming">
+                      <div className="ballot-header">
+                        <h4>{ballot.Ballot_Title}</h4>
+                        <span className="status-badge upcoming">
+                          Upcoming
+                        </span>
+                      </div>
+                      <p className="ballot-description">{ballot.Ballot_Description}</p>
+                      <div className="ballot-meta">
+                        <span><i className="fas fa-calendar me-1"></i>
+                          Starts: {new Date(ballot.Ballot_StartDate).toLocaleDateString()}
+                        </span>
+                        <span><i className="fas fa-clock me-1"></i>
+                          Ends: {new Date(ballot.Ballot_EndDate).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <div className="ballot-actions">
+                        <button 
+                          className="btn btn-outline-secondary"
+                          disabled
+                        >
+                          <i className="fas fa-clock me-1"></i>
+                          Not Started Yet
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+          ) : (
+            <div className="empty-state">
+              <i className="fas fa-calendar-plus"></i>
+              <h3>No Upcoming Ballots</h3>
+              <p>There are currently no upcoming ballots scheduled.</p>
+            </div>
+          )}
+        </div>
+
         {/* Voting History Section */}
         <div className="history-section">
           <div className="section-header">
@@ -463,7 +532,7 @@ const UserDashboard = () => {
         <h3><i className="fas fa-bolt me-2"></i>Quick Actions</h3>
         <div className="quick-actions-grid">
           <button
-            className="btn btn-primary quick-action-btn"
+            className="quick-action-btn primary"
             onClick={() => navigate('/user/ballot-selection')}
           >
             <i className="fas fa-list-alt"></i>
@@ -472,7 +541,7 @@ const UserDashboard = () => {
           </button>
           
           <button
-            className="btn btn-outline-primary quick-action-btn"
+            className="quick-action-btn"
             onClick={() => navigate('/user/voting-history')}
           >
             <i className="fas fa-history"></i>
@@ -481,7 +550,7 @@ const UserDashboard = () => {
           </button>
           
           <button
-            className="btn btn-outline-primary quick-action-btn"
+            className="quick-action-btn"
             onClick={() => navigate('/user/candidates')}
           >
             <i className="fas fa-users"></i>
@@ -490,7 +559,7 @@ const UserDashboard = () => {
           </button>
           
           <button
-            className="btn btn-outline-info quick-action-btn"
+            className="quick-action-btn"
             onClick={() => navigate('/user/results')}
           >
             <i className="fas fa-chart-bar"></i>

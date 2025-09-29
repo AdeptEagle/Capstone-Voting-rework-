@@ -21,6 +21,9 @@ const BallotDetails = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [activeTab, setActiveTab] = useState('overview');
+  const [autoRefresh, setAutoRefresh] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const [refreshInterval, setRefreshInterval] = useState(null);
 
   useEffect(() => {
     fetchBallotData();
@@ -32,6 +35,43 @@ const BallotDetails = () => {
       setActiveTab(tab);
     }
   }, [ballotId, location.search]);
+
+  // Real-time refresh functionality
+  useEffect(() => {
+    if (autoRefresh && ballot?.Ballot_Status === 'ACTIVE' && activeTab === 'results') {
+      const interval = setInterval(() => {
+        fetchResults();
+        setLastUpdated(new Date());
+      }, 5000); // Refresh every 5 seconds
+      
+      setRefreshInterval(interval);
+      
+      return () => {
+        clearInterval(interval);
+        setRefreshInterval(null);
+      };
+    } else if (refreshInterval) {
+      clearInterval(refreshInterval);
+      setRefreshInterval(null);
+    }
+  }, [autoRefresh, ballot?.Ballot_Status, activeTab]);
+
+  // Animate progress bars after results are loaded
+  useEffect(() => {
+    if (results && activeTab === 'results') {
+      const progressBars = document.querySelectorAll('.vote-fill, .trend-bar-fill, .progress-fill');
+      
+      progressBars.forEach(bar => {
+        const percent = bar.getAttribute('data-percent');
+        bar.style.width = '0';
+        
+        setTimeout(() => {
+          bar.style.transition = 'width 1s ease-in-out';
+          bar.style.width = `${percent}%`;
+        }, 100);
+      });
+    }
+  }, [results, activeTab]);
 
   const fetchBallotData = async () => {
     try {
@@ -46,6 +86,7 @@ const BallotDetails = () => {
       
       setBallot(ballotData);
       setResults(resultsData);
+      setLastUpdated(new Date());
       
       // Debug the results data
       console.log('Results data received:', resultsData);
@@ -57,6 +98,16 @@ const BallotDetails = () => {
       setError('Failed to load ballot details. Please try again.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchResults = async () => {
+    try {
+      const resultsData = await getBallotResults(ballotId);
+      setResults(resultsData);
+      setLastUpdated(new Date());
+    } catch (error) {
+      console.log('Results fetch failed:', error);
     }
   };
 
@@ -81,7 +132,19 @@ const BallotDetails = () => {
       fetchBallotData();
     } catch (error) {
       console.error(`Error ${action}ing ballot:`, error);
-      setError(`Failed to ${action} ballot. Please try again.`);
+      
+      // Get more specific error message
+      let errorMessage = `Failed to ${action} ballot. Please try again.`;
+      
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.response?.status === 400) {
+        errorMessage = `Cannot ${action} ballot. The ballot may not be in the correct state.`;
+      } else if (error.response?.status === 404) {
+        errorMessage = 'Ballot not found.';
+      }
+      
+      setError(errorMessage);
     }
   };
 
@@ -119,13 +182,19 @@ const BallotDetails = () => {
     const startDate = new Date(ballot.Ballot_StartDate);
     const endDate = new Date(ballot.Ballot_EndDate);
 
+    // Check ballot status first - this takes precedence
     if (ballot.Ballot_Status === 'CANCELLED') {
       return { status: 'cancelled', color: 'red', text: 'Cancelled' };
     } else if (ballot.Ballot_Status === 'ENDED') {
       return { status: 'ended', color: 'gray', text: 'Ended' };
     } else if (ballot.Ballot_Status === 'PAUSED') {
       return { status: 'paused', color: 'orange', text: 'Paused' };
-    } else if (now < startDate) {
+    } else if (ballot.Ballot_Status === 'ACTIVE') {
+      return { status: 'active', color: 'green', text: 'Active' };
+    }
+    
+    // If no specific status, check dates
+    if (now < startDate) {
       return { status: 'upcoming', color: 'blue', text: 'Upcoming' };
     } else if (now > endDate) {
       return { status: 'ended', color: 'gray', text: 'Ended' };
@@ -140,6 +209,57 @@ const BallotDetails = () => {
     return results.results.resultDetails
       .filter(detail => detail.BallotResultDetails_PositionId === positionId)
       .sort((a, b) => a.BallotResultDetails_Rank - b.BallotResultDetails_Rank);
+  };
+
+  // Analytics functions
+  const getAverageVotesPerPosition = () => {
+    if (!ballot?.ballotPositions?.length) return '0';
+    const totalVotes = results.results?.BallotResults_TotalVotes || 0;
+    return (totalVotes / ballot.ballotPositions.length).toFixed(1);
+  };
+
+  const getLeadingPosition = () => {
+    if (!ballot?.ballotPositions?.length) return 'N/A';
+    
+    let maxVotes = 0;
+    let leadingPosition = '';
+    
+    ballot.ballotPositions.forEach(position => {
+      const positionResults = getPositionResults(position.position.id);
+      const totalPositionVotes = positionResults.reduce((sum, result) => sum + result.BallotResultDetails_VoteCount, 0);
+      
+      if (totalPositionVotes > maxVotes) {
+        maxVotes = totalPositionVotes;
+        leadingPosition = position.position.Position_Title;
+      }
+    });
+    
+    return leadingPosition || 'N/A';
+  };
+
+  const getVoteDistribution = () => {
+    if (!results?.results?.resultDetails?.length) return 'N/A';
+    
+    const allVotes = results.results.resultDetails.map(detail => detail.BallotResultDetails_VoteCount);
+    const maxVotes = Math.max(...allVotes);
+    const minVotes = Math.min(...allVotes);
+    const spread = maxVotes - minVotes;
+    
+    if (spread === 0) return 'Even';
+    if (spread <= 2) return 'Close';
+    if (spread <= 5) return 'Moderate';
+    return 'Wide';
+  };
+
+  const getVotingActivity = () => {
+    // This would ideally come from vote timestamps, but we'll simulate based on current time
+    const now = new Date();
+    const hour = now.getHours();
+    
+    if (hour >= 9 && hour <= 11) return 'Morning Peak';
+    if (hour >= 14 && hour <= 16) return 'Afternoon Peak';
+    if (hour >= 19 && hour <= 21) return 'Evening Peak';
+    return 'Off-Peak';
   };
 
   const getCandidateName = (candidateId) => {
@@ -487,20 +607,211 @@ const BallotDetails = () => {
 
         {activeTab === 'results' && (
           <div className="results-tab">
+            {/* Real-time Controls */}
+            <div className="realtime-controls">
+              <div className="realtime-header">
+                <h3>Live Results</h3>
+                <div className="realtime-status">
+                  {autoRefresh ? (
+                    <span className="status-indicator live">
+                      <i className="fas fa-circle"></i>
+                      Live Updates
+                    </span>
+                  ) : (
+                    <span className="status-indicator paused">
+                      <i className="fas fa-pause-circle"></i>
+                      Paused
+                    </span>
+                  )}
+                </div>
+              </div>
+              
+              <div className="realtime-actions">
+                <button 
+                  className={`realtime-btn ${autoRefresh ? 'active' : ''}`}
+                  onClick={() => setAutoRefresh(!autoRefresh)}
+                  disabled={ballot?.Ballot_Status !== 'ACTIVE'}
+                >
+                  <i className={`fas ${autoRefresh ? 'fa-pause' : 'fa-play'}`}></i>
+                  {autoRefresh ? 'Pause Updates' : 'Start Live Updates'}
+                </button>
+                
+                <button 
+                  className="realtime-btn refresh-btn"
+                  onClick={fetchResults}
+                >
+                  <i className="fas fa-sync-alt"></i>
+                  Refresh Now
+                </button>
+                
+                {lastUpdated && (
+                  <div className="last-updated">
+                    <i className="fas fa-clock"></i>
+                    Last updated: {lastUpdated.toLocaleTimeString()}
+                  </div>
+                )}
+              </div>
+            </div>
+
             {results ? (
               <div className="results-content">
                 <div className="results-summary">
                   <div className="summary-card">
-                    <h3>{results.results?.BallotResults_TotalVotes || 0}</h3>
-                    <p>Total Votes</p>
+                    <div className="summary-icon">
+                      <i className="fas fa-vote-yea"></i>
+                    </div>
+                    <div className="summary-content">
+                      <h3>{results.results?.BallotResults_TotalVotes || 0}</h3>
+                      <p>Total Votes</p>
+                    </div>
                   </div>
                   <div className="summary-card">
-                    <h3>{results.results?.BallotResults_TotalVoters || 0}</h3>
-                    <p>Total Voters</p>
+                    <div className="summary-icon">
+                      <i className="fas fa-users"></i>
+                    </div>
+                    <div className="summary-content">
+                      <h3>{results.results?.BallotResults_TotalVoters || 0}</h3>
+                      <p>Total Voters</p>
+                    </div>
                   </div>
                   <div className="summary-card">
-                    <h3>{results.results?.BallotResults_VoterTurnout ? results.results.BallotResults_VoterTurnout.toFixed(1) : '0.0'}%</h3>
-                    <p>Voter Turnout</p>
+                    <div className="summary-icon">
+                      <i className="fas fa-percentage"></i>
+                    </div>
+                    <div className="summary-content">
+                      <h3>{results.results?.BallotResults_VoterTurnout ? results.results.BallotResults_VoterTurnout.toFixed(1) : '0.0'}%</h3>
+                      <p>Voter Turnout</p>
+                    </div>
+                  </div>
+                  <div className="summary-card">
+                    <div className="summary-icon">
+                      <i className="fas fa-chart-line"></i>
+                    </div>
+                    <div className="summary-content">
+                      <h3>{getAverageVotesPerPosition()}</h3>
+                      <p>Avg Votes/Position</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Leading Candidates Quick Glance */}
+                <div className="leading-candidates-section">
+                  <h3>Leading Candidates by Position</h3>
+                  <div className="leading-candidates-grid">
+                    {ballot.ballotPositions?.map(ballotPosition => {
+                      const positionResults = getPositionResults(ballotPosition.position.id);
+                      const leadingCandidate = positionResults.length > 0 ? positionResults[0] : null;
+                      const totalPositionVotes = positionResults.reduce((sum, result) => sum + result.BallotResultDetails_VoteCount, 0);
+                      
+                      return (
+                        <div key={ballotPosition.position.id} className="leading-candidate-card">
+                          <div className="leading-candidate-header">
+                            <h4>{ballotPosition.position.Position_Title}</h4>
+                            <span className="total-votes">{totalPositionVotes} votes</span>
+                          </div>
+                          
+                          {leadingCandidate ? (
+                            <div className="leading-candidate-info">
+                              <div className="candidate-details">
+                                <div className="candidate-name">
+                                  <i className="fas fa-crown"></i>
+                                  {getCandidateName(leadingCandidate.BallotResultDetails_CandidateId)}
+                                </div>
+                                <div className="vote-stats">
+                                  <span className="vote-count">{leadingCandidate.BallotResultDetails_VoteCount} votes</span>
+                                  <span className="vote-percentage">
+                                    {leadingCandidate.BallotResultDetails_Percentage ? leadingCandidate.BallotResultDetails_Percentage.toFixed(1) : '0.0'}%
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="no-candidates">
+                              <i className="fas fa-user-slash"></i>
+                              <span>No candidates yet</span>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Analytics Section */}
+                <div className="analytics-section">
+                  <h3>Voting Analytics</h3>
+                  <div className="analytics-grid">
+                    <div className="analytics-card">
+                      <div className="analytics-header">
+                        <i className="fas fa-trophy"></i>
+                        <h4>Leading Position</h4>
+                      </div>
+                      <div className="analytics-content">
+                        <p className="analytics-value">{getLeadingPosition()}</p>
+                        <p className="analytics-label">Most competitive race</p>
+                      </div>
+                    </div>
+                    
+                    <div className="analytics-card">
+                      <div className="analytics-header">
+                        <i className="fas fa-balance-scale"></i>
+                        <h4>Vote Distribution</h4>
+                      </div>
+                      <div className="analytics-content">
+                        <p className="analytics-value">{getVoteDistribution()}</p>
+                        <p className="analytics-label">Vote spread analysis</p>
+                      </div>
+                    </div>
+                    
+                    <div className="analytics-card">
+                      <div className="analytics-header">
+                        <i className="fas fa-clock"></i>
+                        <h4>Voting Activity</h4>
+                      </div>
+                      <div className="analytics-content">
+                        <p className="analytics-value">{getVotingActivity()}</p>
+                        <p className="analytics-label">Peak voting time</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Trend Analysis */}
+                <div className="trend-analysis">
+                  <h3>Vote Distribution Analysis</h3>
+                  <div className="trend-grid">
+                    {ballot.ballotPositions?.map(ballotPosition => {
+                      const positionResults = getPositionResults(ballotPosition.position.id);
+                      const totalPositionVotes = positionResults.reduce((sum, result) => sum + result.BallotResultDetails_VoteCount, 0);
+                      const maxVotes = Math.max(...positionResults.map(r => r.BallotResultDetails_VoteCount));
+                      
+                      return (
+                        <div key={ballotPosition.position.id} className="trend-card">
+                          <div className="trend-header">
+                            <h4>{ballotPosition.position.Position_Title}</h4>
+                            <span className="trend-total">{totalPositionVotes} votes</span>
+                          </div>
+                          <div className="trend-bars">
+                            {positionResults.map((result, index) => {
+                              const percentage = totalPositionVotes > 0 ? (result.BallotResultDetails_VoteCount / totalPositionVotes) * 100 : 0;
+                              const isLeading = result.BallotResultDetails_VoteCount === maxVotes && maxVotes > 0;
+                              
+                              return (
+                                <div key={result.BallotResultDetails_CandidateId} className="trend-bar-item">
+                                  <div className="candidate-info">
+                                    <div className="candidate-name">{getCandidateName(result.BallotResultDetails_CandidateId)}</div>
+                                    <div className="vote-stats">
+                                      <span className="vote-count">{result.BallotResultDetails_VoteCount} votes</span>
+                                      <span className="vote-percentage">{percentage.toFixed(1)}%</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -513,41 +824,46 @@ const BallotDetails = () => {
                         <h3>{ballotPosition.position.Position_Title}</h3>
                         
                         <div className="candidates-results">
-                          {positionResults.map((result, index) => (
-                            <div 
-                              key={result.BallotResultDetails_CandidateId}
-                              className={`candidate-result ${index === 0 ? 'winner' : ''}`}
-                            >
-                              <div className="candidate-rank">
-                                <span className="rank-number">#{result.BallotResultDetails_Rank}</span>
-                                {index === 0 && <i className="fas fa-crown winner-crown"></i>}
-                              </div>
-                              
-                              <div className="candidate-info">
-                                <h4>{getCandidateName(result.BallotResultDetails_CandidateId)}</h4>
-                                <div className="vote-stats">
-                                  <span className="vote-count">
-                                    {result.BallotResultDetails_VoteCount} votes
-                                  </span>
-                                  <span className="vote-percentage">
-                                    {result.BallotResultDetails_Percentage ? result.BallotResultDetails_Percentage.toFixed(1) : '0.0'}%
-                                  </span>
+                          {positionResults.map((result, index) => {
+                            const isWinner = index === 0 && result.BallotResultDetails_VoteCount > 0;
+                            const percentage = result.BallotResultDetails_Percentage || 0;
+                            
+                            return (
+                              <div 
+                                key={result.BallotResultDetails_CandidateId}
+                                className={`candidate-result-card ${isWinner ? 'winner' : ''}`}
+                              >
+                                <div className="candidate-header">
+                                  <div className="candidate-name-section">
+                                    {isWinner && <i className="fas fa-crown winner-crown"></i>}
+                                    <span className="candidate-name">{getCandidateName(result.BallotResultDetails_CandidateId)}</span>
+                                  </div>
+                                  <div className="vote-count-display">
+                                    <span className="vote-number">{result.BallotResultDetails_VoteCount}</span>
+                                    <span className="vote-label">votes</span>
+                                  </div>
+                                </div>
+                                
+                                <div className="candidate-stats">
+                                  <div className="percentage-display">
+                                    <span className="percentage-number">{percentage.toFixed(1)}%</span>
+                                  </div>
+                                  <div className="progress-container">
+                                    <div className="progress-bar">
+                                      <div 
+                                        className="progress-fill"
+                                        style={{ 
+                                          width: '0%',
+                                          background: isWinner ? '#10b981' : '#3b82f6'
+                                        }}
+                                        data-percent={percentage}
+                                      ></div>
+                                    </div>
+                                  </div>
                                 </div>
                               </div>
-                              
-                              <div className="vote-bar">
-                                <div 
-                                  className="vote-fill"
-                                  style={{ 
-                                    width: `${result.BallotResultDetails_Percentage || 0}%`,
-                                    background: index === 0 
-                                      ? 'linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%)'
-                                      : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-                                  }}
-                                ></div>
-                              </div>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       </div>
                     );

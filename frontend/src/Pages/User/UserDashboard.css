@@ -238,6 +238,37 @@
   flex-wrap: wrap;
 }
 
+/* Upcoming Ballots Section */
+.upcoming-ballots-section {
+  background: white;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.upcoming-ballots-section h3 {
+  color: #1f2937;
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+}
+
+.ballot-card.upcoming {
+  border-left: 4px solid #f59e0b;
+  background: linear-gradient(135deg, #fffbeb 0%, #ffffff 100%);
+}
+
+.ballot-card.upcoming:hover {
+  border-left-color: #d97706;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15);
+}
+
+.status-badge.upcoming {
+  background-color: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fbbf24;
+}
+
 /* History Section */
 .history-section {
   background: white;
@@ -361,29 +392,55 @@
   padding: 1.5rem 1rem;
   border-radius: 0.5rem;
   text-decoration: none;
-  transition: none;
+  transition: all 0.2s ease;
   border: 1px solid #e5e7eb;
   background: white;
   min-height: 120px;
   justify-content: center;
-  gap: 0.5rem;
+  gap: 0.75rem;
+  cursor: pointer;
+  width: 100%;
 }
 
 .quick-action-btn:hover {
-  transform: none;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   text-decoration: none;
+  border-color: #3b82f6;
+}
+
+.quick-action-btn.primary {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  color: white;
+}
+
+.quick-action-btn.primary:hover {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: white;
 }
 
 .quick-action-btn i {
   font-size: 1.5rem;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0;
+  color: #3b82f6;
+}
+
+.quick-action-btn.primary i {
+  color: white;
 }
 
 .quick-action-btn span {
-  font-weight: 500;
+  font-weight: 600;
   font-size: 0.875rem;
   color: #1f2937;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.quick-action-btn.primary span {
+  color: white;
 }
 
 .quick-action-btn small {
@@ -391,6 +448,12 @@
   color: #6b7280;
   text-align: center;
   line-height: 1.3;
+  margin: 0;
+  opacity: 0.8;
+}
+
+.quick-action-btn.primary small {
+  color: rgba(255, 255, 255, 0.8);
 }
 
 /* Responsive Design */

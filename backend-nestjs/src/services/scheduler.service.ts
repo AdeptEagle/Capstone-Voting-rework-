@@ -32,6 +32,26 @@ export class SchedulerService {
     }
   }
 
+  // Run every minute to check for ballots that should start
+  @Cron(CronExpression.EVERY_MINUTE)
+  async handleAutoStartBallots() {
+    try {
+      this.logger.log('🕐 Checking for ballots that should start...');
+      const result = await this.ballotService.checkAndAutoStartBallots();
+      
+      if (result.autoStartedBallots.length > 0) {
+        this.logger.log(`✅ Auto-started ${result.autoStartedBallots.length} ballot(s)`);
+        result.autoStartedBallots.forEach(ballot => {
+          this.logger.log(`   📊 ${ballot.Ballot_Title}: Started at ${ballot.Ballot_StartDate}`);
+        });
+      } else {
+        this.logger.log('✅ No ballots ready to start');
+      }
+    } catch (error) {
+      this.logger.error('❌ Error in auto-start ballots check:', error);
+    }
+  }
+
   // Run every minute to check for expired ballots
   @Cron(CronExpression.EVERY_MINUTE)
   async handleAutoEndBallots() {

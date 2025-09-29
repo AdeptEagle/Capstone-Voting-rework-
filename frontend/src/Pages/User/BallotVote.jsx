@@ -20,6 +20,7 @@ const BallotVote = () => {
   const [ballot, setBallot] = useState(null);
   const [currentPositionIndex, setCurrentPositionIndex] = useState(0);
   const [selectedVotes, setSelectedVotes] = useState({});
+  const [abstainedPositions, setAbstainedPositions] = useState(new Set());
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -99,6 +100,13 @@ const BallotVote = () => {
     const voteLimit = getPositionVoteLimit(currentPosition);
     const currentVotes = selectedVotes[positionId] || [];
 
+    // Clear abstention when selecting a candidate
+    setAbstainedPositions(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(positionId);
+      return newSet;
+    });
+
     if (currentVotes.includes(candidateId)) {
       // Remove candidate from selection
       setSelectedVotes(prev => ({
@@ -120,10 +128,40 @@ const BallotVote = () => {
     }
   };
 
+  const handleAbstain = () => {
+    const currentPosition = getCurrentPosition();
+    if (!currentPosition) return;
+
+    const positionId = currentPosition.id;
+    
+    // Clear any selected votes for this position
+    setSelectedVotes(prev => ({
+      ...prev,
+      [positionId]: []
+    }));
+
+    // Toggle abstention
+    setAbstainedPositions(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(positionId)) {
+        newSet.delete(positionId);
+      } else {
+        newSet.add(positionId);
+      }
+      return newSet;
+    });
+  };
+
   const isCandidateSelected = (candidateId) => {
     const currentPosition = getCurrentPosition();
     if (!currentPosition) return false;
     return (selectedVotes[currentPosition.id] || []).includes(candidateId);
+  };
+
+  const isPositionAbstained = () => {
+    const currentPosition = getCurrentPosition();
+    if (!currentPosition) return false;
+    return abstainedPositions.has(currentPosition.id);
   };
 
   const canProceed = () => {
@@ -132,6 +170,12 @@ const BallotVote = () => {
     
     const votesForPosition = selectedVotes[currentPosition.id] || [];
     const voteLimit = getPositionVoteLimit(currentPosition);
+    const isAbstained = abstainedPositions.has(currentPosition.id);
+    
+    // If position is abstained, always allow proceeding
+    if (isAbstained) {
+      return true;
+    }
     
     // Check if ballot requires all positions to be voted
     if (ballot.Ballot_RequireAllPositions) {
@@ -280,6 +324,7 @@ const BallotVote = () => {
           <div className="summary-list">
             {ballot.ballotPositions.map((ballotPosition, index) => {
               const position = ballotPosition.position;
+              const isAbstained = abstainedPositions.has(position.id);
               const selectedCandidates = (selectedVotes[position.id] || [])
                 .map(candidateId => 
                   ballot.ballotCandidates.find(bc => bc.candidate.id === candidateId)?.candidate
@@ -290,16 +335,28 @@ const BallotVote = () => {
                 <div key={position.id} className="summary-item">
                   <h4>{position.Position_Title}</h4>
                   <div className="selected-candidates">
-                    {selectedCandidates.map(candidate => (
-                      <div key={candidate.id} className="candidate-summary">
-                        <img 
-                          src={getCandidatePhotoUrl(candidate.photo)}
-                          alt={candidate.Candidate_Name}
-                          onError={() => setImgError(prev => ({ ...prev, [candidate.id]: true }))}
-                        />
-                        <span>{candidate.Candidate_Name}</span>
+                    {isAbstained ? (
+                      <div className="abstain-summary">
+                        <i className="fas fa-minus-circle"></i>
+                        <span>Abstained (No vote cast)</span>
                       </div>
-                    ))}
+                    ) : selectedCandidates.length > 0 ? (
+                      selectedCandidates.map(candidate => (
+                        <div key={candidate.id} className="candidate-summary">
+                          <img 
+                            src={getCandidatePhotoUrl(candidate.photo)}
+                            alt={candidate.Candidate_Name}
+                            onError={() => setImgError(prev => ({ ...prev, [candidate.id]: true }))}
+                          />
+                          <span>{candidate.Candidate_Name}</span>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="no-selection">
+                        <i className="fas fa-exclamation-triangle"></i>
+                        <span>No selection made</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               );
@@ -377,6 +434,29 @@ const BallotVote = () => {
               : `Select up to ${voteLimit} candidates`
             }
           </span>
+        </div>
+
+        <div className="voting-tip">
+          <i className="fas fa-lightbulb"></i>
+          <div className="tip-content">
+            <strong>Voting Tip:</strong> Don't like any of the candidates? You can abstain from this position by clicking the "Abstain" button below. This is a valid choice in real elections!
+          </div>
+        </div>
+
+        <div className="abstain-section">
+          <button 
+            className={`abstain-btn ${isPositionAbstained() ? 'abstained' : ''}`}
+            onClick={handleAbstain}
+          >
+            <i className="fas fa-minus-circle"></i>
+            {isPositionAbstained() ? 'Abstaining (Click to vote)' : 'Abstain from this position'}
+          </button>
+          {isPositionAbstained() && (
+            <p className="abstain-note">
+              <i className="fas fa-info-circle"></i>
+              You have chosen to abstain from voting for this position.
+            </p>
+          )}
         </div>
 
         <div className="candidates-grid">

@@ -30,12 +30,14 @@ import DepartmentManagement from './Pages/DepartmentManagement';
 import TrashBin from './Pages/TrashBin';
 import { getToken, checkCurrentUser, getStoredRole, migrateToSecureStorage } from './services/auth';
 import { ElectionProvider } from './contexts/ElectionContext';
+import { isValidRoute, getDefaultRoute, isRoutePattern } from './utils/routeValidation';
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 // Admin Route Protection (for admin and superadmin)
 function AdminRoute({ children }) {
   const currentUser = checkCurrentUser();
+  const currentPath = window.location.pathname;
 
   if (!currentUser.isAuthenticated) {
     return <Navigate to="/admin-login" />;
@@ -46,6 +48,11 @@ function AdminRoute({ children }) {
   if (role !== 'ADMIN' && role !== 'SUPERADMIN') {
     return <Navigate to="/admin-login" />;
   }
+
+  // Additional route validation - temporarily disabled to fix ballot access
+  // if (!isValidRoute(currentPath, role) && !isRoutePattern(currentPath)) {
+  //   return <NotFound />;
+  // }
   
   return children;
 }
@@ -53,6 +60,7 @@ function AdminRoute({ children }) {
 // SuperAdmin Route Protection (superadmin only)
 function SuperAdminRoute({ children }) {
   const currentUser = checkCurrentUser();
+  const currentPath = window.location.pathname;
 
   if (!currentUser.isAuthenticated) {
     return <Navigate to="/admin-login" />;
@@ -63,6 +71,11 @@ function SuperAdminRoute({ children }) {
   if (role !== 'SUPERADMIN') {
     return <Navigate to="/admin-login" />;
   }
+
+  // Additional route validation - temporarily disabled to fix ballot access
+  // if (!isValidRoute(currentPath, role) && !isRoutePattern(currentPath)) {
+  //   return <NotFound />;
+  // }
   
   return children;
 }
@@ -70,6 +83,7 @@ function SuperAdminRoute({ children }) {
 // User Route Protection (user only)
 function UserRoute({ children }) {
   const currentUser = checkCurrentUser();
+  const currentPath = window.location.pathname;
   
   console.log('UserRoute check:', currentUser);
 
@@ -81,6 +95,14 @@ function UserRoute({ children }) {
   if (currentUser.role !== 'USER') {
     console.log('UserRoute: Role mismatch, expected "USER", got:', currentUser.role);
     return <Navigate to="/user-login" />;
+  }
+
+  // Additional route validation
+  if (!isValidRoute(currentPath, 'USER') && !isRoutePattern(currentPath)) {
+    console.log('UserRoute: Route validation failed for path:', currentPath);
+    console.log('UserRoute: isValidRoute result:', isValidRoute(currentPath, 'USER'));
+    console.log('UserRoute: isRoutePattern result:', isRoutePattern(currentPath));
+    return <NotFound />;
   }
   
   console.log('UserRoute: Access granted');
@@ -315,17 +337,58 @@ function App() {
   );
 }
 
+// 404 Not Found Component
+function NotFound() {
+  return (
+    <div className="not-found-container">
+      <div className="not-found-content">
+        <div className="not-found-icon">
+          <i className="fas fa-exclamation-triangle"></i>
+        </div>
+        <h1>404 - Page Not Found</h1>
+        <p>The page you're looking for doesn't exist.</p>
+        <div className="not-found-actions">
+          <button 
+            className="btn btn-primary"
+            onClick={() => window.history.back()}
+          >
+            <i className="fas fa-arrow-left"></i>
+            Go Back
+          </button>
+          <button 
+            className="btn btn-secondary"
+            onClick={() => window.location.href = '/'}
+          >
+            <i className="fas fa-home"></i>
+            Go Home
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Component to handle catch-all redirects intelligently
 function CatchAllRedirect() {
-  const role = getStoredRole();
+  const currentUser = checkCurrentUser();
+  const currentPath = window.location.pathname;
   
-  // If user has admin role, redirect to admin dashboard
-  if (role === 'ADMIN' || role === 'SUPERADMIN') {
-    return <Navigate to="/admin/dashboard" />;
+  // If user is authenticated, check if the route is valid for their role
+  if (currentUser.isAuthenticated) {
+    const role = currentUser.role?.toUpperCase();
+    
+    // Check if the current path is valid for this role
+    if (isValidRoute(currentPath, role) || isRoutePattern(currentPath)) {
+      // Route is valid, redirect to their appropriate dashboard
+      return <Navigate to={getDefaultRoute(role)} />;
+    } else {
+      // Invalid route for this role, show 404
+      return <NotFound />;
+    }
   }
   
-  // Otherwise redirect to user login
-  return <Navigate to="/user-login" />;
+  // If not authenticated, show 404
+  return <NotFound />;
 }
 
 export default App; 

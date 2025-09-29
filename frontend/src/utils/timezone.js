@@ -56,7 +56,7 @@ export const formatForDateTimeLocal = (date) => {
  * @returns {Object} Object with startDate and endDate formatted for datetime-local input
  */
 export const getDefaultBallotDates = () => {
-  const startDate = getFuturePhilippineTime(1); // 1 minute from now
+  const startDate = getFuturePhilippineTime(5); // 5 minutes from now to ensure validation passes
   const endDate = getFuturePhilippineTime(24 * 60); // 24 hours from now
   
   // Debug logging

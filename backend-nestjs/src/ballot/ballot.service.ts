@@ -1083,6 +1083,58 @@ export class BallotService {
     return ballot;
   }
 
+  async checkAndAutoStartBallots() {
+    try {
+      console.log('🔍 Checking for ballots that should start...');
+      
+      const now = new Date();
+      const ballotsToStart = await this.prisma.ballot.findMany({
+        where: {
+          Ballot_Status: { in: ['DRAFT', 'SCHEDULED'] },
+          Ballot_IsActive: false,
+          Ballot_StartDate: { lte: now },
+          Ballot_EndDate: { gt: now }, // Don't start ballots that have already ended
+          Ballot_IsDeleted: false,
+        },
+      });
+
+      console.log(`📊 Found ${ballotsToStart.length} ballots ready to start`);
+
+      const autoStartedBallots = [];
+
+      for (const ballot of ballotsToStart) {
+        try {
+          console.log(`🔄 Auto-starting ballot: ${ballot.Ballot_Title} (${ballot.id})`);
+          
+          const updatedBallot = await this.prisma.ballot.update({
+            where: { id: ballot.id },
+            data: {
+              Ballot_Status: BallotStatus.ACTIVE,
+              Ballot_IsActive: true,
+              Ballot_StartDate: now, // Update start date to now
+            }
+          });
+
+          autoStartedBallots.push(updatedBallot);
+          console.log(`✅ Auto-started ballot: ${ballot.Ballot_Title}`);
+        } catch (error) {
+          console.error(`❌ Error auto-starting ballot ${ballot.id}:`, error);
+        }
+      }
+
+      return {
+        autoStartedBallots,
+        totalChecked: ballotsToStart.length
+      };
+    } catch (error) {
+      console.error('❌ Error in checkAndAutoStartBallots:', error);
+      return {
+        autoStartedBallots: [],
+        totalChecked: 0
+      };
+    }
+  }
+
   async checkAndAutoEndBallots() {
     try {
       console.log('🔍 Checking for expired ballots...');

@@ -237,8 +237,8 @@ const BallotManagement = () => {
       const ballotData = {
         title: formData.Ballot_Title,
         description: formData.Ballot_Description,
-        startDate: formData.Ballot_StartDate, // Already in Philippine time format
-        endDate: formData.Ballot_EndDate, // Already in Philippine time format
+        startDate: new Date(formData.Ballot_StartDate).toISOString(), // Convert to ISO string
+        endDate: new Date(formData.Ballot_EndDate).toISOString(), // Convert to ISO string
         showResultsAfter: formData.Ballot_ShowResultsAfter || undefined,
         candidateIds: selectedCandidates // Pass the selected candidates
       };

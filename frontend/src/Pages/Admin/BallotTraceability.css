@@ -315,6 +315,7 @@
   width: 100%;
   border-collapse: collapse;
   background: white;
+  table-layout: fixed;
 }
 
 .votes-table th {
@@ -325,12 +326,23 @@
   font-weight: 600;
   font-size: 0.875rem;
   border-bottom: 1px solid #e5e7eb;
+  vertical-align: middle;
 }
+
+.votes-table th:nth-child(1) { width: 15%; } /* Vote ID */
+.votes-table th:nth-child(2) { width: 20%; } /* Voter */
+.votes-table th:nth-child(3) { width: 15%; } /* Student ID */
+.votes-table th:nth-child(4) { width: 15%; } /* Position */
+.votes-table th:nth-child(5) { width: 20%; } /* Candidate */
+.votes-table th:nth-child(6) { width: 10%; } /* Vote Time */
+.votes-table th:nth-child(7) { width: 5%; }  /* IP Address */
 
 .votes-table td {
   padding: 0.75rem;
   border-bottom: 1px solid #e5e7eb;
   font-size: 0.875rem;
+  vertical-align: middle;
+  line-height: 1.4;
 }
 
 .votes-table tr:hover {
@@ -427,6 +439,7 @@
   width: 100%;
   border-collapse: collapse;
   background: white;
+  table-layout: fixed;
 }
 
 .leading-table th {
@@ -437,12 +450,21 @@
   font-weight: 600;
   font-size: 0.875rem;
   border-bottom: 1px solid #e5e7eb;
+  vertical-align: middle;
 }
+
+.leading-table th:nth-child(1) { width: 20%; } /* Position */
+.leading-table th:nth-child(2) { width: 30%; } /* Leading Candidate */
+.leading-table th:nth-child(3) { width: 15%; } /* Votes */
+.leading-table th:nth-child(4) { width: 15%; } /* Percentage */
+.leading-table th:nth-child(5) { width: 20%; } /* Total Votes */
 
 .leading-table td {
   padding: 0.75rem;
   border-bottom: 1px solid #e5e7eb;
   font-size: 0.875rem;
+  vertical-align: middle;
+  line-height: 1.4;
 }
 
 .leading-table tr:hover {
@@ -452,29 +474,34 @@
 .position-name {
   font-weight: 600;
   color: #1f2937;
+  text-align: left;
 }
 
 .candidate-name {
   font-weight: 500;
   color: #1f2937;
+  text-align: left;
 }
 
 .vote-count {
   font-weight: 600;
   color: #3b82f6;
   text-align: center;
+  width: 15%;
 }
 
 .percentage {
   font-weight: 600;
   color: #059669;
   text-align: center;
+  width: 15%;
 }
 
 .total-votes {
   font-weight: 500;
   color: #6b7280;
   text-align: center;
+  width: 20%;
 }
 
 .analysis-grid {
@@ -511,11 +538,18 @@
   background: white;
   border-radius: 0.375rem;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  min-height: 48px;
 }
 
 .analysis-item .label {
   color: #1f2937;
   font-weight: 500;
+  flex: 1;
+  text-align: left;
+  margin-right: 1rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .analysis-item .value {
@@ -525,6 +559,9 @@
   padding: 0.25rem 0.5rem;
   border-radius: 9999px;
   font-size: 0.875rem;
+  flex-shrink: 0;
+  min-width: 60px;
+  text-align: center;
 }
 
 .no-ballots {
@@ -702,6 +739,12 @@
   .leading-table td {
     padding: 8px 6px;
   }
+
+  .leading-table th:nth-child(1) { width: 25%; }
+  .leading-table th:nth-child(2) { width: 35%; }
+  .leading-table th:nth-child(3) { width: 15%; }
+  .leading-table th:nth-child(4) { width: 15%; }
+  .leading-table th:nth-child(5) { width: 10%; }
 
   .analysis-grid {
     grid-template-columns: 1fr;
