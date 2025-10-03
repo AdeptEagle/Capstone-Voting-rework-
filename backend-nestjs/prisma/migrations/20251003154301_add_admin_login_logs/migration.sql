@@ -1,0 +1,19 @@
+-- CreateTable
+CREATE TABLE "admin_login_logs" (
+    "id" VARCHAR(50) NOT NULL,
+    "admin_id" VARCHAR(50) NOT NULL,
+    "login_time" TIMESTAMP(3) NOT NULL,
+    "logout_time" TIMESTAMP(3),
+    "duration" INTEGER,
+    "ip_address" VARCHAR(45),
+    "user_agent" TEXT,
+    "session_id" VARCHAR(255),
+    "is_active" BOOLEAN NOT NULL DEFAULT true,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "admin_login_logs_pkey" PRIMARY KEY ("id")
+);
+
+-- AddForeignKey
+ALTER TABLE "admin_login_logs" ADD CONSTRAINT "admin_login_logs_admin_id_fkey" FOREIGN KEY ("admin_id") REFERENCES "admins"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

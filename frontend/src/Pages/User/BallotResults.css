@@ -5,6 +5,21 @@
   min-height: 100vh;
 }
 
+.top-navigation {
+  margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.top-navigation .btn {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  min-width: auto;
+  width: auto;
+  max-width: none;
+  display: inline-flex;
+}
+
 .results-header {
   background: white;
   border-radius: 0.5rem;
@@ -824,6 +839,12 @@
   flex-wrap: wrap;
 }
 
+.results-actions .btn {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.8rem;
+  min-width: auto;
+}
+
 .btn {
   padding: 0.5rem 1rem;
   border: 1px solid transparent;
@@ -837,7 +858,7 @@
   gap: 0.375rem;
   text-decoration: none;
   text-align: center;
-  min-width: 120px;
+  min-width: auto;
   justify-content: center;
 }
 
@@ -964,8 +985,16 @@
   }
 
   .btn {
-    width: 100%;
+    width: auto;
     min-width: auto;
+    padding: 0.375rem 0.75rem;
+    font-size: 0.8rem;
+  }
+
+  .top-navigation .btn {
+    width: auto !important;
+    max-width: none !important;
+    display: inline-flex !important;
   }
 }
 
@@ -1003,6 +1032,12 @@
   .vote-stats {
     flex-direction: column;
     gap: 0.5rem;
+  }
+
+  .top-navigation .btn {
+    width: auto !important;
+    max-width: none !important;
+    display: inline-flex !important;
   }
 }
 

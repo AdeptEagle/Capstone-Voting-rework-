@@ -486,7 +486,7 @@ const BallotVote = () => {
               </div>
               {isCandidateSelected(candidate.id) && (
                 <div className="selection-indicator">
-                  <i className="fas fa-check-circle"></i>
+                  <i className="fas fa-check"></i>
                 </div>
               )}
             </div>

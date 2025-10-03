@@ -20,6 +20,7 @@ model Admin {
   courses        Course[]
   departments    Department[]
   elections      Election[]
+  loginLogs      AdminLoginLog[]
 
   @@map("admins")
 }
@@ -119,6 +120,7 @@ model Voter {
   hasVoted        Boolean             @default(false)
   auditLogs       AuditLog[]
   ballotHistory   UserBallotHistory[]
+  loginLogs       UserLoginLog[]
   course          Course              @relation(fields: [courseId], references: [id])
   department      Department          @relation(fields: [departmentId], references: [id])
   votes           Vote[]
@@ -350,6 +352,40 @@ model BallotTemplate {
   createdByAdmin        Admin    @relation(fields: [BallotTemplate_CreatedBy], references: [id])
 
   @@map("ballot_templates")
+}
+
+model AdminLoginLog {
+  id            String    @id @db.VarChar(50)
+  adminId       String    @map("admin_id") @db.VarChar(50)
+  loginTime     DateTime  @map("login_time")
+  logoutTime    DateTime? @map("logout_time")
+  duration      Int?      @map("duration") // Duration in seconds
+  ipAddress     String?   @map("ip_address") @db.VarChar(45)
+  userAgent     String?   @map("user_agent") @db.Text
+  sessionId     String?   @map("session_id") @db.VarChar(255)
+  isActive      Boolean   @default(true) @map("is_active")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  admin         Admin     @relation(fields: [adminId], references: [id])
+
+  @@map("admin_login_logs")
+}
+
+model UserLoginLog {
+  id            String    @id @db.VarChar(50)
+  userId        String    @map("user_id") @db.VarChar(50)
+  loginTime     DateTime  @map("login_time")
+  logoutTime    DateTime? @map("logout_time")
+  duration      Int?      @map("duration") // Duration in seconds
+  ipAddress     String?   @map("ip_address") @db.VarChar(45)
+  userAgent     String?   @map("user_agent") @db.Text
+  sessionId     String?   @map("session_id") @db.VarChar(255)
+  isActive      Boolean   @default(true) @map("is_active")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  user          Voter     @relation(fields: [userId], references: [id])
+
+  @@map("user_login_logs")
 }
 
 enum Role {

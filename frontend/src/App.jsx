@@ -4,6 +4,8 @@ import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import SuperAdminDashboard from './Pages/SuperAdmin/SuperAdminDashboard';
 import ManageAdmins from './Pages/SuperAdmin/ManageAdmins';
+import AdminLoginLogs from './Pages/SuperAdmin/AdminLoginLogs';
+import UserLoginLogs from './Pages/SuperAdmin/UserLoginLogs';
 import AdminDashboard from './Pages/Admin/AdminDashboard';
 import BallotManagement from './Pages/Admin/BallotManagement';
 import BallotDetails from './Pages/Admin/BallotDetails';
@@ -179,6 +181,20 @@ function App() {
               <SuperAdminRoute>
                 <AdminLayout>
                   <ManageAdmins />
+                </AdminLayout>
+              </SuperAdminRoute>
+            } />
+            <Route path="/superadmin/admin-logs" element={
+              <SuperAdminRoute>
+                <AdminLayout>
+                  <AdminLoginLogs />
+                </AdminLayout>
+              </SuperAdminRoute>
+            } />
+            <Route path="/superadmin/user-logs" element={
+              <SuperAdminRoute>
+                <AdminLayout>
+                  <UserLoginLogs />
                 </AdminLayout>
               </SuperAdminRoute>
             } />

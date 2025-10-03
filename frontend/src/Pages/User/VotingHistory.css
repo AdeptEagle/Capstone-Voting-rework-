@@ -151,6 +151,12 @@
   background-color: #6b7280;
   color: white;
   border-color: #6b7280;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  min-width: auto;
+  width: auto;
+  max-width: none;
+  display: inline-flex;
 }
 
 .btn-secondary:hover {
@@ -190,8 +196,8 @@
 }
 
 .history-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  display: flex;
+  flex-direction: column;
   gap: 1.5rem;
 }
 
@@ -361,7 +367,6 @@
   }
 
   .history-list {
-    grid-template-columns: 1fr;
     gap: 1rem;
   }
 
@@ -378,6 +383,12 @@
   .history-item-badges {
     width: 100%;
     justify-content: flex-start;
+  }
+
+  .btn-secondary {
+    width: auto !important;
+    max-width: none !important;
+    display: inline-flex !important;
   }
 }
 
@@ -396,6 +407,12 @@
 
   .detail-item {
     font-size: 0.8rem;
+  }
+
+  .btn-secondary {
+    width: auto !important;
+    max-width: none !important;
+    display: inline-flex !important;
   }
 }
 

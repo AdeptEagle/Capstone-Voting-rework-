@@ -39,7 +39,7 @@ export class FileUploadService {
     return `${uniqueId}${fileExtension}`;
   }
 
-  // Process uploaded file using Cloudinary
+  // Process uploaded file using local storage
   async processUploadedFile(file: Express.Multer.File, type: 'image' | 'document'): Promise<any> {
     if (!file) {
       throw new BadRequestException('No file provided');
@@ -56,19 +56,25 @@ export class FileUploadService {
         );
       }
       
-      // Upload to Cloudinary
-      const folder = 'candidates'; // You can make this dynamic based on context
-      const result = await this.cloudinaryService.uploadImage(file, folder);
+      // Save to local storage
+      const uploadPath = path.join(process.cwd(), this.uploadDir, 'images');
+      if (!fs.existsSync(uploadPath)) {
+        fs.mkdirSync(uploadPath, { recursive: true });
+      }
+      
+      const fileName = this.generateFileName(file.originalname);
+      const filePath = path.join(uploadPath, fileName);
+      
+      fs.writeFileSync(filePath, file.buffer);
       
       return {
         originalName: file.originalname,
-        filename: result.publicId,
+        filename: fileName,
         mimetype: file.mimetype,
-        size: result.size,
-        url: result.url,
-        publicId: result.publicId,
+        size: file.size,
+        url: `/uploads/images/${fileName}`,
         type: 'image',
-        uploadedAt: result.uploadedAt,
+        uploadedAt: new Date(),
       };
     } else if (type === 'document') {
       if (!this.validateFileType(file, this.allowedDocumentTypes)) {

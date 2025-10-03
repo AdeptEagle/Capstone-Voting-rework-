@@ -69,6 +69,48 @@ export class IdGeneratorService {
     return this.generateCustomId(this.prisma.passwordResetToken, 'PWD', format);
   }
 
+  async generateAdminLoginLogId(format: 'simple' | 'padded' | 'year' = 'simple'): Promise<string> {
+    return this.generateCustomId(this.prisma.adminLoginLog, 'ADMINLOG', format);
+  }
+
+  async generateUserLoginLogId(format: 'simple' | 'padded' | 'year' = 'simple'): Promise<string> {
+    return this.generateCustomId(this.prisma.userLoginLog, 'USERLOG', format);
+  }
+
+  // Generic method for any model
+  async generateId(modelName: string, format: 'simple' | 'padded' | 'year' = 'simple'): Promise<string> {
+    const modelMap: { [key: string]: any } = {
+      admin: this.prisma.admin,
+      department: this.prisma.department,
+      course: this.prisma.course,
+      position: this.prisma.position,
+      candidate: this.prisma.candidate,
+      voter: this.prisma.voter,
+      election: this.prisma.election,
+      vote: this.prisma.vote,
+      admin_login_log: this.prisma.adminLoginLog,
+      user_login_log: this.prisma.userLoginLog,
+    };
+    
+    const model = modelMap[modelName.toLowerCase()];
+    if (!model) {
+      throw new Error(`Unknown model: ${modelName}`);
+    }
+    
+    const count = await model.count();
+    const number = count + 1;
+    
+    switch (format) {
+      case 'padded':
+        return `${modelName.toUpperCase()}-${number.toString().padStart(3, '0')}`;
+      case 'year':
+        const year = new Date().getFullYear();
+        return `${modelName.toUpperCase()}-${year}-${number}`;
+      default:
+        return `${modelName.toUpperCase()}-${number}`;
+    }
+  }
+
   // Advanced customization methods
   async generateCustomFormatId(
     model: any,

@@ -53,21 +53,21 @@ export const ElectionProvider = ({ children }) => {
       setLoading(true);
       setError('');
       
-      console.log('🔍 [ElectionContext] Fetching election data...');
+      // console.log('🔍 [ElectionContext] Fetching election data...');
       
       // Fetch all elections to check for ended ones
       const allElectionsResponse = await api.get('/elections');
-      console.log('📊 [ElectionContext] All elections response:', allElectionsResponse.data);
+      // console.log('📊 [ElectionContext] All elections response:', allElectionsResponse.data);
       setAllElections(allElectionsResponse.data || []);
       
       // Fetch active election (for admin monitoring, includes paused/stopped elections)
       try {
         const activeResponse = await api.get('/elections/active');
-        console.log('🎯 [ElectionContext] Active elections response:', activeResponse.data);
+        // console.log('🎯 [ElectionContext] Active elections response:', activeResponse.data);
         setActiveElection(activeResponse.data);
       } catch (activeError) {
         // No active election found, which is fine
-        console.log('ℹ️ [ElectionContext] No active election found:', activeError.message);
+        // console.log('ℹ️ [ElectionContext] No active election found:', activeError.message);
         setActiveElection(null);
       }
     } catch (error) {
@@ -86,7 +86,7 @@ export const ElectionProvider = ({ children }) => {
 
   const triggerImmediateRefresh = useCallback(() => {
     if (!isAuthenticated) {
-      console.log('🔒 [ElectionContext] Not authenticated, cannot refresh election data');
+      // console.log('🔒 [ElectionContext] Not authenticated, cannot refresh election data');
       return;
     }
     
@@ -107,7 +107,7 @@ export const ElectionProvider = ({ children }) => {
   // Single useEffect to handle election data fetching when authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      console.log('🔓 [ElectionContext] User authenticated, triggering election data fetch');
+      // console.log('🔓 [ElectionContext] User authenticated, triggering election data fetch');
       fetchElectionData();
       
       // Refresh election status every 10 seconds for more responsive updates
@@ -156,22 +156,22 @@ export const ElectionProvider = ({ children }) => {
   }), [activeElection, allElections, loading, error, refreshElection, triggerImmediateRefresh, isAdmin]);
 
   // Debug logging - only log when values change to prevent spam
-  useEffect(() => {
-    console.log('🔍 [ElectionContext] Debug Info:', {
-      userRole,
-      isAdmin,
-              activeElection: activeElection ? { id: activeElection.id, status: activeElection.status, title: activeElection.Election_Title } : null,
-      allElectionsCount: allElections.length,
-              allElectionsStatuses: allElections.map(e => ({ id: e.id, status: e.status, title: e.Election_Title })),
-      permissions: {
-        canVote: value.canVote,
-        canViewCandidates: value.canViewCandidates,
-        canViewResults: value.canViewResults,
-        hasActiveElection: value.hasActiveElection,
-        hasAnyElection: value.hasAnyElection
-      }
-    });
-  }, [userRole, isAdmin, activeElection, allElections, value.canVote, value.canViewCandidates, value.canViewResults, value.hasActiveElection, value.hasAnyElection]);
+  // useEffect(() => {
+  //   console.log('🔍 [ElectionContext] Debug Info:', {
+  //     userRole,
+  //     isAdmin,
+  //     activeElection: activeElection ? { id: activeElection.id, status: activeElection.status, title: activeElection.Election_Title } : null,
+  //     allElectionsCount: allElections.length,
+  //     allElectionsStatuses: allElections.map(e => ({ id: e.id, status: e.status, title: e.Election_Title })),
+  //     permissions: {
+  //       canVote: value.canVote,
+  //       canViewCandidates: value.canViewCandidates,
+  //       canViewResults: value.canViewResults,
+  //       hasActiveElection: value.hasActiveElection,
+  //       hasAnyElection: value.hasAnyElection
+  //     }
+  //   });
+  // }, [userRole, isAdmin, activeElection, allElections, value.canVote, value.canViewCandidates, value.canViewResults, value.hasActiveElection, value.hasAnyElection]);
 
   return (
     <ElectionContext.Provider value={value}>

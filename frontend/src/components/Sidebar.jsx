@@ -114,6 +114,8 @@ const Sidebar = ({ isOpen, onToggle }) => {
           ],
           advanced: [
             { path: '/superadmin/manage-admins', label: 'Manage Admins', icon: 'fas fa-user-shield' },
+            { path: '/superadmin/admin-logs', label: 'Admin Logs', icon: 'fas fa-history' },
+            { path: '/superadmin/user-logs', label: 'User Logs', icon: 'fas fa-users' },
             { path: '/trash-bin', label: 'Trash Bin', icon: 'fas fa-trash' }
           ]
         };

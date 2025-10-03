@@ -25,14 +25,16 @@ export function CandidatePhotoPlaceholder({ className = '', style = {} }) {
         justifyContent: 'center', 
         width: '100%', 
         height: '100%',
-        fontSize: '16px',
-        color: '#666',
-        background: '#f3f3f3',
-        borderRadius: '50%',
+        fontSize: '3rem',
+        color: '#9ca3af',
+        background: 'linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)',
+        borderRadius: '0.5rem',
+        border: '4px solid #d1d5db',
+        boxShadow: '0 6px 12px rgba(0, 0, 0, 0.15)',
         ...style 
       }}
     >
-      <i className="fas fa-user" style={{ fontSize: '16px', width: '16px', height: '16px' }}></i>
+      <i className="fas fa-user" style={{ fontSize: '3rem' }}></i>
     </div>
   );
 } 

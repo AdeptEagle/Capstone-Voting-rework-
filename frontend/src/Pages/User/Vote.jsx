@@ -666,34 +666,42 @@ const Vote = () => {
                 <div className="vote-candidate-rank-badge">
                   <span className="rank-number">{index + 1}</span>
                 </div>
-                <div className="vote-candidate-photo-container">
-                  {candidate.photoUrl && !imgError[candidate.id] ? (
-                                       <img 
-                     src={getCandidatePhotoUrl(candidate.photoUrl)} 
-                     alt={candidate.Candidate_Name} 
-                     className="vote-candidate-photo"
-                      onError={e => {
-                        setImgError(prev => ({ ...prev, [candidate.id]: true }));
-                        e.target.style.display = 'none';
-                        e.target.parentNode.querySelector('.candidate-photo-placeholder').style.display = 'flex';
-                      }}
-                    />
-                  ) : null}
-                  <CandidatePhotoPlaceholder className="candidate-photo-placeholder" style={{ display: candidate.photoUrl && !imgError[candidate.id] ? 'none' : 'flex' }} />
+                
+                {/* Candidate Photo Section */}
+                <div className="vote-candidate-photo-section">
+                  <div className="vote-candidate-photo-container">
+                    {candidate.photoUrl && !imgError[candidate.id] ? (
+                      <img 
+                        src={getCandidatePhotoUrl(candidate.photoUrl)} 
+                        alt={candidate.Candidate_Name} 
+                        className="vote-candidate-photo"
+                        onError={e => {
+                          setImgError(prev => ({ ...prev, [candidate.id]: true }));
+                          e.target.style.display = 'none';
+                          e.target.parentNode.querySelector('.candidate-photo-placeholder').style.display = 'flex';
+                        }}
+                      />
+                    ) : null}
+                    <CandidatePhotoPlaceholder className="candidate-photo-placeholder" style={{ display: candidate.photoUrl && !imgError[candidate.id] ? 'none' : 'flex' }} />
+                  </div>
                 </div>
-                <div className="vote-candidate-overlay">
-                                     <h3 className="vote-candidate-overlay-name">
-                     {candidate.Candidate_Name}
-                     <span className="verified"><i className="fas fa-check-circle"></i></span>
-                   </h3>
-                  <div className="vote-candidate-overlay-position">{candidate.positionName}</div>
-                  <p className="vote-candidate-overlay-description">
+
+                {/* Candidate Info Section */}
+                <div className="vote-candidate-info-section">
+                  <h3 className="vote-candidate-name">
+                    {candidate.Candidate_Name}
+                    <span className="verified"><i className="fas fa-check-circle"></i></span>
+                  </h3>
+                  <div className="vote-candidate-position">{candidate.positionName}</div>
+                  <p className="vote-candidate-description">
                     {candidate.description ? 
                       candidate.description.substring(0, 120) + (candidate.description.length > 120 ? '...' : '') :
                       'Learn more about this candidate and their vision for the position.'
                     }
                   </p>
                 </div>
+
+                {/* Selection Overlay */}
                 <div className="vote-candidate-selection-overlay">
                   <input
                     type={getVoteLimit() === 1 ? "radio" : "checkbox"}

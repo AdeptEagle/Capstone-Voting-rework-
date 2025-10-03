@@ -194,21 +194,60 @@ export const getCandidates = async () => {
 
 export const createCandidate = async (candidate, config = {}) => {
   try {
-    // Don't add ID - let the backend generate it
-    const response = await api.post('/candidates', candidate, config);
+    // Check if candidate is FormData (for file uploads)
+    const isFormData = candidate instanceof FormData;
+    
+    // Configure headers for FormData
+    const requestConfig = {
+      ...config,
+      headers: {
+        ...config.headers,
+        ...(isFormData ? {} : { 'Content-Type': 'application/json' })
+      }
+    };
+    
+    // Only log image upload debug info
+    if (isFormData) {
+      console.log('📸 Creating candidate with image upload...');
+    }
+    
+    const response = await api.post('/candidates', candidate, requestConfig);
     return response.data;
   } catch (error) {
     console.error('Error creating candidate:', error);
+    if (candidate instanceof FormData) {
+      console.error('📸 Image upload failed:', error.response?.data);
+    }
     throw error;
   }
 };
 
 export const updateCandidate = async (id, candidate, config = {}) => {
   try {
-    const response = await api.put(`/candidates/${id}`, candidate, config);
+    // Check if candidate is FormData (for file uploads)
+    const isFormData = candidate instanceof FormData;
+    
+    // Configure headers for FormData
+    const requestConfig = {
+      ...config,
+      headers: {
+        ...config.headers,
+        ...(isFormData ? {} : { 'Content-Type': 'application/json' })
+      }
+    };
+    
+    // Only log image upload debug info
+    if (isFormData) {
+      console.log('📸 Updating candidate with image upload...');
+    }
+    
+    const response = await api.put(`/candidates/${id}`, candidate, requestConfig);
     return response.data;
   } catch (error) {
     console.error('Error updating candidate:', error);
+    if (candidate instanceof FormData) {
+      console.error('📸 Image upload failed:', error.response?.data);
+    }
     throw error;
   }
 };
@@ -678,6 +717,114 @@ export const deleteAdmin = async (id) => {
     return response.data;
   } catch (error) {
     console.error('Error deleting admin:', error);
+    throw error;
+  }
+};
+
+// Admin Login Logs API Functions
+export const getAdminLoginLogs = async (page = 1, limit = 50, adminId = null) => {
+  try {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+    });
+    
+    if (adminId) {
+      params.append('adminId', adminId);
+    }
+    
+    const response = await api.get(`/admins/login-logs?${params}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching admin login logs:', error);
+    throw error;
+  }
+};
+
+export const getAdminLoginStats = async () => {
+  try {
+    const response = await api.get('/admins/login-logs/stats');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching admin login stats:', error);
+    throw error;
+  }
+};
+
+export const getAdminLoginLogById = async (id) => {
+  try {
+    const response = await api.get(`/admins/login-logs/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching admin login log:', error);
+    throw error;
+  }
+};
+
+export const adminLogout = async () => {
+  try {
+    const response = await api.post('/auth/admin/logout');
+    return response.data;
+  } catch (error) {
+    console.error('Error during admin logout:', error);
+    throw error;
+  }
+};
+
+// User Login Logs API Functions
+export const getUserLoginLogs = async (page = 1, limit = 50, searchTerm = '', department = '', course = '') => {
+  try {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+    });
+    
+    if (searchTerm) {
+      params.append('search', searchTerm);
+    }
+    
+    if (department) {
+      params.append('department', department);
+    }
+    
+    if (course) {
+      params.append('course', course);
+    }
+    
+    const response = await api.get(`/admins/user-login-logs?${params}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching user login logs:', error);
+    throw error;
+  }
+};
+
+export const getUserLoginStats = async () => {
+  try {
+    const response = await api.get('/admins/user-login-logs/stats');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching user login stats:', error);
+    throw error;
+  }
+};
+
+export const getUserLoginLogById = async (id) => {
+  try {
+    const response = await api.get(`/admins/user-login-logs/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching user login log:', error);
+    throw error;
+  }
+};
+
+export const userLogout = async () => {
+  try {
+    const response = await api.post('/auth/user/logout');
+    return response.data;
+  } catch (error) {
+    console.error('Error during user logout:', error);
     throw error;
   }
 };

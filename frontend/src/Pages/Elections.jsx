@@ -60,7 +60,7 @@ const Elections = () => {
         getActiveElectionInfo()
       ]);
 
-      console.log('Fetched elections:', elections); // Debug log
+      // console.log('Fetched elections:', elections); // Debug log
       setElections(elections || []);
       setPositions(positions || []);
       setDepartments(departmentsData || []);
@@ -170,6 +170,7 @@ const Elections = () => {
             candidateData.append('manifesto', candidate.manifesto || '');
             
             if (candidate.photoFile) {
+              console.log('📸 Uploading image for:', candidate.Candidate_Name);
               candidateData.append('photo', candidate.photoFile);
             }
 
@@ -689,6 +690,10 @@ const Elections = () => {
   };
 
   const handlePhotoChange = (candidateIndex, file) => {
+    if (file) {
+      console.log('📸 Image selected:', file.name, `(${Math.round(file.size/1024)}KB)`);
+    }
+    
     const updated = [...tempCandidates];
     updated[candidateIndex] = { ...updated[candidateIndex], photoFile: file };
     setTempCandidates(updated);

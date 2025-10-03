@@ -3,7 +3,6 @@ import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import { IdGeneratorService } from '../utils/id-generator.service';
 import { EmailService } from '../services/email.service';
-import { VotingGateway } from '../websocket/voting.gateway';
 import * as bcrypt from 'bcryptjs';
 import { Response } from 'express';
 import { randomBytes } from 'crypto';
@@ -15,7 +14,6 @@ export class AuthService {
     private jwtService: JwtService,
     private idGenerator: IdGeneratorService,
     private emailService: EmailService,
-    private votingGateway: VotingGateway,
   ) {}
 
   async checkAuthStatus(req: any) {
@@ -109,7 +107,7 @@ export class AuthService {
     }
   }
 
-  async adminLogin(adminLoginDto: { Admin_Username: string; password: string }, res: Response) {
+  async adminLogin(adminLoginDto: { Admin_Username: string; password: string }, res: Response, req?: any) {
     const { Admin_Username, password } = adminLoginDto;
 
     const admin = await this.prisma.admin.findUnique({
@@ -143,6 +141,29 @@ export class AuthService {
       path: '/',
     });
 
+    // Log admin login
+    try {
+      const loginLogId = await this.idGenerator.generateId('admin_login_log', 'simple');
+      const sessionId = randomBytes(32).toString('hex');
+      const ipAddress = req?.ip || req?.connection?.remoteAddress || req?.socket?.remoteAddress || 'unknown';
+      const userAgent = req?.get('User-Agent') || 'unknown';
+
+      await this.prisma.adminLoginLog.create({
+        data: {
+          id: loginLogId,
+          adminId: admin.id,
+          loginTime: new Date(),
+          ipAddress: ipAddress,
+          userAgent: userAgent,
+          sessionId: sessionId,
+          isActive: true,
+        },
+      });
+    } catch (error) {
+      console.error('Failed to log admin login:', error);
+      // Don't throw error here to avoid breaking the login flow
+    }
+
     return {
       message: 'Admin login successful',
       admin: {
@@ -154,7 +175,51 @@ export class AuthService {
     };
   }
 
-  async userLogin(userLoginDto: { Voter_StudentId: string; password: string }, res: Response) {
+  async adminLogout(adminId: string, res: Response) {
+    try {
+      // Find the most recent active login log for this admin
+      const activeLoginLog = await this.prisma.adminLoginLog.findFirst({
+        where: {
+          adminId: adminId,
+          isActive: true,
+        },
+        orderBy: {
+          loginTime: 'desc',
+        },
+      });
+
+      if (activeLoginLog) {
+        const logoutTime = new Date();
+        const duration = Math.floor((logoutTime.getTime() - activeLoginLog.loginTime.getTime()) / 1000);
+
+        await this.prisma.adminLoginLog.update({
+          where: { id: activeLoginLog.id },
+          data: {
+            logoutTime: logoutTime,
+            duration: duration,
+            isActive: false,
+          },
+        });
+      }
+    } catch (error) {
+      console.error('Failed to log admin logout:', error);
+      // Don't throw error here to avoid breaking the logout flow
+    }
+
+    // Clear the HTTP-only cookie
+    res.clearCookie('access_token', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+    });
+
+    return {
+      message: 'Admin logout successful',
+    };
+  }
+
+  async userLogin(userLoginDto: { Voter_StudentId: string; password: string }, res: Response, req?: any) {
     const { Voter_StudentId, password } = userLoginDto;
 
     const voter = await this.prisma.voter.findUnique({
@@ -201,6 +266,29 @@ export class AuthService {
       path: '/',
     });
 
+    // Log user login
+    try {
+      const loginLogId = await this.idGenerator.generateId('user_login_log', 'simple');
+      const sessionId = randomBytes(32).toString('hex');
+      const ipAddress = req?.ip || req?.connection?.remoteAddress || req?.socket?.remoteAddress || 'unknown';
+      const userAgent = req?.get('User-Agent') || 'unknown';
+
+      await this.prisma.userLoginLog.create({
+        data: {
+          id: loginLogId,
+          userId: voter.id,
+          loginTime: new Date(),
+          ipAddress: ipAddress,
+          userAgent: userAgent,
+          sessionId: sessionId,
+          isActive: true,
+        },
+      });
+    } catch (error) {
+      console.error('Failed to log user login:', error);
+      // Don't throw error here to avoid breaking the login flow
+    }
+
     return {
       message: 'User login successful',
       voter: {
@@ -213,6 +301,88 @@ export class AuthService {
         course: voter.course,
       },
     };
+  }
+
+  async userLogout(userId: string, res: Response) {
+    try {
+      // Find ALL active login logs for this user
+      const activeLoginLogs = await this.prisma.userLoginLog.findMany({
+        where: {
+          userId: userId,
+          isActive: true,
+        },
+        orderBy: {
+          loginTime: 'desc',
+        },
+      });
+
+      if (activeLoginLogs.length > 0) {
+        const logoutTime = new Date();
+        
+        // Update ALL active sessions for this user
+        for (const log of activeLoginLogs) {
+          const duration = Math.floor((logoutTime.getTime() - log.loginTime.getTime()) / 1000);
+          
+          await this.prisma.userLoginLog.update({
+            where: { id: log.id },
+            data: {
+              logoutTime: logoutTime,
+              duration: duration,
+              isActive: false,
+            },
+          });
+        }
+        
+        console.log(`✅ Logged out ${activeLoginLogs.length} active session(s) for user ${userId}`);
+      }
+    } catch (error) {
+      console.error('Failed to log user logout:', error);
+      // Don't throw error here to avoid breaking the logout flow
+    }
+
+    // Clear the HTTP-only cookie
+    res.clearCookie('access_token', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+    });
+
+    return {
+      message: 'User logout successful',
+    };
+  }
+
+  async updateUserActivity(userId: string) {
+    try {
+      // Find the most recent active login log for this user
+      const activeLoginLog = await this.prisma.userLoginLog.findFirst({
+        where: {
+          userId: userId,
+          isActive: true,
+        },
+        orderBy: {
+          loginTime: 'desc',
+        },
+      });
+
+      if (activeLoginLog) {
+        // Update the last activity time
+        await this.prisma.userLoginLog.update({
+          where: { id: activeLoginLog.id },
+          data: {
+            updatedAt: new Date(),
+          },
+        });
+        
+        return activeLoginLog;
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Failed to update user activity:', error);
+      throw error;
+    }
   }
 
   async userRegister(userRegisterDto: {
@@ -289,31 +459,7 @@ export class AuthService {
         },
       });
 
-    // Emit real-time voter registration event
-    console.log('🔌 [AuthService] Emitting voter-registered WebSocket event...');
-    try {
-      this.votingGateway.emitVoterRegistered({
-        id: voter.id,
-        studentId: voter.Voter_StudentId,
-        name: voter.Voter_Name,
-        email: voter.Voter_Email,
-        hasVoted: voter.hasVoted,
-        department: voter.department,
-        course: voter.course,
-        createdAt: voter.createdAt,
-      });
-      console.log('✅ [AuthService] voter-registered event emitted successfully');
-
-      // Also emit admin action for voter management
-      this.votingGateway.emitAdminAction('voter-management', {
-        action: 'voter-created',
-        voterId: voter.id,
-        voterName: voter.Voter_Name,
-      });
-      console.log('✅ [AuthService] admin-action event emitted successfully');
-    } catch (error) {
-      console.error('❌ [AuthService] Error emitting WebSocket events:', error);
-    }
+    // WebSocket events removed for now - can be re-enabled later if needed
 
     const payload = { 
       sub: voter.id, 

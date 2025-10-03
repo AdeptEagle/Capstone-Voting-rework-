@@ -9,8 +9,8 @@ body {
 }
 
 .vote-container {
-  max-width: 1200px;
-  margin: 20px auto;
+  width: 100%;
+  margin: 0;
   background: white;
   border-radius: 0.5rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -107,7 +107,7 @@ body {
 /* Modern Vote Candidates Grid */
 .vote-candidates-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, 320px);
+  grid-template-columns: repeat(auto-fit, 380px);
   gap: 2rem;
   margin-bottom: 2rem;
   max-width: 100%;
@@ -168,16 +168,22 @@ body {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
-/* Modern Vote Candidate Card - Full Image Template */
+/* Modern Vote Candidate Card - Card Layout with Photo */
 .vote-candidate-card-modern {
-  width: 320px;
-  height: 500px;
+  width: 380px;
+  height: auto;
+  min-height: 480px;
   position: relative;
-  border-radius: 20px;
+  border-radius: 0.75rem;
   overflow: hidden;
-  box-shadow: 0 15px 25px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   cursor: pointer;
   transition: all 0.3s ease;
+  background: white;
+  border: 2px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
 }
 
 .vote-candidate-card-modern:hover {
@@ -209,7 +215,8 @@ body {
   width: 100%;
   height: 100%;
   position: relative;
-  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .vote-candidate-rank-badge {
@@ -217,28 +224,65 @@ body {
   top: 15px;
   right: 15px;
   background: linear-gradient(135deg, var(--accent-steel), var(--primary-navy));
-  border-radius: 50%;
+  border-radius: 0.5rem;
   width: 40px;
-  height: 40px;
+  height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
   box-shadow: 0 4px 12px rgba(29, 53, 87, 0.3);
-  border: 3px solid var(--white);
+  border: 2px solid var(--white);
   z-index: 20;
 }
 
 .vote-candidate-rank-badge .rank-number {
-  font-size: 1.2rem;
+  font-size: 1rem;
   font-weight: 800;
   color: var(--text-white);
   line-height: 1;
 }
 
-.vote-candidate-photo-container {
+/* Candidate Photo Section - Professional Picture Wall */
+.vote-candidate-photo-section {
   width: 100%;
-  height: 100%;
+  height: 280px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-bottom: 1px solid #e5e7eb;
   position: relative;
+  flex-shrink: 0;
+  overflow: hidden;
+  min-height: 280px;
+  max-height: 280px;
+}
+
+.vote-candidate-photo-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    radial-gradient(circle at 20% 80%, rgba(59, 130, 246, 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(16, 185, 129, 0.05) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.vote-candidate-photo-container {
+  width: 200px;
+  height: 200px;
+  position: relative;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  border: 4px solid #e5e7eb;
+  transition: all 0.3s ease;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  max-width: 100%;
+  max-height: 100%;
+  flex-shrink: 0;
 }
 
 .vote-candidate-photo {
@@ -246,17 +290,104 @@ body {
   height: 100%;
   object-fit: cover;
   display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
 }
 
 .vote-candidate-photo-placeholder {
   width: 100%;
   height: 100%;
-  background: linear-gradient(135deg, var(--light-gray), var(--medium-gray));
+  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--text-muted);
-  font-size: 4rem;
+  color: #9ca3af;
+  font-size: 3rem;
+  border-radius: 0.5rem;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 2;
+}
+
+.vote-candidate-card-modern:hover .vote-candidate-photo-container {
+  border-color: #3b82f6;
+  transform: scale(1.05);
+  box-shadow: 0 8px 16px rgba(59, 130, 246, 0.2);
+}
+
+.vote-candidate-card-modern.selected .vote-candidate-photo-container {
+  border-color: #10b981;
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+  transform: scale(1.02);
+}
+
+.vote-candidate-card-modern.selected .vote-candidate-photo-container::after {
+  content: '';
+  position: absolute;
+  top: -3px;
+  left: -3px;
+  right: -3px;
+  bottom: -3px;
+  border: 2px solid #10b981;
+  border-radius: 0.5rem;
+  pointer-events: none;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Candidate Info Section */
+.vote-candidate-info-section {
+  padding: 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: relative;
+  z-index: 10;
+  background: white;
+  min-height: 200px;
+  margin-top: 0;
+}
+
+.vote-candidate-name {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.vote-candidate-name .verified {
+  color: #10b981;
+  font-size: 1rem;
+}
+
+.vote-candidate-position {
+  font-size: 1rem;
+  color: #6b7280;
+  font-weight: 500;
+  margin: 0;
+}
+
+.vote-candidate-description {
+  font-size: 0.9rem;
+  color: #4b5563;
+  line-height: 1.5;
+  margin: 0;
+  flex: 1;
 }
 
 .vote-candidate-selection-overlay {
@@ -264,6 +395,7 @@ body {
   top: 15px;
   left: 15px;
   z-index: 20;
+  pointer-events: none;
 }
 
 .vote-selection-input {
@@ -274,10 +406,10 @@ body {
 
 .vote-selection-indicator {
   display: inline-block;
-  width: 24px;
-  height: 24px;
-  border: 3px solid var(--white);
-  border-radius: 50%;
+  width: 32px;
+  height: 20px;
+  border: 2px solid var(--white);
+  border-radius: 0.5rem;
   background: rgba(255, 255, 255, 0.9);
   position: relative;
   cursor: pointer;
@@ -290,15 +422,14 @@ body {
 }
 
 .vote-candidate-card-modern.selected .vote-selection-indicator::after {
-  content: '';
+  content: '✓';
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 8px;
-  height: 8px;
-  background: var(--white);
-  border-radius: 50%;
+  color: var(--white);
+  font-size: 12px;
+  font-weight: bold;
 }
 
 /* Remove card body since everything is in overlay */
@@ -1346,9 +1477,9 @@ body {
 /* Responsive Design */
 @media (max-width: 768px) {
   .vote-container {
-    margin: 10px;
+    margin: 0;
     padding: 1rem;
-    max-width: 100%;
+    width: 100%;
     border-radius: 16px;
   }
   
@@ -1382,10 +1513,25 @@ body {
     min-height: 300px;
   }
   
+  .vote-candidate-card-modern {
+    width: 100%;
+    max-width: 380px;
+    margin: 0 auto;
+  }
+  
   .vote-candidate-card {
     height: 140px;
     padding: 1rem;
     gap: 1rem;
+  }
+  
+  .vote-candidate-photo-section {
+    height: 200px;
+  }
+  
+  .vote-candidate-photo-container {
+    width: 150px;
+    height: 150px;
   }
   
   .vote-candidate-photo {

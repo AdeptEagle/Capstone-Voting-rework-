@@ -55,20 +55,20 @@ const Candidates = () => {
         getPositions(),
         getDepartments()
       ]);
-      console.log('Fetched candidates data:', candidatesData);
-      console.log('Fetched positions data:', positionsData);
-      console.log('Fetched departments data:', departmentsData);
+      // console.log('Fetched candidates data:', candidatesData);
+      // console.log('Fetched positions data:', positionsData);
+      // console.log('Fetched departments data:', departmentsData);
       
-      // Debug individual candidates
-      candidatesData.forEach(candidate => {
-        console.log(`Candidate ${candidate.Candidate_Name}:`, {
-          departmentId: candidate.departmentId,
-          departmentName: candidate.department?.Department_Name,
-          courseId: candidate.courseId,
-          courseName: candidate.course?.Course_Name,
-          positionName: candidate.position?.Position_Title
-        });
-      });
+      // Debug individual candidates - commented out to reduce console spam
+      // candidatesData.forEach(candidate => {
+      //   console.log(`Candidate ${candidate.Candidate_Name}:`, {
+      //     departmentId: candidate.departmentId,
+      //     departmentName: candidate.department?.Department_Name,
+      //     courseId: candidate.courseId,
+      //     courseName: candidate.course?.Course_Name,
+      //     positionName: candidate.position?.Position_Title
+      //   });
+      // });
       
       setCandidates(candidatesData);
       setPositions(positionsData);
@@ -257,6 +257,8 @@ const Candidates = () => {
         console.log('Updating candidate:', editingCandidate.id);
         const result = await updateCandidate(editingCandidate.id, dataToSend, photoFile ? { headers: { 'Content-Type': 'multipart/form-data' } } : undefined);
         console.log('Update result:', result);
+        console.log('📸 Photo URL in response:', result.candidate?.photo);
+        console.log('📸 Full candidate object:', result.candidate);
       } else {
         console.log('Creating new candidate');
         const result = await createCandidate(dataToSend, photoFile ? { headers: { 'Content-Type': 'multipart/form-data' } } : undefined);
@@ -490,8 +492,8 @@ const Candidates = () => {
                 <div className="modal-header">
                   <div className="modal-candidate-info">
                     <div className="modal-candidate-photo-container">
-                      {viewCandidate?.photoUrl ? (
-                        <img src={getCandidatePhotoUrl(viewCandidate.photoUrl)} alt={viewCandidate.Candidate_Name} className="modal-candidate-photo" />
+                      {viewCandidate?.photo && viewCandidate.photo !== 'undefined' ? (
+                        <img src={getCandidatePhotoUrl(viewCandidate.photo)} alt={viewCandidate.Candidate_Name} className="modal-candidate-photo" />
                       ) : (
                         <div className="modal-candidate-photo-placeholder">
                           <i className="fas fa-user"></i>

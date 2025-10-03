@@ -30,12 +30,19 @@ export class CandidateController {
     @Body() createCandidateDto: CreateCandidateDto,
     @UploadedFile() photo?: any
   ) {
+    console.log('📸 Controller - Create - Photo received:', photo);
+    console.log('📸 Controller - Create - Photo type:', typeof photo);
+    console.log('📸 Controller - Create - Photo properties:', photo ? Object.keys(photo) : 'No photo');
+    console.log('📸 Controller - Create - CreateCandidateDto:', createCandidateDto);
+    
     // Check if photo URL is provided in the form data
     const photoUrl = (createCandidateDto as any).photo;
     if (photoUrl && typeof photoUrl === 'string' && (photoUrl.startsWith('/uploads/') || photoUrl.startsWith('https://res.cloudinary.com/'))) {
+      console.log('📸 Controller - Create - Using existing photo URL:', photoUrl);
       // Pass the URL string to the service
       return this.candidateService.createCandidate(createCandidateDto, photoUrl);
     }
+    console.log('📸 Controller - Create - Using uploaded file:', photo);
     // Pass the uploaded file to the service
     return this.candidateService.createCandidate(createCandidateDto, photo);
   }
@@ -59,12 +66,19 @@ export class CandidateController {
     @Body() updateCandidateDto: UpdateCandidateDto,
     @UploadedFile() photo?: any
   ) {
+    console.log('📸 Controller - Photo received:', photo);
+    console.log('📸 Controller - Photo type:', typeof photo);
+    console.log('📸 Controller - Photo properties:', photo ? Object.keys(photo) : 'No photo');
+    console.log('📸 Controller - UpdateCandidateDto:', updateCandidateDto);
+    
     // Check if photo URL is provided in the form data
     const photoUrl = (updateCandidateDto as any).photo;
     if (photoUrl && typeof photoUrl === 'string' && (photoUrl.startsWith('/uploads/') || photoUrl.startsWith('https://res.cloudinary.com/'))) {
+      console.log('📸 Controller - Using existing photo URL:', photoUrl);
       // Pass the URL string to the service
       return this.candidateService.updateCandidate(id, updateCandidateDto, photoUrl);
     }
+    console.log('📸 Controller - Using uploaded file:', photo);
     // Pass the uploaded file to the service
     return this.candidateService.updateCandidate(id, updateCandidateDto, photo);
   }

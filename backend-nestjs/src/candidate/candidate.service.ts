@@ -89,44 +89,43 @@ export class CandidateService {
     // Handle photo upload using FileUploadService
     let photoUrl = null;
     if (photo) {
-      console.log('Photo object received:', photo);
-      console.log('Photo type:', typeof photo);
-      console.log('Photo properties:', Object.keys(photo));
-      
       try {
         // Check if photo is a file upload or a URL string
         if (photo.buffer || photo.originalname) {
-          console.log('Processing as file upload');
-          // It's a file upload - will be processed by Cloudinary
+          console.log('📸 Processing image upload for candidate');
+          console.log('📸 Photo details:', {
+            originalname: photo.originalname,
+            mimetype: photo.mimetype,
+            size: photo.size,
+            buffer: photo.buffer ? 'Buffer exists' : 'No buffer'
+          });
+          
+          // It's a file upload - will be processed by local storage
           const fileInfo = await this.fileUploadService.processUploadedFile(photo, 'image');
-          console.log('FileInfo received:', fileInfo);
+          console.log('📸 FileInfo received:', fileInfo);
           
           if (fileInfo && fileInfo.url) {
-            photoUrl = fileInfo.url; // This will be a Cloudinary URL
-            console.log('Photo URL set to:', photoUrl);
+            photoUrl = fileInfo.url; // This will be a local URL like /uploads/images/filename.jpg
+            console.log('📸 Image uploaded successfully:', photoUrl);
           } else {
-            console.error('Invalid fileInfo or fileInfo.url:', fileInfo);
+            console.error('📸 Image upload failed - invalid response:', fileInfo);
             photoUrl = null;
           }
         } else if (typeof photo === 'string') {
           // Check if it's a Cloudinary URL or local upload URL
           if (photo.startsWith('https://res.cloudinary.com/') || photo.startsWith('/uploads/')) {
-            console.log('Processing as URL string:', photo);
             photoUrl = photo;
           } else {
-            console.log('Invalid URL format, setting to null');
             photoUrl = null;
           }
         } else {
-          console.log('Photo is neither file upload nor valid URL string, setting to null');
           photoUrl = null;
         }
       } catch (error) {
-        console.error('Photo upload error:', error);
+        console.error('📸 Image upload error:', error.message);
+        console.error('📸 Full error:', error);
         photoUrl = null;
       }
-    } else {
-      console.log('No photo provided, setting to null');
     }
 
     // Generate custom ID
@@ -305,12 +304,12 @@ export class CandidateService {
             }
           }
 
-          // Upload new photo to Cloudinary
+          // Upload new photo to local storage
           const fileInfo = await this.fileUploadService.processUploadedFile(photo, 'image');
           console.log('FileInfo received:', fileInfo);
           
           if (fileInfo && fileInfo.url) {
-            photoUrl = fileInfo.url; // This will be a Cloudinary URL
+            photoUrl = fileInfo.url; // This will be a local URL like /uploads/images/filename.jpg
             console.log('Photo URL set to:', photoUrl);
           } else {
             console.error('Invalid fileInfo or fileInfo.url:', fileInfo);

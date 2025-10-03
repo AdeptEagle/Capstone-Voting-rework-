@@ -337,6 +337,17 @@ const BallotResults = () => {
 
   return (
     <div className="ballot-results-container">
+      {/* Back to Ballots Button - Top Navigation */}
+      <div className="top-navigation">
+        <button 
+          className="btn btn-secondary"
+          onClick={() => navigate('/user/ballot-selection')}
+        >
+          <i className="fas fa-arrow-left"></i>
+          Back to Ballots
+        </button>
+      </div>
+
       <div className="results-header">
         <div className="header-content">
           <h1>{ballot.Ballot_Title}</h1>
@@ -598,16 +609,8 @@ const BallotResults = () => {
         )}
       </div>
 
-      <div className="results-actions">
-        <button 
-          className="btn btn-secondary"
-          onClick={() => navigate('/user/ballot-selection')}
-        >
-          <i className="fas fa-arrow-left"></i>
-          Back to Ballots
-        </button>
-        
-        {ballotStatus.status === 'active' && (
+      {ballotStatus.status === 'active' && (
+        <div className="results-actions">
           <button 
             className="btn btn-primary"
             onClick={() => navigate(`/user/vote/${ballotId}`)}
@@ -615,8 +618,8 @@ const BallotResults = () => {
             <i className="fas fa-vote-yea"></i>
             Vote Now
           </button>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { ElectionService } from '../election/election.service';
 import { BallotService } from '../ballot/ballot.service';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class SchedulerService {
@@ -9,7 +10,8 @@ export class SchedulerService {
 
   constructor(
     private readonly electionService: ElectionService,
-    private readonly ballotService: BallotService
+    private readonly ballotService: BallotService,
+    private readonly prisma: PrismaService
   ) {}
 
   // Run every minute to check for expired elections
@@ -92,6 +94,60 @@ export class SchedulerService {
       }
     } catch (error) {
       this.logger.error('❌ Error logging election status:', error);
+    }
+  }
+
+  // Run every 5 minutes to clean up inactive user sessions
+  @Cron('0 */5 * * * *') // Every 5 minutes
+  async cleanupInactiveSessions() {
+    try {
+      this.logger.log('🧹 Cleaning up inactive user sessions...');
+      
+      // Find sessions that have been active for more than 30 minutes (simple timeout)
+      const thirtyMinutesAgo = new Date();
+      thirtyMinutesAgo.setMinutes(thirtyMinutesAgo.getMinutes() - 30);
+      
+      const inactiveSessions = await this.prisma.userLoginLog.findMany({
+        where: {
+          isActive: true,
+          loginTime: {
+            lt: thirtyMinutesAgo
+          }
+        },
+        include: {
+          user: true
+        }
+      });
+      
+      if (inactiveSessions.length > 0) {
+        this.logger.log(`📊 Found ${inactiveSessions.length} inactive sessions to clean up`);
+        
+        const now = new Date();
+        let cleanedCount = 0;
+        
+        for (const session of inactiveSessions) {
+          const duration = Math.floor((now.getTime() - session.loginTime.getTime()) / 1000);
+          
+          await this.prisma.userLoginLog.update({
+            where: { id: session.id },
+            data: {
+              logoutTime: now,
+              duration: duration,
+              isActive: false,
+            },
+          });
+          
+          this.logger.log(`✅ Auto-logged out: ${session.user.Voter_Name} (${Math.floor(duration/60)}m ${duration%60}s)`);
+          cleanedCount++;
+        }
+        
+        this.logger.log(`✅ Cleaned up ${cleanedCount} inactive sessions`);
+      } else {
+        this.logger.log('✅ No inactive sessions found');
+      }
+      
+    } catch (error) {
+      this.logger.error('❌ Error cleaning up inactive sessions:', error);
     }
   }
 } 

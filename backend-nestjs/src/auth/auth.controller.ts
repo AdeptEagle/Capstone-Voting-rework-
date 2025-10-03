@@ -248,9 +248,33 @@ export class AuthController {
       },
     },
   })
-  async logout(@Res() res: Response) {
-    const result = await this.authService.logout(res);
-    return res.json(result);
+  async logout(@Request() req: any, @Res() res: Response) {
+    // Check if user is authenticated and get their info
+    try {
+      const authStatus = await this.authService.checkAuthStatus(req);
+      
+      if (authStatus.isAuthenticated) {
+        // Determine if it's an admin or user logout
+        if (authStatus.role === 'SUPER_ADMIN' || authStatus.role === 'ADMIN') {
+          // Admin logout
+          const result = await this.authService.adminLogout(authStatus.user.id, res);
+          return res.json(result);
+        } else {
+          // User logout
+          const result = await this.authService.userLogout(authStatus.user.id, res);
+          return res.json(result);
+        }
+      } else {
+        // Not authenticated, just clear cookie
+        const result = await this.authService.logout(res);
+        return res.json(result);
+      }
+    } catch (error) {
+      // If there's an error checking auth status, just clear the cookie
+      console.error('Error during logout:', error);
+      const result = await this.authService.logout(res);
+      return res.json(result);
+    }
   }
 
   @Post('validate-admin-token')

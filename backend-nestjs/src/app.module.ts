@@ -21,6 +21,7 @@ import { SchedulerService } from './services/scheduler.service';
 import { TimezoneService } from './services/timezone.service';
 import { TimezoneController } from './controllers/timezone.controller';
 import { WebsocketModule } from './websocket/websocket.module';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { WebsocketModule } from './websocket/websocket.module';
     BallotModule,
     BallotTemplateModule,
     WebsocketModule,
+    HealthModule,
   ],
   controllers: [TimezoneController],
   providers: [SchedulerService, TimezoneService],

@@ -381,4 +381,264 @@ export class AdminService {
       adminActivity,
     };
   }
+
+  async getAdminLoginLogs(page: number = 1, limit: number = 50, adminId?: string) {
+    const skip = (page - 1) * limit;
+    
+    const whereClause = adminId ? { adminId } : {};
+    
+    const [loginLogs, total] = await Promise.all([
+      this.prisma.adminLoginLog.findMany({
+        where: whereClause,
+        include: {
+          admin: {
+            select: {
+              id: true,
+              Admin_Username: true,
+              Admin_Email: true,
+              role: true,
+            },
+          },
+        },
+        orderBy: {
+          loginTime: 'desc',
+        },
+        skip,
+        take: limit,
+      }),
+      this.prisma.adminLoginLog.count({
+        where: whereClause,
+      }),
+    ]);
+
+    return {
+      loginLogs,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+
+  async getAdminLoginStats() {
+    const totalLogins = await this.prisma.adminLoginLog.count();
+    const activeSessions = await this.prisma.adminLoginLog.count({
+      where: { isActive: true },
+    });
+    
+    const todayLogins = await this.prisma.adminLoginLog.count({
+      where: {
+        loginTime: {
+          gte: new Date(new Date().setHours(0, 0, 0, 0)),
+        },
+      },
+    });
+
+    const avgSessionDuration = await this.prisma.adminLoginLog.aggregate({
+      where: {
+        duration: { not: null },
+      },
+      _avg: {
+        duration: true,
+      },
+    });
+
+    const recentLogins = await this.prisma.adminLoginLog.findMany({
+      take: 10,
+      include: {
+        admin: {
+          select: {
+            Admin_Username: true,
+            role: true,
+          },
+        },
+      },
+      orderBy: {
+        loginTime: 'desc',
+      },
+    });
+
+    return {
+      totalLogins,
+      activeSessions,
+      todayLogins,
+      avgSessionDuration: avgSessionDuration._avg.duration ? Math.round(avgSessionDuration._avg.duration / 60) : 0, // in minutes
+      recentLogins,
+    };
+  }
+
+  async getAdminLoginLogById(id: string) {
+    return this.prisma.adminLoginLog.findUnique({
+      where: { id },
+      include: {
+        admin: {
+          select: {
+            id: true,
+            Admin_Username: true,
+            Admin_Email: true,
+            role: true,
+          },
+        },
+      },
+    });
+  }
+
+  async getUserLoginLogs(page: number = 1, limit: number = 50, searchTerm?: string, department?: string, course?: string) {
+    const skip = (page - 1) * limit;
+    
+    // Build where clause for search and filters
+    const whereClause: any = {};
+    
+    if (searchTerm) {
+      whereClause.user = {
+        OR: [
+          { Voter_Name: { contains: searchTerm, mode: 'insensitive' } },
+          { Voter_StudentId: { contains: searchTerm, mode: 'insensitive' } },
+          { Voter_Email: { contains: searchTerm, mode: 'insensitive' } }
+        ]
+      };
+    }
+    
+    if (department) {
+      whereClause.user = {
+        ...whereClause.user,
+        department: {
+          Department_Name: department
+        }
+      };
+    }
+    
+    if (course) {
+      whereClause.user = {
+        ...whereClause.user,
+        course: {
+          Course_Name: course
+        }
+      };
+    }
+    
+    const [loginLogs, total] = await Promise.all([
+      this.prisma.userLoginLog.findMany({
+        where: whereClause,
+        include: {
+          user: {
+            select: {
+              id: true,
+              Voter_Name: true,
+              Voter_Email: true,
+              Voter_StudentId: true,
+              department: {
+                select: {
+                  Department_Name: true,
+                },
+              },
+              course: {
+                select: {
+                  Course_Name: true,
+                },
+              },
+            },
+          },
+        },
+        orderBy: {
+          loginTime: 'desc',
+        },
+        skip,
+        take: limit,
+      }),
+      this.prisma.userLoginLog.count({
+        where: whereClause,
+      }),
+    ]);
+
+    return {
+      loginLogs,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+
+  async getUserLoginStats() {
+    const totalLogins = await this.prisma.userLoginLog.count();
+    const activeSessions = await this.prisma.userLoginLog.count({
+      where: { isActive: true },
+    });
+    
+    const todayLogins = await this.prisma.userLoginLog.count({
+      where: {
+        loginTime: {
+          gte: new Date(new Date().setHours(0, 0, 0, 0)),
+        },
+      },
+    });
+
+    const avgSessionDuration = await this.prisma.userLoginLog.aggregate({
+      where: {
+        duration: { not: null },
+      },
+      _avg: {
+        duration: true,
+      },
+    });
+
+    const recentLogins = await this.prisma.userLoginLog.findMany({
+      take: 10,
+      include: {
+        user: {
+          select: {
+            Voter_Name: true,
+            Voter_StudentId: true,
+            department: {
+              select: {
+                Department_Name: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        loginTime: 'desc',
+      },
+    });
+
+    return {
+      totalLogins,
+      activeSessions,
+      todayLogins,
+      avgSessionDuration: avgSessionDuration._avg.duration ? Math.round(avgSessionDuration._avg.duration / 60) : 0, // in minutes
+      recentLogins,
+    };
+  }
+
+  async getUserLoginLogById(id: string) {
+    return this.prisma.userLoginLog.findUnique({
+      where: { id },
+      include: {
+        user: {
+          select: {
+            id: true,
+            Voter_Name: true,
+            Voter_Email: true,
+            Voter_StudentId: true,
+            department: {
+              select: {
+                Department_Name: true,
+              },
+            },
+            course: {
+              select: {
+                Course_Name: true,
+              },
+            },
+          },
+        },
+      },
+    });
+  }
 } 
