@@ -189,19 +189,6 @@ export class BallotTemplateService {
     
     console.log('📊 Template Data:', templateData);
 
-    // Get position IDs from position titles
-    let positionIds = [];
-    if (templateData.positions && templateData.positions.length > 0) {
-      const positionTitles = templateData.positions.map(p => p.positionTitle || p.positionId);
-      const positions = await this.prisma.position.findMany({
-        where: { Position_Title: { in: positionTitles } },
-        select: { id: true, Position_Title: true }
-      });
-      positionIds = positions.map(p => p.id);
-      console.log('🔍 Found positions:', positions);
-      console.log('🆔 Position IDs:', positionIds);
-    }
-
     // Extract ballot configuration from template
     const ballotConfig = {
       Ballot_Title: createBallotDto.title || templateData.title,
@@ -212,44 +199,15 @@ export class BallotTemplateService {
       Ballot_ShowResults: templateData.showResults !== false,
       Ballot_ShowResultsAfter: createBallotDto.showResultsAfter,
       Ballot_ShowLiveResults: templateData.showLiveResults !== false,
-      positionIds: positionIds,
+      templateId: templateId, // Pass template ID to create positions from template
       candidateIds: createBallotDto.candidateIds || [], // Use provided candidates or empty array
     };
 
     // Create the ballot using template-specific method
     const ballot = await this.ballotService.createBallotFromTemplate(ballotConfig, createdBy);
 
-    // Add positions from template with their display order
-    if (templateData.positions && templateData.positions.length > 0 && positionIds.length > 0) {
-      console.log('🏗️ Adding positions to ballot...');
-      console.log('📋 Template positions:', templateData.positions);
-      console.log('🆔 Position IDs to add:', positionIds);
-      
-      for (let i = 0; i < templateData.positions.length; i++) {
-        const positionData = templateData.positions[i];
-        const positionId = positionIds[i]; // Use the looked up position ID
-        
-        console.log(`🔧 Adding position ${i + 1}/${templateData.positions.length}:`, {
-          positionData: positionData,
-          positionId: positionId,
-          displayOrder: positionData.displayOrder || i + 1,
-          isRequired: positionData.isRequired !== false
-        });
-        
-        try {
-          await this.addPositionToBallot(ballot.id, {
-            positionId: positionId,
-            displayOrder: positionData.displayOrder || i + 1,
-            isRequired: positionData.isRequired !== false,
-          });
-          console.log('✅ Added position:', positionId, 'to ballot');
-        } catch (error) {
-          console.error('❌ Error adding position:', positionId, 'Error:', error);
-          throw error;
-        }
-      }
-      console.log('✅ All positions added to ballot');
-    }
+    // Positions are now automatically created in the ballot service
+    console.log('✅ Positions will be created automatically from template data');
 
     // Add selected candidates to the ballot if provided
     if (createBallotDto.candidateIds && createBallotDto.candidateIds.length > 0) {

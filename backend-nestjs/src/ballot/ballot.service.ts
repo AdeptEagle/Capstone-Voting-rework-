@@ -987,8 +987,7 @@ export class BallotService {
       description: ballotData.Ballot_Description,
       startDate: ballotData.Ballot_StartDate,
       endDate: ballotData.Ballot_EndDate,
-      positionIds: ballotData.positionIds,
-      candidateIds: ballotData.candidateIds,
+      templateId: ballotData.templateId,
       requireAllPositions: ballotData.Ballot_RequireAllPositions,
       showResults: ballotData.Ballot_ShowResults,
       showLiveResults: ballotData.Ballot_ShowLiveResults
@@ -1003,7 +1002,7 @@ export class BallotService {
       Ballot_ShowResults,
       Ballot_ShowResultsAfter,
       Ballot_ShowLiveResults,
-      positionIds
+      templateId
     } = ballotData;
 
     // Validate required fields
@@ -1043,12 +1042,22 @@ export class BallotService {
     
     console.log('✅ Date validation passed');
 
-    // Validate positions
-    if (!positionIds || !Array.isArray(positionIds) || positionIds.length === 0) {
-      throw new BadRequestException('At least one position must be selected');
+    // Get template data if templateId is provided
+    let templateData = null;
+    if (templateId) {
+      const template = await this.prisma.ballotTemplate.findUnique({
+        where: { id: templateId }
+      });
+      
+      if (!template) {
+        throw new BadRequestException('Template not found');
+      }
+      
+      templateData = template.BallotTemplate_Data as any;
+      console.log('📋 Template Data:', templateData);
     }
 
-    // Create the ballot
+    // Create the ballot with positions from template
     console.log('🏗️ Creating ballot with data:', {
       title: Ballot_Title,
       description: Ballot_Description,
@@ -1058,29 +1067,67 @@ export class BallotService {
       requireAllPositions: Ballot_RequireAllPositions,
       showResults: Ballot_ShowResults,
       showLiveResults: Ballot_ShowLiveResults,
-      createdBy: createdBy
+      createdBy: createdBy,
+      hasTemplate: !!templateData
     });
     
-    const ballot = await this.prisma.ballot.create({
-      data: {
-        id: this.generateId(),
-        Ballot_Title,
-        Ballot_Description: Ballot_Description || '',
-        Ballot_StartDate: startDate,
-        Ballot_EndDate: endDate,
-        Ballot_RequireAllPositions: Ballot_RequireAllPositions !== false,
-        Ballot_ShowResults: Ballot_ShowResults !== false,
-        Ballot_ShowResultsAfter: Ballot_ShowResultsAfter ? new Date(Ballot_ShowResultsAfter) : null,
-        Ballot_ShowLiveResults: Ballot_ShowLiveResults !== false,
-        Ballot_Status: BallotStatus.DRAFT,
-        Ballot_IsActive: false,
-        Ballot_CreatedBy: createdBy,
-      },
-    });
-    
-    console.log('✅ Ballot created successfully:', ballot.id);
+    return this.prisma.$transaction(async (tx) => {
+      // Create ballot
+      const ballot = await tx.ballot.create({
+        data: {
+          id: this.generateId(),
+          Ballot_Title,
+          Ballot_Description: Ballot_Description || '',
+          Ballot_StartDate: startDate,
+          Ballot_EndDate: endDate,
+          Ballot_RequireAllPositions: Ballot_RequireAllPositions !== false,
+          Ballot_ShowResults: Ballot_ShowResults !== false,
+          Ballot_ShowResultsAfter: Ballot_ShowResultsAfter ? new Date(Ballot_ShowResultsAfter) : null,
+          Ballot_ShowLiveResults: Ballot_ShowLiveResults !== false,
+          Ballot_Status: BallotStatus.DRAFT,
+          Ballot_IsActive: false,
+          Ballot_CreatedBy: createdBy,
+        },
+      });
 
-    return ballot;
+      // Create positions from template if template data exists
+      if (templateData && templateData.positions && Array.isArray(templateData.positions)) {
+        console.log('📋 Creating positions from template:', templateData.positions.length);
+        
+        const createdPositions = await Promise.all(
+          templateData.positions.map(async (positionData: any) => {
+            // Create position
+            const position = await tx.position.create({
+              data: {
+                id: this.generateId(),
+                Position_Title: positionData.positionTitle,
+                Position_Description: `Position for ${positionData.positionTitle}`,
+                voteLimit: positionData.voteLimit || 1,
+                displayOrder: positionData.displayOrder || 1,
+              },
+            });
+
+            // Link position to ballot
+            await tx.ballotPosition.create({
+              data: {
+                id: this.generateId(),
+                BallotPosition_BallotId: ballot.id,
+                BallotPosition_PositionId: position.id,
+                BallotPosition_DisplayOrder: positionData.displayOrder || 1,
+                BallotPosition_IsRequired: positionData.isRequired !== false,
+              },
+            });
+
+            return position;
+          })
+        );
+
+        console.log(`✅ Created ${createdPositions.length} positions from template`);
+      }
+      
+      console.log('✅ Ballot created successfully:', ballot.id);
+      return ballot;
+    });
   }
 
   async checkAndAutoStartBallots() {

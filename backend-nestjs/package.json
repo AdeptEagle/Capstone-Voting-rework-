@@ -27,6 +27,7 @@
     "seed:db": "ts-node prisma/seed.ts",
     "seed:ballot": "ts-node src/scripts/seed-ballot-test-data.ts",
     "seed:templates": "ts-node scripts/seed-ballot-templates.ts",
+    "test:template": "ts-node scripts/test-template-creation.ts",
     "test:cloudinary": "ts-node src/scripts/test-cloudinary.ts",
     "setup:super-admin": "ts-node src/scripts/create-super-admin.ts",
     "create:superadmin": "ts-node src/scripts/create-default-superadmin.ts",
