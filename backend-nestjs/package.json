@@ -33,12 +33,21 @@
     "compare:templates": "ts-node scripts/compare-template-sources.ts",
     "diagnose:templates": "ts-node scripts/diagnose-template-issue.ts",
     "cleanup:duplicates": "ts-node scripts/cleanup-duplicate-positions.ts",
+    "ensure:templates": "ts-node scripts/ensure-templates.ts",
+    "test:auto-init": "ts-node scripts/test-auto-initialization.ts",
+    "verify:startup": "ts-node scripts/verify-startup.ts",
+    "clean:system": "ts-node scripts/clean-system.ts",
+    "seed:candidates": "ts-node scripts/seed-candidates-for-positions.ts",
+    "test:positions": "ts-node scripts/test-position-initialization.ts",
+    "demo:seed": "ts-node scripts/demo-seed-positions-and-candidates.ts",
+    "verify:demo": "ts-node scripts/verify-demo-system.ts",
     "test:cloudinary": "ts-node src/scripts/test-cloudinary.ts",
     "setup:super-admin": "ts-node src/scripts/create-super-admin.ts",
     "create:superadmin": "ts-node src/scripts/create-default-superadmin.ts",
     "setup:db": "node scripts/setup-database.js",
     "init:project": "npm install && npm run setup:db && npm run start:dev",
-    "deploy:init": "npm run db:push && npm run db:seed && npm run start:prod"
+    "deploy:init": "npm run db:push && npm run db:seed && npm run ensure:templates && npm run demo:seed && npm run start:prod",
+    "deploy:demo": "npm run db:push && npm run db:seed && npm run demo:seed && npm run start:prod"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",
