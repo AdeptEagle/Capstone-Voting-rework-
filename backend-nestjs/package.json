@@ -41,13 +41,15 @@
     "test:positions": "ts-node scripts/test-position-initialization.ts",
     "demo:seed": "ts-node scripts/demo-seed-positions-and-candidates.ts",
     "verify:demo": "ts-node scripts/verify-demo-system.ts",
+    "ensure:candidates": "ts-node scripts/ensure-candidates.ts",
+    "setup:other": "ts-node scripts/setup-other-system.ts",
     "test:cloudinary": "ts-node src/scripts/test-cloudinary.ts",
     "setup:super-admin": "ts-node src/scripts/create-super-admin.ts",
     "create:superadmin": "ts-node src/scripts/create-default-superadmin.ts",
     "setup:db": "node scripts/setup-database.js",
     "init:project": "npm install && npm run setup:db && npm run start:dev",
-    "deploy:init": "npm run db:push && npm run db:seed && npm run ensure:templates && npm run demo:seed && npm run start:prod",
-    "deploy:demo": "npm run db:push && npm run db:seed && npm run demo:seed && npm run start:prod"
+    "deploy:init": "npm run db:push && npm run db:seed && npm run ensure:templates && npm run demo:seed && npm run ensure:candidates && npm run start:prod",
+    "deploy:demo": "npm run db:push && npm run db:seed && npm run demo:seed && npm run ensure:candidates && npm run start:prod"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",

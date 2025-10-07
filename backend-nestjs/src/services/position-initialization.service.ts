@@ -93,7 +93,7 @@ export class PositionInitializationService implements OnModuleInit {
           console.log(`   - ${position.Position_Title}`);
         });
 
-        // Now create candidates for all positions (existing + newly created)
+        // Always create candidates for all positions (existing + newly created)
         await this.createCandidatesForAllPositions();
 
         // Verify all positions are now present
@@ -148,14 +148,24 @@ export class PositionInitializationService implements OnModuleInit {
         return;
       }
 
-      // Check if candidates already exist
+      // Check if candidates already exist for all positions
       const existingCandidates = await this.prisma.candidate.findMany();
-      if (existingCandidates.length > 0) {
-        console.log(`📊 Found ${existingCandidates.length} existing candidates, skipping creation`);
+      const positionsWithCandidates = new Set();
+      
+      for (const candidate of existingCandidates) {
+        positionsWithCandidates.add(candidate.positionId);
+      }
+      
+      const positionsNeedingCandidates = positions.filter(p => !positionsWithCandidates.has(p.id));
+      
+      if (positionsNeedingCandidates.length === 0) {
+        console.log(`📊 All positions already have candidates, skipping creation`);
         return;
       }
+      
+      console.log(`📊 Found ${positionsNeedingCandidates.length} positions needing candidates`);
 
-      console.log(`📊 Creating candidates for ${positions.length} positions...`);
+      console.log(`📊 Creating candidates for ${positionsNeedingCandidates.length} positions...`);
 
       // Sample names for candidates
       const candidateNames = [
@@ -188,11 +198,11 @@ export class PositionInitializationService implements OnModuleInit {
         return studentId;
       };
 
-      // Create candidates for each position
+      // Create candidates for each position that needs them
       const allCandidates = [];
       let candidateIndex = 0;
 
-      for (const position of positions) {
+      for (const position of positionsNeedingCandidates) {
         console.log(`📋 Creating candidates for: ${position.Position_Title}`);
         
         // Create 2 candidates for this position
