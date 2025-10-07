@@ -43,6 +43,7 @@
     "verify:demo": "ts-node scripts/verify-demo-system.ts",
     "ensure:candidates": "ts-node scripts/ensure-candidates.ts",
     "setup:other": "ts-node scripts/setup-other-system.ts",
+    "test:auto-candidates": "ts-node scripts/test-auto-candidate-creation.ts",
     "test:cloudinary": "ts-node src/scripts/test-cloudinary.ts",
     "setup:super-admin": "ts-node src/scripts/create-super-admin.ts",
     "create:superadmin": "ts-node src/scripts/create-default-superadmin.ts",

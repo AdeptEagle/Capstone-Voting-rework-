@@ -93,9 +93,6 @@ export class PositionInitializationService implements OnModuleInit {
           console.log(`   - ${position.Position_Title}`);
         });
 
-        // Always create candidates for all positions (existing + newly created)
-        await this.createCandidatesForAllPositions();
-
         // Verify all positions are now present
         const finalCheck = await this.prisma.position.findMany({
           select: { Position_Title: true }
@@ -104,6 +101,11 @@ export class PositionInitializationService implements OnModuleInit {
         console.log(`🔍 Final verification: ${finalCheck.length} positions present`);
 
         if (finalCheck.length >= standardPositions.length) {
+          console.log('🎉 All standard positions are now available!');
+          
+          // Now ensure candidates exist for all positions
+          await this.ensureCandidatesForAllPositions();
+          
           console.log('🎉 All standard positions and candidates are now available!');
           return;
         } else {
@@ -125,7 +127,7 @@ export class PositionInitializationService implements OnModuleInit {
     }
   }
 
-  private async createCandidatesForAllPositions() {
+  private async ensureCandidatesForAllPositions() {
     try {
       console.log('\n🌱 Creating candidates for all positions...');
 
@@ -148,7 +150,7 @@ export class PositionInitializationService implements OnModuleInit {
         return;
       }
 
-      // Check if candidates already exist for all positions
+      // Check which positions need candidates
       const existingCandidates = await this.prisma.candidate.findMany();
       const positionsWithCandidates = new Set();
       
@@ -158,12 +160,13 @@ export class PositionInitializationService implements OnModuleInit {
       
       const positionsNeedingCandidates = positions.filter(p => !positionsWithCandidates.has(p.id));
       
+      console.log(`📊 Found ${existingCandidates.length} existing candidates`);
+      console.log(`📊 Positions needing candidates: ${positionsNeedingCandidates.length}`);
+      
       if (positionsNeedingCandidates.length === 0) {
-        console.log(`📊 All positions already have candidates, skipping creation`);
+        console.log('✅ All positions already have candidates');
         return;
       }
-      
-      console.log(`📊 Found ${positionsNeedingCandidates.length} positions needing candidates`);
 
       console.log(`📊 Creating candidates for ${positionsNeedingCandidates.length} positions...`);
 
