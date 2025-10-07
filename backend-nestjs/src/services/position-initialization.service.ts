@@ -103,10 +103,10 @@ export class PositionInitializationService implements OnModuleInit {
         if (finalCheck.length >= standardPositions.length) {
           console.log('🎉 All standard positions are now available!');
           
-          // Now ensure candidates exist for all positions
-          await this.ensureCandidatesForAllPositions();
+          // DISABLED: Automatic candidate seeding removed
+          // await this.ensureCandidatesForAllPositions();
           
-          console.log('🎉 All standard positions and candidates are now available!');
+          console.log('🎉 All standard positions are now available! (Candidates must be created manually)');
           return;
         } else {
           throw new Error(`Only ${finalCheck.length}/${standardPositions.length} positions found`);

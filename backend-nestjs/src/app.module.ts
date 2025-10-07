@@ -17,6 +17,7 @@ import { AuditModule } from './audit/audit.module';
 import { TrashModule } from './trash/trash.module';
 import { BallotModule } from './ballot/ballot.module';
 import { BallotTemplateModule } from './ballot-template/ballot-template.module';
+import { PartyListModule } from './party-list/party-list.module';
 import { SchedulerService } from './services/scheduler.service';
 import { TimezoneService } from './services/timezone.service';
 import { TemplateInitializationService } from './services/template-initialization.service';
@@ -47,6 +48,7 @@ import { HealthModule } from './health/health.module';
     TrashModule,
     BallotModule,
     BallotTemplateModule,
+    PartyListModule,
     WebsocketModule,
     HealthModule,
   ],

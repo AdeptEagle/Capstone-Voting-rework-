@@ -281,7 +281,10 @@ async function main() {
     }),
   ]);
 
-  console.log('👥 Creating candidates...');
+  // DISABLED: Automatic candidate creation removed
+  console.log('👥 Skipping candidate creation (disabled)');
+  const candidates = []; // Empty array instead of creating candidates
+  /*
   const candidates = await Promise.all([
     // Computer Science candidates
     prisma.candidate.create({
@@ -397,6 +400,7 @@ async function main() {
       },
     }),
   ]);
+  */
 
   console.log('🗳️ Creating voters...');
   const voters = await Promise.all([

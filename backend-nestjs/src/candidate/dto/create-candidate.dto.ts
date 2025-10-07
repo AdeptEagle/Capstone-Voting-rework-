@@ -28,6 +28,15 @@ export class CreateCandidateDto {
   @IsString()
   courseId: string;
 
+  @ApiProperty({ description: 'Party list name', example: 'Progressive Party', required: false })
+  @IsString()
+  @IsOptional()
+  party_list_name?: string;
+
+  @ApiProperty({ description: 'Party list ID', example: 'clx1234567890', required: true })
+  @IsString()
+  partyListId: string;
+
   @ApiProperty({ description: 'Candidate manifesto', example: 'I will work for student welfare', required: false })
   @IsString()
   @IsOptional()

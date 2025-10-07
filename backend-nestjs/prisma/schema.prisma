@@ -80,6 +80,21 @@ model Position {
   @@map("positions")
 }
 
+model PartyList {
+  id          String      @id @db.VarChar(50)
+  name        String      @db.VarChar(255)
+  description String?
+  color       String?     @db.VarChar(7) // Hex color code
+  logo        String?     @db.VarChar(255)
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+  deletedAt   DateTime?   @map("deleted_at")
+  isDeleted   Boolean     @default(false) @map("is_deleted")
+  candidates  Candidate[]
+
+  @@map("party_lists")
+}
+
 model Candidate {
   id                  String                @id @db.VarChar(50)
   Candidate_Name      String                @map("candidate_name") @db.VarChar(255)
@@ -87,6 +102,8 @@ model Candidate {
   Candidate_StudentId String                @unique @map("candidate_student_id") @db.VarChar(50)
   photo               String?               @db.VarChar(255)
   manifesto           String?
+  party_list_name     String?               @map("party_list_name") @db.VarChar(255)
+  partyListId         String?               @map("party_list_id") @db.VarChar(50)
   createdAt           DateTime              @default(now()) @map("created_at")
   updatedAt           DateTime              @updatedAt @map("updated_at")
   deletedAt           DateTime?             @map("deleted_at")
@@ -99,6 +116,7 @@ model Candidate {
   course              Course?               @relation(fields: [courseId], references: [id])
   department          Department?           @relation(fields: [departmentId], references: [id])
   position            Position              @relation(fields: [positionId], references: [id])
+  partyList           PartyList?            @relation(fields: [partyListId], references: [id])
   electionCandidates  ElectionCandidate[]
   votes               Vote[]
 

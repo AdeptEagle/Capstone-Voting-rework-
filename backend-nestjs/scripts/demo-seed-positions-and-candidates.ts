@@ -148,6 +148,9 @@ async function demoSeedPositionsAndCandidates() {
     const allCandidates = [];
     let candidateIndex = 0;
 
+    // DISABLED: Automatic candidate creation removed
+    console.log('📋 Skipping candidate creation (disabled)');
+    /*
     for (const position of allPositions) {
       console.log(`📋 Creating candidates for: ${position.Position_Title}`);
       
@@ -175,19 +178,13 @@ async function demoSeedPositionsAndCandidates() {
         console.log(`   ${i}. ${candidateName} (${studentId}) - ${department.Department_Name}`);
       }
     }
+    */
 
-    // Create all candidates in database
-    console.log(`\n🏗️ Creating ${allCandidates.length} candidates in database...`);
-    
-    const createdCandidates = await Promise.all(
-      allCandidates.map(candidateData => 
-        prisma.candidate.create({
-          data: candidateData
-        })
-      )
-    );
+    // DISABLED: Candidate database creation removed
+    console.log(`\n🏗️ Skipping candidate database creation (disabled)`);
+    const createdCandidates = []; // Empty array
 
-    console.log(`✅ Successfully created ${createdCandidates.length} candidates`);
+    console.log(`✅ No candidates created (automatic seeding disabled)`);
 
     // Show summary by position
     console.log('\n📊 Candidates created by position:');

@@ -1,3 +1,5 @@
+import api from './api';
+
 // For HTTP-only cookies, we can't access the token directly
 // We'll need to make a request to check authentication status
 export function getRole() {
@@ -75,21 +77,13 @@ function getRoleFromHash(hash) {
 // Function to check authentication status with server
 export const checkAuthStatus = async () => {
   try {
-    // Make API call to check authentication status
-    const response = await fetch('http://localhost:3001/auth/status', {
-      credentials: 'include' // Include HTTP-only cookies
-    });
-    
-    if (response.ok) {
-      const data = await response.json();
-      return {
-        isAuthenticated: true,
-        role: data.role,
-        user: data.user
-      };
-    } else {
-      return { isAuthenticated: false, role: null, user: null };
-    }
+    // Make API call to check authentication status using axios instance
+    const response = await api.get('/auth/status');
+    return {
+      isAuthenticated: response.data.isAuthenticated,
+      role: response.data.role,
+      user: response.data.user
+    };
   } catch (error) {
     console.error('Error checking auth status:', error);
     return { isAuthenticated: false, role: null, user: null };
@@ -184,10 +178,7 @@ export const checkCurrentUser = () => {
 export const logout = async () => {
   try {
     // Call backend logout endpoint to clear HTTP-only cookie
-    await fetch('http://localhost:3001/auth/logout', {
-      method: 'POST',
-      credentials: 'include'
-    });
+    await api.post('/auth/logout');
   } catch (error) {
     console.error('Logout API call failed:', error);
     // Continue with local cleanup even if API call fails

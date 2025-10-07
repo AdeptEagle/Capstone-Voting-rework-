@@ -90,6 +90,7 @@ export class IdGeneratorService {
       vote: this.prisma.vote,
       admin_login_log: this.prisma.adminLoginLog,
       user_login_log: this.prisma.userLoginLog,
+      partylist: this.prisma.partyList,
     };
     
     const model = modelMap[modelName.toLowerCase()];
@@ -131,6 +132,7 @@ export class IdGeneratorService {
       voter: this.prisma.voter,
       election: this.prisma.election,
       vote: this.prisma.vote,
+      partylist: this.prisma.partyList,
     };
     
     const model = modelMap[modelName.toLowerCase()];

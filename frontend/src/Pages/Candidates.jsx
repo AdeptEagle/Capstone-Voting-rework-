@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Alert } from 'react-bootstrap';
-import { getCandidates, createCandidate, updateCandidate, deleteCandidate, getPositions, getDepartments, getCoursesByDepartment } from '../services/api';
+import { getCandidates, createCandidate, updateCandidate, deleteCandidate, getPositions, getDepartments, getCoursesByDepartment, getPartyLists, createPartyList, updatePartyList, deletePartyList, getPartyListStatistics } from '../services/api';
 import { checkCurrentUser } from '../services/auth';
 import { useElection } from '../contexts/ElectionContext';
 import ElectionStatusMessage from '../components/ElectionStatusMessage';
@@ -12,6 +12,8 @@ const Candidates = () => {
   const [positions, setPositions] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [courses, setCourses] = useState([]);
+  const [partyLists, setPartyLists] = useState([]);
+  const [partyListStats, setPartyListStats] = useState({ totalPartyLists: 0, partyLists: [] });
   const [loadingCourses, setLoadingCourses] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editingCandidate, setEditingCandidate] = useState(null);
@@ -25,7 +27,9 @@ const Candidates = () => {
     departmentId: '',
     courseId: '',
     photo: null,
-    manifesto: ''
+    manifesto: '',
+    party_list_name: '',
+    partyListId: ''
   });
   const [viewCandidate, setViewCandidate] = useState(null);
   const [photoFile, setPhotoFile] = useState(null);
@@ -36,6 +40,17 @@ const Candidates = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [candidateToDelete, setCandidateToDelete] = useState(null);
   const [successMessage, setSuccessMessage] = useState('');
+  const [showPartyListModal, setShowPartyListModal] = useState(false);
+  const [showPartyListCreateModal, setShowPartyListCreateModal] = useState(false);
+  const [editingPartyList, setEditingPartyList] = useState(null);
+  const [partyListFormData, setPartyListFormData] = useState({
+    name: '',
+    description: '',
+    color: '#007bff',
+    logo: ''
+  });
+  const [partyListLogoFile, setPartyListLogoFile] = useState(null);
+  const [partyListLogoPreview, setPartyListLogoPreview] = useState('');
 
   const role = checkCurrentUser().role;
   const { canViewCandidates, hasActiveElection, triggerImmediateRefresh } = useElection();
@@ -50,29 +65,54 @@ const Candidates = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [candidatesData, positionsData, departmentsData] = await Promise.all([
+      const [candidatesData, positionsData, departmentsData, partyListsData, partyListStatsData] = await Promise.allSettled([
         getCandidates(),
         getPositions(),
-        getDepartments()
+        getDepartments(),
+        getPartyLists(),
+        getPartyListStatistics()
       ]);
-      // console.log('Fetched candidates data:', candidatesData);
-      // console.log('Fetched positions data:', positionsData);
-      // console.log('Fetched departments data:', departmentsData);
       
-      // Debug individual candidates - commented out to reduce console spam
-      // candidatesData.forEach(candidate => {
-      //   console.log(`Candidate ${candidate.Candidate_Name}:`, {
-      //     departmentId: candidate.departmentId,
-      //     departmentName: candidate.department?.Department_Name,
-      //     courseId: candidate.courseId,
-      //     courseName: candidate.course?.Course_Name,
-      //     positionName: candidate.position?.Position_Title
-      //   });
-      // });
+      // Handle candidates data
+      if (candidatesData.status === 'fulfilled') {
+        setCandidates(candidatesData.value);
+      } else {
+        console.error('Error fetching candidates:', candidatesData.reason);
+        setCandidates([]);
+      }
       
-      setCandidates(candidatesData);
-      setPositions(positionsData);
-      setDepartments(departmentsData);
+      // Handle positions data
+      if (positionsData.status === 'fulfilled') {
+        setPositions(positionsData.value);
+      } else {
+        console.error('Error fetching positions:', positionsData.reason);
+        setPositions([]);
+      }
+      
+      // Handle departments data
+      if (departmentsData.status === 'fulfilled') {
+        setDepartments(departmentsData.value);
+      } else {
+        console.error('Error fetching departments:', departmentsData.reason);
+        setDepartments([]);
+      }
+      
+      // Handle party lists data
+      if (partyListsData.status === 'fulfilled') {
+        setPartyLists(partyListsData.value.data || partyListsData.value);
+      } else {
+        console.error('Error fetching party lists:', partyListsData.reason);
+        setPartyLists([]);
+      }
+      
+      // Handle party list statistics
+      if (partyListStatsData.status === 'fulfilled') {
+        setPartyListStats(partyListStatsData.value.data || partyListStatsData.value);
+      } else {
+        console.error('Error fetching party list statistics:', partyListStatsData.reason);
+        setPartyListStats({ totalPartyLists: 0, partyLists: [] });
+      }
+      
       setError('');
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -313,6 +353,139 @@ const Candidates = () => {
     setShowDeleteModal(true);
   };
 
+  // Party List Management Functions
+  const handleShowPartyListModal = (partyList = null) => {
+    // Clear any existing errors
+    setError('');
+    
+    if (partyList) {
+      setEditingPartyList(partyList);
+      setPartyListFormData({
+        name: partyList.name,
+        description: partyList.description || '',
+        color: partyList.color || '#007bff',
+        logo: partyList.logo || ''
+      });
+    } else {
+      setEditingPartyList(null);
+      setPartyListFormData({
+        name: '',
+        description: '',
+        color: '#007bff',
+        logo: ''
+      });
+    }
+    setShowPartyListCreateModal(true);
+  };
+
+  const handleClosePartyListModal = () => {
+    setShowPartyListCreateModal(false);
+    setEditingPartyList(null);
+    setPartyListFormData({
+      name: '',
+      description: '',
+      color: '#007bff',
+      logo: ''
+    });
+    setPartyListLogoFile(null);
+    setPartyListLogoPreview('');
+  };
+
+  const handlePartyListChange = (e) => {
+    const { name, value } = e.target;
+    setPartyListFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handlePartyListLogoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setPartyListLogoFile(file);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setPartyListLogoPreview(e.target.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleEditPartyListFromHeader = (partyList) => {
+    setEditingPartyList(partyList);
+    setPartyListFormData({
+      name: partyList.name,
+      description: partyList.description || '',
+      color: partyList.color || '#007bff',
+      logo: partyList.logo || ''
+    });
+    setPartyListLogoFile(null);
+    setPartyListLogoPreview('');
+    setError('');
+    setShowPartyListCreateModal(true);
+  };
+
+  const handlePartyListSubmit = async (e) => {
+    e.preventDefault();
+    
+    // Basic validation
+    if (!partyListFormData.name.trim()) {
+      setError('Party list name is required');
+      return;
+    }
+    
+    // Check if name already exists (for new party lists)
+    if (!editingPartyList && partyLists && Array.isArray(partyLists) && partyLists.some(pl => pl.name.toLowerCase() === partyListFormData.name.toLowerCase())) {
+      setError(`A party list with the name "${partyListFormData.name}" already exists`);
+      return;
+    }
+    
+    try {
+      if (editingPartyList) {
+        await updatePartyList(editingPartyList.id, partyListFormData, partyListLogoFile);
+        setSuccessMessage(`Party list "${partyListFormData.name}" updated successfully!`);
+      } else {
+        await createPartyList(partyListFormData, partyListLogoFile);
+        setSuccessMessage(`Party list "${partyListFormData.name}" created successfully!`);
+      }
+      
+      handleClosePartyListModal();
+      await fetchData();
+      
+      // Clear success message after 5 seconds
+      setTimeout(() => setSuccessMessage(''), 5000);
+    } catch (error) {
+      console.error('Error saving party list:', error);
+      
+      // Handle specific error cases
+      if (error.response?.status === 409) {
+        setError(`A party list with the name "${partyListFormData.name}" already exists. Please choose a different name.`);
+      } else if (error.response?.status === 400) {
+        setError('Please check your input and try again.');
+      } else if (error.response?.data?.message) {
+        setError(error.response.data.message);
+      } else {
+        setError('Failed to save party list. Please try again.');
+      }
+    }
+  };
+
+  const handleDeletePartyList = async (partyList) => {
+    if (window.confirm(`Are you sure you want to delete the party list "${partyList.name}"? This action cannot be undone.`)) {
+      try {
+        await deletePartyList(partyList.id);
+        setSuccessMessage(`Party list "${partyList.name}" deleted successfully!`);
+        await fetchData();
+        
+        // Clear success message after 5 seconds
+        setTimeout(() => setSuccessMessage(''), 5000);
+      } catch (error) {
+        console.error('Error deleting party list:', error);
+        setError('Failed to delete party list');
+      }
+    }
+  };
+
   // Helper to get correct candidate photo URL
   const getCandidatePhotoUrl = (photoUrl) => {
     if (!photoUrl || photoUrl === 'undefined' || photoUrl === 'null') return null;
@@ -368,6 +541,35 @@ const Candidates = () => {
         return 0;
       }
     });
+
+  // Group candidates by party list and sort by position within each group
+  const groupCandidatesByPartyList = (candidates) => {
+    const grouped = {};
+    
+    candidates.forEach(candidate => {
+      const partyListName = candidate.partyList?.name || 'Independent';
+      if (!grouped[partyListName]) {
+        grouped[partyListName] = {
+          partyList: candidate.partyList,
+          candidates: []
+        };
+      }
+      grouped[partyListName].candidates.push(candidate);
+    });
+    
+    // Sort candidates within each party list by position
+    Object.keys(grouped).forEach(partyListName => {
+      grouped[partyListName].candidates.sort((a, b) => {
+        const positionA = a.position?.Position_Title || '';
+        const positionB = b.position?.Position_Title || '';
+        return positionA.localeCompare(positionB);
+      });
+    });
+    
+    return grouped;
+  };
+
+  const groupedCandidates = groupCandidatesByPartyList(filteredCandidates);
 
   // Helper to render sort icon
   const renderSortIcon = (field) => {
@@ -454,11 +656,13 @@ const Candidates = () => {
                       </div>
                       <div className="candidate-brief">
                         <p>
-                          {candidate.manifesto ? 
-                            candidate.manifesto.substring(0, 120) + (candidate.manifesto.length > 120 ? '...' : '') :
-                            'Learn more about this candidate and their vision for the position.'
-                          }
+                          <strong>Party List:</strong> {candidate.party_list_name || 'Independent'}
                         </p>
+                        {candidate.manifesto && (
+                          <p className="manifesto-preview">
+                            {candidate.manifesto.substring(0, 80) + (candidate.manifesto.length > 80 ? '...' : '')}
+                          </p>
+                        )}
                       </div>
                     </div>
                     <div className="candidate-card-footer">
@@ -663,9 +867,38 @@ const Candidates = () => {
           <div>
             <h1 className="dashboard-title-pro">Manage Candidates</h1>
             <p className="dashboard-subtitle-pro">Add, edit, and view all election candidates.</p>
+            
+            {/* Party List Stats Cards - Uniform Design */}
+            <div className="stats-grid mt-3">
+              <div className="stat-card">
+                <div className="stat-content">
+                  <h3>{partyLists?.length || 0}</h3>
+                  <p>Party Lists</p>
+                </div>
+                <div className="stat-icon blue">
+                  <i className="fas fa-list-ul"></i>
+                </div>
+              </div>
+              
+              <div className="stat-card">
+                <div className="stat-content">
+                  <h3>{candidates?.length || 0}</h3>
+                  <p>Total Candidates</p>
+                </div>
+                <div className="stat-icon green">
+                  <i className="fas fa-users"></i>
+                </div>
+              </div>
+            </div>
+            
           </div>
           <div className="dashboard-header-actions">
+            <button className="btn btn-outline-success me-2" onClick={() => handleShowPartyListModal()}>
+              <i className="fas fa-plus me-1"></i>
+              Add Party List
+            </button>
             <button className="btn btn-custom-blue" onClick={() => handleShowModal()}>
+              <i className="fas fa-user-plus me-1"></i>
               Add Candidate
             </button>
           </div>
@@ -677,13 +910,15 @@ const Candidates = () => {
       {/* Success Message */}
       {successMessage && (
         <div className="alert alert-success alert-dismissible fade show mb-3" role="alert">
-          <i className="fas fa-trash-alt me-2"></i>
+          <i className="fas fa-check-circle me-2"></i>
           {successMessage}
           <div className="mt-2">
-            <a href="/trash-bin?tab=candidates" className="btn btn-sm btn-outline-success me-2">
-              <i className="fas fa-trash me-1"></i>
-              Go to Trash Bin
-            </a>
+            {successMessage.includes('moved to the trash bin') && (
+              <a href="/trash-bin?tab=candidates" className="btn btn-sm btn-outline-success me-2">
+                <i className="fas fa-trash me-1"></i>
+                Go to Trash Bin
+              </a>
+            )}
             <button
               type="button"
               className="btn btn-sm btn-outline-secondary"
@@ -705,111 +940,160 @@ const Candidates = () => {
           onChange={e => setSearchTerm(e.target.value)}
         />
       </div>
-      <div className="table-responsive">
-        <table className="table table-hover">
-          <thead className="table-header-custom">
-            <tr>
-              <th>#</th>
-              <th>Photo</th>
-              <th
-                className={sortField === 'name' ? 'sortable active-sort' : 'sortable'}
-                style={{ cursor: 'pointer' }}
-                onClick={() => setSortField('name') || setSortOrder(sortField === 'name' && sortOrder === 'asc' ? 'desc' : 'asc')}
-              >
-                Name {renderSortIcon('name')}
-              </th>
-              <th
-                className={sortField === 'positionName' ? 'sortable active-sort' : 'sortable'}
-                style={{ cursor: 'pointer' }}
-                onClick={() => setSortField('positionName') || setSortOrder(sortField === 'positionName' && sortOrder === 'asc' ? 'desc' : 'asc')}
-              >
-                Position {renderSortIcon('positionName')}
-              </th>
-              <th
-                className={sortField === 'departmentName' ? 'sortable active-sort' : 'sortable'}
-                style={{ cursor: 'pointer' }}
-                onClick={() => setSortField('departmentName') || setSortOrder(sortField === 'departmentName' && sortOrder === 'asc' ? 'desc' : 'asc')}
-              >
-                Department {renderSortIcon('departmentName')}
-              </th>
-              <th
-                className={sortField === 'courseName' ? 'sortable active-sort' : 'sortable'}
-                style={{ cursor: 'pointer' }}
-                onClick={() => setSortField('courseName') || setSortOrder(sortField === 'courseName' && sortOrder === 'asc' ? 'desc' : 'asc')}
-              >
-                Course {renderSortIcon('courseName')}
-              </th>
-              <th>Description</th>
-              <th style={{ textAlign: 'center' }}>
-                <i className="fas fa-cogs me-1"></i>
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredCandidates.length > 0 ? (
-              filteredCandidates.map((candidate, index) => (
-                <tr key={candidate.id}>
-                  <td>{index + 1}</td>
-                  <td>
-                    {candidate.photo && candidate.photo !== 'undefined' ? (
-                      <img 
-                        src={getCandidatePhotoUrl(candidate.photo)} 
-                        alt={candidate.Candidate_Name}
-                        className="candidate-table-photo"
-                        onError={(e) => {
-                          e.target.style.display = 'none';
-                          if (e.target.nextSibling) {
-                            e.target.nextSibling.style.display = 'flex';
-                          }
-                        }}
-                      />
-                    ) : (
-                      <div className="candidate-table-photo-placeholder">
-                        <i className="fas fa-user"></i>
-                      </div>
-                    )}
-                  </td>
-                                      <td>{candidate.Candidate_Name}</td>
-                                      <td>{candidate.position?.Position_Title || '-'}</td>
-                    <td>{candidate.department?.Department_Name || '-'}</td>
-                                      <td>{candidate.course?.Course_Name || '-'}</td>
-                  <td>{candidate.manifesto || '-'}</td>
-                  <td>
-                    <div className="candidate-actions">
-                      <button 
-                        className="btn btn-sm btn-outline-primary me-2 action-btn-icon"
-                        onClick={() => handleShowModal(candidate)}
-                        title="Edit Candidate"
-                      >
-                        <i className="fas fa-edit"></i>
-                      </button>
-                      <button 
-                        className="btn btn-sm btn-outline-danger me-2 action-btn-icon"
-                        onClick={() => openDeleteModal(candidate)}
-                        title="Delete Candidate"
-                      >
-                        <i className="fas fa-trash"></i>
-                      </button>
-                      <button 
-                        className="btn btn-sm btn-outline-info action-btn-icon"
-                        onClick={() => setViewCandidate(candidate)}
-                        title="View Candidate Details"
-                      >
-                        <i className="fas fa-eye"></i>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="8" className="text-center">No candidates found</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      {/* Separate tables for each party list */}
+      {Object.keys(groupedCandidates).length > 0 ? (
+        Object.entries(groupedCandidates).map(([partyListName, group], groupIndex) => (
+          <div key={partyListName} className="mb-4">
+            {/* Party List Header */}
+            <div className="party-list-table-header">
+              <div className="party-list-info">
+                <div className="party-list-logo-container">
+                  {group.partyList?.logo ? (
+                    <img 
+                      src={group.partyList.logo} 
+                      alt={`${partyListName} logo`}
+                      className="party-list-logo"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        if (e.target.nextSibling) {
+                          e.target.nextSibling.style.display = 'flex';
+                        }
+                      }}
+                    />
+                  ) : null}
+                  <div 
+                    className="party-list-logo-fallback"
+                    style={{ 
+                      display: group.partyList?.logo ? 'none' : 'flex',
+                      backgroundColor: group.partyList?.color || '#6c757d'
+                    }}
+                  >
+                    {partyListName.split(' ').map(word => word.charAt(0)).join('').toUpperCase().slice(0, 2)}
+                  </div>
+                </div>
+                <h5 className="party-list-title">
+                  {partyListName}
+                  <span className="party-list-count">
+                    ({group.candidates.length} candidate{group.candidates.length !== 1 ? 's' : ''})
+                  </span>
+                </h5>
+              </div>
+              <div className="party-list-actions">
+                <button
+                  className="btn btn-sm btn-outline-primary party-list-edit-btn"
+                  onClick={() => handleEditPartyListFromHeader(group.partyList)}
+                  title="Edit Party List"
+                >
+                  <i className="fas fa-edit"></i>
+                </button>
+              </div>
+            </div>
+            
+            {/* Separate table for this party list */}
+            <div className="table-responsive">
+              <table className="table table-hover">
+                <thead className="table-header-custom">
+                  <tr>
+                    <th>#</th>
+                    <th>Photo</th>
+                    <th
+                      className={sortField === 'name' ? 'sortable active-sort' : 'sortable'}
+                      style={{ cursor: 'pointer' }}
+                      onClick={() => setSortField('name') || setSortOrder(sortField === 'name' && sortOrder === 'asc' ? 'desc' : 'asc')}
+                    >
+                      Name {renderSortIcon('name')}
+                    </th>
+                    <th
+                      className={sortField === 'positionName' ? 'sortable active-sort' : 'sortable'}
+                      style={{ cursor: 'pointer' }}
+                      onClick={() => setSortField('positionName') || setSortOrder(sortField === 'positionName' && sortOrder === 'asc' ? 'desc' : 'asc')}
+                    >
+                      Position {renderSortIcon('positionName')}
+                    </th>
+                    <th
+                      className={sortField === 'departmentName' ? 'sortable active-sort' : 'sortable'}
+                      style={{ cursor: 'pointer' }}
+                      onClick={() => setSortField('departmentName') || setSortOrder(sortField === 'departmentName' && sortOrder === 'asc' ? 'desc' : 'asc')}
+                    >
+                      Department {renderSortIcon('departmentName')}
+                    </th>
+                    <th
+                      className={sortField === 'courseName' ? 'sortable active-sort' : 'sortable'}
+                      style={{ cursor: 'pointer' }}
+                      onClick={() => setSortField('courseName') || setSortOrder(sortField === 'courseName' && sortOrder === 'asc' ? 'desc' : 'asc')}
+                    >
+                      Course {renderSortIcon('courseName')}
+                    </th>
+                    <th style={{ textAlign: 'center' }}>
+                      <i className="fas fa-cogs me-1"></i>
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {group.candidates.map((candidate, candidateIndex) => (
+                    <tr key={candidate.id} className="candidate-row">
+                      <td>{candidateIndex + 1}</td>
+                      <td>
+                        {candidate.photo && candidate.photo !== 'undefined' ? (
+                          <img 
+                            src={getCandidatePhotoUrl(candidate.photo)} 
+                            alt={candidate.Candidate_Name}
+                            className="candidate-table-photo"
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                              if (e.target.nextSibling) {
+                                e.target.nextSibling.style.display = 'flex';
+                              }
+                            }}
+                          />
+                        ) : (
+                          <div className="candidate-table-photo-placeholder">
+                            <i className="fas fa-user"></i>
+                          </div>
+                        )}
+                      </td>
+                      <td>{candidate.Candidate_Name}</td>
+                      <td>{candidate.position?.Position_Title || '-'}</td>
+                      <td>{candidate.department?.Department_Name || '-'}</td>
+                      <td>{candidate.course?.Course_Name || '-'}</td>
+                      <td>
+                        <div className="candidate-actions">
+                          <button 
+                            className="btn btn-sm btn-outline-primary me-2 action-btn-icon"
+                            onClick={() => handleShowModal(candidate)}
+                            title="Edit Candidate"
+                          >
+                            <i className="fas fa-edit"></i>
+                          </button>
+                          <button 
+                            className="btn btn-sm btn-outline-danger me-2 action-btn-icon"
+                            onClick={() => openDeleteModal(candidate)}
+                            title="Delete Candidate"
+                          >
+                            <i className="fas fa-trash"></i>
+                          </button>
+                          <button 
+                            className="btn btn-sm btn-outline-info action-btn-icon"
+                            onClick={() => setViewCandidate(candidate)}
+                            title="View Candidate Details"
+                          >
+                            <i className="fas fa-eye"></i>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ))
+      ) : (
+        <div className="text-center py-4">
+          <p className="text-muted">No candidates found</p>
+        </div>
+      )}
 
       {/* Enhanced View Candidate Modal */}
       {viewCandidate && (
@@ -1096,6 +1380,36 @@ const Candidates = () => {
                     )}
                   </div>
                   <div className="mb-3">
+                    <label className="form-label">Party List <span className="text-danger">*</span></label>
+                    <select
+                      className="form-select"
+                      name="partyListId"
+                      value={formData.partyListId}
+                      onChange={handleChange}
+                      required
+                    >
+                      <option value="">Select a party list (required)</option>
+                      {partyLists && Array.isArray(partyLists) && partyLists.map(partyList => (
+                        <option key={partyList.id} value={partyList.id}>
+                          {partyList.name}
+                        </option>
+                      ))}
+                    </select>
+                    <small className="text-muted">
+                      Choose the political party or group this candidate represents
+                    </small>
+                    <div className="mt-2">
+                      <button 
+                        type="button" 
+                        className="btn btn-sm btn-outline-success"
+                        onClick={() => handleShowPartyListModal()}
+                      >
+                        <i className="fas fa-plus me-1"></i>
+                        Create New Party List
+                      </button>
+                    </div>
+                  </div>
+                  <div className="mb-3">
                     <label className="form-label">Manifesto (optional)</label>
                     <textarea
                       className="form-control"
@@ -1182,6 +1496,128 @@ const Candidates = () => {
                   Delete Candidate
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Party List Creation/Edit Modal */}
+      {showPartyListCreateModal && (
+        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">
+                  {editingPartyList ? 'Edit Party List' : 'Create Party List'}
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={handleClosePartyListModal}
+                ></button>
+              </div>
+              <form onSubmit={handlePartyListSubmit}>
+                <div className="modal-body">
+                  <div className="mb-3">
+                    <label className="form-label">Party List Name <span className="text-danger">*</span></label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      name="name"
+                      value={partyListFormData.name}
+                      onChange={handlePartyListChange}
+                      placeholder="Enter party list name (e.g., Progressive Party, Student Alliance)"
+                      required
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Description</label>
+                    <textarea
+                      className="form-control"
+                      rows={3}
+                      name="description"
+                      value={partyListFormData.description}
+                      onChange={handlePartyListChange}
+                      placeholder="Brief description of the party list's platform and goals"
+                    ></textarea>
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Color</label>
+                    <div className="input-group">
+                      <input
+                        type="color"
+                        className="form-control form-control-color"
+                        name="color"
+                        value={partyListFormData.color}
+                        onChange={handlePartyListChange}
+                        title="Choose party list color"
+                      />
+                      <input
+                        type="text"
+                        className="form-control"
+                        name="color"
+                        value={partyListFormData.color}
+                        onChange={handlePartyListChange}
+                        placeholder="#007bff"
+                      />
+                    </div>
+                    <small className="text-muted">
+                      Choose a color to represent this party list
+                    </small>
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Logo</label>
+                    <div className="row">
+                      <div className="col-md-6">
+                        <input
+                          type="file"
+                          className="form-control"
+                          accept="image/*"
+                          onChange={handlePartyListLogoChange}
+                        />
+                        <small className="text-muted">
+                          Upload a logo image (optional)
+                        </small>
+                      </div>
+                      <div className="col-md-6">
+                        <input
+                          type="url"
+                          className="form-control"
+                          name="logo"
+                          value={partyListFormData.logo}
+                          onChange={handlePartyListChange}
+                          placeholder="Or enter logo URL"
+                        />
+                        <small className="text-muted">
+                          Or provide a logo URL
+                        </small>
+                      </div>
+                    </div>
+                    {partyListLogoPreview && (
+                      <div className="mt-2">
+                        <img 
+                          src={partyListLogoPreview} 
+                          alt="Logo preview" 
+                          style={{ maxWidth: '100px', maxHeight: '100px', objectFit: 'contain' }}
+                          className="border rounded"
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="modal-footer">
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={handleClosePartyListModal}
+                  >
+                    Cancel
+                  </button>
+                  <button type="submit" className="btn btn-success">
+                    {editingPartyList ? 'Update Party List' : 'Create Party List'}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         </div>

@@ -480,9 +480,9 @@ const BallotVote = () => {
               <div className="candidate-info">
                 <h3>{candidate.Candidate_Name}</h3>
                 <p>{candidate.Candidate_StudentId}</p>
-                {candidate.manifesto && (
-                  <p className="manifesto">{candidate.manifesto}</p>
-                )}
+                <p className="party-list">
+                  <strong>Party List:</strong> {candidate.party_list_name || 'Independent'}
+                </p>
               </div>
               {isCandidateSelected(candidate.id) && (
                 <div className="selection-indicator">

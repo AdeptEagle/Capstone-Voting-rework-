@@ -1324,4 +1324,45 @@ export const createBallotVote = async (voteData) => {
   }
 };
 
+// Party List API functions
+export const getPartyLists = () => api.get('/party-lists');
+export const getPartyList = (id) => api.get(`/party-lists/${id}`);
+export const createPartyList = (data, logoFile) => {
+  const formData = new FormData();
+  formData.append('name', data.name);
+  formData.append('description', data.description || '');
+  formData.append('color', data.color);
+  if (logoFile) {
+    formData.append('logo', logoFile);
+  } else if (data.logo) {
+    formData.append('logoUrl', data.logo);
+  }
+  
+  return api.post('/party-lists', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+};
+
+export const updatePartyList = (id, data, logoFile) => {
+  const formData = new FormData();
+  formData.append('name', data.name);
+  formData.append('description', data.description || '');
+  formData.append('color', data.color);
+  if (logoFile) {
+    formData.append('logo', logoFile);
+  } else if (data.logo) {
+    formData.append('logoUrl', data.logo);
+  }
+  
+  return api.patch(`/party-lists/${id}`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+};
+export const deletePartyList = (id) => api.delete(`/party-lists/${id}`);
+export const getPartyListStatistics = () => api.get('/party-lists/statistics');
+
 export default api; 
