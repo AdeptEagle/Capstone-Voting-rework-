@@ -1092,20 +1092,33 @@ export class BallotService {
 
       // Create positions from template if template data exists
       if (templateData && templateData.positions && Array.isArray(templateData.positions)) {
-        console.log('📋 Creating positions from template:', templateData.positions.length);
+        console.log('📋 Processing positions from template:', templateData.positions.length);
         
-        const createdPositions = await Promise.all(
+        const processedPositions = await Promise.all(
           templateData.positions.map(async (positionData: any) => {
-            // Create position
-            const position = await tx.position.create({
-              data: {
-                id: this.generateId(),
+            // Check if position already exists
+            let position = await tx.position.findFirst({
+              where: {
                 Position_Title: positionData.positionTitle,
-                Position_Description: `Position for ${positionData.positionTitle}`,
-                voteLimit: positionData.voteLimit || 1,
-                displayOrder: positionData.displayOrder || 1,
-              },
+                voteLimit: positionData.voteLimit || 1
+              }
             });
+
+            // Create position only if it doesn't exist
+            if (!position) {
+              console.log(`🆕 Creating new position: ${positionData.positionTitle}`);
+              position = await tx.position.create({
+                data: {
+                  id: this.generateId(),
+                  Position_Title: positionData.positionTitle,
+                  Position_Description: `Position for ${positionData.positionTitle}`,
+                  voteLimit: positionData.voteLimit || 1,
+                  displayOrder: positionData.displayOrder || 1,
+                },
+              });
+            } else {
+              console.log(`♻️ Reusing existing position: ${positionData.positionTitle}`);
+            }
 
             // Link position to ballot
             await tx.ballotPosition.create({
@@ -1122,7 +1135,7 @@ export class BallotService {
           })
         );
 
-        console.log(`✅ Created ${createdPositions.length} positions from template`);
+        console.log(`✅ Processed ${processedPositions.length} positions from template`);
       }
       
       console.log('✅ Ballot created successfully:', ballot.id);
