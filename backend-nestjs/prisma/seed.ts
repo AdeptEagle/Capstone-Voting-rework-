@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
+import { DEFAULT_BALLOT_TEMPLATES } from '../src/templates/default-templates';
 
 const prisma = new PrismaClient();
 
@@ -491,6 +492,30 @@ async function main() {
     )
   );
 
+  console.log('📋 Seeding ballot templates...');
+  const templates = await Promise.all(
+    DEFAULT_BALLOT_TEMPLATES.map(template =>
+      prisma.ballotTemplate.upsert({
+        where: { id: template.id },
+        update: {
+          BallotTemplate_Name: template.name,
+          BallotTemplate_Description: template.description,
+          BallotTemplate_Data: template.data,
+          BallotTemplate_IsPublic: template.isPublic,
+          BallotTemplate_CreatedBy: superAdmin.id,
+        },
+        create: {
+          id: template.id,
+          BallotTemplate_Name: template.name,
+          BallotTemplate_Description: template.description,
+          BallotTemplate_Data: template.data,
+          BallotTemplate_IsPublic: template.isPublic,
+          BallotTemplate_CreatedBy: superAdmin.id,
+        },
+      })
+    )
+  );
+
   console.log('✅ Database seeding completed successfully!');
   console.log('');
   console.log('📊 Summary of created data:');
@@ -501,6 +526,7 @@ async function main() {
   console.log(`   - Candidates: ${candidates.length}`);
   console.log(`   - Voters: ${voters.length}`);
   console.log(`   - Elections: 1`);
+  console.log(`   - Ballot Templates: ${templates.length}`);
   console.log('');
   console.log('🔑 Default login credentials:');
   console.log('   Superadmin: superadmin / superadmin123');
@@ -508,6 +534,7 @@ async function main() {
   console.log('   Voters: password123 (use any voter email)');
   console.log('');
   console.log('🎯 Election is active and ready for voting!');
+  console.log('📋 Ballot templates are available for creating new ballots!');
 }
 
 main()

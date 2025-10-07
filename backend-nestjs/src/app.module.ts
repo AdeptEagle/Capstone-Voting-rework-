@@ -19,6 +19,7 @@ import { BallotModule } from './ballot/ballot.module';
 import { BallotTemplateModule } from './ballot-template/ballot-template.module';
 import { SchedulerService } from './services/scheduler.service';
 import { TimezoneService } from './services/timezone.service';
+import { TemplateInitializationService } from './services/template-initialization.service';
 import { TimezoneController } from './controllers/timezone.controller';
 import { WebsocketModule } from './websocket/websocket.module';
 import { HealthModule } from './health/health.module';
@@ -49,6 +50,6 @@ import { HealthModule } from './health/health.module';
     HealthModule,
   ],
   controllers: [TimezoneController],
-  providers: [SchedulerService, TimezoneService],
+  providers: [SchedulerService, TimezoneService, TemplateInitializationService],
 })
 export class AppModule {} 

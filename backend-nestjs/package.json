@@ -26,11 +26,13 @@
     "seed:test": "ts-node prisma/seed.ts",
     "seed:db": "ts-node prisma/seed.ts",
     "seed:ballot": "ts-node src/scripts/seed-ballot-test-data.ts",
+    "seed:templates": "ts-node scripts/seed-ballot-templates.ts",
     "test:cloudinary": "ts-node src/scripts/test-cloudinary.ts",
     "setup:super-admin": "ts-node src/scripts/create-super-admin.ts",
     "create:superadmin": "ts-node src/scripts/create-default-superadmin.ts",
     "setup:db": "node scripts/setup-database.js",
-    "init:project": "npm install && npm run setup:db && npm run start:dev"
+    "init:project": "npm install && npm run setup:db && npm run start:dev",
+    "deploy:init": "npm run db:push && npm run db:seed && npm run start:prod"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",
