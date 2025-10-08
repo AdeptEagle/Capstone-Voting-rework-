@@ -27,7 +27,6 @@ const Candidates = () => {
     departmentId: '',
     courseId: '',
     photo: null,
-    manifesto: '',
     party_list_name: '',
     partyListId: ''
   });
@@ -173,7 +172,6 @@ const Candidates = () => {
         departmentId: '',
         courseId: '',
         photo: null,
-        manifesto: ''
       });
       setPhotoPreview('');
       setPhotoFile(null);
@@ -193,7 +191,6 @@ const Candidates = () => {
       departmentId: '',
       courseId: '',
       photo: null,
-      manifesto: ''
     });
     setPhotoPreview('');
     setPhotoFile(null);
@@ -254,7 +251,7 @@ const Candidates = () => {
         dataToSend.append('positionId', formData.positionId);
         dataToSend.append('departmentId', formData.departmentId);
         dataToSend.append('courseId', formData.courseId);
-        dataToSend.append('manifesto', formData.manifesto);
+        dataToSend.append('partyListId', formData.partyListId);
         dataToSend.append('photo', photoFile);
       } else {
         // No new photo file - use JSON data
@@ -658,11 +655,6 @@ const Candidates = () => {
                         <p>
                           <strong>Party List:</strong> {candidate.party_list_name || 'Independent'}
                         </p>
-                        {candidate.manifesto && (
-                          <p className="manifesto-preview">
-                            {candidate.manifesto.substring(0, 80) + (candidate.manifesto.length > 80 ? '...' : '')}
-                          </p>
-                        )}
                       </div>
                     </div>
                     <div className="candidate-card-footer">
@@ -724,27 +716,6 @@ const Candidates = () => {
                 <div className="modal-body">
                   {/* Full-width content layout */}
                   <div className="candidate-content-full">
-                    {/* Platform & Vision Section */}
-                    <div className="candidate-platform mb-4">
-                      <div className="platform-header">
-                        <i className="fas fa-bullhorn"></i>
-                        <h5>Platform & Vision</h5>
-                      </div>
-                      <div className="platform-content">
-                        {viewCandidate?.manifesto ? (
-                          <div className="platform-text">
-                            {viewCandidate.manifesto.split('\n').map((paragraph, index) => (
-                              <p key={index}>{paragraph}</p>
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="no-platform">
-                            <i className="fas fa-info-circle"></i>
-                            <p>No platform information available yet.</p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
 
                     {/* Candidate Details Section - Now below the main content */}
                     <div className="candidate-details-section">
@@ -1131,27 +1102,6 @@ const Candidates = () => {
               <div className="modal-body">
                 {/* Full-width content layout */}
                 <div className="candidate-content-full">
-                  {/* Platform & Vision Section */}
-                  <div className="candidate-platform mb-4">
-                    <div className="platform-header">
-                      <i className="fas fa-bullhorn"></i>
-                      <h5>Platform & Vision</h5>
-                    </div>
-                    <div className="platform-content">
-                      {viewCandidate?.manifesto ? (
-                        <div className="platform-text">
-                          {viewCandidate.manifesto.split('\n').map((paragraph, index) => (
-                            <p key={index}>{paragraph}</p>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="no-platform">
-                          <i className="fas fa-info-circle"></i>
-                          <p>No platform information available yet.</p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
 
                   {/* Candidate Details Section - Now below the main content */}
                   <div className="candidate-details-section">
@@ -1408,17 +1358,6 @@ const Candidates = () => {
                         Create New Party List
                       </button>
                     </div>
-                  </div>
-                  <div className="mb-3">
-                    <label className="form-label">Manifesto (optional)</label>
-                    <textarea
-                      className="form-control"
-                      rows={3}
-                      name="manifesto"
-                      value={formData.manifesto}
-                      onChange={handleChange}
-                      placeholder="Brief manifesto about the candidate"
-                    ></textarea>
                   </div>
                 </div>
                 <div className="modal-footer">

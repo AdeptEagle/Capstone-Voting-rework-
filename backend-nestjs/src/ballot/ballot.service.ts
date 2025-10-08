@@ -24,6 +24,7 @@ export class BallotService {
         Ballot_ShowResults,
         Ballot_ShowResultsAfter,
         Ballot_ShowLiveResults,
+        Ballot_AllowAbstain,
         positionIds,
         candidateIds
       } = createBallotDto;
@@ -61,11 +62,13 @@ export class BallotService {
     }
 
     // Validate positions
+    console.log('🔍 Validating positions:', positionIds);
     if (!positionIds || !Array.isArray(positionIds) || positionIds.length === 0) {
       throw new BadRequestException('At least one position must be selected');
     }
 
     // Validate candidates
+    console.log('🔍 Validating candidates:', candidateIds);
     if (!candidateIds || !Array.isArray(candidateIds) || candidateIds.length === 0) {
       throw new BadRequestException('At least one candidate must be selected');
     }
@@ -76,9 +79,15 @@ export class BallotService {
       select: { id: true, positionId: true }
     });
 
+    console.log('🔍 Found candidates in DB:', candidates);
+    console.log('🔍 Selected position IDs:', positionIds);
+
     const selectedPositionIds = new Set(positionIds);
     const candidatePositionIds = candidates.map(c => c.positionId);
     const validCandidates = candidatePositionIds.filter(posId => selectedPositionIds.has(posId));
+
+    console.log('🔍 Candidate position IDs:', candidatePositionIds);
+    console.log('🔍 Valid candidates:', validCandidates);
 
     if (validCandidates.length === 0) {
       throw new BadRequestException('Selected candidates must belong to the selected positions');
@@ -87,6 +96,9 @@ export class BallotService {
     // Validate that each selected position has at least one candidate
     const positionsWithCandidates = new Set(candidatePositionIds);
     const positionsWithoutCandidates = positionIds.filter(posId => !positionsWithCandidates.has(posId));
+
+    console.log('🔍 Positions with candidates:', Array.from(positionsWithCandidates));
+    console.log('🔍 Positions without candidates:', positionsWithoutCandidates);
 
     if (positionsWithoutCandidates.length > 0) {
       throw new BadRequestException('Each selected position must have at least one candidate');
@@ -112,6 +124,7 @@ export class BallotService {
           Ballot_ShowResults: Ballot_ShowResults !== undefined ? Ballot_ShowResults : true,
           Ballot_ShowResultsAfter: Ballot_ShowResultsAfter ? new Date(Ballot_ShowResultsAfter) : null,
           Ballot_ShowLiveResults: Ballot_ShowLiveResults !== undefined ? Ballot_ShowLiveResults : true,
+          Ballot_AllowAbstain: Ballot_AllowAbstain !== undefined ? Ballot_AllowAbstain : false,
           Ballot_CreatedBy: createdBy,
         },
       });
@@ -344,6 +357,10 @@ export class BallotService {
       updateData.Ballot_ShowLiveResults = updateBallotDto.Ballot_ShowLiveResults;
     }
 
+    if (updateBallotDto.Ballot_AllowAbstain !== undefined) {
+      updateData.Ballot_AllowAbstain = updateBallotDto.Ballot_AllowAbstain;
+    }
+
     return this.prisma.ballot.update({
       where: { id },
       data: updateData,
@@ -386,16 +403,24 @@ export class BallotService {
   }
 
   async deleteBallot(id: string, deletedBy: string) {
+    console.log('🗑️ Delete ballot request:', { id, deletedBy });
+    
     const ballot = await this.getBallotById(id);
+    console.log('🗑️ Found ballot:', { 
+      id: ballot.id, 
+      status: ballot.Ballot_Status, 
+      title: ballot.Ballot_Title 
+    });
 
     // Check if ballot can be deleted
     if (ballot.Ballot_Status === BallotStatus.ACTIVE) {
       throw new ForbiddenException('Cannot delete active ballot');
     }
     
-    if (ballot.Ballot_Status === BallotStatus.ENDED) {
-      throw new ForbiddenException('Cannot delete ended ballot');
-    }
+    // Allow deletion of ended ballots for future workflow changes
+    // if (ballot.Ballot_Status === BallotStatus.ENDED) {
+    //   throw new ForbiddenException('Cannot delete ended ballot');
+    // }
 
     return this.prisma.ballot.update({
       where: { id },
@@ -441,8 +466,15 @@ export class BallotService {
   async pauseBallot(id: string, pausedBy: string) {
     const ballot = await this.getBallotById(id);
 
+    console.log('🔍 Pause ballot debug:', {
+      ballotId: id,
+      currentStatus: ballot.Ballot_Status,
+      isActive: ballot.Ballot_IsActive,
+      pausedBy: pausedBy
+    });
+
     if (ballot.Ballot_Status !== BallotStatus.ACTIVE) {
-      throw new BadRequestException('Only active ballots can be paused');
+      throw new BadRequestException(`Only active ballots can be paused. Current status: ${ballot.Ballot_Status}`);
     }
 
     return this.prisma.ballot.update({
@@ -489,6 +521,7 @@ export class BallotService {
   async getAvailableBallotsForUser(userId: string) {
     const now = new Date();
 
+    // Only return active ballots that users can vote on right now
     return this.prisma.ballot.findMany({
       where: {
         Ballot_IsDeleted: false,
@@ -496,6 +529,55 @@ export class BallotService {
         Ballot_Status: BallotStatus.ACTIVE,
         Ballot_StartDate: { lte: now },
         Ballot_EndDate: { gte: now },
+      },
+      include: {
+        ballotPositions: {
+          include: {
+            position: true,
+          },
+          orderBy: {
+            BallotPosition_DisplayOrder: 'asc',
+          },
+        },
+        ballotCandidates: {
+          include: {
+            candidate: {
+              include: {
+                position: true,
+                department: true,
+                course: true,
+              },
+            },
+          },
+        },
+        userHistory: {
+          where: {
+            UserBallotHistory_UserId: userId,
+          },
+        },
+        _count: {
+          select: {
+            votes: true,
+            userHistory: true,
+          },
+        },
+      },
+      orderBy: {
+        Ballot_StartDate: 'asc',
+      },
+    });
+  }
+
+  async getUpcomingBallotsForUser(userId: string) {
+    const now = new Date();
+
+    // Return upcoming ballots (scheduled/not-started) that users can see but not vote on yet
+    return this.prisma.ballot.findMany({
+      where: {
+        Ballot_IsDeleted: false,
+        Ballot_IsActive: false,
+        Ballot_Status: { in: [BallotStatus.DRAFT, BallotStatus.SCHEDULED] },
+        Ballot_StartDate: { gt: now },
       },
       include: {
         ballotPositions: {
@@ -1084,6 +1166,7 @@ export class BallotService {
           Ballot_ShowResults: Ballot_ShowResults !== false,
           Ballot_ShowResultsAfter: Ballot_ShowResultsAfter ? new Date(Ballot_ShowResultsAfter) : null,
           Ballot_ShowLiveResults: Ballot_ShowLiveResults !== false,
+          Ballot_AllowAbstain: ballotData.Ballot_AllowAbstain !== undefined ? ballotData.Ballot_AllowAbstain : false,
           Ballot_Status: BallotStatus.DRAFT,
           Ballot_IsActive: false,
           Ballot_CreatedBy: createdBy,

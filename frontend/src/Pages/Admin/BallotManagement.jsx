@@ -41,6 +41,7 @@ const BallotManagement = () => {
     Ballot_ShowResults: true,
     Ballot_ShowResultsAfter: '',
     Ballot_ShowLiveResults: true,
+    Ballot_AllowAbstain: false,
     positionIds: [],
     candidateIds: []
   });
@@ -166,6 +167,7 @@ const BallotManagement = () => {
       Ballot_ShowResults: true,
       Ballot_ShowResultsAfter: '',
       Ballot_ShowLiveResults: true,
+      Ballot_AllowAbstain: false,
       positionIds: [],
       candidateIds: []
     });
@@ -183,6 +185,7 @@ const BallotManagement = () => {
       Ballot_ShowResults: ballot.Ballot_ShowResults,
       Ballot_ShowResultsAfter: ballot.Ballot_ShowResultsAfter || '',
       Ballot_ShowLiveResults: ballot.Ballot_ShowLiveResults,
+      Ballot_AllowAbstain: ballot.Ballot_AllowAbstain || false,
       positionIds: ballot.ballotPositions?.map(bp => bp.BallotPosition_PositionId) || [],
       candidateIds: ballot.ballotCandidates?.map(bc => bc.BallotCandidate_CandidateId) || []
     });
@@ -219,6 +222,7 @@ const BallotManagement = () => {
       Ballot_ShowResults: true,
       Ballot_ShowResultsAfter: '',
       Ballot_ShowLiveResults: true,
+      Ballot_AllowAbstain: false,
       positionIds: [],
       candidateIds: [],
       isFromTemplate: false, // Ensure this is false for scratch creation
@@ -232,47 +236,68 @@ const BallotManagement = () => {
     setLoadingForm(true);
     setError('');
 
+    // Validate that we have the required data
+    if (!formData.positionIds || formData.positionIds.length === 0) {
+      setError('No positions selected. Please go back and select positions first.');
+      setLoadingForm(false);
+      return;
+    }
+
+    if (!selectedCandidates || selectedCandidates.length === 0) {
+      setError('No candidates selected. Please select at least one candidate for each position.');
+      setLoadingForm(false);
+      return;
+    }
+
     try {
-      // Create ballot from template with selected candidates
-      const ballotData = {
-        title: formData.Ballot_Title,
-        description: formData.Ballot_Description,
-        startDate: new Date(formData.Ballot_StartDate).toISOString(), // Convert to ISO string
-        endDate: new Date(formData.Ballot_EndDate).toISOString(), // Convert to ISO string
-        showResultsAfter: formData.Ballot_ShowResultsAfter || undefined,
-        candidateIds: selectedCandidates // Pass the selected candidates
-      };
+      if (formData.isFromTemplate) {
+        // Create ballot from template with selected candidates
+        const ballotData = {
+          title: formData.Ballot_Title,
+          description: formData.Ballot_Description,
+          startDate: new Date(formData.Ballot_StartDate).toISOString(),
+          endDate: new Date(formData.Ballot_EndDate).toISOString(),
+          showResultsAfter: formData.Ballot_ShowResultsAfter || undefined,
+          candidateIds: selectedCandidates
+        };
+        
+        console.log('🚀 Creating ballot from template with data:', {
+          templateId: formData.templateId,
+          ballotData: ballotData
+        });
+        
+        await createBallotFromTemplate(formData.templateId, ballotData);
+        setSuccess('Ballot created from template successfully!');
+      } else {
+        // Create ballot from scratch with selected candidates
+        const ballotData = {
+          Ballot_Title: formData.Ballot_Title,
+          Ballot_Description: formData.Ballot_Description,
+          Ballot_StartDate: new Date(formData.Ballot_StartDate).toISOString(),
+          Ballot_EndDate: new Date(formData.Ballot_EndDate).toISOString(),
+          Ballot_RequireAllPositions: formData.Ballot_RequireAllPositions,
+          Ballot_ShowResults: formData.Ballot_ShowResults,
+          Ballot_ShowResultsAfter: formData.Ballot_ShowResultsAfter ? new Date(formData.Ballot_ShowResultsAfter).toISOString() : undefined,
+          Ballot_ShowLiveResults: formData.Ballot_ShowLiveResults,
+          Ballot_AllowAbstain: formData.Ballot_AllowAbstain,
+          positionIds: formData.positionIds,
+          candidateIds: selectedCandidates
+        };
+        
+        console.log('🚀 Creating ballot from scratch with data:', ballotData);
+        console.log('🔍 Form data positionIds:', formData.positionIds);
+        console.log('🔍 Selected candidates:', selectedCandidates);
+        console.log('🔍 Available positions:', positions);
+        console.log('🔍 Filtered positions for candidate selector:', positions.filter(pos => formData.positionIds.includes(pos.id)));
+        
+        await createBallot(ballotData);
+        setSuccess('Ballot created successfully!');
+      }
       
-      console.log('🚀 Creating ballot from template with data:', {
-        templateId: formData.templateId,
-        ballotData: ballotData
-      });
-      
-      // Debug the form data
-      console.log('📋 Form Data Debug:', {
-        title: formData.Ballot_Title,
-        description: formData.Ballot_Description,
-        startDate: formData.Ballot_StartDate,
-        endDate: formData.Ballot_EndDate,
-        showResultsAfter: formData.Ballot_ShowResultsAfter,
-        templatePositions: formData.templatePositions,
-        isFromTemplate: formData.isFromTemplate,
-        templateId: formData.templateId
-      });
-      
-      // Debug selected candidates
-      console.log('👥 Selected Candidates Debug:', {
-        count: selectedCandidates.length,
-        candidates: selectedCandidates
-      });
-      
-      await createBallotFromTemplate(formData.templateId, ballotData);
-      
-      setSuccess('Ballot created from template successfully!');
       fetchBallots();
     } catch (error) {
-      console.error('Error creating ballot from template:', error);
-      setError('Failed to create ballot from template. Please try again.');
+      console.error('Error creating ballot:', error);
+      setError('Failed to create ballot. Please try again.');
     } finally {
       setLoadingForm(false);
     }
@@ -306,6 +331,7 @@ const BallotManagement = () => {
       Ballot_RequireAllPositions: templateData.requireAllPositions !== false,
       Ballot_ShowResults: templateData.showResults !== false,
       Ballot_ShowLiveResults: templateData.showLiveResults !== false,
+      Ballot_AllowAbstain: templateData.allowAbstain || false,
       positionIds: templateData.positions ? templateData.positions.map(p => p.positionId || p.positionTitle) : [],
       templatePositions: templateData.positions || [], // Store template positions for display
       isFromTemplate: true, // Flag to indicate this is from template
@@ -342,6 +368,13 @@ const BallotManagement = () => {
     setLoadingForm(true);
     setError('');
 
+    // Validate that positions are selected for non-template ballots
+    if (!formData.isFromTemplate && formData.positionIds.length === 0) {
+      setError('Please select at least one position before creating the ballot.');
+      setLoadingForm(false);
+      return;
+    }
+
     try {
       if (editingBallot) {
         await updateBallot(editingBallot.id, formData);
@@ -353,10 +386,9 @@ const BallotManagement = () => {
         setShowCreateForm(false);
         setShowCandidateSelector(true);
       } else {
-        await createBallot(formData);
-        setSuccess('Ballot created successfully!');
+        // For create from scratch, show candidate selection modal
         setShowCreateForm(false);
-        fetchBallots();
+        setShowCandidateSelector(true);
       }
     } catch (error) {
       console.error('Error saving ballot:', error);
@@ -747,11 +779,16 @@ const BallotManagement = () => {
           <div className="modal-content candidate-selector-modal">
             <CandidateSelector 
               templatePositions={formData.templatePositions || []}
+              selectedPositions={formData.isFromTemplate ? [] : positions.filter(pos => formData.positionIds.includes(pos.id))}
               onComplete={handleCandidateSelectionComplete}
               onCancel={() => setShowCandidateSelector(false)}
               onGoBack={() => {
                 setShowCandidateSelector(false);
-                setShowTemplateSelector(true);
+                if (formData.isFromTemplate) {
+                  setShowTemplateSelector(true);
+                } else {
+                  setShowCreateForm(true);
+                }
               }}
             />
           </div>
@@ -764,7 +801,7 @@ const BallotManagement = () => {
           className="modal-overlay"
           onClick={(e) => handleModalOverlayClick(e, 'createForm')}
         >
-          <div className="modal-content">
+          <div className="modal-content ballot-creation-modal">
             <div className="modal-header">
               <div className="modal-header-left">
                 <button 
@@ -774,7 +811,12 @@ const BallotManagement = () => {
                 >
                   <i className="fas fa-arrow-left"></i>
                 </button>
-                <h2>{editingBallot ? 'Edit Ballot' : 'Create New Ballot'}</h2>
+                <div className="modal-title-section">
+                  <h2>{editingBallot ? 'Edit Ballot' : 'Create New Ballot'}</h2>
+                  <p className="modal-subtitle">
+                    {editingBallot ? 'Update ballot settings and configuration' : 'Configure your ballot settings and select positions'}
+                  </p>
+                </div>
               </div>
               <button 
                 className="close-btn"
@@ -784,27 +826,38 @@ const BallotManagement = () => {
               </button>
             </div>
             <form onSubmit={handleFormSubmit} className="modal-body">
-              <div className="form-group">
-                <label className="form-label">Ballot Title *</label>
-                <input
-                  type="text"
-                  name="Ballot_Title"
-                  value={formData.Ballot_Title}
-                  onChange={handleFormChange}
-                  className="form-control"
-                  required
-                />
-              </div>
+              {/* Basic Information Section */}
+              <div className="form-section">
+                <div className="section-header">
+                  <h3><i className="fas fa-info-circle"></i> Basic Information</h3>
+                  <p>Enter the basic details for your ballot</p>
+                </div>
+                <div className="section-content">
+                  <div className="form-group">
+                    <label className="form-label">Ballot Title *</label>
+                    <input
+                      type="text"
+                      name="Ballot_Title"
+                      value={formData.Ballot_Title}
+                      onChange={handleFormChange}
+                      className="form-control"
+                      placeholder="Enter ballot title"
+                      required
+                    />
+                  </div>
 
-              <div className="form-group">
-                <label className="form-label">Description</label>
-                <textarea
-                  name="Ballot_Description"
-                  value={formData.Ballot_Description}
-                  onChange={handleFormChange}
-                  className="form-control"
-                  rows="3"
-                />
+                  <div className="form-group">
+                    <label className="form-label">Description</label>
+                    <textarea
+                      name="Ballot_Description"
+                      value={formData.Ballot_Description}
+                      onChange={handleFormChange}
+                      className="form-control"
+                      rows="3"
+                      placeholder="Enter ballot description (optional)"
+                    />
+                  </div>
+                </div>
               </div>
 
               {/* Show template info when using a template */}
@@ -831,96 +884,134 @@ const BallotManagement = () => {
                 </div>
               )}
 
-              <div className="form-row">
-                <div className="form-group">
-                  <label className="form-label">Start Date *</label>
-                  <input
-                    type="datetime-local"
-                    name="Ballot_StartDate"
-                    value={formData.Ballot_StartDate}
-                    onChange={handleFormChange}
-                    className="form-control"
-                    required
-                  />
+              {/* Schedule Section */}
+              <div className="form-section">
+                <div className="section-header">
+                  <h3><i className="fas fa-calendar-alt"></i> Schedule</h3>
+                  <p>Set the start and end times for your ballot</p>
                 </div>
+                <div className="section-content">
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label className="form-label">Start Date *</label>
+                      <input
+                        type="datetime-local"
+                        name="Ballot_StartDate"
+                        value={formData.Ballot_StartDate}
+                        onChange={handleFormChange}
+                        className="form-control"
+                        required
+                      />
+                    </div>
 
-                <div className="form-group">
-                  <label className="form-label">End Date *</label>
-                  <input
-                    type="datetime-local"
-                    name="Ballot_EndDate"
-                    value={formData.Ballot_EndDate}
-                    onChange={handleFormChange}
-                    className="form-control"
-                    required
-                  />
+                    <div className="form-group">
+                      <label className="form-label">End Date *</label>
+                      <input
+                        type="datetime-local"
+                        name="Ballot_EndDate"
+                        value={formData.Ballot_EndDate}
+                        onChange={handleFormChange}
+                        className="form-control"
+                        required
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              {/* Only show positions selection when not using a template */}
+              {/* Positions Section */}
               {!formData.isFromTemplate && (
-                <div className="form-group">
-                  <label className="form-label">Positions *</label>
-                  <div className="checkbox-group">
-                    {positions.map(position => (
-                      <label key={position.id} className="checkbox-item">
-                        <input
-                          type="checkbox"
-                          value={position.id}
-                          checked={formData.positionIds.includes(position.id)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setFormData(prev => ({
-                                ...prev,
-                                positionIds: [...prev.positionIds, position.id]
-                              }));
-                            } else {
-                              setFormData(prev => ({
-                                ...prev,
-                                positionIds: prev.positionIds.filter(id => id !== position.id)
-                              }));
-                            }
-                          }}
-                        />
-                        <span>{position.Position_Title}</span>
-                      </label>
-                    ))}
+                <div className="form-section">
+                  <div className="section-header">
+                    <h3><i className="fas fa-users"></i> Positions</h3>
+                    <p>Select the positions to include in this ballot</p>
+                  </div>
+                  <div className="section-content">
+                    <div className="checkbox-grid">
+                      {positions.map(position => (
+                        <label key={position.id} className="checkbox-item">
+                          <input
+                            type="checkbox"
+                            value={position.id}
+                            checked={formData.positionIds.includes(position.id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setFormData(prev => ({
+                                  ...prev,
+                                  positionIds: [...prev.positionIds, position.id]
+                                }));
+                              } else {
+                                setFormData(prev => ({
+                                  ...prev,
+                                  positionIds: prev.positionIds.filter(id => id !== position.id)
+                                }));
+                              }
+                            }}
+                          />
+                          <span className="checkbox-label">{position.Position_Title}</span>
+                        </label>
+                      ))}
+                    </div>
                   </div>
                 </div>
               )}
 
-
-              {/* Only show candidates selection when not using a template */}
-              {!formData.isFromTemplate && (
-                <div className="form-group">
-                  <label className="form-label">Candidates *</label>
-                  <div className="checkbox-group">
-                    {candidates.map(candidate => (
-                      <label key={candidate.id} className="checkbox-item">
-                        <input
-                          type="checkbox"
-                          value={candidate.id}
-                          checked={formData.candidateIds.includes(candidate.id)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setFormData(prev => ({
-                                ...prev,
-                                candidateIds: [...prev.candidateIds, candidate.id]
-                              }));
-                            } else {
-                              setFormData(prev => ({
-                                ...prev,
-                                candidateIds: prev.candidateIds.filter(id => id !== candidate.id)
-                              }));
-                            }
-                          }}
-                        />
-                        <span>{candidate.Candidate_Name}</span>
-                      </label>
-                    ))}
+              {/* Candidates Section - Show next step message */}
+              {!formData.isFromTemplate && formData.positionIds.length > 0 && (
+                <div className="form-section">
+                  <div className="section-content">
+                    <div className="next-step-message">
+                      <i className="fas fa-arrow-right"></i>
+                      <p>After filling in the details, you'll be able to select specific candidates for each position.</p>
+                    </div>
                   </div>
                 </div>
               )}
+
+              {/* Show message when no positions are selected */}
+              {!formData.isFromTemplate && formData.positionIds.length === 0 && (
+                <div className="form-section">
+                  <div className="section-content">
+                    <div className="no-positions-message">
+                      <i className="fas fa-arrow-up"></i>
+                      <p>Please select positions above to proceed to candidate selection</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Ballot Settings Section */}
+              <div className="form-section">
+                <div className="section-header">
+                  <h3><i className="fas fa-cog"></i> Ballot Settings</h3>
+                  <p>Configure advanced options for your ballot</p>
+                </div>
+                <div className="section-content">
+                  <div className="settings-grid">
+                    <div className="setting-item">
+                      <div className="setting-content">
+                        <div className="setting-header">
+                          <strong>Allow Abstain Option</strong>
+                          <div className="toggle-container">
+                            <input
+                              type="checkbox"
+                              id="Ballot_AllowAbstain"
+                              name="Ballot_AllowAbstain"
+                              checked={formData.Ballot_AllowAbstain}
+                              onChange={handleFormChange}
+                              className="toggle-input"
+                            />
+                            <label htmlFor="Ballot_AllowAbstain" className="toggle-label">
+                              <span className="toggle-slider"></span>
+                            </label>
+                          </div>
+                        </div>
+                        <p className="setting-description">Enable voters to abstain from voting on specific positions</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
               <div className="form-actions">
                 <button
@@ -935,7 +1026,7 @@ const BallotManagement = () => {
                   className="btn btn-primary"
                   disabled={loadingForm}
                 >
-                  {loadingForm ? 'Saving...' : (editingBallot ? 'Update Ballot' : (formData.isFromTemplate ? 'Continue to Candidate Selection' : 'Create Ballot'))}
+                  {loadingForm ? 'Saving...' : (editingBallot ? 'Update Ballot' : (formData.isFromTemplate ? 'Continue' : 'Create Ballot'))}
                 </button>
               </div>
             </form>

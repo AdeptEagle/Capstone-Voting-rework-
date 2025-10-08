@@ -203,6 +203,28 @@
   border: 1px solid #ffc107;
 }
 
+/* Voting Requirement Message */
+.voting-requirement {
+  margin-bottom: 25px;
+  text-align: center;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+
+.voting-requirement i {
+  color: #dc2626;
+  font-size: 1.2rem;
+  margin-right: 0.5rem;
+}
+
+.requirement-content {
+  color: #dc2626;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
 .candidates-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));

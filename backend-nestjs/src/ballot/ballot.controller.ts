@@ -55,6 +55,11 @@ export class BallotController {
     return this.ballotService.getAvailableBallotsForUser(req.user.id);
   }
 
+  @Get('upcoming')
+  getUpcomingBallots(@Request() req) {
+    return this.ballotService.getUpcomingBallotsForUser(req.user.id);
+  }
+
   @Get('user-history')
   getUserBallotHistoryFromAuth(@Request() req) {
     return this.ballotService.getUserBallotHistory(req.user.id);

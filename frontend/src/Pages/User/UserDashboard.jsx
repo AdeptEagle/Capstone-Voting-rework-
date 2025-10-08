@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getAvailableBallots, getUserBallotHistory } from '../../services/api';
+import { getAvailableBallots, getUpcomingBallots, getUserBallotHistory } from '../../services/api';
 import io from 'socket.io-client';
 import './UserDashboard.css';
 
@@ -15,6 +15,7 @@ const UserDashboard = () => {
   
   // Ballot-focused state
   const [availableBallots, setAvailableBallots] = useState([]);
+  const [upcomingBallots, setUpcomingBallots] = useState([]);
   const [votingHistory, setVotingHistory] = useState([]);
   const [ballotsLoading, setBallotsLoading] = useState(true);
   const [activeBallotsCount, setActiveBallotsCount] = useState(0);
@@ -47,14 +48,24 @@ const UserDashboard = () => {
           return;
         }
         
-        // Fetch available ballots
+        // Fetch available ballots (active only)
         let ballots = [];
         try {
           ballots = await getAvailableBallots();
           setAvailableBallots(ballots);
         } catch (error) {
-          console.error('Error fetching ballots:', error);
+          console.error('Error fetching available ballots:', error);
           setAvailableBallots([]);
+        }
+        
+        // Fetch upcoming ballots separately
+        let upcoming = [];
+        try {
+          upcoming = await getUpcomingBallots();
+          setUpcomingBallots(upcoming);
+        } catch (error) {
+          console.error('Error fetching upcoming ballots:', error);
+          setUpcomingBallots([]);
         }
         
         // Fetch voting history
@@ -433,12 +444,9 @@ const UserDashboard = () => {
               <div className="loading-text">Loading...</div>
               <p>Loading upcoming ballots...</p>
             </div>
-          ) : availableBallots.filter(ballot => 
-            !ballot.Ballot_IsActive && ballot.Ballot_Status !== 'ENDED'
-          ).length > 0 ? (
+          ) : upcomingBallots.length > 0 ? (
             <div className="ballots-grid">
-              {availableBallots
-                .filter(ballot => !ballot.Ballot_IsActive && ballot.Ballot_Status !== 'ENDED')
+              {upcomingBallots
                 .slice(0, 3)
                 .map((ballot) => {
                   const hasVoted = votingHistory.some(h => 

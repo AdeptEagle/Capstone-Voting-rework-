@@ -29,7 +29,8 @@ export class PartyListService {
     let logoUrl = null;
     if (logo) {
       try {
-        logoUrl = await this.fileUploadService.uploadFile(logo, 'party-list-logos');
+        const uploadResult = await this.fileUploadService.processUploadedFile(logo, 'image');
+        logoUrl = uploadResult.url;
       } catch (error) {
         console.error('Error uploading party list logo:', error);
         // Continue without logo if upload fails
@@ -151,7 +152,8 @@ export class PartyListService {
     let logoUrl = existingPartyList.logo; // Keep existing logo by default
     if (logo) {
       try {
-        logoUrl = await this.fileUploadService.uploadFile(logo, 'party-list-logos');
+        const uploadResult = await this.fileUploadService.processUploadedFile(logo, 'image');
+        logoUrl = uploadResult.url;
       } catch (error) {
         console.error('Error uploading party list logo:', error);
         // Keep existing logo if upload fails

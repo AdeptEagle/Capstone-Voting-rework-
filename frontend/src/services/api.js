@@ -34,8 +34,15 @@ api.interceptors.response.use(
                                 error.response.data.message.includes('must be') ||
                                 error.response.data.statusCode === 400);
       
-      if (isValidationError) {
-        console.log('Validation error, not redirecting');
+      // Check if this is a business logic error (like "Cannot delete active ballot")
+      const isBusinessLogicError = error.response?.data?.message && 
+                                  (error.response.data.message.includes('Cannot delete') ||
+                                   error.response.data.message.includes('Cannot') ||
+                                   error.response.data.message.includes('Only') ||
+                                   error.response.data.message.includes('permission'));
+      
+      if (isValidationError || isBusinessLogicError) {
+        console.log('Validation or business logic error, not redirecting');
         return Promise.reject(error);
       }
       
@@ -1169,6 +1176,16 @@ export const getAvailableBallots = async () => {
     return response.data;
   } catch (error) {
     console.error('Error fetching available ballots:', error);
+    throw error;
+  }
+};
+
+export const getUpcomingBallots = async () => {
+  try {
+    const response = await api.get(`/ballots/upcoming`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching upcoming ballots:', error);
     throw error;
   }
 };

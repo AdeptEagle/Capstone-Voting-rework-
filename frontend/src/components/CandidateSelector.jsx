@@ -4,6 +4,7 @@ import './CandidateSelector.css';
 
 const CandidateSelector = ({ 
   templatePositions, 
+  selectedPositions, // For create from scratch
   onComplete, 
   onCancel, 
   onGoBack 
@@ -39,6 +40,8 @@ const CandidateSelector = ({
     try {
       setLoading(true);
       const candidatesData = await getCandidates();
+      console.log('🔍 Fetched candidates data:', candidatesData);
+      console.log('🔍 First candidate sample:', candidatesData[0]);
       setCandidates(candidatesData);
     } catch (error) {
       console.error('Error fetching candidates:', error);
@@ -115,9 +118,40 @@ const CandidateSelector = ({
     return filteredCandidates;
   };
 
+  // Helper to get correct candidate photo URL
+  const getCandidatePhotoUrl = (photoUrl) => {
+    if (!photoUrl || photoUrl === 'undefined' || photoUrl === 'null') return null;
+    if (photoUrl.startsWith('http://') || photoUrl.startsWith('https://')) {
+      return photoUrl;
+    }
+    // If the photoUrl already starts with /uploads/, use it as is
+    if (photoUrl.startsWith('/uploads/')) {
+      return `http://localhost:3001${photoUrl}`;
+    }
+    // Otherwise, assume it's just a filename and add the full path
+    return `http://localhost:3001/uploads/images/${photoUrl}`;
+  };
+
+  // Get positions to display (either from template or selected positions)
+  const getPositionsToDisplay = () => {
+    if (templatePositions && templatePositions.length > 0) {
+      return templatePositions;
+    }
+    
+    if (selectedPositions && selectedPositions.length > 0) {
+      return selectedPositions.map(pos => ({
+        positionTitle: pos.Position_Title,
+        voteLimit: 1 // Default vote limit
+      }));
+    }
+    
+    return [];
+  };
+
   const canComplete = () => {
+    const positionsToDisplay = getPositionsToDisplay();
     // Check if at least one candidate is selected for each position
-    return templatePositions.every(position => {
+    return positionsToDisplay.every(position => {
       const positionCandidates = selectedCandidates[position.positionTitle] || [];
       return positionCandidates.length > 0;
     });
@@ -198,7 +232,7 @@ const CandidateSelector = ({
           <p>Choose which candidates will run for each position in this ballot:</p>
         </div>
 
-        {templatePositions.map((position, index) => {
+        {getPositionsToDisplay().map((position, index) => {
           const positionCandidates = getCandidatesForPosition(position.positionTitle);
           
           return (
@@ -243,6 +277,36 @@ const CandidateSelector = ({
                     >
                       <div className="candidate-checkbox">
                         <i className={`fas ${isCandidateSelected(position.positionTitle, candidate.id) ? 'fa-check-square' : 'fa-square'}`}></i>
+                      </div>
+                      <div className="candidate-photo">
+                        {(() => {
+                          console.log('🔍 Candidate photo debug:', {
+                            candidateName: candidate.Candidate_Name,
+                            photo: candidate.photo,
+                            photoType: typeof candidate.photo,
+                            photoUrl: getCandidatePhotoUrl(candidate.photo)
+                          });
+                          return null;
+                        })()}
+                        {candidate.photo && candidate.photo !== 'undefined' ? (
+                          <img 
+                            src={getCandidatePhotoUrl(candidate.photo)} 
+                            alt={candidate.Candidate_Name}
+                            onError={(e) => {
+                              console.log('❌ Image failed to load:', getCandidatePhotoUrl(candidate.photo));
+                              e.target.style.display = 'none';
+                              if (e.target.nextSibling) {
+                                e.target.nextSibling.style.display = 'flex';
+                              }
+                            }}
+                            onLoad={() => {
+                              console.log('✅ Image loaded successfully:', getCandidatePhotoUrl(candidate.photo));
+                            }}
+                          />
+                        ) : null}
+                        <div className="candidate-photo-placeholder" style={{ display: candidate.photo && candidate.photo !== 'undefined' ? 'none' : 'flex' }}>
+                          <i className="fas fa-user"></i>
+                        </div>
                       </div>
                       <div className="candidate-info">
                         <h5>{candidate.Candidate_Name}</h5>

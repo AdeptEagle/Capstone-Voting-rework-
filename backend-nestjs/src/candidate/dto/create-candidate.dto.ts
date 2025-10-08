@@ -37,10 +37,6 @@ export class CreateCandidateDto {
   @IsString()
   partyListId: string;
 
-  @ApiProperty({ description: 'Candidate manifesto', example: 'I will work for student welfare', required: false })
-  @IsString()
-  @IsOptional()
-  manifesto?: string;
 
   @ApiProperty({ description: 'Candidate photo URL', example: '/uploads/images/candidate-photo.jpg', required: false })
   @IsString()

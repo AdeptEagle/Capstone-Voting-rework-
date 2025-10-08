@@ -256,6 +256,7 @@ model Ballot {
   Ballot_ShowResults         Boolean               @default(true) @map("ballot_show_results")
   Ballot_ShowResultsAfter    DateTime?             @map("ballot_show_results_after")
   Ballot_ShowLiveResults     Boolean               @default(true) @map("ballot_show_live_results")
+  Ballot_AllowAbstain        Boolean               @default(false) @map("ballot_allow_abstain")
   Ballot_CreatedBy           String                @map("ballot_created_by")
   Ballot_CreatedAt           DateTime              @default(now()) @map("ballot_created_at")
   Ballot_UpdatedAt           DateTime              @updatedAt @map("ballot_updated_at")

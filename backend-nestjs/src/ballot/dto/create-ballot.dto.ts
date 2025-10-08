@@ -34,6 +34,10 @@ export class CreateBallotDto {
   @IsBoolean()
   Ballot_ShowLiveResults?: boolean;
 
+  @IsOptional()
+  @IsBoolean()
+  Ballot_AllowAbstain?: boolean;
+
   @IsArray()
   @IsNotEmpty()
   @IsString({ each: true })

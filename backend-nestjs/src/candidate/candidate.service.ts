@@ -56,7 +56,7 @@ export class CandidateService {
   async createCandidate(createCandidateDto: CreateCandidateDto, photo?: any) {
     console.log('createCandidate called with photo:', photo);
     console.log('createCandidateDto:', createCandidateDto);
-    const { Candidate_Name, Candidate_Email, Candidate_StudentId, positionId, departmentId, courseId, manifesto, partyListId } = createCandidateDto;
+    const { Candidate_Name, Candidate_Email, Candidate_StudentId, positionId, departmentId, courseId, partyListId } = createCandidateDto;
 
     // Check if position exists
     const position = await this.prisma.position.findUnique({
@@ -158,7 +158,6 @@ export class CandidateService {
         departmentId,
         courseId,
         photo: photoUrl,
-        manifesto,
         partyListId,
       },
       include: {
@@ -235,7 +234,7 @@ export class CandidateService {
   }
 
   async updateCandidate(id: string, updateCandidateDto: UpdateCandidateDto, photo?: any) {
-    const { Candidate_Name, Candidate_Email, Candidate_StudentId, positionId, departmentId, courseId, manifesto, partyListId } = updateCandidateDto;
+    const { Candidate_Name, Candidate_Email, Candidate_StudentId, positionId, departmentId, courseId, partyListId } = updateCandidateDto;
 
     // Check if candidate exists
     const existingCandidate = await this.prisma.candidate.findUnique({
@@ -364,7 +363,6 @@ export class CandidateService {
         departmentId,
         courseId,
         photo: photoUrl,
-        manifesto,
         partyListId,
       },
       include: {

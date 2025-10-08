@@ -130,7 +130,7 @@ const BallotVote = () => {
 
   const handleAbstain = () => {
     const currentPosition = getCurrentPosition();
-    if (!currentPosition) return;
+    if (!currentPosition || !ballot.Ballot_AllowAbstain) return;
 
     const positionId = currentPosition.id;
     
@@ -172,8 +172,13 @@ const BallotVote = () => {
     const voteLimit = getPositionVoteLimit(currentPosition);
     const isAbstained = abstainedPositions.has(currentPosition.id);
     
-    // If position is abstained, always allow proceeding
-    if (isAbstained) {
+    // If abstain is not allowed and position is abstained, don't allow proceeding
+    if (!ballot.Ballot_AllowAbstain && isAbstained) {
+      return false;
+    }
+    
+    // If position is abstained and abstain is allowed, always allow proceeding
+    if (isAbstained && ballot.Ballot_AllowAbstain) {
       return true;
     }
     
@@ -436,28 +441,43 @@ const BallotVote = () => {
           </span>
         </div>
 
-        <div className="voting-tip">
-          <i className="fas fa-lightbulb"></i>
-          <div className="tip-content">
-            <strong>Voting Tip:</strong> Don't like any of the candidates? You can abstain from this position by clicking the "Abstain" button below. This is a valid choice in real elections!
-          </div>
-        </div>
+        {/* Show abstain option only if ballot allows it */}
+        {ballot.Ballot_AllowAbstain && (
+          <>
+            <div className="voting-tip">
+              <i className="fas fa-lightbulb"></i>
+              <div className="tip-content">
+                <strong>Voting Tip:</strong> Don't like any of the candidates? You can abstain from this position by clicking the "Abstain" button below. This is a valid choice in real elections!
+              </div>
+            </div>
 
-        <div className="abstain-section">
-          <button 
-            className={`abstain-btn ${isPositionAbstained() ? 'abstained' : ''}`}
-            onClick={handleAbstain}
-          >
-            <i className="fas fa-minus-circle"></i>
-            {isPositionAbstained() ? 'Abstaining (Click to vote)' : 'Abstain from this position'}
-          </button>
-          {isPositionAbstained() && (
-            <p className="abstain-note">
-              <i className="fas fa-info-circle"></i>
-              You have chosen to abstain from voting for this position.
-            </p>
-          )}
-        </div>
+            <div className="abstain-section">
+              <button 
+                className={`abstain-btn ${isPositionAbstained() ? 'abstained' : ''}`}
+                onClick={handleAbstain}
+              >
+                <i className="fas fa-minus-circle"></i>
+                {isPositionAbstained() ? 'Abstaining (Click to vote)' : 'Abstain from this position'}
+              </button>
+              {isPositionAbstained() && (
+                <p className="abstain-note">
+                  <i className="fas fa-info-circle"></i>
+                  You have chosen to abstain from voting for this position.
+                </p>
+              )}
+            </div>
+          </>
+        )}
+
+        {/* Show message when abstain is not allowed */}
+        {!ballot.Ballot_AllowAbstain && (
+          <div className="voting-requirement">
+            <i className="fas fa-exclamation-circle"></i>
+            <div className="requirement-content">
+              <strong>Voting Requirement:</strong> You must vote for a candidate in this position. Abstaining is not allowed for this ballot.
+            </div>
+          </div>
+        )}
 
         <div className="candidates-grid">
           {candidates.map(candidate => (

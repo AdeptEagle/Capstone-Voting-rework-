@@ -34,7 +34,17 @@ const BallotDetails = () => {
     if (tab && ['overview', 'positions', 'results', 'settings'].includes(tab)) {
       setActiveTab(tab);
     }
-  }, [ballotId, location.search]);
+
+    // Auto-refresh for ballots that might be auto-started
+    const interval = setInterval(() => {
+      if (ballot && (ballot.Ballot_Status === 'DRAFT' || ballot.Ballot_Status === 'SCHEDULED')) {
+        console.log('🔄 Auto-refreshing ballot data for potential auto-start...');
+        fetchBallotData();
+      }
+    }, 5000); // Check every 5 seconds
+
+    return () => clearInterval(interval);
+  }, [ballotId, location.search, ballot?.Ballot_Status]);
 
   // Real-time refresh functionality
   useEffect(() => {
@@ -154,14 +164,29 @@ const BallotDetails = () => {
     }
 
     try {
+      console.log('🗑️ Attempting to delete ballot:', ballotId);
       await deleteBallot(ballotId);
       setSuccess('Ballot deleted successfully!');
       setTimeout(() => {
         navigate('/admin/ballot-management');
       }, 2000);
     } catch (error) {
-      console.error('Error deleting ballot:', error);
-      setError('Failed to delete ballot. Please try again.');
+      console.error('🗑️ Error deleting ballot:', error);
+      console.error('🗑️ Error response:', error.response);
+      console.error('🗑️ Error status:', error.response?.status);
+      console.error('🗑️ Error data:', error.response?.data);
+      
+      let errorMessage = 'Failed to delete ballot. Please try again.';
+      
+      if (error.response?.status === 401) {
+        errorMessage = 'Authentication failed. Please log in again.';
+      } else if (error.response?.status === 403) {
+        errorMessage = 'You do not have permission to delete this ballot.';
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+      
+      setError(errorMessage);
     }
   };
 
@@ -182,6 +207,14 @@ const BallotDetails = () => {
     const startDate = new Date(ballot.Ballot_StartDate);
     const endDate = new Date(ballot.Ballot_EndDate);
 
+    console.log('🔍 Ballot status debug:', {
+      ballotStatus: ballot.Ballot_Status,
+      isActive: ballot.Ballot_IsActive,
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString(),
+      now: now.toISOString()
+    });
+
     // Check ballot status first - this takes precedence
     if (ballot.Ballot_Status === 'CANCELLED') {
       return { status: 'cancelled', color: 'red', text: 'Cancelled' };
@@ -191,6 +224,10 @@ const BallotDetails = () => {
       return { status: 'paused', color: 'orange', text: 'Paused' };
     } else if (ballot.Ballot_Status === 'ACTIVE') {
       return { status: 'active', color: 'green', text: 'Active' };
+    } else if (ballot.Ballot_Status === 'DRAFT') {
+      return { status: 'draft', color: 'gray', text: 'Draft' };
+    } else if (ballot.Ballot_Status === 'SCHEDULED') {
+      return { status: 'scheduled', color: 'blue', text: 'Scheduled' };
     }
     
     // If no specific status, check dates
@@ -327,6 +364,13 @@ const BallotDetails = () => {
             <span className={`status-badge ${ballotStatus.color}`}>
               {ballotStatus.text}
             </span>
+            <button 
+              className="btn btn-outline btn-sm refresh-btn"
+              onClick={fetchBallotData}
+              title="Refresh ballot data"
+            >
+              <i className="fas fa-sync-alt"></i>
+            </button>
           </div>
           
           {ballot.Ballot_Description && (
@@ -482,7 +526,7 @@ const BallotDetails = () => {
 
               {/* Action Buttons */}
               <div className="action-buttons-section">
-                {ballotStatus.status === 'upcoming' && (
+                {(ballotStatus.status === 'upcoming' || ballotStatus.status === 'draft') && (
                   <button 
                     className="btn btn-success action-btn"
                     onClick={() => handleBallotAction('activate')}
@@ -541,9 +585,8 @@ const BallotDetails = () => {
                 )}
                 
                 <button 
-                  className={`btn btn-danger action-btn ${ballotStatus.status === 'ended' ? 'disabled' : ''}`}
-                  onClick={() => ballotStatus.status !== 'ended' && handleDeleteBallot()}
-                  disabled={ballotStatus.status === 'ended'}
+                  className="btn btn-danger action-btn"
+                  onClick={() => handleDeleteBallot()}
                 >
                   <i className="fas fa-trash"></i>
                   Delete Ballot
