@@ -25,6 +25,11 @@ async function bootstrap() {
     prefix: '/uploads/',
   });
 
+  // Serve static files from Logos directory
+  app.useStaticAssets(join(process.cwd(), 'Logos'), {
+    prefix: '/api/Logos/',
+  });
+
   // Global validation pipe
   app.useGlobalPipes(
     new ValidationPipe({
