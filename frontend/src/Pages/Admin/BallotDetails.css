@@ -1611,3 +1611,660 @@
   border-color: inherit;
 }
 
+/* Print Styles */
+/* Removed conflicting print CSS - using the consolidated version below */
+
+/* Professional Print Layout Styles */
+@media print {
+  /* Hide everything except print layout */
+  body * {
+    visibility: hidden !important;
+  }
+  
+  .professional-print-layout,
+  .professional-print-layout * {
+    visibility: visible !important;
+    display: block !important;
+  }
+  
+  .professional-print-layout {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    background: white !important;
+    color: black !important;
+    font-family: 'Times New Roman', serif !important;
+    line-height: 1.4 !important;
+    margin: 0 !important;
+    padding: 20px !important;
+    z-index: 9999 !important;
+  }
+
+  .results-table th,
+  .results-table td {
+    border: 1px solid #000;
+    padding: 0.5rem;
+    text-align: left;
+    font-size: 10pt;
+  }
+
+  .results-table th {
+    background: #f0f0f0;
+    font-weight: bold;
+    text-align: center;
+  }
+
+  .results-table td {
+    text-align: center;
+  }
+
+  .results-table td:first-child {
+    text-align: left;
+  }
+
+  .winner-section {
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+    background: #e8f5e8;
+    border: 1px solid #000;
+  }
+
+  .winner-section p {
+    margin: 0;
+    font-size: 11pt;
+    font-weight: bold;
+  }
+
+  /* Certification Section */
+  .certification-section {
+    margin-top: 3rem;
+    page-break-inside: avoid;
+  }
+
+  .certification-section h2 {
+    font-size: 14pt;
+    font-weight: bold;
+    margin: 0 0 1rem 0;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .certification-section > p {
+    font-size: 11pt;
+    margin-bottom: 2rem;
+    font-style: italic;
+  }
+
+  .signature-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .signature-block {
+    text-align: left;
+    margin-bottom: 1rem;
+  }
+
+  .signature-block p {
+    margin: 0.5rem 0;
+    font-size: 11pt;
+    font-weight: bold;
+  }
+
+  /* Results styling for print */
+  .results-content {
+    background: white;
+    box-shadow: none;
+    border: 1px solid #000;
+    margin-bottom: 1rem;
+  }
+
+  .results-summary {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .summary-card {
+    background: white;
+    border: 1px solid #000;
+    box-shadow: none;
+    padding: 0.75rem;
+  }
+
+  .summary-content h3 {
+    font-size: 14pt;
+    font-weight: bold;
+  }
+
+  .summary-content p {
+    font-size: 10pt;
+  }
+
+  /* Position results */
+  .position-results {
+    background: white;
+    border: 1px solid #000;
+    box-shadow: none;
+    margin-bottom: 1rem;
+  }
+
+  .position-result-card {
+    background: white;
+    border: 1px solid #000;
+    box-shadow: none;
+    margin-bottom: 1rem;
+    page-break-inside: avoid;
+  }
+
+  .position-result-card h3 {
+    font-size: 12pt;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .candidate-result-card {
+    background: white;
+    border: 1px solid #ccc;
+    box-shadow: none;
+    margin-bottom: 0.5rem;
+    padding: 0.75rem;
+  }
+
+  .candidate-result-card.winner {
+    background: #f0f8f0;
+    border: 2px solid #000;
+  }
+
+  .candidate-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+  }
+
+  .candidate-name {
+    font-size: 11pt;
+    font-weight: bold;
+  }
+
+  .vote-count-display {
+    text-align: right;
+  }
+
+  .vote-number {
+    font-size: 12pt;
+    font-weight: bold;
+  }
+
+  .vote-label {
+    font-size: 9pt;
+  }
+
+  .candidate-stats {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .percentage-number {
+    font-size: 11pt;
+    font-weight: bold;
+    background: #e0e0e0;
+    padding: 0.25rem 0.5rem;
+    border: 1px solid #000;
+  }
+
+  .progress-container {
+    display: none; /* Hide progress bars in print */
+  }
+
+  /* Hide interactive elements */
+  .leading-candidates-section,
+  .analytics-section,
+  .trend-analysis {
+    display: none;
+  }
+
+  /* Page breaks */
+  .position-result-card {
+    page-break-inside: avoid;
+  }
+
+  /* Footer for each page */
+  @page {
+    @bottom-center {
+      content: "Official Election Results - Page " counter(page);
+      font-size: 10pt;
+      color: #666;
+    }
+  }
+}
+
+/* Hide print-only elements on screen */
+.print-only {
+  display: none;
+}
+
+/* Print Controls */
+.print-controls {
+  display: flex;
+  justify-content: center;
+  margin: 2rem 0;
+  padding: 1rem;
+  background: #f8fafc;
+  border-radius: 0.5rem;
+  border: 1px solid #e5e7eb;
+}
+
+.print-btn {
+  background: #059669;
+  color: white;
+  border: 1px solid #059669;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+  border-radius: 0.375rem;
+  cursor: pointer;
+}
+
+.print-btn:hover {
+  background: #047857;
+  border-color: #047857;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+}
+
+/* Professional Print Layout Styles */
+@media print {
+  /* Hide everything except print layout */
+  body * {
+    visibility: hidden !important;
+  }
+  
+  .professional-print-layout,
+  .professional-print-layout * {
+    visibility: visible !important;
+    display: block !important;
+  }
+  
+  .professional-print-layout {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    background: white !important;
+    color: black !important;
+    font-family: 'Times New Roman', serif !important;
+    line-height: 1.4 !important;
+    margin: 0 !important;
+    padding: 20px !important;
+    z-index: 9999 !important;
+  }
+  
+  /* Print Header */
+  .print-header {
+    text-align: center;
+    margin-bottom: 0.5rem;
+    border-bottom: 1px solid #000;
+    padding-bottom: 0.25rem;
+  }
+  
+  .election-title h1 {
+    font-size: 14px;
+    font-weight: bold;
+    margin: 0 0 0.1rem 0;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  
+  .election-title h2 {
+    font-size: 10px;
+    font-weight: normal;
+    margin: 0 0 0.25rem 0;
+    color: #333;
+  }
+  
+  .election-details {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.1rem;
+    text-align: left;
+    margin-top: 0.25rem;
+  }
+  
+  .detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.05rem 0;
+    border-bottom: 1px dotted #ccc;
+    font-size: 8px;
+  }
+  
+  .detail-row .label {
+    font-weight: bold;
+    min-width: 80px;
+  }
+  
+  .detail-row .value {
+    font-weight: normal;
+    text-align: right;
+    flex: 1;
+  }
+  
+  /* Position Results */
+  .position-results-print {
+    margin: 0.5rem 0;
+  }
+  
+  .position-section {
+    margin-bottom: 0.25rem;
+    page-break-inside: avoid;
+  }
+  
+  .position-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    padding: 0.25rem 0;
+    border-bottom: 1px solid #000;
+  }
+  
+  .position-emoji {
+    font-size: 14px;
+  }
+  
+  .position-title {
+    font-size: 12px;
+    font-weight: bold;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  /* Results Table */
+  .results-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 0.1rem;
+  }
+  
+  .table-header {
+    display: grid;
+    grid-template-columns: 30px 1fr 100px 60px 60px;
+    gap: 6px;
+    background: #000;
+    color: white;
+    font-weight: bold;
+    padding: 0.15rem 0.5rem;
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .table-row {
+    display: grid;
+    grid-template-columns: 30px 1fr 100px 60px 60px;
+    gap: 6px;
+    padding: 0.15rem 0.5rem;
+    border-bottom: 1px solid #ccc;
+    font-size: 9px;
+    align-items: center;
+  }
+  
+  .table-row:nth-child(even) {
+    background: #f9f9f9;
+  }
+  
+  .col-rank {
+    text-align: center;
+    font-weight: bold;
+  }
+  
+  .col-name {
+    font-weight: 500;
+  }
+  
+  .col-party {
+    text-align: center;
+    font-style: italic;
+  }
+  
+  .col-votes {
+    text-align: center;
+    font-weight: bold;
+  }
+  
+  .col-percentage {
+    text-align: center;
+    font-weight: bold;
+  }
+  
+  
+  /* Other Positions Summary */
+  .other-positions-summary {
+    margin: 1rem 0;
+    page-break-inside: avoid;
+  }
+  
+  .other-positions-summary h3 {
+    font-size: 12px;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .summary-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .summary-header {
+    display: grid;
+    grid-template-columns: 100px 1fr 100px 60px 60px 50px;
+    gap: 6px;
+    background: #000;
+    color: white;
+    font-weight: bold;
+    padding: 0.25rem 0.5rem;
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .summary-row {
+    display: grid;
+    grid-template-columns: 100px 1fr 100px 60px 60px 50px;
+    gap: 6px;
+    padding: 0.2rem 0.5rem;
+    border-bottom: 1px solid #ccc;
+    font-size: 9px;
+    align-items: center;
+  }
+  
+  .summary-row:nth-child(even) {
+    background: #f9f9f9;
+  }
+  
+  .col-position {
+    font-weight: 500;
+  }
+  
+  .col-candidate {
+    font-weight: 500;
+  }
+  
+  .col-winner {
+    text-align: center;
+    font-weight: bold;
+  }
+  
+  /* Certification Section */
+  .certification-section {
+    margin-top: 3rem;
+    page-break-inside: avoid;
+  }
+  
+  .certification-section h3 {
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .certification-text {
+    font-size: 12px;
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+  }
+  
+  .signature-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 2rem;
+  }
+  
+  .signature-header {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
+    background: #000;
+    color: white;
+    font-weight: bold;
+    padding: 0.5rem;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .signature-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
+    padding: 1rem 0.5rem;
+    border-bottom: 1px solid #ccc;
+    font-size: 12px;
+    align-items: center;
+  }
+  
+  .signature-row:nth-child(even) {
+    background: #f9f9f9;
+  }
+  
+  .col-name {
+    font-weight: 500;
+  }
+  
+  .col-signature {
+    text-align: center;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 2px;
+  }
+  
+  .col-date {
+    text-align: center;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 1px;
+  }
+  
+  .document-footer {
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 2px solid #000;
+  }
+  
+  .document-footer p {
+    font-size: 11px;
+    margin: 0.25rem 0;
+    font-style: italic;
+  }
+  
+  /* Page breaks */
+  .position-section.major-position {
+    page-break-after: auto;
+  }
+  
+  .position-section.other-position {
+    page-break-inside: avoid;
+  }
+  
+  /* Ensure proper spacing */
+  .professional-print-layout > * {
+    margin-bottom: 1rem;
+  }
+  
+  .professional-print-layout > *:last-child {
+    margin-bottom: 0;
+  }
+  
+  /* No data message */
+  .no-data-message {
+    text-align: center;
+    padding: 2rem;
+    color: #666;
+    font-style: italic;
+  }
+  
+  .no-data-message p {
+    margin: 0;
+    font-size: 14px;
+  }
+  
+  /* Debug info */
+  .debug-info {
+    background: #f0f0f0;
+    border: 1px solid #ccc;
+    padding: 1rem;
+    margin: 1rem 0;
+    font-family: monospace;
+    font-size: 12px;
+  }
+  
+  .debug-info p {
+    margin: 0.25rem 0;
+  }
+  
+  /* Test content */
+  .test-content {
+    background: #ffffcc;
+    border: 2px solid #ff0000;
+    padding: 1rem;
+    margin: 1rem 0;
+    font-weight: bold;
+  }
+  
+  .test-content p {
+    margin: 0.5rem 0;
+    color: #000;
+  }
+}
+
+/* Screen-only styles for print button */
+@media screen {
+  .print-controls {
+    display: flex;
+  }
+}
+
+/* Hide print controls when printing */
+@media print {
+  .print-controls {
+    display: none !important;
+  }
+}
+

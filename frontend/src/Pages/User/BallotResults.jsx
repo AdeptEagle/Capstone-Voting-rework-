@@ -103,13 +103,37 @@ const BallotResults = () => {
     const now = new Date();
     const startDate = new Date(ballot.Ballot_StartDate);
     const endDate = new Date(ballot.Ballot_EndDate);
+
+    console.log('🔍 BallotResults getBallotStatus debug:', {
+      ballotStatus: ballot.Ballot_Status,
+      isActive: ballot.Ballot_IsActive,
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString(),
+      now: now.toISOString()
+    });
+
+    // Check ballot status first - this takes precedence
+    if (ballot.Ballot_Status === 'CANCELLED') {
+      return { status: 'cancelled', text: 'Cancelled', color: 'red' };
+    } else if (ballot.Ballot_Status === 'ENDED') {
+      return { status: 'ended', text: 'Ended', color: 'red' };
+    } else if (ballot.Ballot_Status === 'PAUSED') {
+      return { status: 'paused', text: 'Paused', color: 'orange' };
+    } else if (ballot.Ballot_Status === 'ACTIVE') {
+      return { status: 'active', text: 'Active', color: 'green' };
+    } else if (ballot.Ballot_Status === 'DRAFT') {
+      return { status: 'draft', text: 'Draft', color: 'gray' };
+    } else if (ballot.Ballot_Status === 'SCHEDULED') {
+      return { status: 'scheduled', text: 'Scheduled', color: 'blue' };
+    }
     
+    // If no specific status, check dates
     if (now < startDate) {
       return { status: 'scheduled', text: 'Scheduled', color: 'blue' };
-    } else if (now >= startDate && now <= endDate) {
-      return { status: 'active', text: 'Active', color: 'green' };
-    } else {
+    } else if (now > endDate) {
       return { status: 'ended', text: 'Ended', color: 'red' };
+    } else {
+      return { status: 'active', text: 'Active', color: 'green' };
     }
   };
 
@@ -605,6 +629,7 @@ const BallotResults = () => {
                 ))}
               </div>
             </div>
+
           </div>
         )}
       </div>

@@ -920,6 +920,20 @@ const BallotDetails = () => {
                 <p>Results will appear here once voting begins and votes are cast.</p>
               </div>
             )}
+
+            {/* Print Button - Only show when there are results */}
+            {results && results.results && results.results.resultDetails && results.results.resultDetails.length > 0 && (
+              <div className="print-controls">
+                <button 
+                  className="btn btn-primary print-btn"
+                  onClick={() => window.print()}
+                >
+                  <i className="fas fa-print"></i>
+                  Print Official Results
+                </button>
+              </div>
+            )}
+
           </div>
         )}
 
@@ -982,6 +996,159 @@ const BallotDetails = () => {
             </div>
           </div>
         )}
+
+        {/* Professional Print Layout - Always available for printing */}
+        <div className="professional-print-layout print-only">
+          <div className="print-header">
+            <div className="election-title">
+              <h1>OFFICIAL ELECTION RESULTS</h1>
+              <h2>{ballot?.Ballot_Title || 'Election Results'}</h2>
+            </div>
+            
+            <div className="election-details">
+              <div className="detail-row">
+                <span className="label">Date of Election:</span>
+                <span className="value">{ballot?.Ballot_EndDate ? new Date(ballot.Ballot_EndDate).toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                }) : 'Not specified'}</span>
+              </div>
+              <div className="detail-row">
+                <span className="label">Location:</span>
+                <span className="value">Benedicto College</span>
+              </div>
+              <div className="detail-row">
+                <span className="label">Total Registered Voters:</span>
+                <span className="value">{results?.results?.BallotResults_TotalVoters || 0}</span>
+              </div>
+              <div className="detail-row">
+                <span className="label">Votes Cast:</span>
+                <span className="value">{results?.results?.BallotResults_TotalVotes || 0}</span>
+              </div>
+              <div className="detail-row">
+                <span className="label">Turnout:</span>
+                <span className="value">{results?.results?.BallotResults_VoterTurnout ? results.results.BallotResults_VoterTurnout.toFixed(1) : '0.0'}%</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Position Results */}
+          <div className="position-results-print">
+            {ballot?.ballotPositions?.map(ballotPosition => {
+              const positionResults = getPositionResults(ballotPosition.position.id);
+              const isMajorPosition = ['PRESIDENT', 'VICE PRESIDENT', 'SECRETARY', 'TREASURER'].includes(ballotPosition.position.Position_Title.toUpperCase());
+              const winner = positionResults.length > 0 ? positionResults[0] : null;
+              
+              return (
+                <div key={ballotPosition.position.id} className={`position-section ${isMajorPosition ? 'major-position' : 'other-position'}`}>
+                  <div className="position-header">
+                    <span className="position-emoji">
+                      {ballotPosition.position.Position_Title.toUpperCase().includes('PRESIDENT') ? '🏆' : 
+                       ballotPosition.position.Position_Title.toUpperCase().includes('VICE') ? '🏅' :
+                       ballotPosition.position.Position_Title.toUpperCase().includes('SECRETARY') ? '🏛' :
+                       ballotPosition.position.Position_Title.toUpperCase().includes('TREASURER') ? '💰' : '📋'}
+                    </span>
+                    <h3 className="position-title">
+                      {ballotPosition.position.Position_Title.toUpperCase()}
+                    </h3>
+                  </div>
+                  
+                  <div className="results-table">
+                    <div className="table-header">
+                      <div className="col-rank">#</div>
+                      <div className="col-name">Candidate Name</div>
+                      <div className="col-party">Party / Group</div>
+                      <div className="col-votes">Total Votes</div>
+                      <div className="col-percentage">% of Votes</div>
+                    </div>
+                    
+                    {positionResults.map((result, index) => (
+                      <div key={result.BallotResultDetails_CandidateId} className="table-row">
+                        <div className="col-rank">{result.BallotResultDetails_Rank || (index + 1)}</div>
+                        <div className="col-name">{getCandidateName(result.BallotResultDetails_CandidateId)}</div>
+                        <div className="col-party">Independent</div>
+                        <div className="col-votes">{result.BallotResultDetails_VoteCount || 0}</div>
+                        <div className="col-percentage">{(result.BallotResultDetails_Percentage || 0).toFixed(1)}%</div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Other Positions Summary */}
+          <div className="other-positions-summary">
+            <h3>📋 OTHER POSITIONS</h3>
+            <div className="summary-table">
+              <div className="summary-header">
+                <div className="col-position">Position</div>
+                <div className="col-candidate">Candidate Name</div>
+                <div className="col-party">Party / Group</div>
+                <div className="col-votes">Total Votes</div>
+                <div className="col-percentage">% of Votes</div>
+                <div className="col-winner">Winner</div>
+              </div>
+              
+              {ballot?.ballotPositions?.filter(pos => !['PRESIDENT', 'VICE PRESIDENT', 'SECRETARY', 'TREASURER'].includes(pos.position.Position_Title.toUpperCase())).map(position => {
+                const positionResults = getPositionResults(position.position.id);
+                return positionResults.map((result, index) => (
+                  <div key={result.BallotResultDetails_CandidateId} className="summary-row">
+                    <div className="col-position">{position.position.Position_Title}</div>
+                    <div className="col-candidate">{getCandidateName(result.BallotResultDetails_CandidateId)}</div>
+                    <div className="col-party">Independent</div>
+                    <div className="col-votes">{result.BallotResultDetails_VoteCount || 0}</div>
+                    <div className="col-percentage">{(result.BallotResultDetails_Percentage || 0).toFixed(1)}%</div>
+                    <div className="col-winner">{index === 0 && result.BallotResultDetails_VoteCount > 0 ? 'Yes' : 'No'}</div>
+                  </div>
+                ));
+              })}
+            </div>
+          </div>
+
+          {/* Certification Section */}
+          <div className="certification-section">
+            <h3>📝 CERTIFICATION OF RESULTS</h3>
+            <p className="certification-text">
+              I hereby certify that the above results are accurate and officially declared by the Election Committee of Benedicto College.
+            </p>
+            
+            <div className="signature-table">
+              <div className="signature-header">
+                <div className="col-name">Name & Position</div>
+                <div className="col-signature">Signature</div>
+                <div className="col-date">Date</div>
+              </div>
+              
+              <div className="signature-row">
+                <div className="col-name">Chairman, Election Committee</div>
+                <div className="col-signature">_________________________</div>
+                <div className="col-date">_________________</div>
+              </div>
+              
+              <div className="signature-row">
+                <div className="col-name">Dean of Student Affairs</div>
+                <div className="col-signature">_________________________</div>
+                <div className="col-date">_________________</div>
+              </div>
+              
+              <div className="signature-row">
+                <div className="col-name">Director for Academic Affairs</div>
+                <div className="col-signature">_________________________</div>
+                <div className="col-date">_________________</div>
+              </div>
+            </div>
+            
+            <div className="document-footer">
+              <p>📌 This document serves as the official canvassing report of the student election.</p>
+              <p>📄 Prepared and signed by the Election Committee.</p>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
