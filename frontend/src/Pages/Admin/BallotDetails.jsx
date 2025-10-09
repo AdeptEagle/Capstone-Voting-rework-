@@ -10,6 +10,7 @@ import {
   endBallot,
   deleteBallot
 } from '../../services/api';
+import PrintPreview from '../../components/PrintPreview';
 import './BallotDetails.css';
 import './print-styles.css';
 
@@ -412,7 +413,7 @@ const BallotDetails = () => {
           throw new Error('Invalid action');
       }
       
-      setSuccess(`Ballot ${action}d successfully!`);
+      setSuccess(`Ballot ${action === 'end' ? 'ended' : action + 'd'} successfully!`);
       fetchBallotData();
     } catch (error) {
       console.error(`Error ${action}ing ballot:`, error);
@@ -979,8 +980,8 @@ const BallotDetails = () => {
 
             {results ? (
               <div className="results-content">
-                {/* Print Button - Only show when there are results */}
-                {results && results.results && results.results.resultDetails && results.results.resultDetails.length > 0 && (
+                {/* Print Button - Only show when ballot has ended and there are results */}
+                {ballot && ballot.Ballot_Status === 'ENDED' && results && results.results && results.results.resultDetails && results.results.resultDetails.length > 0 && (
                   <div className="print-controls">
                     <button 
                       className="btn btn-primary print-btn"
@@ -1683,105 +1684,8 @@ const BallotDetails = () => {
           </div>
         )}
 
-        {/* Professional Print Layout - Clean Design */}
-        <div className="professional-print-layout print-only">
-          <header>
-            <img 
-              src={`${API_BASE_URL}/api/Logos/BC Logo.png`} 
-              alt="BC Logo" 
-              className="left-logo"
-              onError={(e) => {
-                console.error('Failed to load BC Logo:', e.target.src);
-                e.target.style.display = 'none';
-              }}
-              onLoad={() => {
-                console.log('BC Logo loaded successfully');
-              }}
-            />
-            <h1>Official Election Results</h1>
-            <img 
-              src={`${API_BASE_URL}/api/Logos/SSC Logo.png`} 
-              alt="SSC Logo" 
-              className="right-logo"
-              onError={(e) => {
-                console.error('Failed to load SSC Logo:', e.target.src);
-                e.target.style.display = 'none';
-              }}
-              onLoad={() => {
-                console.log('SSC Logo loaded successfully');
-              }}
-            />
-          </header>
-
-          <section className="ballot-info">
-            <table>
-              <tbody>
-                <tr>
-                  <td><strong>Ballot Name:</strong> {ballot?.Ballot_Title || 'Election Results'}</td>
-                  <td><strong>Ballot ID:</strong> {ballot?.id || 'N/A'}</td>
-                </tr>
-                <tr>
-                  <td><strong>Start Date:</strong> {ballot?.Ballot_StartDate ? new Date(ballot.Ballot_StartDate).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                  }) : 'Not specified'}</td>
-                  <td><strong>End Date:</strong> {ballot?.Ballot_EndDate ? new Date(ballot.Ballot_EndDate).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                  }) : 'Not specified'}</td>
-                </tr>
-              </tbody>
-            </table>
-          </section>
-
-          <div className="summary-box">
-            <div>Total Voters: <span>{results?.results?.BallotResults_TotalVoters || 0}</span></div>
-            <div>Total Votes Cast: <span>{results?.results?.BallotResults_TotalVotes || 0}</span></div>
-          </div>
-
-          {/* Position Results */}
-          {ballot?.ballotPositions?.map(ballotPosition => {
-            const positionResults = getPositionResults(ballotPosition.position.id);
-            
-            return (
-              <section key={ballotPosition.position.id} className="position-section">
-                <div className="position-title">{ballotPosition.position.Position_Title}</div>
-                <table className="candidates">
-                  <thead>
-                    <tr>
-                      <th>Candidate Name</th>
-                      <th>Votes</th>
-                      <th>Percentage</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {positionResults.map((result, index) => (
-                      <tr key={result.BallotResultDetails_CandidateId}>
-                        <td>{getCandidateName(result.BallotResultDetails_CandidateId)}</td>
-                        <td>{result.BallotResultDetails_VoteCount || 0}</td>
-                        <td>{(result.BallotResultDetails_Percentage || 0).toFixed(1)}%</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </section>
-            );
-          })}
-
-          <section className="signature-section">
-            <h3>Official Certification of Results</h3>
-            <div className="signatures">
-              <div className="sig-box"><div className="sig-line">Dean, CCS</div></div>
-              <div className="sig-box"><div className="sig-line">Dean, CBM</div></div>
-              <div className="sig-box"><div className="sig-line">Dean, COE</div></div>
-              <div className="sig-box"><div className="sig-line">Dean, CEA</div></div>
-              <div className="sig-box"><div className="sig-line">SSC Adviser</div></div>
-              <div className="sig-box"><div className="sig-line">Election Officer</div></div>
-            </div>
-          </section>
-        </div>
+        {/* Print Preview Component */}
+        <PrintPreview ballot={ballot} results={results} />
       </div>
     </div>
   );

@@ -1,0 +1,278 @@
+/* Professional Print Layout Styles - Clean Design */
+@media print {
+  @page {
+    size: 8.5in 11in;
+    margin: 0.5in;
+  }
+  
+  /* Hide everything except print layout */
+  body * {
+    visibility: hidden !important;
+  }
+  
+  .professional-print-layout,
+  .professional-print-layout * {
+    visibility: visible !important;
+  }
+
+  .professional-print-layout {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    max-width: 7.5in !important;
+    background: white !important;
+    color: #222 !important;
+    font-family: "Segoe UI", Arial, sans-serif !important;
+    margin: 0 !important;
+    padding: 0.5in !important;
+    z-index: 9999 !important;
+    box-sizing: border-box !important;
+  }
+  
+  .professional-print-layout header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    margin-bottom: 15px !important;
+    padding-bottom: 8px !important;
+    border-bottom: 2px solid #1e293b !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+    flex-wrap: wrap !important;
+    gap: 10px !important;
+  }
+  
+  .professional-print-layout header img {
+    height: 50px !important;
+    width: auto !important;
+    flex-shrink: 0 !important;
+  }
+  
+  .professional-print-layout header .left-logo {
+    order: 1 !important;
+  }
+  
+  .professional-print-layout header .right-logo {
+    order: 3 !important;
+  }
+  
+  .professional-print-layout header h1 {
+    text-align: center !important;
+    font-size: 18px !important;
+    font-weight: 700 !important;
+    color: #1e293b !important;
+    margin: 0 !important;
+    flex-grow: 1 !important;
+    flex-basis: 0 !important;
+    order: 2 !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    hyphens: auto !important;
+    min-width: 0 !important;
+  }
+  
+  .professional-print-layout .ballot-info {
+    margin-top: 10px !important;
+    margin-bottom: 15px !important;
+    font-size: 11px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+  }
+  
+  .professional-print-layout .ballot-info table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    display: table !important;
+    table-layout: fixed !important;
+    max-width: 100% !important;
+  }
+  
+  .professional-print-layout .ballot-info tr {
+    display: table-row !important;
+  }
+  
+  .professional-print-layout .ballot-info td {
+    padding: 8px 10px !important;
+    vertical-align: top !important;
+    display: table-cell !important;
+    width: 50% !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    hyphens: auto !important;
+  }
+  
+  .professional-print-layout .summary-box {
+    display: flex !important;
+    justify-content: space-between !important;
+    background: #e2e8f0 !important;
+    padding: 6px 10px !important;
+    border-radius: 4px !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    margin-bottom: 12px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+    flex-wrap: wrap !important;
+  }
+  
+  .professional-print-layout .position-section {
+    margin-top: 10px !important;
+    background: #fff !important;
+    padding: 6px 10px !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 4px !important;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
+    page-break-inside: avoid !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+  }
+  
+  .professional-print-layout .position-title {
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    margin-bottom: 4px !important;
+    color: #1e293b !important;
+    border-bottom: 1px solid #94a3b8 !important;
+    padding-bottom: 1px !important;
+  }
+  
+  .professional-print-layout table.candidates {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    margin-top: 4px !important;
+    display: table !important;
+    table-layout: auto !important;
+    max-width: 100% !important;
+    word-wrap: break-word !important;
+  }
+  
+  .professional-print-layout table.candidates th:nth-child(1),
+  .professional-print-layout table.candidates td:nth-child(1) {
+    width: 60% !important;
+    max-width: 60% !important;
+  }
+  
+  .professional-print-layout table.candidates th:nth-child(2),
+  .professional-print-layout table.candidates td:nth-child(2) {
+    width: 20% !important;
+    max-width: 20% !important;
+  }
+  
+  .professional-print-layout table.candidates th:nth-child(3),
+  .professional-print-layout table.candidates td:nth-child(3) {
+    width: 20% !important;
+    max-width: 20% !important;
+  }
+  
+  .professional-print-layout table.candidates th,
+  .professional-print-layout table.candidates td {
+    border: 1px solid #cbd5e1 !important;
+    padding: 4px 6px !important;
+    text-align: left !important;
+    font-size: 10px !important;
+    vertical-align: middle !important;
+    display: table-cell !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    hyphens: auto !important;
+    overflow: hidden !important;
+  }
+  
+  .professional-print-layout table.candidates th {
+    background-color: #e2e8f0 !important;
+    color: #1e293b !important;
+    font-weight: 600 !important;
+    text-align: center !important;
+  }
+  
+  .professional-print-layout table.candidates tbody tr:nth-child(even) {
+    background: #f8fafc !important;
+  }
+  
+  .professional-print-layout table.candidates td:last-child {
+    text-align: center !important;
+    white-space: nowrap !important;
+  }
+  
+  .professional-print-layout table.candidates tr {
+    display: table-row !important;
+  }
+  
+  .professional-print-layout table.candidates thead {
+    display: table-header-group !important;
+  }
+  
+  .professional-print-layout table.candidates tbody {
+    display: table-row-group !important;
+  }
+  
+  .professional-print-layout .signature-section {
+    margin-top: 20px !important;
+    padding-top: 10px !important;
+    border-top: 2px solid #1e293b !important;
+    page-break-inside: avoid !important;
+    page-break-before: auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  
+  .professional-print-layout .signature-section h3 {
+    text-align: center !important;
+    margin-bottom: 10px !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    color: #1e293b !important;
+  }
+  
+  .professional-print-layout .signatures {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    gap: 15px !important;
+  }
+  
+  .professional-print-layout .sig-box {
+    flex: 1 1 30% !important;
+    text-align: center !important;
+    min-width: 100px !important;
+    margin-top: 15px !important;
+  }
+  
+  .professional-print-layout .sig-line {
+    border-top: 1px solid #000 !important;
+    margin-top: 20px !important;
+    padding-top: 2px !important;
+    font-size: 10px !important;
+    font-weight: 500 !important;
+  }
+  
+  .professional-print-layout .footer {
+    text-align: center !important;
+    margin-top: 20px !important;
+    font-size: 10px !important;
+    color: #6b7280 !important;
+  }
+  
+  /* Override any conflicting styles */
+  .professional-print-layout * {
+    box-sizing: border-box !important;
+  }
+}
+
+/* Hide print-only elements on screen */
+.print-only {
+  display: none;
+}
+
+/* Hide print controls when printing */
+@media print {
+  .print-controls {
+    display: none !important;
+  }
+}
