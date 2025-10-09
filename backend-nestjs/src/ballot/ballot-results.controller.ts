@@ -36,7 +36,18 @@ export class BallotResultsController {
   refreshBallotResults(@Param('id') id: string) {
     return this.ballotResultsService.refreshBallotResults(id);
   }
+
+  @Get(':id/results/partylist')
+  getPartylistResults(@Param('id') id: string) {
+    return this.ballotResultsService.getPartylistResults(id);
+  }
+
+  @Get(':id/results/analytics')
+  getBallotAnalytics(@Param('id') id: string) {
+    return this.ballotResultsService.getBallotAnalytics(id);
+  }
 }
+
 
 
 

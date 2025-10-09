@@ -193,14 +193,14 @@ const VotingHistory = () => {
                   <div className="history-item-header">
                     <div className="history-item-title">
                       <h3>{item.title}</h3>
-                      <div className="history-item-badges">
-                        <span className={`status-badge ${status.color}`}>
-                          {status.text}
-                        </span>
-                        <span className="type-badge ballot">
-                          Ballot
-                        </span>
-                      </div>
+                    </div>
+                    <div className="history-item-badges">
+                      <span className={`status-badge ${status.color}`}>
+                        {status.text}
+                      </span>
+                      <span className="type-badge ballot">
+                        Ballot
+                      </span>
                     </div>
                   </div>
 

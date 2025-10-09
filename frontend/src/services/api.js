@@ -1330,6 +1330,16 @@ export const refreshBallotResults = async (ballotId) => {
   }
 };
 
+export const getPartylistResults = async (ballotId) => {
+  try {
+    const response = await api.get(`/ballots/${ballotId}/results/partylist`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching partylist results:', error);
+    throw error;
+  }
+};
+
 // Ballot Voting API Functions
 export const createBallotVote = async (voteData) => {
   try {
@@ -1381,5 +1391,16 @@ export const updatePartyList = (id, data, logoFile) => {
 };
 export const deletePartyList = (id) => api.delete(`/party-lists/${id}`);
 export const getPartyListStatistics = () => api.get('/party-lists/statistics');
+
+// Analytics API functions
+export const getBallotAnalytics = async (ballotId) => {
+  try {
+    const response = await api.get(`/ballots/${ballotId}/results/analytics`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching ballot analytics:', error);
+    throw error;
+  }
+};
 
 export default api; 

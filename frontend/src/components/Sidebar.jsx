@@ -54,7 +54,12 @@ const Sidebar = ({ isOpen, onToggle }) => {
   }, []);
 
   const userRole = currentUser.role;
-  const userName = userData?.name || userData?.username || userRole || 'User';
+  
+  // Debug logging to understand the data structure
+  console.log('Sidebar userData:', userData);
+  console.log('Sidebar userRole:', userRole);
+  
+  const userName = userData?.Voter_Name || userData?.Admin_Username || userData?.name || userData?.username || userRole || 'User';
   
   // State for collapsible sections - use localStorage to persist state
   const [expandedSections, setExpandedSections] = useState(() => {
@@ -242,7 +247,7 @@ const Sidebar = ({ isOpen, onToggle }) => {
           <h3 className="admin-name">{userName}</h3>
           <div className="role-badge">
             <i className="fas fa-circle"></i>
-            <span>{userRole === 'USER' ? 'VOTER' : userRole?.toUpperCase() || 'USER'}</span>
+            <span>{userRole?.toUpperCase() || 'USER'}</span>
           </div>
         </div>
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import api from '../../services/api';
+import api, { getPartylistResults, getUserBallotHistory } from '../../services/api';
 import './BallotResults.css';
 
 const BallotResults = () => {
@@ -8,6 +8,8 @@ const BallotResults = () => {
   const navigate = useNavigate();
   const [ballot, setBallot] = useState(null);
   const [results, setResults] = useState(null);
+  const [partylistResults, setPartylistResults] = useState(null);
+  const [votingHistory, setVotingHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [autoRefresh, setAutoRefresh] = useState(false);
@@ -15,6 +17,8 @@ const BallotResults = () => {
   useEffect(() => {
     fetchBallot();
     fetchResults();
+    fetchPartylistResults();
+    fetchVotingHistory();
   }, [ballotId]);
 
   // Animate progress bars after results are loaded
@@ -66,6 +70,8 @@ const BallotResults = () => {
     if (autoRefresh && ballot?.Ballot_Status === 'ACTIVE') {
       interval = setInterval(() => {
         fetchResults();
+        fetchPartylistResults();
+        fetchVotingHistory();
       }, 5000); // Refresh every 5 seconds
     }
     return () => {
@@ -95,6 +101,33 @@ const BallotResults = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchPartylistResults = async () => {
+    try {
+      const response = await getPartylistResults(ballotId);
+      setPartylistResults(response);
+    } catch (err) {
+      console.error('Error fetching partylist results:', err);
+      // Don't set error state for partylist results as it's optional
+    }
+  };
+
+  const fetchVotingHistory = async () => {
+    try {
+      const response = await getUserBallotHistory();
+      setVotingHistory(response);
+    } catch (err) {
+      console.error('Error fetching voting history:', err);
+      setVotingHistory([]);
+    }
+  };
+
+  const hasVoted = () => {
+    return votingHistory.some(h => 
+      h.UserBallotHistory_BallotId === ballotId && 
+      h.UserBallotHistory_IsCompleted
+    );
   };
 
   const getBallotStatus = () => {
@@ -500,6 +533,89 @@ const BallotResults = () => {
               </div>
             </div>
 
+            {/* Partylist Results Section */}
+            {partylistResults && partylistResults.length > 0 && (
+              <div className="partylist-results-section">
+                <h3>Partylist Results</h3>
+                <div className="partylist-results-grid">
+                  {partylistResults.map((partylist, index) => (
+                    <div key={partylist.partylistId} className="partylist-result-card">
+                      <div className="partylist-header">
+                        <div className="partylist-logo-container">
+                          {partylist.partylistLogo ? (
+                            <img 
+                              src={partylist.partylistLogo} 
+                              alt={`${partylist.partylistName} logo`}
+                              className="partylist-logo"
+                              onError={(e) => {
+                                e.target.style.display = 'none';
+                                if (e.target.nextSibling) {
+                                  e.target.nextSibling.style.display = 'flex';
+                                }
+                              }}
+                            />
+                          ) : null}
+                          <div 
+                            className="partylist-logo-fallback"
+                            style={{ 
+                              display: partylist.partylistLogo ? 'none' : 'flex',
+                              backgroundColor: partylist.partylistColor || '#6c757d'
+                            }}
+                          >
+                            {partylist.partylistName.split(' ').map(word => word.charAt(0)).join('').toUpperCase().slice(0, 2)}
+                          </div>
+                        </div>
+                        <div className="partylist-info">
+                          <h4 className="partylist-name">{partylist.partylistName}</h4>
+                          <div className="partylist-rank">
+                            <span className="rank-number">#{index + 1}</span>
+                            <span className="rank-label">Partylist</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="partylist-stats">
+                        <div className="stat-row">
+                          <div className="stat-item">
+                            <span className="stat-value">{partylist.totalVotes}</span>
+                            <span className="stat-label">Total Votes</span>
+                          </div>
+                          <div className="stat-item">
+                            <span className="stat-value">{partylist.percentage.toFixed(1)}%</span>
+                            <span className="stat-label">Vote Share</span>
+                          </div>
+                        </div>
+                        
+                        <div className="stat-row">
+                          <div className="stat-item">
+                            <span className="stat-value">{partylist.candidateCount}</span>
+                            <span className="stat-label">Candidates</span>
+                          </div>
+                          <div className="stat-item">
+                            <span className="stat-value">{partylist.averageVotesPerCandidate.toFixed(1)}</span>
+                            <span className="stat-label">Avg Votes/Candidate</span>
+                          </div>
+                        </div>
+                        
+                        <div className="progress-container">
+                          <div className="progress-bar">
+                            <div 
+                              className="progress-fill"
+                              style={{ 
+                                width: '0%',
+                                backgroundColor: partylist.partylistColor || '#3b82f6'
+                              }}
+                              data-percent={partylist.percentage}
+                            ></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Analytics Section */}
             <div className="analytics-section">
               <h3>Voting Analytics</h3>
@@ -634,7 +750,7 @@ const BallotResults = () => {
         )}
       </div>
 
-      {ballotStatus.status === 'active' && (
+      {ballotStatus.status === 'active' && !hasVoted() && (
         <div className="results-actions">
           <button 
             className="btn btn-primary"
@@ -643,6 +759,17 @@ const BallotResults = () => {
             <i className="fas fa-vote-yea"></i>
             Vote Now
           </button>
+        </div>
+      )}
+
+      {ballotStatus.status === 'active' && hasVoted() && (
+        <div className="results-actions">
+          <div className="alert alert-success d-flex align-items-center" role="alert">
+            <i className="fas fa-check-circle me-2"></i>
+            <div>
+              <strong>You have already voted!</strong> Your vote has been recorded.
+            </div>
+          </div>
         </div>
       )}
     </div>

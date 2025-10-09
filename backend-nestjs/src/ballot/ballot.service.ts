@@ -621,6 +621,9 @@ export class BallotService {
     return this.prisma.userBallotHistory.findMany({
       where: {
         UserBallotHistory_UserId: userId,
+        ballot: {
+          Ballot_IsDeleted: false, // Filter out deleted ballots
+        },
       },
       include: {
         ballot: {

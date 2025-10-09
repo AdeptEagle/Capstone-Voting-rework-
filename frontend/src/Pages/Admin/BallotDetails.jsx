@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { 
-  getBallotById, 
+import {
+  getBallotById,
   getBallotResults,
-  activateBallot, 
-  pauseBallot, 
+  getPartylistResults,
+  getBallotAnalytics,
+  activateBallot,
+  pauseBallot,
   endBallot,
-  deleteBallot 
+  deleteBallot
 } from '../../services/api';
 import './BallotDetails.css';
 import './print-styles.css';
@@ -18,6 +20,8 @@ const BallotDetails = () => {
   
   const [ballot, setBallot] = useState(null);
   const [results, setResults] = useState(null);
+  const [partylistResults, setPartylistResults] = useState(null);
+  const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -87,20 +91,31 @@ const BallotDetails = () => {
   const fetchBallotData = async () => {
     try {
       setLoading(true);
-      const [ballotData, resultsData] = await Promise.all([
+      const [ballotData, resultsData, partylistData, analyticsData] = await Promise.all([
         getBallotById(ballotId),
         getBallotResults(ballotId).catch((error) => {
           console.log('Results fetch failed (this is normal if results are not available):', error);
           return null; // Results might not exist yet
+        }),
+        getPartylistResults(ballotId).catch((error) => {
+          console.log('Partylist results fetch failed (this is normal if no partylist data):', error);
+          return null; // Partylist results might not exist yet
+        }),
+        getBallotAnalytics(ballotId).catch((error) => {
+          console.log('Analytics fetch failed (this is normal if no analytics data):', error);
+          return null; // Analytics might not exist yet
         })
       ]);
       
       setBallot(ballotData);
       setResults(resultsData);
+      setPartylistResults(partylistData);
+      setAnalytics(analyticsData);
       setLastUpdated(new Date());
       
       // Debug the results data
       console.log('Results data received:', resultsData);
+      console.log('Partylist results received:', partylistData);
       console.log('Results type:', typeof resultsData);
       console.log('Results results property:', resultsData?.results);
       console.log('Results results length:', resultsData?.results?.length);
@@ -114,8 +129,15 @@ const BallotDetails = () => {
 
   const fetchResults = async () => {
     try {
-      const resultsData = await getBallotResults(ballotId);
+      const [resultsData, partylistData] = await Promise.all([
+        getBallotResults(ballotId),
+        getPartylistResults(ballotId).catch((error) => {
+          console.log('Partylist results fetch failed:', error);
+          return null;
+        })
+      ]);
       setResults(resultsData);
+      setPartylistResults(partylistData);
       setLastUpdated(new Date());
     } catch (error) {
       console.log('Results fetch failed:', error);
@@ -423,6 +445,13 @@ const BallotDetails = () => {
         >
           <i className="fas fa-chart-bar"></i>
           Results
+        </button>
+        <button 
+          className={`tab-btn ${activeTab === 'analytics' ? 'active' : ''}`}
+          onClick={() => setActiveTab('analytics')}
+        >
+          <i className="fas fa-chart-line"></i>
+          Analytics
         </button>
         <button 
           className={`tab-btn ${activeTab === 'settings' ? 'active' : ''}`}
@@ -781,6 +810,89 @@ const BallotDetails = () => {
                   </div>
                 </div>
 
+                {/* Partylist Results Section */}
+                {partylistResults && partylistResults.length > 0 && (
+                  <div className="partylist-results-section">
+                    <h3>Partylist Results</h3>
+                    <div className="partylist-results-grid">
+                      {partylistResults.map((partylist, index) => (
+                        <div key={partylist.partylistId} className="partylist-result-card">
+                          <div className="partylist-header">
+                            <div className="partylist-logo-container">
+                              {partylist.partylistLogo ? (
+                                <img 
+                                  src={partylist.partylistLogo} 
+                                  alt={`${partylist.partylistName} logo`}
+                                  className="partylist-logo"
+                                  onError={(e) => {
+                                    e.target.style.display = 'none';
+                                    if (e.target.nextSibling) {
+                                      e.target.nextSibling.style.display = 'flex';
+                                    }
+                                  }}
+                                />
+                              ) : null}
+                              <div 
+                                className="partylist-logo-fallback"
+                                style={{ 
+                                  display: partylist.partylistLogo ? 'none' : 'flex',
+                                  backgroundColor: partylist.partylistColor || '#6c757d'
+                                }}
+                              >
+                                {partylist.partylistName.split(' ').map(word => word.charAt(0)).join('').toUpperCase().slice(0, 2)}
+                              </div>
+                            </div>
+                            <div className="partylist-info">
+                              <h4 className="partylist-name">{partylist.partylistName}</h4>
+                              <div className="partylist-rank">
+                                <span className="rank-number">#{index + 1}</span>
+                                <span className="rank-label">Partylist</span>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="partylist-stats">
+                            <div className="stat-row">
+                              <div className="stat-item">
+                                <span className="stat-value">{partylist.totalVotes}</span>
+                                <span className="stat-label">Total Votes</span>
+                              </div>
+                              <div className="stat-item">
+                                <span className="stat-value">{partylist.percentage.toFixed(1)}%</span>
+                                <span className="stat-label">Vote Share</span>
+                              </div>
+                            </div>
+                            
+                            <div className="stat-row">
+                              <div className="stat-item">
+                                <span className="stat-value">{partylist.candidateCount}</span>
+                                <span className="stat-label">Candidates</span>
+                              </div>
+                              <div className="stat-item">
+                                <span className="stat-value">{partylist.averageVotesPerCandidate.toFixed(1)}</span>
+                                <span className="stat-label">Avg Votes/Candidate</span>
+                              </div>
+                            </div>
+                            
+                            <div className="progress-container">
+                              <div className="progress-bar">
+                                <div 
+                                  className="progress-fill"
+                                  style={{ 
+                                    width: '0%',
+                                    backgroundColor: partylist.partylistColor || '#3b82f6'
+                                  }}
+                                  data-percent={partylist.percentage}
+                                ></div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Analytics Section */}
                 <div className="analytics-section">
                   <h3>Voting Analytics</h3>
@@ -935,6 +1047,237 @@ const BallotDetails = () => {
               </div>
             )}
 
+          </div>
+        )}
+
+        {activeTab === 'analytics' && (
+          <div className="analytics-tab">
+            {analytics ? (
+              <div className="analytics-content">
+                {/* Basic Statistics */}
+                <div className="analytics-section">
+                  <h3><i className="fas fa-chart-pie"></i> Basic Statistics</h3>
+                  <div className="stats-grid">
+                    <div className="stat-card">
+                      <div className="stat-icon">
+                        <i className="fas fa-vote-yea"></i>
+                      </div>
+                      <div className="stat-content">
+                        <h4>{analytics.basicStats.totalVotes}</h4>
+                        <p>Total Votes</p>
+                      </div>
+                    </div>
+                    <div className="stat-card">
+                      <div className="stat-icon">
+                        <i className="fas fa-users"></i>
+                      </div>
+                      <div className="stat-content">
+                        <h4>{analytics.basicStats.totalVoters}</h4>
+                        <p>Total Voters</p>
+                      </div>
+                    </div>
+                    <div className="stat-card">
+                      <div className="stat-icon">
+                        <i className="fas fa-percentage"></i>
+                      </div>
+                      <div className="stat-content">
+                        <h4>{analytics.basicStats.voterTurnout.toFixed(1)}%</h4>
+                        <p>Voter Turnout</p>
+                      </div>
+                    </div>
+                    <div className="stat-card">
+                      <div className="stat-icon">
+                        <i className="fas fa-calendar"></i>
+                      </div>
+                      <div className="stat-content">
+                        <h4>{analytics.basicStats.ballotDuration}</h4>
+                        <p>Duration (Days)</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Position Analytics */}
+                <div className="analytics-section">
+                  <h3><i className="fas fa-user-tie"></i> Position Analytics</h3>
+                  <div className="position-analytics-grid">
+                    {Object.values(analytics.positionAnalytics).map((position, index) => (
+                      <div key={index} className="position-analytics-card">
+                        <h4>{position.positionTitle}</h4>
+                        <div className="position-stats">
+                          <div className="stat-row">
+                            <span>Total Votes:</span>
+                            <span>{position.totalVotes}</span>
+                          </div>
+                          <div className="stat-row">
+                            <span>Candidates:</span>
+                            <span>{position.candidateCount}</span>
+                          </div>
+                          <div className="stat-row">
+                            <span>Competitiveness:</span>
+                            <span className={`competitiveness ${position.competitiveness > 70 ? 'high' : position.competitiveness > 40 ? 'medium' : 'low'}`}>
+                              {position.competitiveness}%
+                            </span>
+                          </div>
+                        </div>
+                        <div className="top-candidates">
+                          <h5>Top Candidates:</h5>
+                          {position.candidates.slice(0, 3).map((candidate, idx) => (
+                            <div key={idx} className="candidate-result">
+                              <span className="candidate-name">{candidate.candidateName}</span>
+                              <span className="candidate-votes">{candidate.votes} votes ({candidate.percentage.toFixed(1)}%)</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Department Analytics */}
+                {analytics.departmentAnalytics.length > 0 && (
+                  <div className="analytics-section">
+                    <h3><i className="fas fa-building"></i> Department Performance</h3>
+                    <div className="department-analytics-grid">
+                      {analytics.departmentAnalytics.map((dept, index) => (
+                        <div key={index} className="department-card">
+                          <h4>{dept.departmentName}</h4>
+                          <div className="department-stats">
+                            <div className="stat-row">
+                              <span>Total Votes:</span>
+                              <span>{dept.totalVotes}</span>
+                            </div>
+                            <div className="stat-row">
+                              <span>Vote Share:</span>
+                              <span>{dept.voteShare.toFixed(1)}%</span>
+                            </div>
+                            <div className="stat-row">
+                              <span>Candidates:</span>
+                              <span>{dept.uniqueCandidates}</span>
+                            </div>
+                            <div className="stat-row">
+                              <span>Positions:</span>
+                              <span>{dept.positionsContested}</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Partylist Analytics */}
+                {analytics.partylistAnalytics.length > 0 && (
+                  <div className="analytics-section">
+                    <h3><i className="fas fa-flag"></i> Partylist Performance</h3>
+                    <div className="partylist-analytics-grid">
+                      {analytics.partylistAnalytics.map((partylist, index) => (
+                        <div key={index} className="partylist-card">
+                          <div className="partylist-header">
+                            <div 
+                              className="partylist-color" 
+                              style={{ backgroundColor: partylist.partylistColor || '#6c757d' }}
+                            ></div>
+                            <h4>{partylist.partylistName}</h4>
+                          </div>
+                          <div className="partylist-stats">
+                            <div className="stat-row">
+                              <span>Total Votes:</span>
+                              <span>{partylist.totalVotes}</span>
+                            </div>
+                            <div className="stat-row">
+                              <span>Vote Share:</span>
+                              <span>{partylist.voteShare.toFixed(1)}%</span>
+                            </div>
+                            <div className="stat-row">
+                              <span>Candidates:</span>
+                              <span>{partylist.uniqueCandidates}</span>
+                            </div>
+                            <div className="stat-row">
+                              <span>Avg Votes/Candidate:</span>
+                              <span>{partylist.averageVotesPerCandidate.toFixed(1)}</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Voting Patterns */}
+                <div className="analytics-section">
+                  <h3><i className="fas fa-chart-line"></i> Voting Patterns</h3>
+                  <div className="voting-patterns-grid">
+                    <div className="pattern-card">
+                      <div className="pattern-icon">
+                        <i className="fas fa-check-circle"></i>
+                      </div>
+                      <div className="pattern-content">
+                        <h4>{analytics.votingPatterns.completeVotingRate.toFixed(1)}%</h4>
+                        <p>Complete Voting Rate</p>
+                      </div>
+                    </div>
+                    <div className="pattern-card">
+                      <div className="pattern-icon">
+                        <i className="fas fa-clock"></i>
+                      </div>
+                      <div className="pattern-content">
+                        <h4>{analytics.votingPatterns.partialVotingRate.toFixed(1)}%</h4>
+                        <p>Partial Voting Rate</p>
+                      </div>
+                    </div>
+                    <div className="pattern-card">
+                      <div className="pattern-icon">
+                        <i className="fas fa-times-circle"></i>
+                      </div>
+                      <div className="pattern-content">
+                        <h4>{analytics.votingPatterns.abstentionRate.toFixed(1)}%</h4>
+                        <p>Abstention Rate</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Time Analytics */}
+                <div className="analytics-section">
+                  <h3><i className="fas fa-clock"></i> Time Analytics</h3>
+                  <div className="time-analytics-grid">
+                    <div className="time-card">
+                      <h4>Ballot Duration</h4>
+                      <p>{analytics.timeAnalytics.duration} days</p>
+                    </div>
+                    <div className="time-card">
+                      <h4>Status</h4>
+                      <p className={`status ${analytics.timeAnalytics.isActive ? 'active' : analytics.timeAnalytics.isEnded ? 'ended' : 'scheduled'}`}>
+                        {analytics.timeAnalytics.isActive ? 'Active' : analytics.timeAnalytics.isEnded ? 'Ended' : 'Scheduled'}
+                      </p>
+                    </div>
+                    {analytics.timeAnalytics.isActive && (
+                      <div className="time-card">
+                        <h4>Time Remaining</h4>
+                        <p>{analytics.timeAnalytics.timeRemaining} days</p>
+                      </div>
+                    )}
+                    <div className="time-card">
+                      <h4>Progress</h4>
+                      <div className="progress-bar">
+                        <div 
+                          className="progress-fill" 
+                          style={{ width: `${analytics.timeAnalytics.votingProgress}%` }}
+                        ></div>
+                      </div>
+                      <p>{analytics.timeAnalytics.votingProgress.toFixed(1)}%</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="analytics-loading">
+                <i className="fas fa-chart-line fa-spin"></i>
+                <h3>Loading Analytics...</h3>
+                <p>Calculating comprehensive voting insights</p>
+              </div>
+            )}
           </div>
         )}
 
