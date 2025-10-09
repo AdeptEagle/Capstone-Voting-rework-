@@ -650,14 +650,50 @@ export class BallotResultsService {
       departmentStats[departmentId].positions.add(vote.positionId);
     });
 
-    // Convert to array format
-    return Object.values(departmentStats).map((dept: any) => ({
-      departmentName: dept.departmentName,
-      totalVotes: dept.totalVotes,
-      uniqueCandidates: dept.candidates.size,
-      positionsContested: dept.positions.size,
-      voteShare: ballot._count.votes > 0 ? (dept.totalVotes / ballot._count.votes) * 100 : 0,
-    })).sort((a, b) => b.totalVotes - a.totalVotes);
+    // Get department registration data from user history
+    const departmentRegistration = {};
+    ballot.userHistory.forEach(history => {
+      const deptId = history.user.department?.id;
+      const deptName = history.user.department?.Department_Name || 'Unknown';
+      
+      if (!departmentRegistration[deptId]) {
+        departmentRegistration[deptId] = {
+          departmentName: deptName,
+          registeredStudents: 0,
+          votedStudents: 0,
+        };
+      }
+      
+      departmentRegistration[deptId].registeredStudents++;
+      if (history.UserBallotHistory_IsCompleted) {
+        departmentRegistration[deptId].votedStudents++;
+      }
+    });
+
+    // Merge vote stats with registration data
+    const enhancedDepartmentStats = Object.values(departmentStats).map((dept: any) => {
+      const registrationData = Object.values(departmentRegistration).find((reg: any) => 
+        reg.departmentName === dept.departmentName
+      );
+      
+      const registeredStudents = (registrationData as any)?.registeredStudents || 0;
+      const votedStudents = (registrationData as any)?.votedStudents || 0;
+      const participationRate = registeredStudents > 0 ? (votedStudents / registeredStudents) * 100 : 0;
+      
+      return {
+        departmentName: dept.departmentName,
+        totalVotes: dept.totalVotes,
+        uniqueCandidates: dept.candidates.size,
+        positionsContested: dept.positions.size,
+        voteShare: ballot._count.votes > 0 ? (dept.totalVotes / ballot._count.votes) * 100 : 0,
+        registeredStudents,
+        votedStudents,
+        participationRate,
+        averageVotesPerVoter: votedStudents > 0 ? dept.totalVotes / votedStudents : 0,
+      };
+    });
+
+    return enhancedDepartmentStats.sort((a, b) => b.totalVotes - a.totalVotes);
   }
 
   private calculateCourseAnalytics(ballot: any) {

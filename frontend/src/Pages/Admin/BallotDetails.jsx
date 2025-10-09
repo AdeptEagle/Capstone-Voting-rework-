@@ -13,6 +13,9 @@ import {
 import './BallotDetails.css';
 import './print-styles.css';
 
+// API base URL for logo paths
+const API_BASE_URL = 'http://localhost:3001';
+
 const BallotDetails = () => {
   const { ballotId } = useParams();
   const navigate = useNavigate();
@@ -29,6 +32,10 @@ const BallotDetails = () => {
   const [autoRefresh, setAutoRefresh] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(null);
   const [refreshInterval, setRefreshInterval] = useState(null);
+
+  const handlePrint = () => {
+    window.print();
+  };
 
   useEffect(() => {
     fetchBallotData();
@@ -87,6 +94,250 @@ const BallotDetails = () => {
       });
     }
   }, [results, activeTab]);
+
+  // Initialize charts when analytics tab is active
+  useEffect(() => {
+    if (analytics && activeTab === 'analytics' && analytics.departmentAnalytics.length > 0) {
+      // Small delay to ensure DOM is ready
+      const timer = setTimeout(() => {
+        initializeDepartmentCharts();
+      }, 100);
+
+      return () => {
+        clearTimeout(timer);
+        // Cleanup charts when component unmounts or tab changes
+        if (window.departmentVotesChart && typeof window.departmentVotesChart.destroy === 'function') {
+          try {
+            window.departmentVotesChart.destroy();
+          } catch (error) {
+            console.log('Error destroying votes chart in cleanup:', error);
+          }
+          window.departmentVotesChart = null;
+        }
+        if (window.departmentParticipationChart && typeof window.departmentParticipationChart.destroy === 'function') {
+          try {
+            window.departmentParticipationChart.destroy();
+          } catch (error) {
+            console.log('Error destroying participation chart in cleanup:', error);
+          }
+          window.departmentParticipationChart = null;
+        }
+      };
+    }
+  }, [analytics, activeTab]);
+
+  const initializeDepartmentCharts = () => {
+    console.log('Attempting to initialize charts...');
+    console.log('Chart.js available:', typeof window.Chart !== 'undefined');
+    console.log('Analytics data:', analytics);
+    console.log('Department analytics:', analytics?.departmentAnalytics);
+
+    if (typeof window.Chart === 'undefined') {
+      console.log('Chart.js not loaded yet, retrying in 500ms...');
+      setTimeout(() => initializeDepartmentCharts(), 500);
+      return;
+    }
+
+    // Ensure Chart.js is fully loaded
+    if (!window.Chart || typeof window.Chart.getChart !== 'function') {
+      console.log('Chart.js not fully loaded, retrying in 500ms...');
+      setTimeout(() => initializeDepartmentCharts(), 500);
+      return;
+    }
+
+    if (!analytics || !analytics.departmentAnalytics || analytics.departmentAnalytics.length === 0) {
+      console.log('No department analytics data available, using sample data for testing');
+      // Use sample data for testing charts
+      const sampleData = [
+        { departmentName: 'Computer Science', totalVotes: 150, participationRate: 85.5 },
+        { departmentName: 'Information Technology', totalVotes: 120, participationRate: 78.2 },
+        { departmentName: 'Business Administration', totalVotes: 90, participationRate: 72.1 },
+        { departmentName: 'Education', totalVotes: 75, participationRate: 65.8 },
+        { departmentName: 'Engineering', totalVotes: 60, participationRate: 58.3 }
+      ];
+      createChartsWithData(sampleData);
+      return;
+    }
+
+    console.log('Initializing department charts with data:', analytics.departmentAnalytics);
+    createChartsWithData(analytics.departmentAnalytics);
+  };
+
+  const createChartsWithData = (departmentData) => {
+    console.log('Creating charts with data:', departmentData);
+
+    // Destroy existing charts safely
+    if (window.departmentVotesChart && typeof window.departmentVotesChart.destroy === 'function') {
+      try {
+        window.departmentVotesChart.destroy();
+      } catch (error) {
+        console.log('Error destroying votes chart:', error);
+      }
+      window.departmentVotesChart = null;
+    }
+    if (window.departmentParticipationChart && typeof window.departmentParticipationChart.destroy === 'function') {
+      try {
+        window.departmentParticipationChart.destroy();
+      } catch (error) {
+        console.log('Error destroying participation chart:', error);
+      }
+      window.departmentParticipationChart = null;
+    }
+    
+    // Wait for DOM elements to be available
+    setTimeout(() => {
+      // Votes by Department Bar Chart
+      const votesCtx = document.getElementById('departmentVotesChart');
+      console.log('Votes chart canvas found:', !!votesCtx);
+      
+      if (votesCtx) {
+        try {
+          console.log('Creating votes bar chart...');
+          // Clear any existing chart on the canvas
+          const existingChart = window.Chart.getChart(votesCtx);
+          if (existingChart) {
+            existingChart.destroy();
+          }
+          
+          window.departmentVotesChart = new window.Chart(votesCtx, {
+            type: 'bar',
+            data: {
+              labels: departmentData.map(dept => dept.departmentName),
+              datasets: [{
+                label: 'Votes Cast',
+                data: departmentData.map(dept => dept.totalVotes),
+                backgroundColor: '#A7D9F8', // Light pastel blue
+                borderColor: '#7DD3FC', // Slightly darker light blue for border
+                borderWidth: 1,
+                borderRadius: 4,
+                barThickness: 60, // Fixed bar thickness for better proportions
+                maxBarThickness: 80, // Maximum bar thickness
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false, // Allow chart to fill container
+              plugins: {
+                legend: {
+                  display: false
+                }
+              },
+              scales: {
+                x: {
+                  ticks: {
+                    maxRotation: 45,
+                    minRotation: 0,
+                    font: {
+                      size: 14
+                    }
+                  },
+                  grid: {
+                    display: false
+                  }
+                },
+                y: {
+                  beginAtZero: true,
+                  ticks: {
+                    stepSize: 1,
+                    font: {
+                      size: 14
+                    }
+                  },
+                  grid: {
+                    color: '#f3f4f6'
+                  }
+                }
+              },
+              layout: {
+                padding: {
+                  top: 20,
+                  bottom: 20,
+                  left: 20,
+                  right: 20
+                }
+              }
+            }
+          });
+          console.log('Votes bar chart created successfully');
+        } catch (error) {
+          console.error('Error creating votes bar chart:', error);
+        }
+      } else {
+        console.log('Votes chart canvas not found in DOM');
+      }
+
+      // Participation Distribution Doughnut Chart
+      const participationCtx = document.getElementById('departmentParticipationChart');
+      console.log('Participation chart canvas found:', !!participationCtx);
+      
+      if (participationCtx) {
+        try {
+          console.log('Creating participation doughnut chart...');
+          // Clear any existing chart on the canvas
+          const existingChart = window.Chart.getChart(participationCtx);
+          if (existingChart) {
+            existingChart.destroy();
+          }
+          
+          window.departmentParticipationChart = new window.Chart(participationCtx, {
+            type: 'doughnut',
+            data: {
+              labels: departmentData.map(dept => dept.departmentName),
+              datasets: [{
+                data: departmentData.map(dept => dept.participationRate),
+                backgroundColor: [
+                  '#A7D9F8', // Light pastel blue
+                  '#F8A5C2', // Light pink/coral
+                  '#FFB366', // Light orange
+                  '#FFE066', // Light yellow/gold
+                  '#7DD3FC', // Light teal/mint
+                  '#C4B5FD', // Light purple
+                  '#86EFAC'  // Light green
+                ],
+                borderWidth: 2,
+                borderColor: '#ffffff'
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false, // Allow chart to fill container
+              plugins: {
+                legend: {
+                  position: 'right',
+                  labels: {
+                    usePointStyle: true,
+                    padding: 25,
+                    font: {
+                      size: 14
+                    }
+                  }
+                },
+                tooltip: {
+                  callbacks: {
+                    label: function(context) {
+                      const label = context.label || '';
+                      const value = context.parsed;
+                      return `${label}: ${value.toFixed(1)}%`;
+                    }
+                  }
+                }
+              },
+              cutout: '40%', // Smaller cutout for larger chart area
+              animation: {
+                animateRotate: true,
+                animateScale: true
+              }
+            }
+          });
+          console.log('Participation doughnut chart created successfully');
+        } catch (error) {
+          console.error('Error creating participation doughnut chart:', error);
+        }
+      } else {
+        console.log('Participation chart canvas not found in DOM');
+      }
+    }, 200);
+  };
 
   const fetchBallotData = async () => {
     try {
@@ -728,6 +979,19 @@ const BallotDetails = () => {
 
             {results ? (
               <div className="results-content">
+                {/* Print Button - Only show when there are results */}
+                {results && results.results && results.results.resultDetails && results.results.resultDetails.length > 0 && (
+                  <div className="print-controls">
+                    <button 
+                      className="btn btn-primary print-btn"
+                      onClick={handlePrint}
+                    >
+                      <i className="fas fa-print"></i>
+                      Print Official Results
+                    </button>
+                  </div>
+                )}
+
                 <div className="results-summary">
                   <div className="summary-card">
                     <div className="summary-icon">
@@ -1034,19 +1298,6 @@ const BallotDetails = () => {
               </div>
             )}
 
-            {/* Print Button - Only show when there are results */}
-            {results && results.results && results.results.resultDetails && results.results.resultDetails.length > 0 && (
-              <div className="print-controls">
-                <button 
-                  className="btn btn-primary print-btn"
-                  onClick={() => window.print()}
-                >
-                  <i className="fas fa-print"></i>
-                  Print Official Results
-                </button>
-              </div>
-            )}
-
           </div>
         )}
 
@@ -1054,48 +1305,6 @@ const BallotDetails = () => {
           <div className="analytics-tab">
             {analytics ? (
               <div className="analytics-content">
-                {/* Basic Statistics */}
-                <div className="analytics-section">
-                  <h3><i className="fas fa-chart-pie"></i> Basic Statistics</h3>
-                  <div className="stats-grid">
-                    <div className="stat-card">
-                      <div className="stat-icon">
-                        <i className="fas fa-vote-yea"></i>
-                      </div>
-                      <div className="stat-content">
-                        <h4>{analytics.basicStats.totalVotes}</h4>
-                        <p>Total Votes</p>
-                      </div>
-                    </div>
-                    <div className="stat-card">
-                      <div className="stat-icon">
-                        <i className="fas fa-users"></i>
-                      </div>
-                      <div className="stat-content">
-                        <h4>{analytics.basicStats.totalVoters}</h4>
-                        <p>Total Voters</p>
-                      </div>
-                    </div>
-                    <div className="stat-card">
-                      <div className="stat-icon">
-                        <i className="fas fa-percentage"></i>
-                      </div>
-                      <div className="stat-content">
-                        <h4>{analytics.basicStats.voterTurnout.toFixed(1)}%</h4>
-                        <p>Voter Turnout</p>
-                      </div>
-                    </div>
-                    <div className="stat-card">
-                      <div className="stat-icon">
-                        <i className="fas fa-calendar"></i>
-                      </div>
-                      <div className="stat-content">
-                        <h4>{analytics.basicStats.ballotDuration}</h4>
-                        <p>Duration (Days)</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
 
                 {/* Position Analytics */}
                 <div className="analytics-section">
@@ -1134,34 +1343,167 @@ const BallotDetails = () => {
                   </div>
                 </div>
 
-                {/* Department Analytics */}
-                {analytics.departmentAnalytics.length > 0 && (
+                    {/* Enhanced Department Analytics */}
+                {analytics && (
                   <div className="analytics-section">
-                    <h3><i className="fas fa-building"></i> Department Performance</h3>
-                    <div className="department-analytics-grid">
-                      {analytics.departmentAnalytics.map((dept, index) => (
-                        <div key={index} className="department-card">
-                          <h4>{dept.departmentName}</h4>
-                          <div className="department-stats">
-                            <div className="stat-row">
-                              <span>Total Votes:</span>
-                              <span>{dept.totalVotes}</span>
-                            </div>
-                            <div className="stat-row">
-                              <span>Vote Share:</span>
-                              <span>{dept.voteShare.toFixed(1)}%</span>
-                            </div>
-                            <div className="stat-row">
-                              <span>Candidates:</span>
-                              <span>{dept.uniqueCandidates}</span>
-                            </div>
-                            <div className="stat-row">
-                              <span>Positions:</span>
-                              <span>{dept.positionsContested}</span>
-                            </div>
-                          </div>
+                    <h3><i className="fas fa-building"></i> Department Performance Analytics</h3>
+                    
+                    {/* Debug Information */}
+                    <div className="debug-info" style={{ background: '#f0f9ff', padding: '1rem', borderRadius: '0.5rem', marginBottom: '1rem', fontSize: '0.875rem' }}>
+                      <strong>Debug Info:</strong><br/>
+                      Analytics loaded: {analytics ? 'Yes' : 'No'}<br/>
+                      Department data: {analytics?.departmentAnalytics?.length || 0} departments<br/>
+                      Chart.js available: {typeof window.Chart !== 'undefined' ? 'Yes' : 'No'}<br/>
+                      <button 
+                        className="btn btn-sm btn-primary" 
+                        onClick={() => {
+                          console.log('Manual chart refresh triggered');
+                          initializeDepartmentCharts();
+                        }}
+                        style={{ marginTop: '0.5rem', marginRight: '0.5rem' }}
+                      >
+                        <i className="fas fa-sync-alt"></i> Force Refresh Charts
+                      </button>
+                      <button 
+                        className="btn btn-sm btn-secondary" 
+                        onClick={() => {
+                          console.log('Testing with sample data');
+                          const sampleData = [
+                            { departmentName: 'Computer Science', totalVotes: 150, participationRate: 85.5 },
+                            { departmentName: 'Information Technology', totalVotes: 120, participationRate: 78.2 },
+                            { departmentName: 'Business Administration', totalVotes: 90, participationRate: 72.1 },
+                            { departmentName: 'Education', totalVotes: 75, participationRate: 65.8 },
+                            { departmentName: 'Engineering', totalVotes: 60, participationRate: 58.3 }
+                          ];
+                          createChartsWithData(sampleData);
+                        }}
+                        style={{ marginTop: '0.5rem' }}
+                      >
+                        <i className="fas fa-chart-bar"></i> Test with Sample Data
+                      </button>
+                    </div>
+                    
+                    {/* Department Details Table - First */}
+                    <div className="department-details-section">
+                      <h4>Department Details</h4>
+                      <div className="department-table-container">
+                        <table className="department-table">
+                          <thead>
+                            <tr>
+                              <th>Department</th>
+                              <th>Registered</th>
+                              <th>Voted</th>
+                              <th>Votes Cast</th>
+                              <th>Participation</th>
+                              <th>Candidates</th>
+                              <th>Avg Votes/Voter</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {analytics.departmentAnalytics.map((dept, index) => (
+                              <tr key={index}>
+                                <td className="dept-name">{dept.departmentName}</td>
+                                <td>{dept.registeredStudents.toLocaleString()}</td>
+                                <td>{dept.votedStudents.toLocaleString()}</td>
+                                <td>{dept.totalVotes.toLocaleString()}</td>
+                                <td>
+                                  <span className={`participation-rate ${dept.participationRate > 80 ? 'high' : dept.participationRate > 60 ? 'medium' : 'low'}`}>
+                                    {dept.participationRate.toFixed(1)}%
+                                  </span>
+                                </td>
+                                <td>{dept.uniqueCandidates}</td>
+                                <td>{dept.averageVotesPerVoter.toFixed(1)}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                    {/* Department Summary Cards */}
+                    <div className="department-summary-cards">
+                      <div className="summary-card">
+                        <div className="summary-icon">
+                          <i className="fas fa-vote-yea"></i>
                         </div>
-                      ))}
+                        <div className="summary-content">
+                          <h4>{analytics.departmentAnalytics.reduce((sum, dept) => sum + dept.totalVotes, 0).toLocaleString()}</h4>
+                          <p>Total Votes Cast</p>
+                          <span className="summary-subtitle">Across all departments</span>
+                        </div>
+                      </div>
+                      <div className="summary-card">
+                        <div className="summary-icon">
+                          <i className="fas fa-users"></i>
+                        </div>
+                        <div className="summary-content">
+                          <h4>{analytics.departmentAnalytics.reduce((sum, dept) => sum + dept.registeredStudents, 0).toLocaleString()}</h4>
+                          <p>Registered Students</p>
+                          <span className="summary-subtitle">Students eligible to vote</span>
+                        </div>
+                      </div>
+                      <div className="summary-card">
+                        <div className="summary-icon">
+                          <i className="fas fa-percentage"></i>
+                        </div>
+                        <div className="summary-content">
+                          <h4>{analytics.departmentAnalytics.length > 0 ? 
+                            (analytics.departmentAnalytics.reduce((sum, dept) => sum + dept.votedStudents, 0) / 
+                             analytics.departmentAnalytics.reduce((sum, dept) => sum + dept.registeredStudents, 0) * 100).toFixed(1) : '0.0'}%</h4>
+                          <p>Overall Participation</p>
+                          <span className="summary-subtitle">% of registered who voted</span>
+                        </div>
+                      </div>
+                      <div className="summary-card">
+                        <div className="summary-icon">
+                          <i className="fas fa-building"></i>
+                        </div>
+                        <div className="summary-content">
+                          <h4>{analytics.departmentAnalytics.length}</h4>
+                          <p>Departments</p>
+                          <span className="summary-subtitle">Count of departments included</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Votes by Department Chart - Second */}
+                    <div className="chart-container">
+                      <div className="chart-header">
+                        <h4>Votes by Department</h4>
+                        <button 
+                          className="btn btn-sm btn-outline" 
+                          onClick={() => initializeDepartmentCharts()}
+                          style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}
+                        >
+                          <i className="fas fa-sync-alt"></i> Refresh Chart
+                        </button>
+                      </div>
+                      <canvas id="departmentVotesChart" width="800" height="400"></canvas>
+                      {analytics.departmentAnalytics.length === 0 && (
+                        <div className="chart-placeholder">
+                          <p>No department data available for chart</p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Participation Distribution Chart - Third */}
+                    <div className="chart-container">
+                      <div className="chart-header">
+                        <h4>Participation Distribution</h4>
+                        <button 
+                          className="btn btn-sm btn-outline" 
+                          onClick={() => initializeDepartmentCharts()}
+                          style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}
+                        >
+                          <i className="fas fa-sync-alt"></i> Refresh Chart
+                        </button>
+                      </div>
+                      <canvas id="departmentParticipationChart" width="600" height="400"></canvas>
+                      {analytics.departmentAnalytics.length === 0 && (
+                        <div className="chart-placeholder">
+                          <p>No department data available for chart</p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
@@ -1344,29 +1686,53 @@ const BallotDetails = () => {
         {/* Professional Print Layout - Clean Design */}
         <div className="professional-print-layout print-only">
           <header>
-            <img src="/api/Logos/BC Logo.png" alt="BC Logo" className="left-logo" />
+            <img 
+              src={`${API_BASE_URL}/api/Logos/BC Logo.png`} 
+              alt="BC Logo" 
+              className="left-logo"
+              onError={(e) => {
+                console.error('Failed to load BC Logo:', e.target.src);
+                e.target.style.display = 'none';
+              }}
+              onLoad={() => {
+                console.log('BC Logo loaded successfully');
+              }}
+            />
             <h1>Official Election Results</h1>
-            <img src="/api/Logos/SSC Logo.png" alt="SSC Logo" className="right-logo" />
+            <img 
+              src={`${API_BASE_URL}/api/Logos/SSC Logo.png`} 
+              alt="SSC Logo" 
+              className="right-logo"
+              onError={(e) => {
+                console.error('Failed to load SSC Logo:', e.target.src);
+                e.target.style.display = 'none';
+              }}
+              onLoad={() => {
+                console.log('SSC Logo loaded successfully');
+              }}
+            />
           </header>
 
           <section className="ballot-info">
             <table>
-              <tr>
-                <td><strong>Ballot Name:</strong> {ballot?.Ballot_Title || 'Election Results'}</td>
-                <td><strong>Ballot ID:</strong> {ballot?.id || 'N/A'}</td>
-              </tr>
-              <tr>
-                <td><strong>Start Date:</strong> {ballot?.Ballot_StartDate ? new Date(ballot.Ballot_StartDate).toLocaleDateString('en-US', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric'
-                }) : 'Not specified'}</td>
-                <td><strong>End Date:</strong> {ballot?.Ballot_EndDate ? new Date(ballot.Ballot_EndDate).toLocaleDateString('en-US', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric'
-                }) : 'Not specified'}</td>
-              </tr>
+              <tbody>
+                <tr>
+                  <td><strong>Ballot Name:</strong> {ballot?.Ballot_Title || 'Election Results'}</td>
+                  <td><strong>Ballot ID:</strong> {ballot?.id || 'N/A'}</td>
+                </tr>
+                <tr>
+                  <td><strong>Start Date:</strong> {ballot?.Ballot_StartDate ? new Date(ballot.Ballot_StartDate).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  }) : 'Not specified'}</td>
+                  <td><strong>End Date:</strong> {ballot?.Ballot_EndDate ? new Date(ballot.Ballot_EndDate).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  }) : 'Not specified'}</td>
+                </tr>
+              </tbody>
             </table>
           </section>
 
