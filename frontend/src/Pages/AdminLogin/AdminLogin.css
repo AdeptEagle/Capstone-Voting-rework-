@@ -1,0 +1,74 @@
+/* AdminLogin component styles */
+/* Override global App styles that interfere with Tailwind */
+
+/* Reset App container styles for admin login */
+.admin-login-container {
+  display: block !important;
+  min-height: 100vh !important;
+  background-color: transparent !important;
+}
+
+/* Override any global main styles */
+.admin-login-container main {
+  display: block !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background-color: transparent !important;
+  min-height: auto !important;
+  position: static !important;
+  z-index: auto !important;
+}
+
+/* Ensure full viewport coverage */
+.admin-login-container .bg-gradient-to-br {
+  min-height: 100vh !important;
+  width: 100vw !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+}
+
+/* Custom animations for smooth transitions */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Error message animation */
+.error-message {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Custom focus styles for better accessibility */
+input:focus {
+  outline: none;
+}
+
+/* Ensure Feather icons are properly sized and positioned */
+[data-feather] {
+  width: 1rem !important;
+  height: 1rem !important;
+  display: inline-block !important;
+}
+
+/* Force proper input padding for icons */
+.admin-login-container input[type="text"],
+.admin-login-container input[type="password"],
+.admin-login-container input[type="email"] {
+  padding-left: 3rem !important;
+  padding-right: 3rem !important;
+}
+
+/* Password toggle button hover effect */
+.password-toggle:hover {
+  opacity: 0.8;
+  transition: all 0.2s;
+}
