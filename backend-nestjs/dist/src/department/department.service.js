@@ -20,6 +20,9 @@ let DepartmentService = class DepartmentService {
     }
     async getAllDepartments() {
         return this.prisma.department.findMany({
+            where: {
+                isDeleted: false,
+            },
             include: {
                 admin: {
                     select: {
@@ -180,7 +183,10 @@ let DepartmentService = class DepartmentService {
             throw new common_1.NotFoundException('Department not found');
         }
         return this.prisma.course.findMany({
-            where: { departmentId: id },
+            where: {
+                departmentId: id,
+                isDeleted: false,
+            },
             include: {
                 admin: {
                     select: {
@@ -226,7 +232,10 @@ let DepartmentService = class DepartmentService {
             throw new common_1.NotFoundException('Department not found');
         }
         return this.prisma.candidate.findMany({
-            where: { departmentId: id },
+            where: {
+                departmentId: id,
+                isDeleted: false,
+            },
             include: {
                 position: {
                     select: {

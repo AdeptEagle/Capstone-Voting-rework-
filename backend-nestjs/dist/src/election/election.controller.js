@@ -24,19 +24,8 @@ let ElectionController = class ElectionController {
         this.prisma = prisma;
     }
     async getAllElections() {
+        console.warn('⚠️ DEPRECATED: Election endpoints are deprecated. Use ballot system instead.');
         return this.electionService.getAllElections();
-    }
-    async getActiveElections() {
-        return this.electionService.getActiveElections();
-    }
-    async getActiveElection() {
-        return this.electionService.getActiveElection();
-    }
-    async hasActiveElections() {
-        return this.electionService.hasActiveElections();
-    }
-    async getActiveElectionInfo() {
-        return this.electionService.getActiveElectionInfo();
     }
     async getElectionHistory() {
         return this.electionService.getElectionHistory();
@@ -85,24 +74,6 @@ let ElectionController = class ElectionController {
     async deactivateElection(id) {
         return this.electionService.deactivateElection(id);
     }
-    async startBallot(id) {
-        return this.electionService.startBallot(id);
-    }
-    async pauseBallot(id) {
-        return this.electionService.pauseBallot(id);
-    }
-    async resumeBallot(id) {
-        return this.electionService.resumeBallot(id);
-    }
-    async stopBallot(id) {
-        return this.electionService.stopBallot(id);
-    }
-    async endBallot(id) {
-        return this.electionService.endBallot(id);
-    }
-    async getBallotStatus(id) {
-        return this.electionService.getBallotStatus(id);
-    }
     async checkAndAutoEndElections() {
         return this.electionService.checkAndAutoEndElections();
     }
@@ -128,44 +99,12 @@ let ElectionController = class ElectionController {
 exports.ElectionController = ElectionController;
 __decorate([
     (0, common_1.Get)(),
-    (0, swagger_1.ApiOperation)({ summary: 'Get all elections' }),
+    (0, swagger_1.ApiOperation)({ summary: 'Get all elections (DEPRECATED - Use ballot system instead)' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'List of all elections' }),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
 ], ElectionController.prototype, "getAllElections", null);
-__decorate([
-    (0, common_1.Get)('active'),
-    (0, swagger_1.ApiOperation)({ summary: 'Get active elections' }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'List of active elections' }),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
-    __metadata("design:returntype", Promise)
-], ElectionController.prototype, "getActiveElections", null);
-__decorate([
-    (0, common_1.Get)('active/single'),
-    (0, swagger_1.ApiOperation)({ summary: 'Get single active election' }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Single active election' }),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
-    __metadata("design:returntype", Promise)
-], ElectionController.prototype, "getActiveElection", null);
-__decorate([
-    (0, common_1.Get)('active/check'),
-    (0, swagger_1.ApiOperation)({ summary: 'Check if there are any active elections' }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Active election status' }),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
-    __metadata("design:returntype", Promise)
-], ElectionController.prototype, "hasActiveElections", null);
-__decorate([
-    (0, common_1.Get)('active/info'),
-    (0, swagger_1.ApiOperation)({ summary: 'Get detailed information about active elections' }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Active election information' }),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
-    __metadata("design:returntype", Promise)
-], ElectionController.prototype, "getActiveElectionInfo", null);
 __decorate([
     (0, common_1.Get)('history'),
     (0, swagger_1.ApiOperation)({ summary: 'Get election history - comprehensive data for ended elections' }),
@@ -265,71 +204,6 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], ElectionController.prototype, "deactivateElection", null);
-__decorate([
-    (0, common_1.Put)(':id/start-ballot'),
-    (0, swagger_1.ApiOperation)({ summary: 'Start ballot - Begin voting process' }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Ballot started successfully' }),
-    (0, swagger_1.ApiResponse)({ status: 404, description: 'Election not found' }),
-    (0, swagger_1.ApiResponse)({ status: 409, description: 'Cannot start ballot - validation failed' }),
-    __param(0, (0, common_1.Param)('id')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", Promise)
-], ElectionController.prototype, "startBallot", null);
-__decorate([
-    (0, common_1.Put)(':id/pause-ballot'),
-    (0, swagger_1.ApiOperation)({ summary: 'Pause ballot - Temporarily stop voting' }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Ballot paused successfully' }),
-    (0, swagger_1.ApiResponse)({ status: 404, description: 'Election not found' }),
-    (0, swagger_1.ApiResponse)({ status: 409, description: 'Cannot pause ballot - not active' }),
-    __param(0, (0, common_1.Param)('id')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", Promise)
-], ElectionController.prototype, "pauseBallot", null);
-__decorate([
-    (0, common_1.Put)(':id/resume-ballot'),
-    (0, swagger_1.ApiOperation)({ summary: 'Resume ballot - Continue paused voting' }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Ballot resumed successfully' }),
-    (0, swagger_1.ApiResponse)({ status: 404, description: 'Election not found' }),
-    (0, swagger_1.ApiResponse)({ status: 409, description: 'Cannot resume ballot - not paused' }),
-    __param(0, (0, common_1.Param)('id')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", Promise)
-], ElectionController.prototype, "resumeBallot", null);
-__decorate([
-    (0, common_1.Put)(':id/stop-ballot'),
-    (0, swagger_1.ApiOperation)({ summary: 'Stop ballot - Close voting temporarily' }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Ballot stopped successfully' }),
-    (0, swagger_1.ApiResponse)({ status: 404, description: 'Election not found' }),
-    (0, swagger_1.ApiResponse)({ status: 409, description: 'Cannot stop ballot - not active or paused' }),
-    __param(0, (0, common_1.Param)('id')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", Promise)
-], ElectionController.prototype, "stopBallot", null);
-__decorate([
-    (0, common_1.Put)(':id/end-ballot'),
-    (0, swagger_1.ApiOperation)({ summary: 'End ballot - Finalize and save results' }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Ballot ended successfully with final results' }),
-    (0, swagger_1.ApiResponse)({ status: 404, description: 'Election not found' }),
-    (0, swagger_1.ApiResponse)({ status: 409, description: 'Cannot end ballot - validation failed' }),
-    __param(0, (0, common_1.Param)('id')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", Promise)
-], ElectionController.prototype, "endBallot", null);
-__decorate([
-    (0, common_1.Get)(':id/ballot-status'),
-    (0, swagger_1.ApiOperation)({ summary: 'Get ballot status and lifecycle information' }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Ballot status retrieved successfully' }),
-    (0, swagger_1.ApiResponse)({ status: 404, description: 'Election not found' }),
-    __param(0, (0, common_1.Param)('id')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", Promise)
-], ElectionController.prototype, "getBallotStatus", null);
 __decorate([
     (0, common_1.Post)('auto-end-check'),
     (0, swagger_1.ApiOperation)({ summary: 'Check and auto-end expired elections' }),

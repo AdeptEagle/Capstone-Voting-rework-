@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button, Alert } from 'react-bootstrap';
 import { getCandidates, createCandidate, updateCandidate, deleteCandidate, getPositions, getDepartments, getCoursesByDepartment, getPartyLists, createPartyList, updatePartyList, deletePartyList, getPartyListStatistics } from '../services/api';
 import { checkCurrentUser } from '../services/auth';
-import { useElection } from '../contexts/ElectionContext';
+import { useBallot } from '../contexts/BallotContext';
 import ElectionStatusMessage from '../components/ElectionStatusMessage';
 import './Candidates.css';
 import { getCandidatePhotoUrl, CandidatePhotoPlaceholder } from '../utils/image.jsx';
@@ -52,7 +52,7 @@ const Candidates = () => {
   const [partyListLogoPreview, setPartyListLogoPreview] = useState('');
 
   const role = checkCurrentUser().role;
-  const { canViewCandidates, hasActiveElection, triggerImmediateRefresh } = useElection();
+  const { canViewCandidates, hasActiveBallot, triggerImmediateRefresh } = useBallot();
 
   useEffect(() => {
     // Trigger immediate election status refresh
@@ -838,30 +838,6 @@ const Candidates = () => {
           <div>
             <h1 className="dashboard-title-pro">Manage Candidates</h1>
             <p className="dashboard-subtitle-pro">Add, edit, and view all election candidates.</p>
-            
-            {/* Party List Stats Cards - Uniform Design */}
-            <div className="stats-grid mt-3">
-              <div className="stat-card">
-                <div className="stat-content">
-                  <h3>{partyLists?.length || 0}</h3>
-                  <p>Party Lists</p>
-                </div>
-                <div className="stat-icon blue">
-                  <i className="fas fa-list-ul"></i>
-                </div>
-              </div>
-              
-              <div className="stat-card">
-                <div className="stat-content">
-                  <h3>{candidates?.length || 0}</h3>
-                  <p>Total Candidates</p>
-                </div>
-                <div className="stat-icon green">
-                  <i className="fas fa-users"></i>
-                </div>
-              </div>
-            </div>
-            
           </div>
           <div className="dashboard-header-actions">
             <button className="btn btn-outline-success me-2" onClick={() => handleShowPartyListModal()}>
@@ -872,6 +848,33 @@ const Candidates = () => {
               <i className="fas fa-user-plus me-1"></i>
               Add Candidate
             </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Party List Stats Cards - Outside Header */}
+      <div className="row mb-4">
+        <div className="col-md-6 mb-3">
+          <div className="stat-card">
+            <div className="stat-content">
+              <h3>{partyLists?.length || 0}</h3>
+              <p>Party Lists</p>
+            </div>
+            <div className="stat-icon blue">
+              <i className="fas fa-list-ul"></i>
+            </div>
+          </div>
+        </div>
+        
+        <div className="col-md-6 mb-3">
+          <div className="stat-card">
+            <div className="stat-content">
+              <h3>{candidates?.length || 0}</h3>
+              <p>Total Candidates</p>
+            </div>
+            <div className="stat-icon green">
+              <i className="fas fa-users"></i>
+            </div>
           </div>
         </div>
       </div>
@@ -901,15 +904,40 @@ const Candidates = () => {
         </div>
       )}
 
-      <div className="d-flex flex-wrap align-items-center mb-3 gap-2">
-        <input
-          type="text"
-          className="form-control"
-          style={{ maxWidth: 300 }}
-          placeholder="Search by name, department, course, or position..."
-          value={searchTerm}
-          onChange={e => setSearchTerm(e.target.value)}
-        />
+      {/* Search and Filter Section */}
+      <div className="card mb-3">
+        <div className="card-body">
+          <div className="row align-items-center">
+            <div className="col-md-6">
+              <div className="input-group">
+                <span className="input-group-text">
+                  <i className="fas fa-search"></i>
+                </span>
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Search candidates by name, department, course, or position..."
+                  value={searchTerm}
+                  onChange={e => setSearchTerm(e.target.value)}
+                />
+                {searchTerm && (
+                  <button
+                    className="btn btn-outline-secondary"
+                    type="button"
+                    onClick={() => setSearchTerm('')}
+                  >
+                    <i className="fas fa-times"></i>
+                  </button>
+                )}
+              </div>
+            </div>
+            <div className="col-md-6 text-end">
+              <small className="text-muted">
+                Showing {Object.values(groupedCandidates).reduce((total, group) => total + group.candidates.length, 0)} of {candidates?.length || 0} candidates
+              </small>
+            </div>
+          </div>
+        </div>
       </div>
       {/* Separate tables for each party list */}
       {Object.keys(groupedCandidates).length > 0 ? (
@@ -1348,16 +1376,6 @@ const Candidates = () => {
                     <small className="text-muted">
                       Choose the political party or group this candidate represents
                     </small>
-                    <div className="mt-2">
-                      <button 
-                        type="button" 
-                        className="btn btn-sm btn-outline-success"
-                        onClick={() => handleShowPartyListModal()}
-                      >
-                        <i className="fas fa-plus me-1"></i>
-                        Create New Party List
-                      </button>
-                    </div>
                   </div>
                 </div>
                 <div className="modal-footer">

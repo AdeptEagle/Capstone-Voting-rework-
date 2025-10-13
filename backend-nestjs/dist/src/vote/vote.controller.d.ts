@@ -117,7 +117,7 @@ export declare class VoteController {
         voterTurnout: number;
     }>;
     getVoteTimeline(): Promise<any[]>;
-    getVoterVotingStatus(voterId: string, electionId: string): Promise<{
+    getVoterVotingStatus(voterId: string, ballotId: string): Promise<{
         voter: {
             id: string;
             name: string;
@@ -142,7 +142,7 @@ export declare class VoteController {
         canVote: boolean;
         lockoutMessage: string;
     }>;
-    getVotesByElection(electionId: string): Promise<({
+    getVotesByBallot(ballotId: string): Promise<({
         position: {
             id: string;
             Position_Title: string;
@@ -208,7 +208,7 @@ export declare class VoteController {
         voterId: string;
         ballotId: string | null;
     })[]>;
-    getVoteResults(electionId: string): Promise<{
+    getVoteResults(ballotId: string): Promise<{
         electionId: string;
         results: any[];
         summary: {
@@ -216,7 +216,7 @@ export declare class VoteController {
             totalVotes: any;
         };
     }>;
-    getComprehensiveVoteAnalytics(electionId: string): Promise<{
+    getComprehensiveVoteAnalytics(ballotId: string): Promise<{
         election: {
             id: string;
             title: string;
@@ -372,7 +372,7 @@ export declare class VoteController {
             }[];
         };
     }>;
-    getDepartmentVotingResults(electionId: string): Promise<{
+    getDepartmentVotingResults(ballotId: string): Promise<{
         department: any;
         statistics: {
             totalVoters: any;

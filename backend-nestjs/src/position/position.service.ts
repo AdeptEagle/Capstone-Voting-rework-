@@ -172,10 +172,17 @@ export class PositionService {
   }
 
   async deletePosition(id: string) {
-    console.log(`[PositionService] deletePosition called with ID: ${id}`);
+    console.log(`[PositionService] deletePosition called with ID: "${id}"`);
+    console.log(`[PositionService] ID type: ${typeof id}`);
+    console.log(`[PositionService] ID length: ${id?.length}`);
+    console.log(`[PositionService] ID trimmed: "${id?.trim()}"`);
+    
+    // Ensure ID is trimmed
+    const trimmedId = id?.trim();
+    console.log(`[PositionService] Using trimmed ID: "${trimmedId}"`);
     
     const position = await this.prisma.position.findUnique({
-      where: { id },
+      where: { id: trimmedId },
       include: {
         _count: {
           select: {
@@ -188,7 +195,7 @@ export class PositionService {
     });
 
     if (!position) {
-      console.log(`[PositionService] Position not found with ID: ${id}`);
+      console.log(`[PositionService] Position not found with ID: "${trimmedId}"`);
       throw new NotFoundException('Position not found');
     }
 
@@ -200,23 +207,23 @@ export class PositionService {
 
     // Check if position is already soft-deleted
     if (position.isDeleted) {
-      console.log(`[PositionService] Position already soft-deleted: ${id}`);
+      console.log(`[PositionService] Position already soft-deleted: "${trimmedId}"`);
       throw new NotFoundException('Position has already been deleted');
     }
 
-    console.log(`[PositionService] Performing soft delete for position: ${id}`);
+    console.log(`[PositionService] Performing soft delete for position: "${trimmedId}"`);
 
     // SOFT DELETE: Mark as deleted but preserve data
     // We allow deletion even with related data since soft delete preserves everything
     await this.prisma.position.update({
-      where: { id },
+      where: { id: trimmedId },
       data: {
         isDeleted: true,
         deletedAt: new Date()
       }
     });
 
-    console.log(`[PositionService] Position ${id} soft-deleted successfully`);
+    console.log(`[PositionService] Position "${trimmedId}" soft-deleted successfully`);
 
     return {
       message: 'Position moved to trash successfully!',

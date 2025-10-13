@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { getPositions, getCandidates, getVoters, createVote, getElectionBallot, getElectionPositions, getElectionCandidates } from '../../services/api';
+import { getPositions, getCandidates, getVoters, createBallotVote, getAvailableBallots, getBallotById } from '../../services/api';
 import { useNavigate } from 'react-router-dom';
-import { useElection } from '../../contexts/ElectionContext';
+import { useBallot } from '../../contexts/BallotContext';
 import ElectionStatusMessage from '../../components/ElectionStatusMessage';
 import './Vote.css';
 import { getCandidatePhotoUrl, CandidatePhotoPlaceholder } from '../../utils/image.jsx';
@@ -32,18 +32,18 @@ const Vote = () => {
   const [success, setSuccess] = useState('');
   const [showVoteSummary, setShowVoteSummary] = useState(false);
   const navigate = useNavigate();
-  const { canVote, hasActiveElection, triggerImmediateRefresh, activeElection } = useElection();
+  const { canVote, hasActiveBallot, triggerImmediateRefresh, activeBallot } = useBallot();
   const [imgError, setImgError] = useState({}); // Track image errors by candidate ID
-  const [electionToUse, setElectionToUse] = useState(null); // Store the election to use for voting
+  const [ballotToUse, setBallotToUse] = useState(null); // Store the ballot to use for voting
 
   useEffect(() => {
-    console.log('Vote component - activeElection received:', activeElection);
+    console.log('Vote component - activeBallot received:', activeBallot);
     console.log('Vote component - canVote:', canVote);
-    console.log('Vote component - hasActiveElection:', hasActiveElection);
+    console.log('Vote component - hasActiveBallot:', hasActiveBallot);
     
-    // Trigger immediate election status refresh only if no active election exists
-    if (!activeElection) {
-      console.log('No active election, triggering refresh...');
+    // Trigger immediate ballot status refresh only if no active ballot exists
+    if (!activeBallot) {
+      console.log('No active ballot, triggering refresh...');
       triggerImmediateRefresh();
     }
     
@@ -52,7 +52,7 @@ const Vote = () => {
         // Get user info from auth status endpoint instead of localStorage
         let userId = null;
         try {
-          const authResponse = await fetch('http://localhost:3001/auth/status', {
+          const authResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'}/auth/status`, {
             credentials: 'include'
           });
           if (authResponse.ok) {
@@ -69,32 +69,31 @@ const Vote = () => {
           console.log('Fallback userId from localStorage:', userId);
         }
         
-        if (!activeElection) {
-          console.log('No active election found');
-          setLoading(false);
-          return;
-        }
-
-        console.log('Active election data:', activeElection);
-        console.log('Active election type:', typeof activeElection);
-        console.log('Active election is array:', Array.isArray(activeElection));
+        // Get available ballots instead of elections
+        console.log('Fetching available ballots...');
+        const availableBallots = await getAvailableBallots();
+        console.log('Available ballots:', availableBallots);
         
-        // Handle case where activeElection is an array
-        let electionToUse = activeElection;
-        if (Array.isArray(activeElection) && activeElection.length > 0) {
-          electionToUse = activeElection[0];
-          console.log('Using first election from array:', electionToUse);
-        }
-        
-        if (!electionToUse || !electionToUse.id) {
-          console.error('No valid election found:', electionToUse);
-          setError('No active election found. Please check back later.');
+        if (!availableBallots || availableBallots.length === 0) {
+          console.log('No available ballots found');
+          setError('No active ballots available for voting. Please check back later.');
           setLoading(false);
           return;
         }
         
-        // Store the election in state for use in vote submission
-        setElectionToUse(electionToUse);
+        // Use the first available ballot
+        const ballotToUse = availableBallots[0];
+        console.log('Using ballot:', ballotToUse);
+        
+        if (!ballotToUse || !ballotToUse.id) {
+          console.error('No valid ballot found:', ballotToUse);
+          setError('No active ballot found. Please check back later.');
+          setLoading(false);
+          return;
+        }
+        
+        // Store the ballot in state for use in vote submission
+        setBallotToUse(ballotToUse);
 
         if (!userId) {
           console.error('No user ID found');
@@ -102,98 +101,112 @@ const Vote = () => {
           return;
         }
 
-        console.log('Attempting to fetch ballot data for election ID:', electionToUse.id);
+        console.log('Attempting to fetch ballot data for ballot ID:', ballotToUse.id);
         
         let ballotData, voters;
         
         try {
           // Try to get complete ballot data first
-          console.log('Attempting to fetch ballot data for election ID:', electionToUse.id);
+          console.log('Attempting to fetch ballot data for ballot ID:', ballotToUse.id);
           
-                  // First, test if backend is accessible
-        try {
-          const testResponse = await fetch('http://localhost:3001/auth/status', { credentials: 'include' });
-          console.log('Backend connectivity test response:', testResponse.status);
-          
-          if (testResponse.status !== 200) {
-            console.error('Backend server is not responding properly. Status:', testResponse.status);
-            setError('Backend server is not accessible. Please check if the server is running.');
-            setLoading(false);
-            return;
-          }
-        } catch (healthError) {
-          console.error('Backend server is not accessible:', healthError);
-          setError('Cannot connect to the voting server. Please check your internet connection or try again later.');
-          setLoading(false);
-          return;
-        }
-          
-          // Test if the election exists in the database
+          // First, test if backend is accessible
           try {
-            const electionTestResponse = await fetch(`http://localhost:3001/elections/${electionToUse.id}`, { credentials: 'include' });
-            console.log('Election existence check response:', electionTestResponse.status);
+            const testResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'}/auth/status`, { credentials: 'include' });
+            console.log('Backend connectivity test response:', testResponse.status);
             
-            if (electionTestResponse.status === 404) {
-              console.error('Election not found in database:', electionToUse.id);
-              setError('The election you are trying to access does not exist in the database. Please contact an administrator.');
+            if (testResponse.status !== 200) {
+              console.error('Backend server is not responding properly. Status:', testResponse.status);
+              setError('Backend server is not accessible. Please check if the server is running.');
               setLoading(false);
               return;
             }
-          } catch (electionTestError) {
-            console.warn('Could not verify election existence:', electionTestError);
+          } catch (healthError) {
+            console.error('Backend server is not accessible:', healthError);
+            setError('Cannot connect to the voting server. Please check your internet connection or try again later.');
+            setLoading(false);
+            return;
+          }
+          
+          // Test if the ballot exists in the database
+          try {
+            const ballotTestResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'}/ballots/${ballotToUse.id}`, { credentials: 'include' });
+            console.log('Ballot existence check response:', ballotTestResponse.status);
+            
+            if (ballotTestResponse.status === 404) {
+              console.error('Ballot not found in database:', ballotToUse.id);
+              setError('The ballot you are trying to access does not exist in the database. Please contact an administrator.');
+              setLoading(false);
+              return;
+            }
+          } catch (ballotTestError) {
+            console.warn('Could not verify ballot existence:', ballotTestError);
           }
           
           [ballotData, voters] = await Promise.all([
-            getElectionBallot(electionToUse.id), // Get complete ballot data
+            getBallotById(ballotToUse.id), // Get complete ballot data
             getVoters()
           ]);
           
           console.log('Ballot data received:', ballotData);
+          console.log('🔍 Full ballot data structure:', JSON.stringify(ballotData, null, 2));
           console.log('Voters data received:', voters);
-          console.log('Active election ID:', electionToUse.id);
+          console.log('Active ballot ID:', ballotToUse.id);
+          
+          // Debug the raw ballot data structure
+          console.log('🔍 Raw ballot data structure:');
+          if (ballotData.ballotPositions && ballotData.ballotPositions.length > 0) {
+            console.log('First position candidates:', ballotData.ballotPositions[0]);
+            if (ballotData.ballotCandidates && ballotData.ballotCandidates.length > 0) {
+              const firstCandidate = ballotData.ballotCandidates[0];
+              console.log('First candidate party data:', {
+                name: firstCandidate.candidate.Candidate_Name,
+                party_list_name: firstCandidate.candidate.party_list_name,
+                partyListId: firstCandidate.candidate.partyListId,
+                partyList: firstCandidate.candidate.partyList
+              });
+            }
+          }
           
           // Extract positions and candidates from ballot data
-          const positions = ballotData.ballot.map(item => item.position);
-          const candidates = ballotData.ballot.flatMap(item => 
-            item.candidates.map(candidate => ({
-              ...candidate,
-              positionId: item.position.id,
-                             positionName: item.position.Position_Title
-            }))
-          );
+          const positions = ballotData.ballotPositions.map(bp => bp.position);
+          const candidates = ballotData.ballotCandidates.map(bc => ({
+            ...bc.candidate,
+            positionId: bc.BallotCandidate_PositionId,
+            positionName: positions.find(p => p.id === bc.BallotCandidate_PositionId)?.Position_Title
+          }));
         
                   console.log('Extracted positions:', positions);
           console.log('Extracted candidates:', candidates);
           
+          // Debug the extracted candidates data
+          console.log('🔍 Extracted candidates party data:');
+          if (candidates.length > 0) {
+            candidates.forEach((candidate, index) => {
+              console.log(`Candidate ${index + 1}:`, {
+                name: candidate.Candidate_Name,
+                party_list_name: candidate.party_list_name,
+                partyListId: candidate.partyListId,
+                partyList: candidate.partyList,
+                finalDisplayValue: candidate.partyList?.name || candidate.party_list_name || 'Independent'
+              });
+            });
+          }
+          
+          
+          
           setPositions(positions);
           setCandidates(candidates);
         } catch (ballotError) {
-          console.warn('Ballot endpoint failed, falling back to individual endpoints:', ballotError);
+          console.warn('Ballot endpoint failed:', ballotError);
           console.log('Ballot error details:', {
             status: ballotError.response?.status,
             url: ballotError.config?.url,
             message: ballotError.message
           });
           
-          // Fallback: Get positions and candidates separately
-          try {
-            const [positions, candidates, votersData] = await Promise.all([
-              getElectionPositions(electionToUse.id),
-              getElectionCandidates(electionToUse.id),
-              getVoters()
-            ]);
-            
-            console.log('Fallback - Positions received:', positions);
-            console.log('Fallback - Candidates received:', candidates);
-            console.log('Fallback - Voters received:', votersData);
-            
-            setPositions(positions);
-            setCandidates(candidates);
-            voters = votersData;
-          } catch (fallbackError) {
-            console.error('Fallback endpoints also failed:', fallbackError);
-            throw fallbackError; // Re-throw to be caught by outer catch block
-          }
+          // For ballot system, we don't have fallback endpoints like election system
+          // Just throw the error to be handled by the outer catch block
+          throw ballotError;
         }
         
         // Find the voter in the voters list
@@ -220,7 +233,7 @@ const Vote = () => {
         if (!voter) {
           // Try finding by email if available
           try {
-            const authData = await fetch('http://localhost:3001/auth/status', { credentials: 'include' });
+            const authData = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'}/auth/status`, { credentials: 'include' });
             if (authData.ok) {
               const userData = await authData.json();
               console.log('Auth user data for email search:', userData);
@@ -238,7 +251,7 @@ const Vote = () => {
         if (!voter) {
           // Try finding by student ID if available
           try {
-            const authData = await fetch('http://localhost:3001/auth/status', { credentials: 'include' });
+            const authData = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'}/auth/status`, { credentials: 'include' });
             if (authData.ok) {
               const userData = await authData.json();
               console.log('Auth user data for student ID search:', userData);
@@ -276,7 +289,7 @@ const Vote = () => {
         if (!voter) {
           try {
             console.log('Trying direct API call to get voter by ID:', userId);
-            const directVoterResponse = await fetch(`http://localhost:3001/voters/${userId}`, { credentials: 'include' });
+            const directVoterResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'}/voters/${userId}`, { credentials: 'include' });
             console.log('Direct voter API response status:', directVoterResponse.status);
             
             if (directVoterResponse.ok) {
@@ -319,16 +332,16 @@ const Vote = () => {
         // Provide more specific error messages
         if (error.response?.status === 404) {
           if (error.config?.url?.includes('/ballot')) {
-            setError('No ballot data found for this election. The election may not have positions or candidates assigned yet.');
+            setError('No ballot data found. The ballot may not have positions or candidates assigned yet.');
           } else {
-            setError('Election data not found. Please check if the election is properly configured.');
+            setError('Ballot data not found. Please check if the ballot is properly configured.');
           }
         } else if (error.response?.status === 401) {
           setError('Authentication failed. Please log in again.');
         } else if (error.response?.status === 403) {
-          setError('Access denied. You may not have permission to view this election.');
+          setError('Access denied. You may not have permission to view this ballot.');
         } else {
-          setError('Failed to load election data. Please try again or contact support.');
+          setError('Failed to load ballot data. Please try again or contact support.');
         }
       } finally {
         setLoading(false);
@@ -336,7 +349,7 @@ const Vote = () => {
     };
 
     fetchData();
-  }, [activeElection, triggerImmediateRefresh]);
+  }, [ballotToUse, triggerImmediateRefresh]);
 
   const handleSelect = (positionId, candidateId) => {
     const currentPosition = positions.find(p => p.id === positionId);
@@ -408,8 +421,8 @@ const Vote = () => {
       return;
     }
     
-    if (!electionToUse || !electionToUse.id) {
-      setError('Election information not found. Please refresh the page and try again.');
+    if (!ballotToUse || !ballotToUse.id) {
+      setError('Ballot information not found. Please refresh the page and try again.');
       return;
     }
     
@@ -417,52 +430,35 @@ const Vote = () => {
     const studentId = user.studentId;
     
     try {
-      console.log('Starting vote submission with election:', electionToUse);
+      console.log('Starting vote submission with ballot:', ballotToUse);
       console.log('User data:', user);
       console.log('Selected votes:', selectedVotes);
       
-      // Submit votes for all positions
-      const positionsToVote = positions.filter(pos => selectedVotes[pos.id] && selectedVotes[pos.id].length > 0);
-      let voteCount = 0;
-      const totalVotes = positionsToVote.reduce((total, pos) => total + selectedVotes[pos.id].length, 0);
-      
-      console.log('Positions to vote:', positionsToVote);
-      console.log('Total votes to submit:', totalVotes);
-      
-      for (let i = 0; i < positionsToVote.length; i++) {
-        const pos = positionsToVote[i];
-        const candidateIds = selectedVotes[pos.id];
-        
-        console.log(`Processing position ${pos.id} (${pos.name}) with ${candidateIds.length} candidates`);
-        
-        for (let j = 0; j < candidateIds.length; j++) {
-          const candidateId = candidateIds[j];
-          voteCount++;
-          
-          const voteData = {
-            voterId: String(voterId), // Ensure voterId is a string
-            candidateId: String(candidateId), // Ensure candidateId is a string
-            electionId: String(electionToUse.id), // Ensure electionId is a string
-            positionId: String(pos.id) // Ensure positionId is a string
-          };
-          
-          console.log(`Submitting vote ${voteCount}/${totalVotes}:`, voteData);
-          console.log(`Vote data types:`, {
-            voterId: typeof voteData.voterId,
-            candidateId: typeof voteData.candidateId,
-            electionId: typeof voteData.electionId,
-            positionId: typeof voteData.positionId
+      // Prepare vote data for ballot submission
+      const votes = [];
+      Object.entries(selectedVotes).forEach(([positionId, candidateIds]) => {
+        candidateIds.forEach(candidateId => {
+          votes.push({
+            positionId: positionId,
+            candidateId: candidateId
           });
-          
-          try {
-            await createVote(voteData);
-            console.log(`Vote ${voteCount} submitted successfully`);
-          } catch (voteError) {
-            console.error(`Failed to submit vote ${voteCount}:`, voteError);
-            throw voteError; // Re-throw to stop the process
-          }
-        }
-      }
+        });
+      });
+      
+      console.log('Prepared votes for ballot submission:', votes);
+      
+      // Submit votes using ballot system
+      const voteData = {
+        ballotId: ballotToUse.id,
+        votes: votes,
+        ipAddress: null, // Could be added if needed
+        userAgent: navigator.userAgent,
+        sessionId: null // Could be added if needed
+      };
+      
+      console.log('Submitting ballot vote:', voteData);
+      await createBallotVote(voteData);
+      console.log('Ballot vote submitted successfully');
       
       setSuccess('Your votes have been submitted successfully! Thank you for participating.');
       setHasVoted(true);
@@ -670,9 +666,9 @@ const Vote = () => {
                 {/* Candidate Photo Section */}
                 <div className="vote-candidate-photo-section">
                   <div className="vote-candidate-photo-container">
-                    {candidate.photoUrl && !imgError[candidate.id] ? (
+                    {candidate.photoUrl || candidate.photo && !imgError[candidate.id] ? (
                       <img 
-                        src={getCandidatePhotoUrl(candidate.photoUrl)} 
+                        src={getCandidatePhotoUrl(candidate.photoUrl || candidate.photo)} 
                         alt={candidate.Candidate_Name} 
                         className="vote-candidate-photo"
                         onError={e => {
@@ -682,7 +678,7 @@ const Vote = () => {
                         }}
                       />
                     ) : null}
-                    <CandidatePhotoPlaceholder className="candidate-photo-placeholder" style={{ display: candidate.photoUrl && !imgError[candidate.id] ? 'none' : 'flex' }} />
+                    <CandidatePhotoPlaceholder className="candidate-photo-placeholder" style={{ display: candidate.photoUrl || candidate.photo && !imgError[candidate.id] ? 'none' : 'flex' }} />
                   </div>
                 </div>
 
@@ -693,6 +689,22 @@ const Vote = () => {
                     <span className="verified"><i className="fas fa-check-circle"></i></span>
                   </h3>
                   <div className="vote-candidate-position">{candidate.positionName}</div>
+                  
+                  {/* Party List Information */}
+                  <div className="vote-candidate-party-list">
+                    <span className="party-list-label">Party List:</span>
+                    <span className="party-list-name">
+                      {candidate.partyList?.name || candidate.party_list_name || 'Independent'}
+                    </span>
+                    {candidate.partyList?.color && (
+                      <span 
+                        className="party-list-color-indicator" 
+                        style={{ backgroundColor: candidate.partyList.color }}
+                        title={`${candidate.partyList.name} party color`}
+                      ></span>
+                    )}
+                  </div>
+                  
                   <p className="vote-candidate-description">
                     {candidate.description ? 
                       candidate.description.substring(0, 120) + (candidate.description.length > 120 ? '...' : '') :
@@ -813,9 +825,9 @@ const Vote = () => {
                         {selectedCandidates.map(candidate => (
                           <div key={candidate.id} className="selected-candidate-item">
                             <div className="candidate-avatar-wrapper">
-                            {candidate.photoUrl && !imgError[candidate.id] ? (
+                            {candidate.photoUrl || candidate.photo && !imgError[candidate.id] ? (
                               <img 
-                                  src={getCandidatePhotoUrl(candidate.photoUrl)} 
+                                  src={getCandidatePhotoUrl(candidate.photoUrl || candidate.photo)} 
                                 alt={candidate.name} 
                                 className="selected-candidate-photo"
                                 onError={() => setImgError(prev => ({ ...prev, [candidate.id]: true }))}
@@ -825,6 +837,9 @@ const Vote = () => {
                               )}
                               </div>
                                                          <span className="selected-candidate-name">{candidate.Candidate_Name}</span>
+                                                         <span className="selected-candidate-party">
+                                                           {candidate.partyList?.name || candidate.party_list_name || 'Independent'}
+                                                         </span>
                           </div>
                         ))}
                         {selectedCandidates.length > 3 && (
@@ -867,9 +882,9 @@ const Vote = () => {
                             {selectedCandidates.map(candidate => (
                               <div key={candidate.id} className="confirmation-candidate-item">
                                 <div className="candidate-avatar-wrapper">
-                                {candidate.photoUrl && !imgError[candidate.id] ? (
+                                {candidate.photoUrl || candidate.photo && !imgError[candidate.id] ? (
                                   <img 
-                                      src={getCandidatePhotoUrl(candidate.photoUrl)} 
+                                      src={getCandidatePhotoUrl(candidate.photoUrl || candidate.photo)} 
                                     alt={candidate.Candidate_Name} 
                                     className="confirmation-candidate-photo"
                                     onError={() => setImgError(prev => ({ ...prev, [candidate.id]: true }))}
@@ -879,6 +894,9 @@ const Vote = () => {
                                   )}
                                   </div>
                                 <span className="confirmation-candidate-name">{candidate.Candidate_Name}</span>
+                                <span className="confirmation-candidate-party">
+                                  {candidate.partyList?.name || candidate.party_list_name || 'Independent'}
+                                </span>
                               </div>
                             ))}
                           </div>
@@ -951,9 +969,9 @@ const Vote = () => {
                             {selectedCandidates.map(candidate => (
                               <div key={candidate.id} className="confirmation-candidate-item">
                                 <div className="candidate-avatar-wrapper">
-                                {candidate.photoUrl && !imgError[candidate.id] ? (
+                                {candidate.photoUrl || candidate.photo && !imgError[candidate.id] ? (
                                   <img 
-                                      src={getCandidatePhotoUrl(candidate.photoUrl)} 
+                                      src={getCandidatePhotoUrl(candidate.photoUrl || candidate.photo)} 
                                     alt={candidate.Candidate_Name} 
                                     className="confirmation-candidate-photo"
                                     onError={() => setImgError(prev => ({ ...prev, [candidate.id]: true }))}
@@ -963,6 +981,9 @@ const Vote = () => {
                                   )}
                                   </div>
                                 <span className="confirmation-candidate-name">{candidate.Candidate_Name}</span>
+                                <span className="confirmation-candidate-party">
+                                  {candidate.partyList?.name || candidate.party_list_name || 'Independent'}
+                                </span>
                               </div>
                             ))}
                           </div>

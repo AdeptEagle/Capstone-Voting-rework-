@@ -12,6 +12,9 @@ export class CourseService {
 
   async getAllCourses() {
     return this.prisma.course.findMany({
+      where: {
+        isDeleted: false,
+      },
       include: {
         department: {
           select: {
@@ -255,7 +258,10 @@ export class CourseService {
     }
 
     return this.prisma.course.findMany({
-      where: { departmentId },
+      where: { 
+        departmentId,
+        isDeleted: false,
+      },
       include: {
         admin: {
           select: {
@@ -307,7 +313,10 @@ export class CourseService {
     }
 
     return this.prisma.candidate.findMany({
-      where: { courseId: id },
+      where: { 
+        courseId: id,
+        isDeleted: false,
+      },
       include: {
         position: {
           select: {

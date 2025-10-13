@@ -116,13 +116,19 @@ let PositionInitializationService = class PositionInitializationService {
                 console.log('⚠️ No positions found, skipping candidate creation');
                 return;
             }
-            const departments = await this.prisma.department.findMany();
-            const courses = await this.prisma.course.findMany();
+            const departments = await this.prisma.department.findMany({
+                where: { isDeleted: false },
+            });
+            const courses = await this.prisma.course.findMany({
+                where: { isDeleted: false },
+            });
             if (departments.length === 0 || courses.length === 0) {
                 console.log('⚠️ No departments or courses found, skipping candidate creation');
                 return;
             }
-            const existingCandidates = await this.prisma.candidate.findMany();
+            const existingCandidates = await this.prisma.candidate.findMany({
+                where: { isDeleted: false },
+            });
             const positionsWithCandidates = new Set();
             for (const candidate of existingCandidates) {
                 positionsWithCandidates.add(candidate.positionId);

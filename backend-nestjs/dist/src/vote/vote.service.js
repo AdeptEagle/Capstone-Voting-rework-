@@ -94,6 +94,7 @@ let VoteService = class VoteService {
         return vote;
     }
     async createVote(createVoteDto) {
+        console.warn('⚠️ DEPRECATED: createVote() is deprecated. Use ballot system instead.');
         const { voterId, candidateId, electionId, positionId } = createVoteDto;
         const election = await this.prisma.election.findUnique({
             where: {
@@ -921,6 +922,9 @@ let VoteService = class VoteService {
             },
         });
         const departments = await this.prisma.department.findMany({
+            where: {
+                isDeleted: false,
+            },
             include: {
                 voters: {
                     select: {

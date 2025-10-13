@@ -54,6 +54,16 @@ export class PositionController {
   @ApiResponse({ status: 200, description: 'Position deleted successfully' })
   @ApiResponse({ status: 404, description: 'Position not found' })
   async deletePosition(@Param('id') id: string) {
-    return this.positionService.deletePosition(id);
+    console.log(`[PositionController] deletePosition called with ID: "${id}"`);
+    console.log(`[PositionController] ID type: ${typeof id}`);
+    console.log(`[PositionController] ID length: ${id?.length}`);
+    console.log(`[PositionController] ID trimmed: "${id?.trim()}"`);
+    console.log(`[PositionController] ID trimmed length: ${id?.trim()?.length}`);
+    
+    // Trim the ID to handle any whitespace issues
+    const trimmedId = id?.trim();
+    console.log(`[PositionController] Using trimmed ID: "${trimmedId}"`);
+    
+    return this.positionService.deletePosition(trimmedId);
   }
 } 

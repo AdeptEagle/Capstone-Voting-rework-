@@ -59,8 +59,29 @@ const AdminLoginLogs = () => {
     }
   };
 
-  const formatDuration = (seconds) => {
+  const formatDuration = (seconds, isActive, loginTime) => {
+    // For active sessions, calculate duration from login time to now
+    if (isActive && !seconds && loginTime) {
+      const now = new Date();
+      const login = new Date(loginTime);
+      const durationInSeconds = Math.floor((now.getTime() - login.getTime()) / 1000);
+      
+      const hours = Math.floor(durationInSeconds / 3600);
+      const minutes = Math.floor((durationInSeconds % 3600) / 60);
+      const secs = durationInSeconds % 60;
+      
+      if (hours > 0) {
+        return `${hours}h ${minutes}m ${secs}s (active)`;
+      } else if (minutes > 0) {
+        return `${minutes}m ${secs}s (active)`;
+      } else {
+        return `${secs}s (active)`;
+      }
+    }
+    
+    // For completed sessions, use the stored duration
     if (!seconds) return 'N/A';
+    
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
@@ -252,7 +273,6 @@ const AdminLoginLogs = () => {
                     <th>Login Time</th>
                     <th>Logout Time</th>
                     <th>Duration</th>
-                    <th>IP Address</th>
                     <th>Status</th>
                     <th>Actions</th>
                   </tr>
@@ -268,11 +288,8 @@ const AdminLoginLogs = () => {
                         </div>
                       </td>
                       <td>{formatDate(log.loginTime)}</td>
-                      <td>{log.logoutTime ? formatDate(log.logoutTime) : 'N/A'}</td>
-                      <td>{formatDuration(log.duration)}</td>
-                      <td>
-                        <code>{log.ipAddress || 'N/A'}</code>
-                      </td>
+                      <td>{log.logoutTime ? formatDate(log.logoutTime) : (log.isActive ? 'Still Active' : 'N/A')}</td>
+                      <td>{formatDuration(log.duration, log.isActive, log.loginTime)}</td>
                       <td>{getStatusBadge(log.isActive, log.logoutTime)}</td>
                       <td>
                         <button
@@ -364,16 +381,9 @@ const AdminLoginLogs = () => {
                       <div className="col-md-6">
                         <h6>Session Information</h6>
                         <p><strong>Login Time:</strong> {formatDate(log.loginTime)}</p>
-                        <p><strong>Logout Time:</strong> {log.logoutTime ? formatDate(log.logoutTime) : 'Still Active'}</p>
-                        <p><strong>Duration:</strong> {formatDuration(log.duration)}</p>
+                        <p><strong>Logout Time:</strong> {log.logoutTime ? formatDate(log.logoutTime) : (log.isActive ? 'Still Active' : 'N/A')}</p>
+                        <p><strong>Duration:</strong> {formatDuration(log.duration, log.isActive, log.loginTime)}</p>
                         <p><strong>Status:</strong> {getStatusBadge(log.isActive, log.logoutTime)}</p>
-                      </div>
-                      <div className="col-12 mt-3">
-                        <h6>Technical Details</h6>
-                        <p><strong>IP Address:</strong> <code>{log.ipAddress || 'N/A'}</code></p>
-                        <p><strong>Session ID:</strong> <code>{log.sessionId || 'N/A'}</code></p>
-                        <p><strong>User Agent:</strong></p>
-                        <pre className="bg-light p-2 rounded">{log.userAgent || 'N/A'}</pre>
                       </div>
                     </div>
                   );

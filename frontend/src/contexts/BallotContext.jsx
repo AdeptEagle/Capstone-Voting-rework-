@@ -2,19 +2,19 @@ import React, { createContext, useContext, useState, useEffect, useCallback, use
 import api from '../services/api';
 import { checkCurrentUser } from '../services/auth';
 
-const ElectionContext = createContext();
+const BallotContext = createContext();
 
-export const useElection = () => {
-  const context = useContext(ElectionContext);
+export const useBallot = () => {
+  const context = useContext(BallotContext);
   if (!context) {
-    throw new Error('useElection must be used within an ElectionProvider');
+    throw new Error('useBallot must be used within a BallotProvider');
   }
   return context;
 };
 
-export const ElectionProvider = ({ children }) => {
-  const [activeElection, setActiveElection] = useState(null);
-  const [allElections, setAllElections] = useState([]);
+export const BallotProvider = ({ children }) => {
+  const [activeBallot, setActiveBallot] = useState(null);
+  const [allBallots, setAllBallots] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const refreshTimeoutRef = useRef(null);
@@ -42,10 +42,10 @@ export const ElectionProvider = ({ children }) => {
     checkAuth();
   }, []);
 
-  const fetchElectionData = useCallback(async () => {
+  const fetchBallotData = useCallback(async () => {
     // Only fetch if authenticated
     if (!isAuthenticated) {
-      console.log('🔒 [ElectionContext] Not authenticated, skipping election data fetch');
+      console.log('🔒 [BallotContext] Not authenticated, skipping ballot data fetch');
       return;
     }
 
@@ -53,40 +53,40 @@ export const ElectionProvider = ({ children }) => {
       setLoading(true);
       setError('');
       
-      // console.log('🔍 [ElectionContext] Fetching election data...');
+      // console.log('🔍 [BallotContext] Fetching ballot data...');
       
-      // Fetch all elections to check for ended ones
-      const allElectionsResponse = await api.get('/elections');
-      // console.log('📊 [ElectionContext] All elections response:', allElectionsResponse.data);
-      setAllElections(allElectionsResponse.data || []);
+      // Fetch all ballots to check for ended ones
+      const allBallotsResponse = await api.get('/ballots');
+      // console.log('📊 [BallotContext] All ballots response:', allBallotsResponse.data);
+      setAllBallots(allBallotsResponse.data || []);
       
-      // Fetch active election (for admin monitoring, includes paused/stopped elections)
+      // Fetch active ballot (for admin monitoring, includes paused/stopped ballots)
       try {
-        const activeResponse = await api.get('/elections/active');
-        // console.log('🎯 [ElectionContext] Active elections response:', activeResponse.data);
-        setActiveElection(activeResponse.data);
+        const activeResponse = await api.get('/ballots/available');
+        // console.log('🎯 [BallotContext] Active ballots response:', activeResponse.data);
+        setActiveBallot(activeResponse.data?.[0] || null);
       } catch (activeError) {
-        // No active election found, which is fine
-        // console.log('ℹ️ [ElectionContext] No active election found:', activeError.message);
-        setActiveElection(null);
+        // No active ballot found, which is fine
+        // console.log('ℹ️ [BallotContext] No active ballot found:', activeError.message);
+        setActiveBallot(null);
       }
     } catch (error) {
-      console.error('❌ [ElectionContext] Error fetching election data:', error);
-      setError('Failed to fetch election status');
+      console.error('❌ [BallotContext] Error fetching ballot data:', error);
+      setError('Failed to fetch ballot status');
     } finally {
       setLoading(false);
     }
   }, [isAuthenticated]);
 
-  const refreshElection = useCallback(() => {
+  const refreshBallot = useCallback(() => {
     if (isAuthenticated) {
-      fetchElectionData();
+      fetchBallotData();
     }
-  }, [isAuthenticated, fetchElectionData]);
+  }, [isAuthenticated, fetchBallotData]);
 
   const triggerImmediateRefresh = useCallback(() => {
     if (!isAuthenticated) {
-      // console.log('🔒 [ElectionContext] Not authenticated, cannot refresh election data');
+      // console.log('🔒 [BallotContext] Not authenticated, cannot refresh ballot data');
       return;
     }
     
@@ -99,19 +99,19 @@ export const ElectionProvider = ({ children }) => {
     // Only refresh if not already loading to prevent loops
     if (!loading) {
       refreshTimeoutRef.current = setTimeout(() => {
-        fetchElectionData();
+        fetchBallotData();
       }, 100);
     }
   }, [isAuthenticated, loading]);
 
-  // Single useEffect to handle election data fetching when authenticated
+  // Single useEffect to handle ballot data fetching when authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      // console.log('🔓 [ElectionContext] User authenticated, triggering election data fetch');
-      fetchElectionData();
+      // console.log('🔓 [BallotContext] User authenticated, triggering ballot data fetch');
+      fetchBallotData();
       
-      // Refresh election status every 10 seconds for more responsive updates
-      const interval = setInterval(fetchElectionData, 10000);
+      // Refresh ballot status every 10 seconds for more responsive updates
+      const interval = setInterval(fetchBallotData, 10000);
       
       return () => {
         clearInterval(interval);
@@ -137,23 +137,23 @@ export const ElectionProvider = ({ children }) => {
   }, [userRole]);
 
   const value = useMemo(() => ({
-    activeElection,
-    allElections,
+    activeBallot,
+    allBallots,
     loading,
     error,
-    refreshElection,
+    refreshBallot,
     triggerImmediateRefresh,
-    hasActiveElection: !!activeElection,
-    hasAnyElection: allElections.length > 0,
-    hasEndedElection: allElections.some(election => election.status === 'ended'),
-    // Fix: Users can vote if there are any active elections, not just if activeElection is set
-    canVote: isAdmin ? !!activeElection && activeElection.status === 'active' : allElections.length > 0 && allElections.some(election => election.status === 'active'),
-    // Fix: Users can view results if there are any elections (active or ended)
-    canViewResults: isAdmin || allElections.length > 0,
-    // Fix: Users can view candidates if there are any elections
-    canViewCandidates: isAdmin || allElections.length > 0
+    hasActiveBallot: !!activeBallot,
+    hasAnyBallot: allBallots.length > 0,
+    hasEndedBallot: allBallots.some(ballot => ballot.Ballot_Status === 'ENDED'),
+    // Fix: Users can vote if there are any active ballots, not just if activeBallot is set
+    canVote: isAdmin ? !!activeBallot && activeBallot.Ballot_Status === 'ACTIVE' : allBallots.length > 0 && allBallots.some(ballot => ballot.Ballot_Status === 'ACTIVE'),
+    // Fix: Users can view results if there are any ballots (active or ended)
+    canViewResults: isAdmin || allBallots.length > 0,
+    // Fix: Users can view candidates if there are any ballots
+    canViewCandidates: isAdmin || allBallots.length > 0
     // Remove forceRefresh to prevent memory leaks
-  }), [activeElection, allElections, loading, error, refreshElection, triggerImmediateRefresh, isAdmin]);
+  }), [activeBallot, allBallots, loading, error, refreshBallot, triggerImmediateRefresh, isAdmin]);
 
   // Debug logging - only log when values change to prevent spam
   // useEffect(() => {
@@ -174,8 +174,8 @@ export const ElectionProvider = ({ children }) => {
   // }, [userRole, isAdmin, activeElection, allElections, value.canVote, value.canViewCandidates, value.canViewResults, value.hasActiveElection, value.hasAnyElection]);
 
   return (
-    <ElectionContext.Provider value={value}>
+    <BallotContext.Provider value={value}>
       {children}
-    </ElectionContext.Provider>
+    </BallotContext.Provider>
   );
 }; 

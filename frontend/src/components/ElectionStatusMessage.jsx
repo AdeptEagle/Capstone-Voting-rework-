@@ -1,9 +1,9 @@
 import React from 'react';
-import { useElection } from '../contexts/ElectionContext';
+import { useBallot } from '../contexts/BallotContext';
 import './ElectionStatusMessage.css';
 
 const ElectionStatusMessage = ({ type = 'general' }) => {
-  const { activeElection, loading, hasActiveElection, hasAnyElection } = useElection();
+  const { activeBallot, loading, hasActiveBallot, hasAnyBallot } = useBallot();
 
   if (loading) {
     return (
@@ -17,9 +17,9 @@ const ElectionStatusMessage = ({ type = 'general' }) => {
   }
 
   // Check if there's an election but it's not active
-  if (activeElection && activeElection.status !== 'active') {
+  if (activeBallot && activeBallot.Ballot_Status !== 'ACTIVE') {
     const getInactiveMessage = () => {
-      const status = activeElection.status;
+      const status = activeBallot.Ballot_Status;
       const statusText = status.charAt(0).toUpperCase() + status.slice(1);
       
       switch (type) {
@@ -27,14 +27,14 @@ const ElectionStatusMessage = ({ type = 'general' }) => {
           return {
             icon: 'fas fa-pause-circle',
             title: `Election ${statusText}`,
-            message: `The election "${activeElection.Election_Title}" is currently ${status}. Voting is not available at this time.`,
+            message: `The ballot "${activeBallot.Ballot_Title}" is currently ${status}. Voting is not available at this time.`,
             color: status === 'ended' ? 'success' : 'warning'
           };
         case 'candidates':
           return {
             icon: 'fas fa-users',
             title: `Election ${statusText}`,
-            message: `The election "${activeElection.Election_Title}" is currently ${status}. Candidates are not available for viewing.`,
+            message: `The ballot "${activeBallot.Ballot_Title}" is currently ${status}. Candidates are not available for viewing.`,
             color: status === 'ended' ? 'success' : 'warning'
           };
         case 'results':
@@ -42,14 +42,14 @@ const ElectionStatusMessage = ({ type = 'general' }) => {
             return {
               icon: 'fas fa-chart-bar',
               title: 'Election Ended',
-              message: `The election "${activeElection.Election_Title}" has ended. Results should be available now.`,
+              message: `The ballot "${activeBallot.Ballot_Title}" has ended. Results should be available now.`,
               color: 'success'
             };
           } else {
             return {
               icon: 'fas fa-chart-bar',
               title: `Election ${statusText}`,
-              message: `The election "${activeElection.Election_Title}" is currently ${status}. Results are not available yet.`,
+              message: `The ballot "${activeBallot.Ballot_Title}" is currently ${status}. Results are not available yet.`,
               color: 'warning'
             };
           }
@@ -57,7 +57,7 @@ const ElectionStatusMessage = ({ type = 'general' }) => {
           return {
             icon: 'fas fa-info-circle',
             title: `Election ${statusText}`,
-            message: `The election "${activeElection.Election_Title}" is currently ${status}.`,
+            message: `The ballot "${activeBallot.Ballot_Title}" is currently ${status}.`,
             color: status === 'ended' ? 'success' : 'warning'
           };
       }
@@ -79,12 +79,12 @@ const ElectionStatusMessage = ({ type = 'general' }) => {
     );
   }
 
-  if (hasActiveElection) {
+  if (hasActiveBallot) {
     return null; // Don't show message if there's an active election
   }
 
   // For results, check if there are any elections at all
-  if (type === 'results' && hasAnyElection) {
+  if (type === 'results' && hasAnyBallot) {
     return null; // Don't show message if there are elections
   }
 

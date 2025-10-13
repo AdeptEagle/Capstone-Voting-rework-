@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { useElection } from '../contexts/ElectionContext';
+import { useBallot } from '../contexts/BallotContext';
 import { checkCurrentUser, logout } from '../services/auth';
 import './Sidebar.css';
 
@@ -8,24 +8,24 @@ const Sidebar = ({ isOpen, onToggle }) => {
   const location = useLocation();
   const currentUser = checkCurrentUser();
   
-  // Safely get election context with fallback
-  let electionContext = null;
+  // Safely get ballot context with fallback
+  let ballotContext = null;
   try {
-    electionContext = useElection();
+    ballotContext = useBallot();
   } catch (error) {
-    console.warn('ElectionContext not available:', error.message);
+    console.warn('BallotContext not available:', error.message);
     // Provide fallback values
-    electionContext = {
+    ballotContext = {
       canVote: false,
       canViewCandidates: false,
       canViewResults: false,
-      hasActiveElection: false,
-      hasAnyElection: false,
-      hasEndedElection: false
+      hasActiveBallot: false,
+      hasAnyBallot: false,
+      hasEndedBallot: false
     };
   }
   
-  const { canVote, canViewCandidates, canViewResults, hasActiveElection, hasAnyElection, hasEndedElection } = electionContext;
+  const { canVote, canViewCandidates, canViewResults, hasActiveBallot, hasAnyBallot, hasEndedBallot } = ballotContext;
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -33,7 +33,7 @@ const Sidebar = ({ isOpen, onToggle }) => {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const response = await fetch('http://localhost:3001/auth/status', {
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'}/auth/status`, {
           credentials: 'include'
         });
         

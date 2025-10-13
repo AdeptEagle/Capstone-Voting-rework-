@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getElections, getPositions, getCandidates, createElection, updateElection, deleteElection, startElection, pauseElection, stopElection, resumeElection, endElection, getElectionPositions, createPosition, createCandidate, getDepartments, addPositionToElection, addCandidateToElection, hasActiveElections, getActiveElectionInfo, getElectionCandidates, getUnassignedCandidates, assignCandidateToElection, removeCandidateFromElection } from '../services/api';
+import { getElections, getPositions, getCandidates, createElection, updateElection, deleteElection, startElection, pauseElection, stopElection, resumeElection, endElection, getElectionPositions, createPosition, createCandidate, getDepartments, addPositionToElection, addCandidateToElection, hasActiveElections, getActiveElectionInfo, getElectionCandidates, getUnassignedCandidates, assignCandidateToBallot, removeCandidateFromBallot } from '../services/api';
 import './Elections.css';
 import Button from 'react-bootstrap/Button'; // Added missing import for Button
 
@@ -19,7 +19,7 @@ const Elections = () => {
   const [updatingElection, setUpdatingElection] = useState(null);
   const [loadingPositions, setLoadingPositions] = useState(false);
   const [activeTab, setActiveTab] = useState('active'); // 'active' or 'ended'
-  const [activeElectionInfo, setActiveElectionInfo] = useState({ hasActive: false, activeCount: 0, activeElections: [] });
+  const [activeBallotInfo, setActiveBallotInfo] = useState({ hasActive: false, activeCount: 0, activeBallots: [] });
   const navigate = useNavigate();
 
   // Enhanced form state for creating elections with positions and candidates
@@ -64,7 +64,7 @@ const Elections = () => {
       setElections(elections || []);
       setPositions(positions || []);
       setDepartments(departmentsData || []);
-      setActiveElectionInfo(activeInfo || { hasActive: false, activeCount: 0, activeElections: [] });
+      setActiveBallotInfo(activeInfo || { hasActive: false, activeCount: 0, activeBallots: [] });
     } catch (error) {
       console.error('Error fetching elections data:', error);
       setError('Failed to load elections data');
@@ -619,7 +619,7 @@ const Elections = () => {
   // Candidate management functions for edit modal
   const handleAssignCandidate = async (candidateId) => {
     try {
-      await assignCandidateToElection(editingElection.id, candidateId);
+      await assignCandidateToBallot(editingElection.id, candidateId);
       
       // Refresh candidate data
       const [electionCandidatesData, unassignedCandidatesData] = await Promise.all([
@@ -640,7 +640,7 @@ const Elections = () => {
 
   const handleRemoveCandidate = async (candidateId) => {
     try {
-      await removeCandidateFromElection(editingElection.id, candidateId);
+      await removeCandidateFromBallot(editingElection.id, candidateId);
       
       // Refresh candidate data
       const [electionCandidatesData, unassignedCandidatesData] = await Promise.all([
@@ -894,8 +894,8 @@ const Elections = () => {
     const actions = [];
 
     // Check if this election can be started (grayed out if another election is active)
-    const canStartElection = !activeElectionInfo.hasActive || 
-      activeElectionInfo.activeElections.some(active => active.id === election.id);
+    const canStartElection = !activeBallotInfo.hasActive || 
+      activeBallotInfo.activeBallots.some(active => active.id === election.id);
 
     // Add fix status button for invalid statuses
     if (!['draft', 'active', 'paused', 'stopped', 'ended'].includes(status)) {
@@ -1104,8 +1104,8 @@ const Elections = () => {
 
       {/* Admin Guide for Single Election Policy */}
       {(() => {
-        const activeElections = getActiveElections();
-        const currentlyActive = activeElections.filter(e => e.status === 'active');
+        const activeBallots = getAvailableBallots();
+        const currentlyActive = activeBallots.filter(e => e.Ballot_Status === 'ACTIVE');
         
         if (currentlyActive.length > 0) {
           return (

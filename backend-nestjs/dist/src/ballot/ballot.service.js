@@ -55,7 +55,10 @@ let BallotService = class BallotService {
                 throw new common_1.BadRequestException('At least one candidate must be selected');
             }
             const candidates = await this.prisma.candidate.findMany({
-                where: { id: { in: candidateIds } },
+                where: {
+                    id: { in: candidateIds },
+                    isDeleted: false,
+                },
                 select: { id: true, positionId: true }
             });
             console.log('🔍 Found candidates in DB:', candidates);
@@ -178,6 +181,7 @@ let BallotService = class BallotService {
                                 position: true,
                                 department: true,
                                 course: true,
+                                partyList: true,
                             },
                         },
                     },
@@ -224,6 +228,7 @@ let BallotService = class BallotService {
                                 position: true,
                                 department: true,
                                 course: true,
+                                partyList: true,
                             },
                         },
                     },
@@ -313,6 +318,7 @@ let BallotService = class BallotService {
                                 position: true,
                                 department: true,
                                 course: true,
+                                partyList: true,
                             },
                         },
                     },
@@ -441,6 +447,7 @@ let BallotService = class BallotService {
                                 position: true,
                                 department: true,
                                 course: true,
+                                partyList: true,
                             },
                         },
                     },
@@ -487,6 +494,7 @@ let BallotService = class BallotService {
                                 position: true,
                                 department: true,
                                 course: true,
+                                partyList: true,
                             },
                         },
                     },
@@ -551,7 +559,11 @@ let BallotService = class BallotService {
                     },
                     ballotCandidates: {
                         include: {
-                            candidate: true
+                            candidate: {
+                                include: {
+                                    partyList: true
+                                }
+                            }
                         }
                     }
                 }
@@ -601,7 +613,7 @@ let BallotService = class BallotService {
                             id: this.generateId(),
                             voterId: userId,
                             candidateId: candidateId,
-                            electionId: 'ELEC-12',
+                            electionId: null,
                             positionId: positionId,
                             ballotId: ballotId,
                             ipAddress: voteData.ipAddress || null,
@@ -690,7 +702,11 @@ let BallotService = class BallotService {
                     },
                     ballotCandidates: {
                         include: {
-                            candidate: true
+                            candidate: {
+                                include: {
+                                    partyList: true
+                                }
+                            }
                         }
                     }
                 }

@@ -40,7 +40,14 @@ let PositionController = class PositionController {
         return this.positionService.updatePosition(id, updatePositionDto);
     }
     async deletePosition(id) {
-        return this.positionService.deletePosition(id);
+        console.log(`[PositionController] deletePosition called with ID: "${id}"`);
+        console.log(`[PositionController] ID type: ${typeof id}`);
+        console.log(`[PositionController] ID length: ${id?.length}`);
+        console.log(`[PositionController] ID trimmed: "${id?.trim()}"`);
+        console.log(`[PositionController] ID trimmed length: ${id?.trim()?.length}`);
+        const trimmedId = id?.trim();
+        console.log(`[PositionController] Using trimmed ID: "${trimmedId}"`);
+        return this.positionService.deletePosition(trimmedId);
     }
 };
 exports.PositionController = PositionController;

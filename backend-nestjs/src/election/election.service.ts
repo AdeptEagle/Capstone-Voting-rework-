@@ -459,8 +459,16 @@ export class ElectionService {
     };
   }
 
-  // ===== COMPREHENSIVE BALLOT LIFECYCLE MANAGEMENT =====
+  // ===== BALLOT LIFECYCLE MANAGEMENT MOVED TO BALLOT SERVICE =====
+  // These methods have been moved to BallotService for better organization
+  // Use BallotService methods instead:
+  // - startBallot() -> ballotService.activateBallot()
+  // - pauseBallot() -> ballotService.pauseBallot()
+  // - resumeBallot() -> ballotService.resumeBallot()
+  // - stopBallot() -> ballotService.pauseBallot()
+  // - endBallot() -> ballotService.endBallot()
 
+  // DEPRECATED: This method has been moved to BallotService
   async startBallot(id: string) {
     const election = await this.prisma.election.findUnique({
       where: { id },

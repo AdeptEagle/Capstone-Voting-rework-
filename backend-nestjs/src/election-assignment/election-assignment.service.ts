@@ -318,6 +318,16 @@ export class ElectionAssignmentService {
             Candidate_StudentId: true,
             photo: true,
             manifesto: true,
+            party_list_name: true,
+            partyListId: true,
+            partyList: {
+              select: {
+                id: true,
+                name: true,
+                color: true,
+                logo: true,
+              },
+            },
             position: {
               select: {
                 id: true,
@@ -629,6 +639,9 @@ export class ElectionAssignmentService {
 
     // Get all candidates
     const allCandidates = await this.prisma.candidate.findMany({
+      where: {
+        isDeleted: false,
+      },
       include: {
         position: {
           select: {
@@ -677,6 +690,9 @@ export class ElectionAssignmentService {
     }
 
     const allCandidates = await this.prisma.candidate.findMany({
+      where: {
+        isDeleted: false,
+      },
       include: {
         position: {
           select: {
@@ -758,6 +774,16 @@ export class ElectionAssignmentService {
             photo: true,
             manifesto: true,
             positionId: true,
+            party_list_name: true,
+            partyListId: true,
+            partyList: {
+              select: {
+                id: true,
+                name: true,
+                color: true,
+                logo: true,
+              },
+            },
             position: {
               select: {
                 id: true,
@@ -780,6 +806,7 @@ export class ElectionAssignmentService {
       const positionCandidates = electionCandidates.filter(
         ec => ec.candidate.positionId === electionPosition.positionId
       );
+
 
       return {
         position: electionPosition.position,

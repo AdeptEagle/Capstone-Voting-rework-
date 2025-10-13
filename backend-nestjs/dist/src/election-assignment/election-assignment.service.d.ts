@@ -163,6 +163,14 @@ export declare class ElectionAssignmentService {
                 Candidate_StudentId: string;
                 photo: string;
                 manifesto: string;
+                party_list_name: string;
+                partyListId: string;
+                partyList: {
+                    id: string;
+                    name: string;
+                    color: string;
+                    logo: string;
+                };
             };
         } & {
             id: string;
@@ -425,6 +433,14 @@ export declare class ElectionAssignmentService {
                 Candidate_StudentId: string;
                 photo: string;
                 manifesto: string;
+                party_list_name: string;
+                partyListId: string;
+                partyList: {
+                    id: string;
+                    name: string;
+                    color: string;
+                    logo: string;
+                };
             }[];
         }[];
     }>;

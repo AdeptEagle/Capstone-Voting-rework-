@@ -16,11 +16,12 @@ export class VoteController {
   }
 
   @Post()
-  @ApiOperation({ summary: 'Cast a vote' })
+  @ApiOperation({ summary: 'Cast a vote (DEPRECATED - Use ballot system instead)' })
   @ApiResponse({ status: 201, description: 'Vote cast successfully' })
   @ApiResponse({ status: 409, description: 'Voter has already voted' })
   @ApiResponse({ status: 400, description: 'Invalid vote data' })
   async createVote(@Body() createVoteDto: CreateVoteDto) {
+    console.warn('⚠️ DEPRECATED: POST /votes is deprecated. Use POST /ballots/cast-vote instead.');
     return this.voteService.createVote(createVoteDto);
   }
 
@@ -55,19 +56,21 @@ export class VoteController {
     return this.voteService.getVoteTimeline();
   }
 
-  @Get('voter/:voterId/election/:electionId/status')
-  @ApiOperation({ summary: 'Get voter voting status and lockout information' })
+  @Get('voter/:voterId/ballot/:ballotId/status')
+  @ApiOperation({ summary: 'Get voter voting status for specific ballot (DEPRECATED - Use ballot system instead)' })
   @ApiResponse({ status: 200, description: 'Voter voting status' })
-  @ApiResponse({ status: 404, description: 'Voter or election not found' })
-  async getVoterVotingStatus(@Param('voterId') voterId: string, @Param('electionId') electionId: string) {
-    return this.voteService.getVoterVotingStatus(voterId, electionId);
+  @ApiResponse({ status: 404, description: 'Voter or ballot not found' })
+  async getVoterVotingStatus(@Param('voterId') voterId: string, @Param('ballotId') ballotId: string) {
+    console.warn('⚠️ DEPRECATED: Election-based voting status is deprecated. Use ballot system instead.');
+    return this.voteService.getVoterVotingStatus(voterId, ballotId);
   }
 
-  @Get('election/:electionId')
-  @ApiOperation({ summary: 'Get votes by election' })
-  @ApiResponse({ status: 200, description: 'Votes for election' })
-  async getVotesByElection(@Param('electionId') electionId: string) {
-    return this.voteService.getVotesByElection(electionId);
+  @Get('ballot/:ballotId')
+  @ApiOperation({ summary: 'Get votes by ballot (DEPRECATED - Use ballot system instead)' })
+  @ApiResponse({ status: 200, description: 'Votes for ballot' })
+  async getVotesByBallot(@Param('ballotId') ballotId: string) {
+    console.warn('⚠️ DEPRECATED: Election-based vote retrieval is deprecated. Use ballot system instead.');
+    return this.voteService.getVotesByElection(ballotId);
   }
 
   @Get('voter/:voterId')
@@ -77,25 +80,28 @@ export class VoteController {
     return this.voteService.getVotesByVoter(voterId);
   }
 
-  @Get('results/:electionId')
-  @ApiOperation({ summary: 'Get vote results for election' })
+  @Get('results/:ballotId')
+  @ApiOperation({ summary: 'Get vote results for ballot (DEPRECATED - Use ballot system instead)' })
   @ApiResponse({ status: 200, description: 'Vote results' })
-  async getVoteResults(@Param('electionId') electionId: string) {
-    return this.voteService.getVoteResults(electionId);
+  async getVoteResults(@Param('ballotId') ballotId: string) {
+    console.warn('⚠️ DEPRECATED: Election-based results are deprecated. Use ballot system instead.');
+    return this.voteService.getVoteResults(ballotId);
   }
 
-  @Get('analytics/:electionId')
-  @ApiOperation({ summary: 'Get comprehensive vote analytics for election' })
+  @Get('analytics/:ballotId')
+  @ApiOperation({ summary: 'Get comprehensive vote analytics for ballot (DEPRECATED - Use ballot system instead)' })
   @ApiResponse({ status: 200, description: 'Comprehensive vote analytics' })
-  async getComprehensiveVoteAnalytics(@Param('electionId') electionId: string) {
-    return this.voteService.getComprehensiveVoteAnalytics(electionId);
+  async getComprehensiveVoteAnalytics(@Param('ballotId') ballotId: string) {
+    console.warn('⚠️ DEPRECATED: Election-based analytics are deprecated. Use ballot system instead.');
+    return this.voteService.getComprehensiveVoteAnalytics(ballotId);
   }
 
-  @Get('results/:electionId/departments')
-  @ApiOperation({ summary: 'Get department-based voting results for election' })
+  @Get('results/:ballotId/departments')
+  @ApiOperation({ summary: 'Get department-based voting results for ballot (DEPRECATED - Use ballot system instead)' })
   @ApiResponse({ status: 200, description: 'Department-based voting results' })
-  async getDepartmentVotingResults(@Param('electionId') electionId: string) {
-    return this.voteService.getDepartmentVotingResults(electionId);
+  async getDepartmentVotingResults(@Param('ballotId') ballotId: string) {
+    console.warn('⚠️ DEPRECATED: Election-based department results are deprecated. Use ballot system instead.');
+    return this.voteService.getDepartmentVotingResults(ballotId);
   }
 
   // Parameterized routes come after specific routes

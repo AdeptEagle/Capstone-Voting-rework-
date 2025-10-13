@@ -1,28 +1,28 @@
 import React, { useState, useEffect } from 'react';
-import { useElection } from '../../contexts/ElectionContext';
+import { useBallot } from '../../contexts/BallotContext';
 import { 
   getPositionAssignmentStatus
 } from '../../services/api';
 import './BallotPositions.css';
 
 const BallotPositions = () => {
-  const { activeElection } = useElection();
+  const { activeBallot } = useBallot();
   const [positions, setPositions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (activeElection) {
+    if (activeBallot) {
       fetchPositions();
     } else {
       setLoading(false);
     }
-  }, [activeElection]);
+  }, [activeBallot]);
 
   const fetchPositions = async () => {
     try {
       setLoading(true);
-      const data = await getPositionAssignmentStatus(activeElection.id);
+      const data = await getPositionAssignmentStatus(activeBallot.id);
       setPositions(data);
       setError('');
     } catch (err) {
@@ -46,7 +46,7 @@ const BallotPositions = () => {
     );
   }
 
-  if (!activeElection) {
+  if (!activeBallot) {
     return (
       <div className="ballot-positions-error">
         <div className="alert alert-warning text-center">
@@ -85,9 +85,9 @@ const BallotPositions = () => {
       <div className="dashboard-header-pro">
         <div className="header-content">
           <h1>Ballot Positions View</h1>
-                             <p>View positions for: <strong>{activeElection.Election_Title}</strong> 
-            <span className={`badge ms-2 ${activeElection.status === 'active' ? 'bg-success' : activeElection.status === 'paused' ? 'bg-warning' : activeElection.status === 'stopped' ? 'bg-danger' : 'bg-secondary'}`}>
-              {activeElection.status.toUpperCase()}
+                             <p>View positions for: <strong>{activeBallot.Ballot_Title}</strong> 
+            <span className={`badge ms-2 ${activeBallot.Ballot_Status === 'ACTIVE' ? 'bg-success' : activeBallot.Ballot_Status === 'PAUSED' ? 'bg-warning' : activeBallot.Ballot_Status === 'STOPPED' ? 'bg-danger' : 'bg-secondary'}`}>
+              {activeBallot.Ballot_Status}
             </span>
           </p>
           <div className="alert alert-info">

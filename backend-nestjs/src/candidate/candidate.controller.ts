@@ -17,7 +17,7 @@ export class CandidateController {
   @ApiOperation({ summary: 'Get all candidates' })
   @ApiResponse({ status: 200, description: 'List of all candidates' })
   async getAllCandidates(@Request() req) {
-    const showAll = req.user && (req.user.role === 'ADMIN' || req.user.role === 'SUPERADMIN');
+    const showAll = false; // Always filter out deleted candidates
     return this.candidateService.getAllCandidates(showAll);
   }
 

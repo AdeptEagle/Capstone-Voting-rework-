@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Button, Table, Badge, Modal, Alert, Spinner } from 'react-bootstrap';
+import { Card, Button, Table, Badge, Modal, Alert, Spinner, Tooltip, OverlayTrigger } from 'react-bootstrap';
 import { FaTrash, FaUndo, FaExclamationTriangle, FaInfoCircle } from 'react-icons/fa';
 import './TrashBin.css';
 
@@ -259,24 +259,37 @@ const TrashBin = () => {
               })}
               <td>
                 <div className="d-flex gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline-success"
-                    onClick={() => openRestoreModal(item)}
-                    disabled={actionLoading}
+                  <OverlayTrigger
+                    placement="top"
+                    overlay={<Tooltip id="restore-tooltip">Restore Item</Tooltip>}
                   >
-                    <FaUndo className="me-1" />
-                    Restore
-                  </Button>
-                                     <Button
-                     size="sm"
-                     variant="outline-danger"
-                     onClick={() => openDeleteModal(item)}
-                     disabled={actionLoading}
-                   >
-                     <FaTrash className="me-1" />
-                     Permanently Delete
-                   </Button>
+                    <Button
+                      size="sm"
+                      variant="outline-success"
+                      onClick={() => openRestoreModal(item)}
+                      disabled={actionLoading}
+                      className="d-flex align-items-center justify-content-center"
+                      style={{ width: '32px', height: '32px' }}
+                    >
+                      <FaUndo />
+                    </Button>
+                  </OverlayTrigger>
+                  
+                  <OverlayTrigger
+                    placement="top"
+                    overlay={<Tooltip id="delete-tooltip">Permanently Delete</Tooltip>}
+                  >
+                    <Button
+                      size="sm"
+                      variant="outline-danger"
+                      onClick={() => openDeleteModal(item)}
+                      disabled={actionLoading}
+                      className="d-flex align-items-center justify-content-center"
+                      style={{ width: '32px', height: '32px' }}
+                    >
+                      <FaTrash />
+                    </Button>
+                  </OverlayTrigger>
                 </div>
               </td>
             </tr>

@@ -19,7 +19,7 @@ const Login = () => {
   // WebSocket connection setup
   useEffect(() => {
     console.log('🔌 [LandingPage Login] Setting up WebSocket connection...');
-    const newSocket = io('http://localhost:3001', {
+    const newSocket = io(import.meta.env.VITE_WS_URL || 'http://localhost:3001', {
       withCredentials: true,
       transports: ['websocket', 'polling'],
       timeout: 20000,

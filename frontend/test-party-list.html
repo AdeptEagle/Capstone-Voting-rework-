@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Party List Test</title>
+</head>
+<body>
+    <h1>Party List Data Test</h1>
+    <div id="results"></div>
+    
+    <script>
+        async function testPartyListData() {
+            try {
+                console.log('Testing party list data...');
+                
+                // Test the main ballot endpoint
+                const ballotResponse = await fetch('http://localhost:3001/election-assignments/election/ELEC-12/ballot?_t=' + Date.now(), {
+                    credentials: 'include'
+                });
+                const ballotData = await ballotResponse.json();
+                
+                console.log('Ballot data:', ballotData);
+                
+                if (ballotData.ballot && ballotData.ballot.length > 0) {
+                    const firstPosition = ballotData.ballot[0];
+                    console.log('First position:', firstPosition);
+                    
+                    if (firstPosition.candidates && firstPosition.candidates.length > 0) {
+                        const firstCandidate = firstPosition.candidates[0];
+                        console.log('First candidate:', firstCandidate);
+                        console.log('Party list data:', {
+                            party_list_name: firstCandidate.party_list_name,
+                            partyListId: firstCandidate.partyListId,
+                            partyList: firstCandidate.partyList
+                        });
+                        
+                        const displayValue = firstCandidate.partyList?.name || firstCandidate.party_list_name || 'Independent';
+                        console.log('Final display value:', displayValue);
+                        
+                        document.getElementById('results').innerHTML = `
+                            <h2>Candidate: ${firstCandidate.Candidate_Name}</h2>
+                            <p>Party List: ${displayValue}</p>
+                            <p>Party List ID: ${firstCandidate.partyListId}</p>
+                            <p>Party List Object: ${JSON.stringify(firstCandidate.partyList)}</p>
+                        `;
+                    }
+                }
+                
+            } catch (error) {
+                console.error('Error testing party list data:', error);
+                document.getElementById('results').innerHTML = '<p>Error: ' + error.message + '</p>';
+            }
+        }
+        
+        testPartyListData();
+    </script>
+</body>
+</html>

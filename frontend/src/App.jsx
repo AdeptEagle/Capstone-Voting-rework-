@@ -36,7 +36,7 @@ import ResetPassword from './Pages/ResetPassword';
 import DepartmentManagement from './Pages/DepartmentManagement';
 import TrashBin from './Pages/TrashBin';
 import { getToken, checkCurrentUser, getStoredRole, migrateToSecureStorage } from './services/auth';
-import { ElectionProvider } from './contexts/ElectionContext';
+import { BallotProvider } from './contexts/BallotContext';
 import { isValidRoute, getDefaultRoute, isRoutePattern } from './utils/routeValidation';
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -160,7 +160,7 @@ function App() {
   }, []);
 
   return (
-    <ElectionProvider>
+    <BallotProvider>
     <Router>
         <div className="App">
           <Routes>
@@ -358,7 +358,7 @@ function App() {
           </Routes>
         </div>
       </Router>
-      </ElectionProvider>
+      </BallotProvider>
   );
 }
 

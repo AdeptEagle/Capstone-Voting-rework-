@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getAvailableBallots, getUserBallotHistory, getElections } from '../../services/api';
+import { getAvailableBallots, getUserBallotHistory } from '../../services/api';
 import './BallotSelection.css';
 
 const BallotSelection = () => {
@@ -18,27 +18,20 @@ const BallotSelection = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [ballotsData, historyData, electionsData] = await Promise.all([
+      const [ballotsData, historyData] = await Promise.all([
         getAvailableBallots(),
-        getUserBallotHistory(),
-        getElections()
+        getUserBallotHistory()
       ]);
       
       console.log('🎯 Fetched ballots:', ballotsData);
-      console.log('🗳️ Fetched elections:', electionsData);
       
       setAvailableBallots(ballotsData || []);
       setUserHistory(historyData || []);
       
-      // Filter active elections for users
-      const activeElections = (electionsData || []).filter(election => 
-        election.isActive && 
-        !election.isDeleted &&
-        election.status === 'active'
-      );
-      setAvailableElections(activeElections);
+      // Elections are now handled through the ballot system
+      setAvailableElections([]);
       
-      console.log('✅ Active elections for users:', activeElections);
+      console.log('✅ Ballot data loaded successfully');
     } catch (error) {
       console.error('Error fetching ballot data:', error);
       setError('Failed to load ballots. Please try again.');

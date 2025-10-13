@@ -13,39 +13,19 @@ export class ElectionController {
   ) {}
 
   @Get()
-  @ApiOperation({ summary: 'Get all elections' })
+  @ApiOperation({ summary: 'Get all elections (DEPRECATED - Use ballot system instead)' })
   @ApiResponse({ status: 200, description: 'List of all elections' })
   async getAllElections() {
+    console.warn('⚠️ DEPRECATED: Election endpoints are deprecated. Use ballot system instead.');
     return this.electionService.getAllElections();
   }
 
-  @Get('active')
-  @ApiOperation({ summary: 'Get active elections' })
-  @ApiResponse({ status: 200, description: 'List of active elections' })
-  async getActiveElections() {
-    return this.electionService.getActiveElections();
-  }
-
-  @Get('active/single')
-  @ApiOperation({ summary: 'Get single active election' })
-  @ApiResponse({ status: 200, description: 'Single active election' })
-  async getActiveElection() {
-    return this.electionService.getActiveElection();
-  }
-
-  @Get('active/check')
-  @ApiOperation({ summary: 'Check if there are any active elections' })
-  @ApiResponse({ status: 200, description: 'Active election status' })
-  async hasActiveElections() {
-    return this.electionService.hasActiveElections();
-  }
-
-  @Get('active/info')
-  @ApiOperation({ summary: 'Get detailed information about active elections' })
-  @ApiResponse({ status: 200, description: 'Active election information' })
-  async getActiveElectionInfo() {
-    return this.electionService.getActiveElectionInfo();
-  }
+  // ===== DEPRECATED VOTING ENDPOINTS REMOVED =====
+  // These endpoints have been removed. Use ballot system instead:
+  // - getActiveElections() -> getAvailableBallots()
+  // - getActiveElection() -> getBallotById()
+  // - hasActiveElections() -> getAvailableBallots().length > 0
+  // - getActiveElectionInfo() -> getBallotById() with full details
 
   @Get('history')
   @ApiOperation({ summary: 'Get election history - comprehensive data for ended elections' })
@@ -154,60 +134,8 @@ export class ElectionController {
     return this.electionService.deactivateElection(id);
   }
 
-  // ===== COMPREHENSIVE BALLOT LIFECYCLE MANAGEMENT =====
-
-  @Put(':id/start-ballot')
-  @ApiOperation({ summary: 'Start ballot - Begin voting process' })
-  @ApiResponse({ status: 200, description: 'Ballot started successfully' })
-  @ApiResponse({ status: 404, description: 'Election not found' })
-  @ApiResponse({ status: 409, description: 'Cannot start ballot - validation failed' })
-  async startBallot(@Param('id') id: string) {
-    return this.electionService.startBallot(id);
-  }
-
-  @Put(':id/pause-ballot')
-  @ApiOperation({ summary: 'Pause ballot - Temporarily stop voting' })
-  @ApiResponse({ status: 200, description: 'Ballot paused successfully' })
-  @ApiResponse({ status: 404, description: 'Election not found' })
-  @ApiResponse({ status: 409, description: 'Cannot pause ballot - not active' })
-  async pauseBallot(@Param('id') id: string) {
-    return this.electionService.pauseBallot(id);
-  }
-
-  @Put(':id/resume-ballot')
-  @ApiOperation({ summary: 'Resume ballot - Continue paused voting' })
-  @ApiResponse({ status: 200, description: 'Ballot resumed successfully' })
-  @ApiResponse({ status: 404, description: 'Election not found' })
-  @ApiResponse({ status: 409, description: 'Cannot resume ballot - not paused' })
-  async resumeBallot(@Param('id') id: string) {
-    return this.electionService.resumeBallot(id);
-  }
-
-  @Put(':id/stop-ballot')
-  @ApiOperation({ summary: 'Stop ballot - Close voting temporarily' })
-  @ApiResponse({ status: 200, description: 'Ballot stopped successfully' })
-  @ApiResponse({ status: 404, description: 'Election not found' })
-  @ApiResponse({ status: 409, description: 'Cannot stop ballot - not active or paused' })
-  async stopBallot(@Param('id') id: string) {
-    return this.electionService.stopBallot(id);
-  }
-
-  @Put(':id/end-ballot')
-  @ApiOperation({ summary: 'End ballot - Finalize and save results' })
-  @ApiResponse({ status: 200, description: 'Ballot ended successfully with final results' })
-  @ApiResponse({ status: 404, description: 'Election not found' })
-  @ApiResponse({ status: 409, description: 'Cannot end ballot - validation failed' })
-  async endBallot(@Param('id') id: string) {
-    return this.electionService.endBallot(id);
-  }
-
-  @Get(':id/ballot-status')
-  @ApiOperation({ summary: 'Get ballot status and lifecycle information' })
-  @ApiResponse({ status: 200, description: 'Ballot status retrieved successfully' })
-  @ApiResponse({ status: 404, description: 'Election not found' })
-  async getBallotStatus(@Param('id') id: string) {
-    return this.electionService.getBallotStatus(id);
-  }
+  // ===== BALLOT LIFECYCLE MANAGEMENT MOVED TO BALLOT CONTROLLER =====
+  // These endpoints have been moved to /ballots controller for better organization
 
   // ===== AUTOMATIC VOTE LOCKOUT ENDPOINTS =====
 

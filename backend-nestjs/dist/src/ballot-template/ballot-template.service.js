@@ -142,10 +142,12 @@ let BallotTemplateService = class BallotTemplateService {
         console.log('👤 Created By:', createdBy);
         console.log('🗄️ Database State Debug:');
         const departments = await this.prisma.department.findMany({
+            where: { isDeleted: false },
             select: { id: true, Department_Name: true, _count: { select: { courses: true } } }
         });
         console.log('🏢 Departments:', departments);
         const courses = await this.prisma.course.findMany({
+            where: { isDeleted: false },
             select: { id: true, Course_Name: true, Course_Code: true, departmentId: true, _count: { select: { candidates: true } } }
         });
         console.log('📚 Courses:', courses);
@@ -154,6 +156,7 @@ let BallotTemplateService = class BallotTemplateService {
         });
         console.log('💼 Positions:', positions);
         const candidates = await this.prisma.candidate.findMany({
+            where: { isDeleted: false },
             select: { id: true, Candidate_Name: true, positionId: true, departmentId: true, courseId: true }
         });
         console.log('👥 Candidates:', candidates);
@@ -181,7 +184,10 @@ let BallotTemplateService = class BallotTemplateService {
             console.log('🎯 Adding candidates to ballot:', createBallotDto.candidateIds);
             console.log('👥 Candidate count:', createBallotDto.candidateIds.length);
             const candidateDetails = await this.prisma.candidate.findMany({
-                where: { id: { in: createBallotDto.candidateIds } },
+                where: {
+                    id: { in: createBallotDto.candidateIds },
+                    isDeleted: false,
+                },
                 select: { id: true, Candidate_Name: true, positionId: true, position: { select: { Position_Title: true } } }
             });
             console.log('👥 Candidate details:', candidateDetails);
@@ -257,7 +263,10 @@ let BallotTemplateService = class BallotTemplateService {
             const uniqueCandidateIds = [...new Set(candidateIds)];
             console.log('🔍 Unique candidate IDs:', uniqueCandidateIds);
             const candidates = await this.prisma.candidate.findMany({
-                where: { id: { in: uniqueCandidateIds } },
+                where: {
+                    id: { in: uniqueCandidateIds },
+                    isDeleted: false,
+                },
                 select: { id: true, positionId: true }
             });
             console.log('🔍 Found candidates:', candidates);

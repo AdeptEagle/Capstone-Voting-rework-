@@ -1,44 +1,50 @@
 import React, { useState, useEffect } from 'react';
-import { getElections, getActiveElection, getVotes, getVoters, updateElection } from '../services/api';
+import { getBallots, getAvailableBallots, getVotes, getVoters, updateBallot } from '../services/api';
 import './ElectionStatus.css';
 
 const ElectionStatus = () => {
-  const [elections, setElections] = useState([]);
-  const [activeElection, setActiveElection] = useState(null);
+  const [ballots, setBallots] = useState([]);
+  const [activeBallot, setActiveBallot] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [updatingElection, setUpdatingElection] = useState(null);
+  const [updatingBallot, setUpdatingBallot] = useState(null);
 
   useEffect(() => {
-    fetchElectionData();
+    fetchBallotData();
   }, []);
 
-  const fetchElectionData = async () => {
+  const fetchBallotData = async () => {
     try {
       setLoading(true);
-      const [elections, activeElection, votes, voters] = await Promise.all([
-        getElections(),
-        getActiveElection(),
+      const [ballots, activeBallot, votes, voters] = await Promise.all([
+        getBallots(),
+        getAvailableBallots(),
         getVotes(),
         getVoters()
       ]);
 
-      console.log('All elections:', elections);
-      console.log('Active election:', activeElection);
+      console.log('All ballots:', ballots);
+      console.log('Active ballot:', activeBallot);
 
-      setElections(elections || []);
-      setActiveElection(activeElection);
+      setBallots(ballots || []);
       
-      // Calculate voting statistics
-      const totalVotes = votes.length;
-      const totalVoters = voters.length;
-      const votedVoters = voters.filter(voter => voter.hasVoted).length;
+      // Only set active ballot if it exists and has valid data
+      if (activeBallot && Array.isArray(activeBallot) && activeBallot.length > 0 && activeBallot[0]) {
+        setActiveBallot(activeBallot[0]);
+      } else {
+        setActiveBallot(null);
+      }
       
-      // Update active election with voting stats
-      if (activeElection) {
-        setActiveElection({
-          ...activeElection,
+      // Calculate voting statistics only if we have a valid active ballot
+      if (activeBallot && Array.isArray(activeBallot) && activeBallot.length > 0 && activeBallot[0]) {
+        const totalVotes = votes.length;
+        const totalVoters = voters.length;
+        const votedVoters = voters.filter(voter => voter.hasVoted).length;
+        
+        // Update active election with voting stats
+        setActiveBallot({
+          ...activeBallot[0],
           totalVotes,
           totalVoters,
           votedVoters,
@@ -110,19 +116,19 @@ const ElectionStatus = () => {
 
   const handleStatusChange = async (electionId, newStatus) => {
     try {
-      setUpdatingElection(electionId);
+      setUpdatingBallot(electionId);
       setError('');
       setSuccess('');
       
       // Find the current election data
-      const election = elections.find(e => e.id === electionId);
+      const election = ballots.find(e => e.id === electionId);
       if (!election) {
         setError('Election not found');
         return;
       }
 
       // Update the election status
-      await updateElection(electionId, {
+      await updateBallot(electionId, {
         Election_Title: election.Election_Title,
         Election_Description: election.Election_Description,
         startDate: election.startDate,
@@ -131,7 +137,7 @@ const ElectionStatus = () => {
       });
 
       // Refresh the data
-      await fetchElectionData();
+      await fetchBallotData();
       
       // Show success message
       const statusText = newStatus.charAt(0).toUpperCase() + newStatus.slice(1);
@@ -144,7 +150,7 @@ const ElectionStatus = () => {
       console.error('Error updating election status:', error);
       setError('Failed to update election status');
     } finally {
-      setUpdatingElection(null);
+      setUpdatingBallot(null);
     }
   };
 
@@ -162,9 +168,9 @@ const ElectionStatus = () => {
             key="activate"
             className="btn btn-success btn-sm me-2"
             onClick={() => handleStatusChange(election.id, 'active')}
-            disabled={updatingElection === election.id}
+            disabled={updatingBallot === election.id}
           >
-            {updatingElection === election.id ? (
+            {updatingBallot === election.id ? (
               <i className="fas fa-spinner fa-spin me-1"></i>
             ) : (
               <i className="fas fa-play me-1"></i>
@@ -180,9 +186,9 @@ const ElectionStatus = () => {
             key="pause"
             className="btn btn-warning btn-sm me-2"
             onClick={() => handleStatusChange(election.id, 'draft')}
-            disabled={updatingElection === election.id}
+            disabled={updatingBallot === election.id}
           >
-            {updatingElection === election.id ? (
+            {updatingBallot === election.id ? (
               <i className="fas fa-spinner fa-spin me-1"></i>
             ) : (
               <i className="fas fa-pause me-1"></i>
@@ -193,9 +199,9 @@ const ElectionStatus = () => {
             key="end"
             className="btn btn-danger btn-sm me-2"
             onClick={() => handleStatusChange(election.id, 'ended')}
-            disabled={updatingElection === election.id}
+            disabled={updatingBallot === election.id}
           >
-            {updatingElection === election.id ? (
+            {updatingBallot === election.id ? (
               <i className="fas fa-spinner fa-spin me-1"></i>
             ) : (
               <i className="fas fa-stop me-1"></i>
@@ -260,7 +266,7 @@ const ElectionStatus = () => {
         </h4>
         <button 
           className="btn btn-outline-primary btn-sm"
-          onClick={fetchElectionData}
+          onClick={fetchBallotData}
           disabled={loading}
         >
           {loading ? (
@@ -273,7 +279,7 @@ const ElectionStatus = () => {
       </div>
       
       {/* Current Election Status */}
-      {activeElection ? (
+      {activeBallot && activeBallot.id ? (
         <div className="card mb-4">
           <div className="card-header bg-success text-white">
             <h5 className="mb-0">
@@ -284,76 +290,76 @@ const ElectionStatus = () => {
           <div className="card-body">
             <div className="row">
               <div className="col-md-8">
-                                   <h4 className="text-success">{activeElection.Election_Title}</h4>
-                   <p className="text-muted">{activeElection.Election_Description}</p>
+                                   <h4 className="text-success">{activeBallot.Ballot_Title}</h4>
+                   <p className="text-muted">{activeBallot.Ballot_Description}</p>
                 <div className="election-details">
                   <div className="detail-item">
                     <span className="detail-label">Start Time:</span>
-                    <span className="detail-value">{formatDateTime(activeElection.startDate)}</span>
+                    <span className="detail-value">{formatDateTime(activeBallot.Ballot_StartDate)}</span>
                   </div>
                   <div className="detail-item">
                     <span className="detail-label">End Time:</span>
-                    <span className="detail-value">{formatDateTime(activeElection.endDate)}</span>
+                    <span className="detail-value">{formatDateTime(activeBallot.Ballot_EndDate)}</span>
                   </div>
                   <div className="detail-item">
                     <span className="detail-label">Time Remaining:</span>
                     <span className="detail-value text-warning fw-bold">
-                      {getTimeRemaining(activeElection.endDate)}
+                      {getTimeRemaining(activeBallot.Ballot_EndDate)}
                     </span>
                   </div>
                   <div className="detail-item">
                     <span className="detail-label">Created By:</span>
-                    <span className="detail-value">{activeElection.admin?.Admin_Username || 'Unknown'}</span>
+                    <span className="detail-value">{activeBallot.Ballot_CreatedBy || 'Unknown'}</span>
                   </div>
                 </div>
                 <div className="active-election-actions mt-3">
                   <button
                     className="btn btn-warning btn-sm me-2"
-                    onClick={() => handleStatusChange(activeElection.id, 'draft')}
-                    disabled={updatingElection === activeElection.id}
+                    onClick={() => handleStatusChange(activeBallot.id, 'draft')}
+                    disabled={updatingBallot === activeBallot.id}
                   >
-                    {updatingElection === activeElection.id ? (
+                    {updatingBallot === activeBallot.id ? (
                       <i className="fas fa-spinner fa-spin me-1"></i>
                     ) : (
                       <i className="fas fa-pause me-1"></i>
                     )}
-                    Pause Election
+                    Pause Ballot
                   </button>
                   <button
                     className="btn btn-danger btn-sm"
-                    onClick={() => handleStatusChange(activeElection.id, 'ended')}
-                    disabled={updatingElection === activeElection.id}
+                    onClick={() => handleStatusChange(activeBallot.id, 'ended')}
+                    disabled={updatingBallot === activeBallot.id}
                   >
-                    {updatingElection === activeElection.id ? (
+                    {updatingBallot === activeBallot.id ? (
                       <i className="fas fa-spinner fa-spin me-1"></i>
                     ) : (
                       <i className="fas fa-stop me-1"></i>
                     )}
-                    End Election
+                    End Ballot
                   </button>
                 </div>
               </div>
               <div className="col-md-4">
                 <div className="voting-stats">
                   <div className="stat-card">
-                    <div className="stat-number">{activeElection.totalVotes || 0}</div>
+                    <div className="stat-number">{activeBallot.totalVotes || 0}</div>
                     <div className="stat-label">Total Votes Cast</div>
                   </div>
                   <div className="stat-card">
-                    <div className="stat-number">{activeElection.totalVoters || 0}</div>
+                    <div className="stat-number">{activeBallot.totalVoters || 0}</div>
                     <div className="stat-label">Registered Voters</div>
                   </div>
                   <div className="stat-card">
-                    <div className="stat-number">{activeElection.votedVoters || 0}</div>
+                    <div className="stat-number">{activeBallot.votedVoters || 0}</div>
                     <div className="stat-label">Voters Participated</div>
                   </div>
                   <div className="turnout-progress">
                     <div className="progress">
                       <div 
                         className="progress-bar bg-success" 
-                        style={{ width: `${activeElection.turnoutPercentage || 0}%` }}
+                        style={{ width: `${activeBallot.turnoutPercentage || 0}%` }}
                       >
-                        {activeElection.turnoutPercentage || 0}%
+                        {activeBallot.turnoutPercentage || 0}%
                       </div>
                     </div>
                     <small className="text-muted">Voter Turnout</small>
@@ -388,9 +394,9 @@ const ElectionStatus = () => {
           </h5>
         </div>
         <div className="card-body">
-          {elections.length > 0 ? (
+          {ballots.length > 0 ? (
             <div className="elections-list">
-              {elections.map((election) => (
+              {ballots.map((election) => (
                 <div key={election.id} className="election-item">
                   <div className="election-header">
                     <div className="election-title">

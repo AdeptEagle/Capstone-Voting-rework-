@@ -89,6 +89,17 @@ export declare class BallotController {
                     displayOrder: number;
                     voteLimit: number;
                 };
+                partyList: {
+                    id: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    name: string;
+                    deletedAt: Date | null;
+                    isDeleted: boolean;
+                    description: string | null;
+                    color: string | null;
+                    logo: string | null;
+                };
             } & {
                 id: string;
                 createdAt: Date;
@@ -202,6 +213,17 @@ export declare class BallotController {
                     displayOrder: number;
                     voteLimit: number;
                 };
+                partyList: {
+                    id: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    name: string;
+                    deletedAt: Date | null;
+                    isDeleted: boolean;
+                    description: string | null;
+                    color: string | null;
+                    logo: string | null;
+                };
             } & {
                 id: string;
                 createdAt: Date;
@@ -314,6 +336,17 @@ export declare class BallotController {
                     Position_Description: string | null;
                     displayOrder: number;
                     voteLimit: number;
+                };
+                partyList: {
+                    id: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    name: string;
+                    deletedAt: Date | null;
+                    isDeleted: boolean;
+                    description: string | null;
+                    color: string | null;
+                    logo: string | null;
                 };
             } & {
                 id: string;
@@ -503,6 +536,17 @@ export declare class BallotController {
                     displayOrder: number;
                     voteLimit: number;
                 };
+                partyList: {
+                    id: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    name: string;
+                    deletedAt: Date | null;
+                    isDeleted: boolean;
+                    description: string | null;
+                    color: string | null;
+                    logo: string | null;
+                };
             } & {
                 id: string;
                 createdAt: Date;
@@ -660,6 +704,17 @@ export declare class BallotController {
                     Position_Description: string | null;
                     displayOrder: number;
                     voteLimit: number;
+                };
+                partyList: {
+                    id: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    name: string;
+                    deletedAt: Date | null;
+                    isDeleted: boolean;
+                    description: string | null;
+                    color: string | null;
+                    logo: string | null;
                 };
             } & {
                 id: string;
@@ -857,6 +912,17 @@ export declare class BallotController {
                     Position_Description: string | null;
                     displayOrder: number;
                     voteLimit: number;
+                };
+                partyList: {
+                    id: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    name: string;
+                    deletedAt: Date | null;
+                    isDeleted: boolean;
+                    description: string | null;
+                    color: string | null;
+                    logo: string | null;
                 };
             } & {
                 id: string;

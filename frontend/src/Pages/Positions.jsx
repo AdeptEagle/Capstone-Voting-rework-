@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getPositions, createPosition, updatePosition, deletePosition } from '../services/api';
+import './Positions.css';
 
 const Positions = () => {
   const [positions, setPositions] = useState([]);
@@ -73,7 +74,15 @@ const Positions = () => {
     try {
       const data = await getPositions();
       console.log('Fetched positions:', data); // Debug log
-      setPositions(data);
+      
+      // Trim any whitespace from position IDs to prevent API issues
+      const trimmedData = data.map(position => ({
+        ...position,
+        id: position.id?.toString().trim()
+      }));
+      
+      console.log('Trimmed positions:', trimmedData); // Debug log
+      setPositions(trimmedData);
     } catch (error) {
       console.error('Error fetching positions:', error);
     } finally {
@@ -125,8 +134,20 @@ const Positions = () => {
 
   const handleDelete = async (id) => {
     try {
-      console.log('Deleting position with ID:', id); // Debug log
-      const result = await deletePosition(id);
+      // Trim any whitespace from the ID
+      const trimmedId = id?.toString().trim();
+      console.log('Deleting position with ID:', trimmedId); // Debug log
+      console.log('Original ID:', id);
+      console.log('Original ID length:', id?.toString().length);
+      console.log('Trimmed ID:', trimmedId);
+      console.log('Trimmed ID length:', trimmedId?.length);
+      
+      // Validate that we have a valid ID
+      if (!trimmedId) {
+        throw new Error('Invalid position ID');
+      }
+      
+      const result = await deletePosition(trimmedId);
       console.log('Position deleted successfully, refreshing list...'); // Debug log
       
       // Show success message about trash bin
@@ -155,7 +176,13 @@ const Positions = () => {
   };
 
   const openDeleteModal = (position) => {
-    setPositionToDelete(position);
+    // Ensure the position ID is trimmed
+    const trimmedPosition = {
+      ...position,
+      id: position.id?.toString().trim()
+    };
+    console.log('Opening delete modal for position:', trimmedPosition);
+    setPositionToDelete(trimmedPosition);
     setShowDeleteModal(true);
   };
 
@@ -293,10 +320,10 @@ const Positions = () => {
                     <td>{position.Position_Title}</td>
                     <td>{position.voteLimit}</td>
                     <td>{position.displayOrder || 0}</td>
-                    <td>
-                      <div className="position-actions">
+                    <td className="text-center">
+                      <div className="d-flex justify-content-center gap-2">
                         <button
-                          className="btn btn-sm btn-outline-primary me-2 action-btn-icon"
+                          className="btn btn-sm btn-outline-primary action-btn-icon"
                           onClick={() => handleEdit(position)}
                           title="Edit Position"
                         >
@@ -324,7 +351,11 @@ const Positions = () => {
         <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
-              <div className="modal-header">
+              <div className="modal-header" style={{ 
+                background: '#f8f9fa !important', 
+                backgroundImage: 'none !important',
+                color: '#333 !important'
+              }}>
                 <h5 className="modal-title">
                   {editingPosition ? 'Edit Position' : 'Add New Position'}
                 </h5>

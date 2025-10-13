@@ -91,7 +91,9 @@ export class VoteService {
     return vote;
   }
 
+  // DEPRECATED: Use ballot system instead - castBallotVote()
   async createVote(createVoteDto: CreateVoteDto) {
+    console.warn('⚠️ DEPRECATED: createVote() is deprecated. Use ballot system instead.');
     const { voterId, candidateId, electionId, positionId } = createVoteDto;
 
     // Check if election exists and is active
@@ -1056,6 +1058,9 @@ export class VoteService {
 
     // Get all departments that have voters
     const departments = await this.prisma.department.findMany({
+      where: {
+        isDeleted: false,
+      },
       include: {
         voters: {
           select: {

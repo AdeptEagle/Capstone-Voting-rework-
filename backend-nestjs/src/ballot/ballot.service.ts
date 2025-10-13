@@ -75,7 +75,10 @@ export class BallotService {
 
     // Validate that selected candidates belong to selected positions
     const candidates = await this.prisma.candidate.findMany({
-      where: { id: { in: candidateIds } },
+      where: { 
+        id: { in: candidateIds },
+        isDeleted: false,
+      },
       select: { id: true, positionId: true }
     });
 
@@ -231,6 +234,7 @@ export class BallotService {
                 position: true,
                 department: true,
                 course: true,
+                partyList: true,
               },
             },
           },
@@ -278,6 +282,7 @@ export class BallotService {
                 position: true,
                 department: true,
                 course: true,
+                partyList: true,
               },
             },
           },
@@ -387,6 +392,7 @@ export class BallotService {
                 position: true,
                 department: true,
                 course: true,
+                partyList: true,
               },
             },
           },
@@ -546,6 +552,7 @@ export class BallotService {
                 position: true,
                 department: true,
                 course: true,
+                partyList: true,
               },
             },
           },
@@ -595,6 +602,7 @@ export class BallotService {
                 position: true,
                 department: true,
                 course: true,
+                partyList: true,
               },
             },
           },
@@ -664,7 +672,11 @@ export class BallotService {
           },
           ballotCandidates: {
             include: {
-              candidate: true
+              candidate: {
+                include: {
+                  partyList: true
+                }
+              }
             }
           }
         }
@@ -737,7 +749,7 @@ export class BallotService {
               id: this.generateId(),
               voterId: userId,
               candidateId: candidateId,
-              electionId: 'ELEC-12', // Use a valid election ID for compatibility
+              electionId: null, // Ballots can be independent of elections
               positionId: positionId,
               ballotId: ballotId, // Use ballotId to make votes unique per ballot
               ipAddress: voteData.ipAddress || null,
@@ -833,7 +845,11 @@ export class BallotService {
           },
           ballotCandidates: {
             include: {
-              candidate: true
+              candidate: {
+                include: {
+                  partyList: true
+                }
+              }
             }
           }
         }

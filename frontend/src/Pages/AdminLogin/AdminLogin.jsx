@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { adminLogin } from '../../services/api';
 import { storeRole, clearUserData } from '../../services/auth';
+import BCLogo from '../../assets/BCLogo.png';
 import './AdminLogin.css';
 
 const AdminLogin = () => {
@@ -112,23 +113,20 @@ const AdminLogin = () => {
     return false;
   };
 
-  console.log('AdminLogin component is rendering');
-  
   return (
     <div className="admin-login-container">
       <div className="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen flex items-center justify-center p-4">
         <div className="bg-white rounded-lg p-8 w-full max-w-md border border-gray-100 shadow-lg">
         <div className="text-center mb-8">
           <div className="flex justify-center items-center space-x-3 mb-2">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
+            <img 
+              src={BCLogo} 
+              alt="BC Logo" 
+              className="h-10 w-10 object-contain"
+            />
             <h1 className="text-3xl font-bold text-indigo-700">BallotBlitz</h1>
           </div>
           <p className="text-gray-500 text-sm uppercase tracking-wider">Secure Admin Portal</p>
-          <div className="bg-red-500 text-white p-2 mt-2 rounded">
-            DEBUG: AdminLogin component is rendering
-          </div>
         </div>
 
         {error && (

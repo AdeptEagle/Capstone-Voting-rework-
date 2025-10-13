@@ -21,8 +21,8 @@ let ElectionAssignmentController = class ElectionAssignmentController {
     constructor(electionAssignmentService) {
         this.electionAssignmentService = electionAssignmentService;
     }
-    async getAllElectionAssignments(electionId, candidateId) {
-        return this.electionAssignmentService.getAllElectionAssignments(electionId, candidateId);
+    async getAllBallotAssignments(ballotId, candidateId) {
+        return this.electionAssignmentService.getAllElectionAssignments(ballotId, candidateId);
     }
     async createElectionAssignment(createElectionAssignmentDto) {
         return this.electionAssignmentService.createElectionAssignment(createElectionAssignmentDto);
@@ -36,59 +36,59 @@ let ElectionAssignmentController = class ElectionAssignmentController {
     async deleteElectionAssignment(id) {
         return this.electionAssignmentService.deleteElectionAssignment(id);
     }
-    async getCandidatesForElection(electionId) {
-        return this.electionAssignmentService.getCandidatesForElection(electionId);
+    async getCandidatesForBallot(ballotId) {
+        return this.electionAssignmentService.getCandidatesForElection(ballotId);
     }
-    async getElectionsForCandidate(candidateId) {
+    async getBallotsForCandidate(candidateId) {
         return this.electionAssignmentService.getElectionsForCandidate(candidateId);
     }
     async bulkAssignCandidates(assignments) {
         return this.electionAssignmentService.bulkAssignCandidates(assignments);
     }
-    async removeCandidateFromElection(electionId, candidateId) {
-        return this.electionAssignmentService.removeCandidateFromElection(electionId, candidateId);
+    async removeCandidateFromBallot(ballotId, candidateId) {
+        return this.electionAssignmentService.removeCandidateFromElection(ballotId, candidateId);
     }
-    async getElectionPositions(electionId) {
-        return this.electionAssignmentService.getElectionPositions(electionId);
+    async getBallotPositions(ballotId) {
+        return this.electionAssignmentService.getElectionPositions(ballotId);
     }
-    async getUnassignedPositions(electionId) {
-        return this.electionAssignmentService.getUnassignedPositions(electionId);
+    async getUnassignedPositions(ballotId) {
+        return this.electionAssignmentService.getUnassignedPositions(ballotId);
     }
-    async getPositionAssignmentStatus(electionId) {
-        return this.electionAssignmentService.getPositionAssignmentStatus(electionId);
+    async getPositionAssignmentStatus(ballotId) {
+        return this.electionAssignmentService.getPositionAssignmentStatus(ballotId);
     }
-    async assignPositionToElection(electionId, positionId) {
-        return this.electionAssignmentService.assignPositionToElection(electionId, positionId);
+    async assignPositionToBallot(ballotId, positionId) {
+        return this.electionAssignmentService.assignPositionToElection(ballotId, positionId);
     }
-    async removePositionFromElection(electionId, positionId) {
-        return this.electionAssignmentService.removePositionFromElection(electionId, positionId);
+    async removePositionFromBallot(ballotId, positionId) {
+        return this.electionAssignmentService.removePositionFromElection(ballotId, positionId);
     }
-    async getUnassignedCandidates(electionId) {
-        return this.electionAssignmentService.getUnassignedCandidates(electionId);
+    async getUnassignedCandidates(ballotId) {
+        return this.electionAssignmentService.getUnassignedCandidates(ballotId);
     }
-    async getCandidateAssignmentStatus(electionId) {
-        return this.electionAssignmentService.getCandidateAssignmentStatus(electionId);
+    async getCandidateAssignmentStatus(ballotId) {
+        return this.electionAssignmentService.getCandidateAssignmentStatus(ballotId);
     }
-    async assignCandidateToElection(electionId, candidateId) {
-        return this.electionAssignmentService.assignCandidateToElection(electionId, candidateId);
+    async assignCandidateToBallot(ballotId, candidateId) {
+        return this.electionAssignmentService.assignCandidateToElection(ballotId, candidateId);
     }
-    async getElectionBallot(electionId) {
-        return this.electionAssignmentService.getElectionBallot(electionId);
+    async getBallotDetails(ballotId) {
+        return this.electionAssignmentService.getElectionBallot(ballotId);
     }
 };
 exports.ElectionAssignmentController = ElectionAssignmentController;
 __decorate([
     (0, common_1.Get)(),
-    (0, swagger_1.ApiOperation)({ summary: 'Get all election assignments' }),
-    (0, swagger_1.ApiQuery)({ name: 'electionId', required: false, description: 'Filter by election ID' }),
+    (0, swagger_1.ApiOperation)({ summary: 'Get all ballot assignments' }),
+    (0, swagger_1.ApiQuery)({ name: 'ballotId', required: false, description: 'Filter by ballot ID' }),
     (0, swagger_1.ApiQuery)({ name: 'candidateId', required: false, description: 'Filter by candidate ID' }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'List of all election assignments' }),
-    __param(0, (0, common_1.Query)('electionId')),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'List of all ballot assignments' }),
+    __param(0, (0, common_1.Query)('ballotId')),
     __param(1, (0, common_1.Query)('candidateId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", Promise)
-], ElectionAssignmentController.prototype, "getAllElectionAssignments", null);
+], ElectionAssignmentController.prototype, "getAllBallotAssignments", null);
 __decorate([
     (0, common_1.Post)(),
     (0, swagger_1.ApiOperation)({ summary: 'Create a new election assignment' }),
@@ -130,26 +130,26 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], ElectionAssignmentController.prototype, "deleteElectionAssignment", null);
 __decorate([
-    (0, common_1.Get)('election/:electionId/candidates'),
-    (0, swagger_1.ApiOperation)({ summary: 'Get all candidates for a specific election' }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Candidates for election retrieved successfully' }),
-    __param(0, (0, common_1.Param)('electionId')),
+    (0, common_1.Get)('ballot/:ballotId/candidates'),
+    (0, swagger_1.ApiOperation)({ summary: 'Get all candidates for a specific ballot' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Candidates for ballot retrieved successfully' }),
+    __param(0, (0, common_1.Param)('ballotId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
-], ElectionAssignmentController.prototype, "getCandidatesForElection", null);
+], ElectionAssignmentController.prototype, "getCandidatesForBallot", null);
 __decorate([
-    (0, common_1.Get)('candidate/:candidateId/elections'),
-    (0, swagger_1.ApiOperation)({ summary: 'Get all elections for a specific candidate' }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Elections for candidate retrieved successfully' }),
+    (0, common_1.Get)('candidate/:candidateId/ballots'),
+    (0, swagger_1.ApiOperation)({ summary: 'Get all ballots for a specific candidate' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Ballots for candidate retrieved successfully' }),
     __param(0, (0, common_1.Param)('candidateId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
-], ElectionAssignmentController.prototype, "getElectionsForCandidate", null);
+], ElectionAssignmentController.prototype, "getBallotsForCandidate", null);
 __decorate([
     (0, common_1.Post)('bulk-assign'),
-    (0, swagger_1.ApiOperation)({ summary: 'Bulk assign candidates to elections' }),
+    (0, swagger_1.ApiOperation)({ summary: 'Bulk assign candidates to ballots' }),
     (0, swagger_1.ApiResponse)({ status: 201, description: 'Bulk assignment completed successfully' }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -157,102 +157,102 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], ElectionAssignmentController.prototype, "bulkAssignCandidates", null);
 __decorate([
-    (0, common_1.Delete)('election/:electionId/candidate/:candidateId'),
-    (0, swagger_1.ApiOperation)({ summary: 'Remove candidate from election' }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Candidate removed from election successfully' }),
-    __param(0, (0, common_1.Param)('electionId')),
+    (0, common_1.Delete)('ballot/:ballotId/candidate/:candidateId'),
+    (0, swagger_1.ApiOperation)({ summary: 'Remove candidate from ballot' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Candidate removed from ballot successfully' }),
+    __param(0, (0, common_1.Param)('ballotId')),
     __param(1, (0, common_1.Param)('candidateId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", Promise)
-], ElectionAssignmentController.prototype, "removeCandidateFromElection", null);
+], ElectionAssignmentController.prototype, "removeCandidateFromBallot", null);
 __decorate([
-    (0, common_1.Get)('election/:electionId/positions'),
-    (0, swagger_1.ApiOperation)({ summary: 'Get all positions assigned to an election' }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Election positions retrieved successfully' }),
-    __param(0, (0, common_1.Param)('electionId')),
+    (0, common_1.Get)('ballot/:ballotId/positions'),
+    (0, swagger_1.ApiOperation)({ summary: 'Get all positions assigned to a ballot' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Ballot positions retrieved successfully' }),
+    __param(0, (0, common_1.Param)('ballotId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
-], ElectionAssignmentController.prototype, "getElectionPositions", null);
+], ElectionAssignmentController.prototype, "getBallotPositions", null);
 __decorate([
-    (0, common_1.Get)('election/:electionId/unassigned-positions'),
-    (0, swagger_1.ApiOperation)({ summary: 'Get all positions NOT assigned to an election' }),
+    (0, common_1.Get)('ballot/:ballotId/unassigned-positions'),
+    (0, swagger_1.ApiOperation)({ summary: 'Get all positions NOT assigned to a ballot' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Unassigned positions retrieved successfully' }),
-    __param(0, (0, common_1.Param)('electionId')),
+    __param(0, (0, common_1.Param)('ballotId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], ElectionAssignmentController.prototype, "getUnassignedPositions", null);
 __decorate([
-    (0, common_1.Get)('election/:electionId/position-status'),
-    (0, swagger_1.ApiOperation)({ summary: 'Get assignment status for positions in an election' }),
+    (0, common_1.Get)('ballot/:ballotId/position-status'),
+    (0, swagger_1.ApiOperation)({ summary: 'Get assignment status for positions in a ballot' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Position assignment status retrieved successfully' }),
-    __param(0, (0, common_1.Param)('electionId')),
+    __param(0, (0, common_1.Param)('ballotId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], ElectionAssignmentController.prototype, "getPositionAssignmentStatus", null);
 __decorate([
-    (0, common_1.Post)('election/:electionId/assign-position/:positionId'),
-    (0, swagger_1.ApiOperation)({ summary: 'Assign a position to an election' }),
-    (0, swagger_1.ApiResponse)({ status: 201, description: 'Position assigned to election successfully' }),
-    __param(0, (0, common_1.Param)('electionId')),
+    (0, common_1.Post)('ballot/:ballotId/assign-position/:positionId'),
+    (0, swagger_1.ApiOperation)({ summary: 'Assign a position to a ballot' }),
+    (0, swagger_1.ApiResponse)({ status: 201, description: 'Position assigned to ballot successfully' }),
+    __param(0, (0, common_1.Param)('ballotId')),
     __param(1, (0, common_1.Param)('positionId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", Promise)
-], ElectionAssignmentController.prototype, "assignPositionToElection", null);
+], ElectionAssignmentController.prototype, "assignPositionToBallot", null);
 __decorate([
-    (0, common_1.Delete)('election/:electionId/position/:positionId'),
-    (0, swagger_1.ApiOperation)({ summary: 'Remove position from election' }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Position removed from election successfully' }),
-    __param(0, (0, common_1.Param)('electionId')),
+    (0, common_1.Delete)('ballot/:ballotId/position/:positionId'),
+    (0, swagger_1.ApiOperation)({ summary: 'Remove position from ballot' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Position removed from ballot successfully' }),
+    __param(0, (0, common_1.Param)('ballotId')),
     __param(1, (0, common_1.Param)('positionId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", Promise)
-], ElectionAssignmentController.prototype, "removePositionFromElection", null);
+], ElectionAssignmentController.prototype, "removePositionFromBallot", null);
 __decorate([
-    (0, common_1.Get)('election/:electionId/unassigned-candidates'),
-    (0, swagger_1.ApiOperation)({ summary: 'Get all candidates NOT assigned to an election' }),
+    (0, common_1.Get)('ballot/:ballotId/unassigned-candidates'),
+    (0, swagger_1.ApiOperation)({ summary: 'Get all candidates NOT assigned to a ballot' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Unassigned candidates retrieved successfully' }),
-    __param(0, (0, common_1.Param)('electionId')),
+    __param(0, (0, common_1.Param)('ballotId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], ElectionAssignmentController.prototype, "getUnassignedCandidates", null);
 __decorate([
-    (0, common_1.Get)('election/:electionId/candidate-status'),
-    (0, swagger_1.ApiOperation)({ summary: 'Get assignment status for candidates in an election' }),
+    (0, common_1.Get)('ballot/:ballotId/candidate-status'),
+    (0, swagger_1.ApiOperation)({ summary: 'Get assignment status for candidates in a ballot' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Candidate assignment status retrieved successfully' }),
-    __param(0, (0, common_1.Param)('electionId')),
+    __param(0, (0, common_1.Param)('ballotId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], ElectionAssignmentController.prototype, "getCandidateAssignmentStatus", null);
 __decorate([
-    (0, common_1.Post)('election/:electionId/assign-candidate/:candidateId'),
-    (0, swagger_1.ApiOperation)({ summary: 'Assign a candidate to an election' }),
-    (0, swagger_1.ApiResponse)({ status: 201, description: 'Candidate assigned to election successfully' }),
-    __param(0, (0, common_1.Param)('electionId')),
+    (0, common_1.Post)('ballot/:ballotId/assign-candidate/:candidateId'),
+    (0, swagger_1.ApiOperation)({ summary: 'Assign a candidate to a ballot' }),
+    (0, swagger_1.ApiResponse)({ status: 201, description: 'Candidate assigned to ballot successfully' }),
+    __param(0, (0, common_1.Param)('ballotId')),
     __param(1, (0, common_1.Param)('candidateId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", Promise)
-], ElectionAssignmentController.prototype, "assignCandidateToElection", null);
+], ElectionAssignmentController.prototype, "assignCandidateToBallot", null);
 __decorate([
-    (0, common_1.Get)('election/:electionId/ballot'),
-    (0, swagger_1.ApiOperation)({ summary: 'Get complete ballot for an election' }),
+    (0, common_1.Get)('ballot/:ballotId/complete'),
+    (0, swagger_1.ApiOperation)({ summary: 'Get complete ballot details' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Ballot retrieved successfully' }),
-    __param(0, (0, common_1.Param)('electionId')),
+    __param(0, (0, common_1.Param)('ballotId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
-], ElectionAssignmentController.prototype, "getElectionBallot", null);
+], ElectionAssignmentController.prototype, "getBallotDetails", null);
 exports.ElectionAssignmentController = ElectionAssignmentController = __decorate([
-    (0, swagger_1.ApiTags)('Election Assignment'),
-    (0, common_1.Controller)('election-assignments'),
+    (0, swagger_1.ApiTags)('Ballot Assignment'),
+    (0, common_1.Controller)('ballot-assignments'),
     __metadata("design:paramtypes", [election_assignment_service_1.ElectionAssignmentService])
 ], ElectionAssignmentController);
 //# sourceMappingURL=election-assignment.controller.js.map

@@ -1,10 +1,9 @@
 import axios from 'axios';
-
-const API_BASE_URL = 'http://localhost:3001';
+import { getApiUrl } from '../config/environment';
 
 // Create axios instance with default config
 const api = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: getApiUrl(),
   headers: {
     'Content-Type': 'application/json',
   },
@@ -177,10 +176,38 @@ export const updatePosition = async (id, position) => {
 
 export const deletePosition = async (id) => {
   try {
-    const response = await api.delete(`/positions/${id}`);
+    // Ensure ID is trimmed and valid
+    const trimmedId = id?.toString().trim();
+    console.log('🔍 [deletePosition] Attempting to delete position with ID:', trimmedId);
+    console.log('🔍 [deletePosition] Original ID:', id);
+    console.log('🔍 [deletePosition] ID type:', typeof id);
+    console.log('🔍 [deletePosition] ID length:', id?.toString().length);
+    console.log('🔍 [deletePosition] Trimmed ID length:', trimmedId?.length);
+    
+    // Validate ID
+    if (!trimmedId) {
+      throw new Error('Invalid position ID: ID is empty or null');
+    }
+    
+    // Construct URL safely
+    const requestUrl = `/positions/${trimmedId}`;
+    console.log('🔍 [deletePosition] Request URL:', requestUrl);
+    console.log('🔍 [deletePosition] API base URL:', api.defaults.baseURL);
+    console.log('🔍 [deletePosition] Full URL will be:', api.defaults.baseURL + requestUrl);
+    
+    const response = await api.delete(requestUrl);
+    console.log('✅ [deletePosition] Success:', response.data);
     return response.data;
   } catch (error) {
-    console.error('Error deleting position:', error);
+    console.error('❌ [deletePosition] Error details:', {
+      message: error.message,
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+      url: error.config?.url,
+      method: error.config?.method,
+      fullUrl: error.config?.baseURL + error.config?.url
+    });
     throw error;
   }
 };
@@ -382,7 +409,9 @@ export const getVotes = async () => {
   }
 };
 
+// DEPRECATED: Use ballot system instead - createBallotVote()
 export const createVote = async (vote) => {
+  console.warn('⚠️ DEPRECATED: createVote() is deprecated. Use createBallotVote() instead.');
   try {
     const response = await api.post('/votes', vote);
     return response.data;
@@ -475,22 +504,31 @@ export const getElection = async (id) => {
   }
 };
 
+// DEPRECATED: Use ballot system instead - getBallotPositions()
 export const getElectionPositions = async (id) => {
+  console.warn('⚠️ DEPRECATED: getElectionPositions() is deprecated. Use getBallotPositions() instead.');
   try {
-    const response = await api.get(`/election-assignments/election/${id}/positions`);
+    const response = await api.get(`/ballot-assignments/ballot/${id}/positions`);
     return response.data;
   } catch (error) {
-    console.error('Error fetching election positions:', error);
+    console.error('Error fetching ballot positions:', error);
     throw error;
   }
 };
 
-export const getElectionBallot = async (electionId) => {
+// DEPRECATED: Use ballot system instead - getBallotById()
+export const getElectionBallot = async (ballotId) => {
+  console.warn('⚠️ DEPRECATED: getElectionBallot() is deprecated. Use getBallotById() instead.');
   try {
-    const response = await api.get(`/election-assignments/election/${electionId}/ballot`);
+    console.log('🔍 API: Fetching ballot for ID:', ballotId);
+    // Add cache-busting parameter to prevent stale data
+    const response = await api.get(`/ballot-assignments/ballot/${ballotId}/complete`, {
+      params: { _t: Date.now() }
+    });
+    console.log('🔍 API: Ballot response received:', response.data);
     return response.data;
   } catch (error) {
-    console.error('Error fetching election ballot:', error);
+    console.error('Error fetching ballot:', error);
     throw error;
   }
 };
@@ -505,22 +543,26 @@ export const createElection = async (election) => {
   }
 };
 
-export const addPositionToElection = async (electionId, positionData) => {
+// DEPRECATED: Use ballot system instead - addPositionToBallot()
+export const addPositionToElection = async (ballotId, positionData) => {
+  console.warn('⚠️ DEPRECATED: addPositionToElection() is deprecated. Use addPositionToBallot() instead.');
   try {
-    const response = await api.post(`/elections/${electionId}/positions`, positionData);
+    const response = await api.post(`/ballots/${ballotId}/positions`, positionData);
     return response.data;
   } catch (error) {
-    console.error('Error adding position to election:', error);
+    console.error('Error adding position to ballot:', error);
     throw error;
   }
 };
 
-export const addCandidateToElection = async (electionId, candidateData) => {
+// DEPRECATED: Use ballot system instead - addCandidateToBallot()
+export const addCandidateToElection = async (ballotId, candidateData) => {
+  console.warn('⚠️ DEPRECATED: addCandidateToElection() is deprecated. Use addCandidateToBallot() instead.');
   try {
-    const response = await api.post(`/elections/${electionId}/candidates`, candidateData);
+    const response = await api.post(`/ballots/${ballotId}/candidates`, candidateData);
     return response.data;
   } catch (error) {
-    console.error('Error adding candidate to election:', error);
+    console.error('Error adding candidate to ballot:', error);
     throw error;
   }
 };
@@ -837,29 +879,31 @@ export const userLogout = async () => {
 };
 
 // Election Assignment API Functions
-export const getAssignedElectionPositions = async (electionId) => {
+export const getAssignedBallotPositions = async (ballotId) => {
   try {
-    const response = await api.get(`/election-assignments/elections/${electionId}/positions`);
+    const response = await api.get(`/ballot-assignments/ballot/${ballotId}/positions`);
     return response.data;
   } catch (error) {
-    console.error('Error fetching assigned election positions:', error);
+    console.error('Error fetching assigned ballot positions:', error);
     throw error;
   }
 };
 
-export const getElectionCandidates = async (electionId) => {
+// DEPRECATED: Use ballot system instead - getBallotCandidates()
+export const getElectionCandidates = async (ballotId) => {
+  console.warn('⚠️ DEPRECATED: getElectionCandidates() is deprecated. Use getBallotCandidates() instead.');
   try {
-    const response = await api.get(`/election-assignments/election/${electionId}/candidates`);
+    const response = await api.get(`/ballot-assignments/ballot/${ballotId}/candidates`);
     return response.data;
   } catch (error) {
-    console.error('Error fetching election candidates:', error);
+    console.error('Error fetching ballot candidates:', error);
     throw error;
   }
 };
 
-export const getUnassignedPositions = async (electionId) => {
+export const getUnassignedPositions = async (ballotId) => {
   try {
-    const response = await api.get(`/election-assignments/elections/${electionId}/unassigned-positions`);
+    const response = await api.get(`/ballot-assignments/ballot/${ballotId}/unassigned-positions`);
     return response.data;
   } catch (error) {
     console.error('Error fetching unassigned positions:', error);
@@ -867,9 +911,9 @@ export const getUnassignedPositions = async (electionId) => {
   }
 };
 
-export const getUnassignedCandidates = async (electionId) => {
+export const getUnassignedCandidates = async (ballotId) => {
   try {
-    const response = await api.get(`/election-assignments/elections/${electionId}/unassigned-candidates`);
+    const response = await api.get(`/ballot-assignments/ballot/${ballotId}/unassigned-candidates`);
     return response.data;
   } catch (error) {
     console.error('Error fetching unassigned candidates:', error);
@@ -877,9 +921,9 @@ export const getUnassignedCandidates = async (electionId) => {
   }
 };
 
-export const getPositionAssignmentStatus = async (electionId) => {
+export const getPositionAssignmentStatus = async (ballotId) => {
   try {
-    const response = await api.get(`/election-assignments/elections/${electionId}/position-status`);
+    const response = await api.get(`/ballot-assignments/ballot/${ballotId}/position-status`);
     return response.data;
   } catch (error) {
     console.error('Error fetching position assignment status:', error);
@@ -887,9 +931,9 @@ export const getPositionAssignmentStatus = async (electionId) => {
   }
 };
 
-export const getCandidateAssignmentStatus = async (electionId) => {
+export const getCandidateAssignmentStatus = async (ballotId) => {
   try {
-    const response = await api.get(`/election-assignments/elections/${electionId}/candidate-status`);
+    const response = await api.get(`/ballot-assignments/ballot/${ballotId}/candidate-status`);
     return response.data;
   } catch (error) {
     console.error('Error fetching candidate assignment status:', error);
@@ -897,48 +941,42 @@ export const getCandidateAssignmentStatus = async (electionId) => {
   }
 };
 
-export const assignPositionToElection = async (electionId, positionId) => {
+export const assignPositionToBallot = async (ballotId, positionId) => {
   try {
-    const response = await api.post('/election-assignments/elections/assign-position', {
-      electionId,
-      positionId
-    });
+    const response = await api.post(`/ballot-assignments/ballot/${ballotId}/assign-position/${positionId}`);
     return response.data;
   } catch (error) {
-    console.error('Error assigning position to election:', error);
+    console.error('Error assigning position to ballot:', error);
     throw error;
   }
 };
 
-export const assignCandidateToElection = async (electionId, candidateId) => {
+export const assignCandidateToBallot = async (ballotId, candidateId) => {
   try {
-    const response = await api.post('/election-assignments/elections/assign-candidate', {
-      electionId,
-      candidateId
-    });
+    const response = await api.post(`/ballot-assignments/ballot/${ballotId}/assign-candidate/${candidateId}`);
     return response.data;
   } catch (error) {
-    console.error('Error assigning candidate to election:', error);
+    console.error('Error assigning candidate to ballot:', error);
     throw error;
   }
 };
 
-export const removePositionFromElection = async (electionId, positionId) => {
+export const removePositionFromBallot = async (ballotId, positionId) => {
   try {
-    const response = await api.delete(`/election-assignments/elections/${electionId}/positions/${positionId}`);
+    const response = await api.delete(`/ballot-assignments/ballot/${ballotId}/position/${positionId}`);
     return response.data;
   } catch (error) {
-    console.error('Error removing position from election:', error);
+    console.error('Error removing position from ballot:', error);
     throw error;
   }
 };
 
-export const removeCandidateFromElection = async (electionId, candidateId) => {
+export const removeCandidateFromBallot = async (ballotId, candidateId) => {
   try {
-    const response = await api.delete(`/election-assignments/elections/${electionId}/candidates/${candidateId}`);
+    const response = await api.delete(`/ballot-assignments/ballot/${ballotId}/candidate/${candidateId}`);
     return response.data;
   } catch (error) {
-    console.error('Error removing candidate from election:', error);
+    console.error('Error removing candidate from ballot:', error);
     throw error;
   }
 };
@@ -946,7 +984,7 @@ export const removeCandidateFromElection = async (electionId, candidateId) => {
 // Test function to check if election_candidates table exists
 export const testElectionCandidatesTable = async () => {
   try {
-    const response = await api.get('/election-assignments/test-table');
+    const response = await api.get('/ballot-assignments/test-table');
     return response.data;
   } catch (error) {
     console.error('Error testing table:', error);

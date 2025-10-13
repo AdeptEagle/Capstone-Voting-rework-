@@ -288,6 +288,16 @@ let ElectionAssignmentService = class ElectionAssignmentService {
                         Candidate_StudentId: true,
                         photo: true,
                         manifesto: true,
+                        party_list_name: true,
+                        partyListId: true,
+                        partyList: {
+                            select: {
+                                id: true,
+                                name: true,
+                                color: true,
+                                logo: true,
+                            },
+                        },
                         position: {
                             select: {
                                 id: true,
@@ -545,6 +555,9 @@ let ElectionAssignmentService = class ElectionAssignmentService {
             throw new common_1.NotFoundException('Election not found');
         }
         const allCandidates = await this.prisma.candidate.findMany({
+            where: {
+                isDeleted: false,
+            },
             include: {
                 position: {
                     select: {
@@ -582,6 +595,9 @@ let ElectionAssignmentService = class ElectionAssignmentService {
             throw new common_1.NotFoundException('Election not found');
         }
         const allCandidates = await this.prisma.candidate.findMany({
+            where: {
+                isDeleted: false,
+            },
             include: {
                 position: {
                     select: {
@@ -652,6 +668,16 @@ let ElectionAssignmentService = class ElectionAssignmentService {
                         photo: true,
                         manifesto: true,
                         positionId: true,
+                        party_list_name: true,
+                        partyListId: true,
+                        partyList: {
+                            select: {
+                                id: true,
+                                name: true,
+                                color: true,
+                                logo: true,
+                            },
+                        },
                         position: {
                             select: {
                                 id: true,

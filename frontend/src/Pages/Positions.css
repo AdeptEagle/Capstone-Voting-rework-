@@ -60,4 +60,29 @@
 /* Search results counter */
 .text-muted {
   font-size: 0.875rem;
+}
+
+/* Modal Header - Override any gradient with solid color */
+.positions-container .modal-header,
+.modal-header {
+  background: #f8f9fa !important;
+  background-image: none !important;
+  background-color: #f8f9fa !important;
+  color: #333 !important;
+  border-bottom: 1px solid #dee2e6;
+  border-radius: 12px 12px 0 0;
+}
+
+.positions-container .modal-header .modal-title,
+.modal-header .modal-title {
+  color: #333 !important;
+  font-weight: 600;
+}
+
+/* Force override any gradient styles */
+.modal-header[style*="gradient"],
+.modal-header[style*="linear-gradient"] {
+  background: #f8f9fa !important;
+  background-image: none !important;
+  background-color: #f8f9fa !important;
 } 

@@ -162,6 +162,7 @@ model Election {
   auditLogs            AuditLog[]
   electionCandidates   ElectionCandidate[]
   electionPositions    ElectionPosition[]
+  ballots              Ballot[]
   admin                Admin               @relation(fields: [createdBy], references: [id])
   votes                Vote[]
 
@@ -187,7 +188,7 @@ model Vote {
   position         Position  @relation(fields: [positionId], references: [id])
   voter            Voter     @relation(fields: [voterId], references: [id])
 
-  @@unique([voterId, electionId, positionId, candidateId, ballotId])
+  @@unique([voterId, positionId, candidateId, ballotId])
   @@map("votes")
 }
 
@@ -262,11 +263,13 @@ model Ballot {
   Ballot_UpdatedAt           DateTime              @updatedAt @map("ballot_updated_at")
   Ballot_DeletedAt           DateTime?             @map("ballot_deleted_at")
   Ballot_IsDeleted           Boolean               @default(false) @map("ballot_is_deleted")
+  electionId                 String?               @map("election_id") @db.VarChar(50)
   ballotCandidates           BallotCandidate[]
   ballotPositions            BallotPosition[]
   resultDetails              BallotResultDetails[]
   results                    BallotResults?
   createdByAdmin             Admin                 @relation(fields: [Ballot_CreatedBy], references: [id])
+  election                   Election?             @relation(fields: [electionId], references: [id])
   userHistory                UserBallotHistory[]
   votes                      Vote[]
 

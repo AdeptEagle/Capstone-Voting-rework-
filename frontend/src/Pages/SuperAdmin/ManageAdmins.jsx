@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getAdmins, createAdmin, updateAdmin, deleteAdmin } from '../../services/api';
-import { checkCurrentUser, isSuperAdmin } from '../../services/auth';
+import { checkCurrentUser, isSuperAdmin, checkAuthStatus } from '../../services/auth';
 import './ManageAdmins.css';
 
 const ManageAdmins = () => {
@@ -9,6 +9,7 @@ const ManageAdmins = () => {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingAdmin, setEditingAdmin] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
   const [formData, setFormData] = useState({ 
     Admin_Username: '', 
     Admin_Email: '', 
@@ -24,21 +25,36 @@ const ManageAdmins = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if user is superadmin
-    const currentUser = checkCurrentUser();
-    if (!currentUser.isAuthenticated) {
-      setAuthError('Please log in to access this page');
-      setLoading(false);
-      return;
-    }
+    const initializePage = async () => {
+      try {
+        // Check authentication status with server
+        const authStatus = await checkAuthStatus();
+        
+        if (!authStatus.isAuthenticated) {
+          setAuthError('Please log in to access this page');
+          setLoading(false);
+          return;
+        }
+        
+        if (authStatus.role !== 'SUPERADMIN') {
+          setAuthError('Access denied. Superadmin privileges required.');
+          setLoading(false);
+          return;
+        }
+        
+        // Set current user data
+        setCurrentUser(authStatus.user);
+        
+        // Fetch admins
+        await fetchAdmins();
+      } catch (error) {
+        console.error('Error initializing page:', error);
+        setAuthError('Failed to load page data');
+        setLoading(false);
+      }
+    };
     
-    if (!isSuperAdmin()) {
-      setAuthError('Access denied. Superadmin privileges required.');
-      setLoading(false);
-      return;
-    }
-    
-    fetchAdmins();
+    initializePage();
   }, []);
 
   const fetchAdmins = async () => {
@@ -124,11 +140,10 @@ const ManageAdmins = () => {
   };
 
   const handleDelete = async (id) => {
-    const currentUser = checkCurrentUser();
     const adminToDelete = admins.find(admin => admin.id === id);
     
     // Prevent self-deletion
-    if (currentUser.user?.id === id) {
+    if (currentUser?.id === id) {
       setError('You cannot delete your own account');
       return;
     }
@@ -242,11 +257,6 @@ const ManageAdmins = () => {
         </div>
       )}
 
-      {/* Show current user info */}
-      <div className="alert alert-info">
-        <strong>Current User:</strong> {checkCurrentUser().user?.Admin_Username || 'Unknown'} 
-        <span className="badge bg-primary ms-2">{checkCurrentUser().role || 'No role'}</span>
-      </div>
 
       <div className="card">
         <div className="card-body">
@@ -254,7 +264,6 @@ const ManageAdmins = () => {
             <table className="table table-hover">
               <thead className="table-header-custom">
                 <tr>
-                  <th>ID</th>
                   <th>Username</th>
                   <th>Email</th>
                   <th>Role</th>
@@ -268,9 +277,8 @@ const ManageAdmins = () => {
               <tbody>
                 {admins.map((admin) => (
                   <tr key={admin.id}>
-                    <td>{admin.id}</td>
-                                           <td>{admin.Admin_Username}</td>
-                       <td>{admin.Admin_Email || 'N/A'}</td>
+                    <td>{admin.Admin_Username}</td>
+                    <td>{admin.Admin_Email || 'N/A'}</td>
                     <td>
                       <span className={`badge ${admin.role === 'SUPERADMIN' ? 'bg-danger' : 'bg-primary'}`}>
                         {admin.role}
@@ -290,11 +298,11 @@ const ManageAdmins = () => {
                           <button
                             className="action-btn-icon delete-btn"
                             onClick={() => handleDelete(admin.id)}
-                            disabled={admin.role === 'SUPERADMIN' || checkCurrentUser().user?.id === admin.id}
+                            disabled={admin.role === 'SUPERADMIN' || currentUser?.id === admin.id}
                             title={
                               admin.role === 'SUPERADMIN' 
                                 ? 'Superadmins cannot be deleted' 
-                                : checkCurrentUser().user?.id === admin.id 
+                                : currentUser?.id === admin.id 
                                   ? 'You cannot delete your own account'
                                   : 'Delete Admin'
                             }

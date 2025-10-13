@@ -158,12 +158,14 @@ export class BallotTemplateService {
     
     // Check departments
     const departments = await this.prisma.department.findMany({
+      where: { isDeleted: false },
       select: { id: true, Department_Name: true, _count: { select: { courses: true } } }
     });
     console.log('🏢 Departments:', departments);
     
     // Check courses
     const courses = await this.prisma.course.findMany({
+      where: { isDeleted: false },
       select: { id: true, Course_Name: true, Course_Code: true, departmentId: true, _count: { select: { candidates: true } } }
     });
     console.log('📚 Courses:', courses);
@@ -176,6 +178,7 @@ export class BallotTemplateService {
     
     // Check candidates
     const candidates = await this.prisma.candidate.findMany({
+      where: { isDeleted: false },
       select: { id: true, Candidate_Name: true, positionId: true, departmentId: true, courseId: true }
     });
     console.log('👥 Candidates:', candidates);
@@ -216,7 +219,10 @@ export class BallotTemplateService {
       
       // Debug candidate data
       const candidateDetails = await this.prisma.candidate.findMany({
-        where: { id: { in: createBallotDto.candidateIds } },
+        where: { 
+          id: { in: createBallotDto.candidateIds },
+          isDeleted: false,
+        },
         select: { id: true, Candidate_Name: true, positionId: true, position: { select: { Position_Title: true } } }
       });
       console.log('👥 Candidate details:', candidateDetails);
@@ -310,7 +316,10 @@ export class BallotTemplateService {
       
       // Get candidates with their position information
       const candidates = await this.prisma.candidate.findMany({
-        where: { id: { in: uniqueCandidateIds } },
+        where: { 
+          id: { in: uniqueCandidateIds },
+          isDeleted: false,
+        },
         select: { id: true, positionId: true }
       });
 

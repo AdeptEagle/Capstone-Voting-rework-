@@ -3,7 +3,7 @@ import { CreateElectionAssignmentDto, UpdateElectionAssignmentDto } from './dto'
 export declare class ElectionAssignmentController {
     private readonly electionAssignmentService;
     constructor(electionAssignmentService: ElectionAssignmentService);
-    getAllElectionAssignments(electionId?: string, candidateId?: string): Promise<({
+    getAllBallotAssignments(ballotId?: string, candidateId?: string): Promise<({
         election: {
             id: string;
             Election_Title: string;
@@ -136,7 +136,7 @@ export declare class ElectionAssignmentController {
     deleteElectionAssignment(id: string): Promise<{
         message: string;
     }>;
-    getCandidatesForElection(electionId: string): Promise<{
+    getCandidatesForBallot(ballotId: string): Promise<{
         election: {
             id: string;
             title: string;
@@ -161,6 +161,14 @@ export declare class ElectionAssignmentController {
                 Candidate_StudentId: string;
                 photo: string;
                 manifesto: string;
+                party_list_name: string;
+                partyListId: string;
+                partyList: {
+                    id: string;
+                    name: string;
+                    color: string;
+                    logo: string;
+                };
             };
         } & {
             id: string;
@@ -169,7 +177,7 @@ export declare class ElectionAssignmentController {
             candidateId: string;
         })[];
     }>;
-    getElectionsForCandidate(candidateId: string): Promise<{
+    getBallotsForCandidate(candidateId: string): Promise<{
         candidate: {
             id: string;
             name: string;
@@ -203,10 +211,10 @@ export declare class ElectionAssignmentController {
             failed: number;
         };
     }>;
-    removeCandidateFromElection(electionId: string, candidateId: string): Promise<{
+    removeCandidateFromBallot(ballotId: string, candidateId: string): Promise<{
         message: string;
     }>;
-    getElectionPositions(electionId: string): Promise<{
+    getBallotPositions(ballotId: string): Promise<{
         election: {
             id: string;
             title: string;
@@ -227,7 +235,7 @@ export declare class ElectionAssignmentController {
             voteLimit: number;
         }[];
     }>;
-    getUnassignedPositions(electionId: string): Promise<{
+    getUnassignedPositions(ballotId: string): Promise<{
         election: {
             id: string;
             title: string;
@@ -244,7 +252,7 @@ export declare class ElectionAssignmentController {
             voteLimit: number;
         }[];
     }>;
-    getPositionAssignmentStatus(electionId: string): Promise<{
+    getPositionAssignmentStatus(ballotId: string): Promise<{
         election: {
             id: string;
             title: string;
@@ -265,7 +273,7 @@ export declare class ElectionAssignmentController {
             assignedAt: Date;
         }[];
     }>;
-    assignPositionToElection(electionId: string, positionId: string): Promise<{
+    assignPositionToBallot(ballotId: string, positionId: string): Promise<{
         message: string;
         assignment: {
             position: {
@@ -281,10 +289,10 @@ export declare class ElectionAssignmentController {
             positionId: string;
         };
     }>;
-    removePositionFromElection(electionId: string, positionId: string): Promise<{
+    removePositionFromBallot(ballotId: string, positionId: string): Promise<{
         message: string;
     }>;
-    getUnassignedCandidates(electionId: string): Promise<{
+    getUnassignedCandidates(ballotId: string): Promise<{
         election: {
             id: string;
             title: string;
@@ -316,7 +324,7 @@ export declare class ElectionAssignmentController {
             partyListId: string | null;
         })[];
     }>;
-    getCandidateAssignmentStatus(electionId: string): Promise<{
+    getCandidateAssignmentStatus(ballotId: string): Promise<{
         election: {
             id: string;
             title: string;
@@ -352,7 +360,7 @@ export declare class ElectionAssignmentController {
             assignedAt: Date;
         }[];
     }>;
-    assignCandidateToElection(electionId: string, candidateId: string): Promise<{
+    assignCandidateToBallot(ballotId: string, candidateId: string): Promise<{
         message: string;
         assignment: {
             election: {
@@ -386,7 +394,7 @@ export declare class ElectionAssignmentController {
             candidateId: string;
         };
     }>;
-    getElectionBallot(electionId: string): Promise<{
+    getBallotDetails(ballotId: string): Promise<{
         election: {
             id: string;
             title: string;
@@ -423,6 +431,14 @@ export declare class ElectionAssignmentController {
                 Candidate_StudentId: string;
                 photo: string;
                 manifesto: string;
+                party_list_name: string;
+                partyListId: string;
+                partyList: {
+                    id: string;
+                    name: string;
+                    color: string;
+                    logo: string;
+                };
             }[];
         }[];
     }>;

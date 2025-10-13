@@ -25,6 +25,7 @@ let VoteController = class VoteController {
         return this.voteService.getAllVotes();
     }
     async createVote(createVoteDto) {
+        console.warn('⚠️ DEPRECATED: POST /votes is deprecated. Use POST /ballots/cast-vote instead.');
         return this.voteService.createVote(createVoteDto);
     }
     async confirmVote(createVoteDto) {
@@ -39,23 +40,28 @@ let VoteController = class VoteController {
     async getVoteTimeline() {
         return this.voteService.getVoteTimeline();
     }
-    async getVoterVotingStatus(voterId, electionId) {
-        return this.voteService.getVoterVotingStatus(voterId, electionId);
+    async getVoterVotingStatus(voterId, ballotId) {
+        console.warn('⚠️ DEPRECATED: Election-based voting status is deprecated. Use ballot system instead.');
+        return this.voteService.getVoterVotingStatus(voterId, ballotId);
     }
-    async getVotesByElection(electionId) {
-        return this.voteService.getVotesByElection(electionId);
+    async getVotesByBallot(ballotId) {
+        console.warn('⚠️ DEPRECATED: Election-based vote retrieval is deprecated. Use ballot system instead.');
+        return this.voteService.getVotesByElection(ballotId);
     }
     async getVotesByVoter(voterId) {
         return this.voteService.getVotesByVoter(voterId);
     }
-    async getVoteResults(electionId) {
-        return this.voteService.getVoteResults(electionId);
+    async getVoteResults(ballotId) {
+        console.warn('⚠️ DEPRECATED: Election-based results are deprecated. Use ballot system instead.');
+        return this.voteService.getVoteResults(ballotId);
     }
-    async getComprehensiveVoteAnalytics(electionId) {
-        return this.voteService.getComprehensiveVoteAnalytics(electionId);
+    async getComprehensiveVoteAnalytics(ballotId) {
+        console.warn('⚠️ DEPRECATED: Election-based analytics are deprecated. Use ballot system instead.');
+        return this.voteService.getComprehensiveVoteAnalytics(ballotId);
     }
-    async getDepartmentVotingResults(electionId) {
-        return this.voteService.getDepartmentVotingResults(electionId);
+    async getDepartmentVotingResults(ballotId) {
+        console.warn('⚠️ DEPRECATED: Election-based department results are deprecated. Use ballot system instead.');
+        return this.voteService.getDepartmentVotingResults(ballotId);
     }
     async getVoteById(id) {
         return this.voteService.getVoteById(id);
@@ -78,7 +84,7 @@ __decorate([
 ], VoteController.prototype, "getAllVotes", null);
 __decorate([
     (0, common_1.Post)(),
-    (0, swagger_1.ApiOperation)({ summary: 'Cast a vote' }),
+    (0, swagger_1.ApiOperation)({ summary: 'Cast a vote (DEPRECATED - Use ballot system instead)' }),
     (0, swagger_1.ApiResponse)({ status: 201, description: 'Vote cast successfully' }),
     (0, swagger_1.ApiResponse)({ status: 409, description: 'Voter has already voted' }),
     (0, swagger_1.ApiResponse)({ status: 400, description: 'Invalid vote data' }),
@@ -123,25 +129,25 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], VoteController.prototype, "getVoteTimeline", null);
 __decorate([
-    (0, common_1.Get)('voter/:voterId/election/:electionId/status'),
-    (0, swagger_1.ApiOperation)({ summary: 'Get voter voting status and lockout information' }),
+    (0, common_1.Get)('voter/:voterId/ballot/:ballotId/status'),
+    (0, swagger_1.ApiOperation)({ summary: 'Get voter voting status for specific ballot (DEPRECATED - Use ballot system instead)' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Voter voting status' }),
-    (0, swagger_1.ApiResponse)({ status: 404, description: 'Voter or election not found' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Voter or ballot not found' }),
     __param(0, (0, common_1.Param)('voterId')),
-    __param(1, (0, common_1.Param)('electionId')),
+    __param(1, (0, common_1.Param)('ballotId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", Promise)
 ], VoteController.prototype, "getVoterVotingStatus", null);
 __decorate([
-    (0, common_1.Get)('election/:electionId'),
-    (0, swagger_1.ApiOperation)({ summary: 'Get votes by election' }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Votes for election' }),
-    __param(0, (0, common_1.Param)('electionId')),
+    (0, common_1.Get)('ballot/:ballotId'),
+    (0, swagger_1.ApiOperation)({ summary: 'Get votes by ballot (DEPRECATED - Use ballot system instead)' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Votes for ballot' }),
+    __param(0, (0, common_1.Param)('ballotId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
-], VoteController.prototype, "getVotesByElection", null);
+], VoteController.prototype, "getVotesByBallot", null);
 __decorate([
     (0, common_1.Get)('voter/:voterId'),
     (0, swagger_1.ApiOperation)({ summary: 'Get votes by voter' }),
@@ -152,28 +158,28 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], VoteController.prototype, "getVotesByVoter", null);
 __decorate([
-    (0, common_1.Get)('results/:electionId'),
-    (0, swagger_1.ApiOperation)({ summary: 'Get vote results for election' }),
+    (0, common_1.Get)('results/:ballotId'),
+    (0, swagger_1.ApiOperation)({ summary: 'Get vote results for ballot (DEPRECATED - Use ballot system instead)' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Vote results' }),
-    __param(0, (0, common_1.Param)('electionId')),
+    __param(0, (0, common_1.Param)('ballotId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], VoteController.prototype, "getVoteResults", null);
 __decorate([
-    (0, common_1.Get)('analytics/:electionId'),
-    (0, swagger_1.ApiOperation)({ summary: 'Get comprehensive vote analytics for election' }),
+    (0, common_1.Get)('analytics/:ballotId'),
+    (0, swagger_1.ApiOperation)({ summary: 'Get comprehensive vote analytics for ballot (DEPRECATED - Use ballot system instead)' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Comprehensive vote analytics' }),
-    __param(0, (0, common_1.Param)('electionId')),
+    __param(0, (0, common_1.Param)('ballotId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], VoteController.prototype, "getComprehensiveVoteAnalytics", null);
 __decorate([
-    (0, common_1.Get)('results/:electionId/departments'),
-    (0, swagger_1.ApiOperation)({ summary: 'Get department-based voting results for election' }),
+    (0, common_1.Get)('results/:ballotId/departments'),
+    (0, swagger_1.ApiOperation)({ summary: 'Get department-based voting results for ballot (DEPRECATED - Use ballot system instead)' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Department-based voting results' }),
-    __param(0, (0, common_1.Param)('electionId')),
+    __param(0, (0, common_1.Param)('ballotId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)

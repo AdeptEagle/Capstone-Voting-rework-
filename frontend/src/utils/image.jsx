@@ -1,17 +1,10 @@
 import React from 'react';
+import { getImageUrl as getEnvImageUrl } from '../config/environment';
+
 // Utility to get the correct candidate photo URL
 export function getCandidatePhotoUrl(photoUrl) {
   if (!photoUrl) return null;
-  // If already a full URL, use as is
-  if (photoUrl.startsWith('http://') || photoUrl.startsWith('https://')) {
-    return photoUrl;
-  }
-  // If already starts with /uploads/, use as is (prepend host)
-  if (photoUrl.startsWith('/uploads/')) {
-    return `http://localhost:3001${photoUrl}`;
-  }
-  // If just a filename, prepend /uploads/
-  return `http://localhost:3001/uploads/${photoUrl}`;
+  return getEnvImageUrl(photoUrl);
 }
 
 // Placeholder component for candidate photo

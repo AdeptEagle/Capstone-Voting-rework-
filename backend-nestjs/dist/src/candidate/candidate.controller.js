@@ -24,7 +24,7 @@ let CandidateController = class CandidateController {
         this.candidateService = candidateService;
     }
     async getAllCandidates(req) {
-        const showAll = req.user && (req.user.role === 'ADMIN' || req.user.role === 'SUPERADMIN');
+        const showAll = false;
         return this.candidateService.getAllCandidates(showAll);
     }
     async createCandidate(createCandidateDto, photo) {

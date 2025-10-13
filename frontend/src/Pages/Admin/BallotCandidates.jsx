@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useElection } from '../../contexts/ElectionContext';
+import { useBallot } from '../../contexts/BallotContext';
 import { 
   getCandidateAssignmentStatus
 } from '../../services/api';
@@ -8,23 +8,23 @@ import '../Candidates.css';
 import { getCandidatePhotoUrl, CandidatePhotoPlaceholder } from '../../utils/image.jsx';
 
 const BallotCandidates = () => {
-  const { activeElection } = useElection();
+  const { activeBallot } = useBallot();
   const [candidates, setCandidates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (activeElection) {
+    if (activeBallot) {
       fetchCandidates();
     } else {
       setLoading(false);
     }
-  }, [activeElection]);
+  }, [activeBallot]);
 
   const fetchCandidates = async () => {
     try {
       setLoading(true);
-      const data = await getCandidateAssignmentStatus(activeElection.id);
+      const data = await getCandidateAssignmentStatus(activeBallot.id);
       setCandidates(data);
       setError('');
     } catch (err) {
@@ -46,7 +46,7 @@ const BallotCandidates = () => {
     );
   }
 
-  if (!activeElection) {
+  if (!activeBallot) {
     return (
       <div className="ballot-candidates-error">
         <div className="alert alert-warning text-center">
@@ -101,9 +101,9 @@ const BallotCandidates = () => {
       <div className="dashboard-header-pro">
         <div className="header-content">
           <h1>Ballot Candidates View</h1>
-                             <p>View candidates for: <strong>{activeElection.Election_Title}</strong> 
-            <span className={`badge ms-2 ${activeElection.status === 'active' ? 'bg-success' : activeElection.status === 'paused' ? 'bg-warning' : activeElection.status === 'stopped' ? 'bg-danger' : 'bg-secondary'}`}>
-              {activeElection.status.toUpperCase()}
+                             <p>View candidates for: <strong>{activeBallot.Ballot_Title}</strong> 
+            <span className={`badge ms-2 ${activeBallot.Ballot_Status === 'ACTIVE' ? 'bg-success' : activeBallot.Ballot_Status === 'PAUSED' ? 'bg-warning' : activeBallot.Ballot_Status === 'STOPPED' ? 'bg-danger' : 'bg-secondary'}`}>
+              {activeBallot.Ballot_Status}
             </span>
           </p>
           <div className="alert alert-info">
