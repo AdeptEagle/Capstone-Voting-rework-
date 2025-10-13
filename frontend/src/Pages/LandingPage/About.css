@@ -1,0 +1,146 @@
+/* About Page Styles */
+.about-section {
+  background-color: #f8f9fa;
+  padding: 3rem 0;
+}
+
+.about-container {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+.about-card {
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  border: none;
+  overflow: hidden;
+}
+
+.about-card-body {
+  padding: 2rem 3rem;
+}
+
+.about-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 1.5rem;
+}
+
+.about-intro {
+  font-size: 1.25rem;
+  color: #6c757d;
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+}
+
+.about-subtitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 1rem;
+}
+
+.about-text {
+  color: #6c757d;
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+}
+
+.about-list {
+  list-style: none;
+  padding: 0;
+  margin-bottom: 1.5rem;
+}
+
+.about-list li {
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: flex-start;
+}
+
+.about-list i {
+  color: #6B73FF;
+  margin-right: 0.5rem;
+  margin-top: 0.125rem;
+  flex-shrink: 0;
+}
+
+.about-steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+  margin-bottom: 3rem;
+}
+
+.about-step {
+  background-color: #f8f9fa;
+  border: none;
+  height: 100%;
+  transition: all 0.3s ease;
+}
+
+.about-step:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+}
+
+.about-step-body {
+  text-align: center;
+  padding: 2rem;
+}
+
+.about-step-icon {
+  background-color: #6B73FF;
+  color: white;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+  width: 48px;
+  height: 48px;
+}
+
+.about-step-icon i {
+  width: 24px;
+  height: 24px;
+}
+
+.about-step-title {
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 1rem;
+}
+
+.about-step-text {
+  color: #6c757d;
+  margin: 0;
+  line-height: 1.6;
+}
+
+@media (max-width: 768px) {
+  .about-container {
+    padding: 0 1rem;
+  }
+  
+  .about-card-body {
+    padding: 1.5rem;
+  }
+  
+  .about-title {
+    font-size: 2rem;
+  }
+  
+  .about-intro {
+    font-size: 1.125rem;
+  }
+  
+  .about-steps {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+}

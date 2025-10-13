@@ -185,13 +185,13 @@ const Sidebar = ({ isOpen, onToggle }) => {
   const handleLogout = async () => {
     try {
       await logout();
-      // Redirect to appropriate login page based on role
-      const redirectUrl = userRole === 'USER' ? '/user-login' : '/admin-login';
+      // Redirect to appropriate page based on role
+      const redirectUrl = userRole === 'USER' ? '/' : '/admin-login';
       window.location.href = redirectUrl;
     } catch (error) {
       console.error('Logout failed:', error);
       // Still redirect even if logout fails
-      const redirectUrl = userRole === 'USER' ? '/user-login' : '/admin-login';
+      const redirectUrl = userRole === 'USER' ? '/' : '/admin-login';
       window.location.href = redirectUrl;
     }
   };

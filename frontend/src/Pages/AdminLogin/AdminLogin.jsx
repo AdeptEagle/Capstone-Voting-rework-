@@ -112,6 +112,8 @@ const AdminLogin = () => {
     return false;
   };
 
+  console.log('AdminLogin component is rendering');
+  
   return (
     <div className="admin-login-container">
       <div className="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen flex items-center justify-center p-4">
@@ -124,6 +126,9 @@ const AdminLogin = () => {
             <h1 className="text-3xl font-bold text-indigo-700">BallotBlitz</h1>
           </div>
           <p className="text-gray-500 text-sm uppercase tracking-wider">Secure Admin Portal</p>
+          <div className="bg-red-500 text-white p-2 mt-2 rounded">
+            DEBUG: AdminLogin component is rendering
+          </div>
         </div>
 
         {error && (

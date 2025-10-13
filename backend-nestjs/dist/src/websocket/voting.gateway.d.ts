@@ -1,0 +1,30 @@
+import { OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit } from '@nestjs/websockets';
+import { Server, Socket } from 'socket.io';
+export declare class VotingGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
+    server: Server;
+    private readonly logger;
+    private connectedClients;
+    afterInit(server: Server): void;
+    handleConnection(client: Socket): void;
+    handleDisconnect(client: Socket): void;
+    emitVoteUpdate(electionId: string, voteData: any): void;
+    emitElectionStatusUpdate(electionId: string, status: string, data?: any): void;
+    emitVoterRegistered(voterData: any): void;
+    emitVoterUpdated(voterData: any): void;
+    emitVoterDeleted(voterId: string): void;
+    emitCandidateUpdated(candidateData: any): void;
+    emitPositionUpdated(positionData: any): void;
+    emitElectionCreated(electionData: any): void;
+    emitElectionUpdated(electionData: any): void;
+    emitResultsUpdate(electionId: string, resultsData: any): void;
+    emitAdminAction(action: string, data: any): void;
+    emitNotification(type: string, message: string, data?: any): void;
+    emitTestEvent(): void;
+    handleJoinElection(client: Socket, electionId: string): void;
+    handleLeaveElection(client: Socket, electionId: string): void;
+    handleGetClientsCount(client: Socket): void;
+    handleTestWebSocket(client: Socket): void;
+    emitToElectionRoom(electionId: string, event: string, data: any): void;
+    getConnectedClientsCount(): number;
+    broadcastToAll(event: string, data: any): void;
+}

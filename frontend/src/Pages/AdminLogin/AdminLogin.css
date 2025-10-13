@@ -6,6 +6,8 @@
   display: block !important;
   min-height: 100vh !important;
   background-color: transparent !important;
+  position: relative !important;
+  z-index: 9999 !important;
 }
 
 /* Override any global main styles */

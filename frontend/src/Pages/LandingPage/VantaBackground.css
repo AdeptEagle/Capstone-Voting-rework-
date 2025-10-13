@@ -1,0 +1,40 @@
+/* Vanta Background Styles */
+.vanta-container {
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+.vanta-content {
+  position: relative;
+  z-index: 1;
+}
+
+/* Ensure Vanta.js canvas covers the full container */
+.vanta-container canvas {
+  position: absolute !important;
+  top: 0;
+  left: 0;
+  width: 100% !important;
+  height: 100% !important;
+  z-index: 0;
+}
+
+/* Overlay for better text readability if needed */
+.vanta-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.1);
+  z-index: 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .vanta-container {
+    min-height: 50vh;
+  }
+}
+

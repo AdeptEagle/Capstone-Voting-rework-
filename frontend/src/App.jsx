@@ -17,15 +17,20 @@ import Voters from './Pages/Voters';
 import VoterHistory from './Pages/Admin/VoterHistory';
 import Elections from './Pages/Elections';
 import ElectionHistory from './Pages/ElectionHistory';
-import UserRegister from './Pages/User/UserRegister';
 import Vote from './Pages/User/Vote';
 import BallotSelection from './Pages/User/BallotSelection';
 import BallotVote from './Pages/User/BallotVote';
 import BallotResults from './Pages/User/BallotResults';
 import VotingHistory from './Pages/User/VotingHistory';
 import AdminLogin from './Pages/AdminLogin/AdminLogin';
-import UserLogin from './Pages/User/UserLogin';
-import ForgotPassword from './Pages/ForgotPassword';
+import LandingPage from './Pages/LandingPage/LandingPage';
+import LandingLogin from './Pages/LandingPage/Login';
+import LandingRegister from './Pages/LandingPage/Register';
+import LandingForgotPassword from './Pages/LandingPage/ForgotPassword';
+import About from './Pages/LandingPage/About';
+import Team from './Pages/LandingPage/Team';
+import Mission from './Pages/LandingPage/Mission';
+import HowToVote from './Pages/LandingPage/HowToVote';
 import AdminForgotPassword from './Pages/AdminLogin/AdminForgotPassword';
 import ResetPassword from './Pages/ResetPassword';
 import DepartmentManagement from './Pages/DepartmentManagement';
@@ -91,12 +96,12 @@ function UserRoute({ children }) {
 
   if (!currentUser.isAuthenticated) {
     console.log('UserRoute: Not authenticated, redirecting to login');
-    return <Navigate to="/user-login" />;
+    return <Navigate to="/login" />;
   }
   
   if (currentUser.role !== 'USER') {
     console.log('UserRoute: Role mismatch, expected "USER", got:', currentUser.role);
-    return <Navigate to="/user-login" />;
+    return <Navigate to="/login" />;
   }
 
   // Additional route validation
@@ -160,12 +165,16 @@ function App() {
         <div className="App">
           <Routes>
             {/* Public Routes */}
-            <Route path="/" element={<UserLogin />} />
+            <Route path="/" element={<LandingPage />} />
             <Route path="/admin" element={<AdminLogin />} />
             <Route path="/admin-login" element={<AdminLogin />} />
-            <Route path="/user-login" element={<UserLogin />} />
-            <Route path="/register" element={<UserRegister />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/login" element={<LandingLogin />} />
+            <Route path="/register" element={<LandingRegister />} />
+            <Route path="/forgot-password" element={<LandingForgotPassword />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/team" element={<Team />} />
+            <Route path="/mission" element={<Mission />} />
+            <Route path="/how-to-vote" element={<HowToVote />} />
             <Route path="/admin-forgot-password" element={<AdminForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
 

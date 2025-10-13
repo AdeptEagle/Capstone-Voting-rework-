@@ -1,0 +1,1005 @@
+import { BallotService } from './ballot.service';
+import { CreateBallotDto } from './dto/create-ballot.dto';
+import { UpdateBallotDto } from './dto/update-ballot.dto';
+export declare class BallotController {
+    private readonly ballotService;
+    constructor(ballotService: BallotService);
+    createBallot(createBallotDto: CreateBallotDto, req: any): Promise<{
+        id: string;
+        Ballot_Title: string;
+        Ballot_Description: string | null;
+        Ballot_StartDate: Date;
+        Ballot_EndDate: Date;
+        Ballot_Status: import(".prisma/client").$Enums.BallotStatus;
+        Ballot_IsActive: boolean;
+        Ballot_MaxVotesPerUser: number;
+        Ballot_AllowMultipleVotes: boolean;
+        Ballot_RequireAllPositions: boolean;
+        Ballot_ShowResults: boolean;
+        Ballot_ShowResultsAfter: Date | null;
+        Ballot_ShowLiveResults: boolean;
+        Ballot_AllowAbstain: boolean;
+        Ballot_CreatedBy: string;
+        Ballot_CreatedAt: Date;
+        Ballot_UpdatedAt: Date;
+        Ballot_DeletedAt: Date | null;
+        Ballot_IsDeleted: boolean;
+    }>;
+    getBallots(status?: string, isActive?: string, createdBy?: string): Promise<({
+        ballotPositions: ({
+            position: {
+                id: string;
+                createdAt: Date;
+                updatedAt: Date;
+                deletedAt: Date | null;
+                isDeleted: boolean;
+                Position_Title: string;
+                Position_Description: string | null;
+                displayOrder: number;
+                voteLimit: number;
+            };
+        } & {
+            id: string;
+            BallotPosition_BallotId: string;
+            BallotPosition_PositionId: string;
+            BallotPosition_DisplayOrder: number;
+            BallotPosition_IsRequired: boolean;
+        })[];
+        createdByAdmin: {
+            id: string;
+            Admin_Username: string;
+            Admin_Email: string;
+        };
+        _count: {
+            votes: number;
+            userHistory: number;
+        };
+        ballotCandidates: ({
+            candidate: {
+                department: {
+                    id: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    Department_Name: string;
+                    Department_Description: string | null;
+                    deletedAt: Date | null;
+                    isDeleted: boolean;
+                    createdBy: string;
+                };
+                course: {
+                    id: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    deletedAt: Date | null;
+                    isDeleted: boolean;
+                    createdBy: string;
+                    Course_Name: string;
+                    Course_Code: string;
+                    Course_Description: string | null;
+                    departmentId: string;
+                };
+                position: {
+                    id: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    deletedAt: Date | null;
+                    isDeleted: boolean;
+                    Position_Title: string;
+                    Position_Description: string | null;
+                    displayOrder: number;
+                    voteLimit: number;
+                };
+            } & {
+                id: string;
+                createdAt: Date;
+                updatedAt: Date;
+                deletedAt: Date | null;
+                isDeleted: boolean;
+                departmentId: string | null;
+                courseId: string | null;
+                positionId: string;
+                Candidate_Name: string;
+                Candidate_Email: string;
+                Candidate_StudentId: string;
+                photo: string | null;
+                manifesto: string | null;
+                party_list_name: string | null;
+                partyListId: string | null;
+            };
+        } & {
+            id: string;
+            BallotCandidate_IsActive: boolean;
+            BallotCandidate_BallotId: string;
+            BallotCandidate_CandidateId: string;
+            BallotCandidate_PositionId: string;
+        })[];
+        results: {
+            id: string;
+            BallotResults_BallotId: string;
+            BallotResults_TotalVotes: number;
+            BallotResults_TotalVoters: number;
+            BallotResults_VoterTurnout: number;
+            BallotResults_LastUpdated: Date;
+            BallotResults_IsFinal: boolean;
+        };
+    } & {
+        id: string;
+        Ballot_Title: string;
+        Ballot_Description: string | null;
+        Ballot_StartDate: Date;
+        Ballot_EndDate: Date;
+        Ballot_Status: import(".prisma/client").$Enums.BallotStatus;
+        Ballot_IsActive: boolean;
+        Ballot_MaxVotesPerUser: number;
+        Ballot_AllowMultipleVotes: boolean;
+        Ballot_RequireAllPositions: boolean;
+        Ballot_ShowResults: boolean;
+        Ballot_ShowResultsAfter: Date | null;
+        Ballot_ShowLiveResults: boolean;
+        Ballot_AllowAbstain: boolean;
+        Ballot_CreatedBy: string;
+        Ballot_CreatedAt: Date;
+        Ballot_UpdatedAt: Date;
+        Ballot_DeletedAt: Date | null;
+        Ballot_IsDeleted: boolean;
+    })[]>;
+    getAvailableBallots(req: any): Promise<({
+        ballotPositions: ({
+            position: {
+                id: string;
+                createdAt: Date;
+                updatedAt: Date;
+                deletedAt: Date | null;
+                isDeleted: boolean;
+                Position_Title: string;
+                Position_Description: string | null;
+                displayOrder: number;
+                voteLimit: number;
+            };
+        } & {
+            id: string;
+            BallotPosition_BallotId: string;
+            BallotPosition_PositionId: string;
+            BallotPosition_DisplayOrder: number;
+            BallotPosition_IsRequired: boolean;
+        })[];
+        _count: {
+            votes: number;
+            userHistory: number;
+        };
+        ballotCandidates: ({
+            candidate: {
+                department: {
+                    id: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    Department_Name: string;
+                    Department_Description: string | null;
+                    deletedAt: Date | null;
+                    isDeleted: boolean;
+                    createdBy: string;
+                };
+                course: {
+                    id: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    deletedAt: Date | null;
+                    isDeleted: boolean;
+                    createdBy: string;
+                    Course_Name: string;
+                    Course_Code: string;
+                    Course_Description: string | null;
+                    departmentId: string;
+                };
+                position: {
+                    id: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    deletedAt: Date | null;
+                    isDeleted: boolean;
+                    Position_Title: string;
+                    Position_Description: string | null;
+                    displayOrder: number;
+                    voteLimit: number;
+                };
+            } & {
+                id: string;
+                createdAt: Date;
+                updatedAt: Date;
+                deletedAt: Date | null;
+                isDeleted: boolean;
+                departmentId: string | null;
+                courseId: string | null;
+                positionId: string;
+                Candidate_Name: string;
+                Candidate_Email: string;
+                Candidate_StudentId: string;
+                photo: string | null;
+                manifesto: string | null;
+                party_list_name: string | null;
+                partyListId: string | null;
+            };
+        } & {
+            id: string;
+            BallotCandidate_IsActive: boolean;
+            BallotCandidate_BallotId: string;
+            BallotCandidate_CandidateId: string;
+            BallotCandidate_PositionId: string;
+        })[];
+        userHistory: {
+            id: string;
+            UserBallotHistory_VotedAt: Date | null;
+            UserBallotHistory_UserId: string;
+            UserBallotHistory_BallotId: string;
+            UserBallotHistory_VoteCount: number;
+            UserBallotHistory_IsCompleted: boolean;
+            UserBallotHistory_LastAccessed: Date;
+        }[];
+    } & {
+        id: string;
+        Ballot_Title: string;
+        Ballot_Description: string | null;
+        Ballot_StartDate: Date;
+        Ballot_EndDate: Date;
+        Ballot_Status: import(".prisma/client").$Enums.BallotStatus;
+        Ballot_IsActive: boolean;
+        Ballot_MaxVotesPerUser: number;
+        Ballot_AllowMultipleVotes: boolean;
+        Ballot_RequireAllPositions: boolean;
+        Ballot_ShowResults: boolean;
+        Ballot_ShowResultsAfter: Date | null;
+        Ballot_ShowLiveResults: boolean;
+        Ballot_AllowAbstain: boolean;
+        Ballot_CreatedBy: string;
+        Ballot_CreatedAt: Date;
+        Ballot_UpdatedAt: Date;
+        Ballot_DeletedAt: Date | null;
+        Ballot_IsDeleted: boolean;
+    })[]>;
+    getUpcomingBallots(req: any): Promise<({
+        ballotPositions: ({
+            position: {
+                id: string;
+                createdAt: Date;
+                updatedAt: Date;
+                deletedAt: Date | null;
+                isDeleted: boolean;
+                Position_Title: string;
+                Position_Description: string | null;
+                displayOrder: number;
+                voteLimit: number;
+            };
+        } & {
+            id: string;
+            BallotPosition_BallotId: string;
+            BallotPosition_PositionId: string;
+            BallotPosition_DisplayOrder: number;
+            BallotPosition_IsRequired: boolean;
+        })[];
+        _count: {
+            votes: number;
+            userHistory: number;
+        };
+        ballotCandidates: ({
+            candidate: {
+                department: {
+                    id: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    Department_Name: string;
+                    Department_Description: string | null;
+                    deletedAt: Date | null;
+                    isDeleted: boolean;
+                    createdBy: string;
+                };
+                course: {
+                    id: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    deletedAt: Date | null;
+                    isDeleted: boolean;
+                    createdBy: string;
+                    Course_Name: string;
+                    Course_Code: string;
+                    Course_Description: string | null;
+                    departmentId: string;
+                };
+                position: {
+                    id: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    deletedAt: Date | null;
+                    isDeleted: boolean;
+                    Position_Title: string;
+                    Position_Description: string | null;
+                    displayOrder: number;
+                    voteLimit: number;
+                };
+            } & {
+                id: string;
+                createdAt: Date;
+                updatedAt: Date;
+                deletedAt: Date | null;
+                isDeleted: boolean;
+                departmentId: string | null;
+                courseId: string | null;
+                positionId: string;
+                Candidate_Name: string;
+                Candidate_Email: string;
+                Candidate_StudentId: string;
+                photo: string | null;
+                manifesto: string | null;
+                party_list_name: string | null;
+                partyListId: string | null;
+            };
+        } & {
+            id: string;
+            BallotCandidate_IsActive: boolean;
+            BallotCandidate_BallotId: string;
+            BallotCandidate_CandidateId: string;
+            BallotCandidate_PositionId: string;
+        })[];
+        userHistory: {
+            id: string;
+            UserBallotHistory_VotedAt: Date | null;
+            UserBallotHistory_UserId: string;
+            UserBallotHistory_BallotId: string;
+            UserBallotHistory_VoteCount: number;
+            UserBallotHistory_IsCompleted: boolean;
+            UserBallotHistory_LastAccessed: Date;
+        }[];
+    } & {
+        id: string;
+        Ballot_Title: string;
+        Ballot_Description: string | null;
+        Ballot_StartDate: Date;
+        Ballot_EndDate: Date;
+        Ballot_Status: import(".prisma/client").$Enums.BallotStatus;
+        Ballot_IsActive: boolean;
+        Ballot_MaxVotesPerUser: number;
+        Ballot_AllowMultipleVotes: boolean;
+        Ballot_RequireAllPositions: boolean;
+        Ballot_ShowResults: boolean;
+        Ballot_ShowResultsAfter: Date | null;
+        Ballot_ShowLiveResults: boolean;
+        Ballot_AllowAbstain: boolean;
+        Ballot_CreatedBy: string;
+        Ballot_CreatedAt: Date;
+        Ballot_UpdatedAt: Date;
+        Ballot_DeletedAt: Date | null;
+        Ballot_IsDeleted: boolean;
+    })[]>;
+    getUserBallotHistoryFromAuth(req: any): Promise<({
+        ballot: {
+            ballotPositions: ({
+                position: {
+                    id: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    deletedAt: Date | null;
+                    isDeleted: boolean;
+                    Position_Title: string;
+                    Position_Description: string | null;
+                    displayOrder: number;
+                    voteLimit: number;
+                };
+            } & {
+                id: string;
+                BallotPosition_BallotId: string;
+                BallotPosition_PositionId: string;
+                BallotPosition_DisplayOrder: number;
+                BallotPosition_IsRequired: boolean;
+            })[];
+            results: {
+                id: string;
+                BallotResults_BallotId: string;
+                BallotResults_TotalVotes: number;
+                BallotResults_TotalVoters: number;
+                BallotResults_VoterTurnout: number;
+                BallotResults_LastUpdated: Date;
+                BallotResults_IsFinal: boolean;
+            };
+        } & {
+            id: string;
+            Ballot_Title: string;
+            Ballot_Description: string | null;
+            Ballot_StartDate: Date;
+            Ballot_EndDate: Date;
+            Ballot_Status: import(".prisma/client").$Enums.BallotStatus;
+            Ballot_IsActive: boolean;
+            Ballot_MaxVotesPerUser: number;
+            Ballot_AllowMultipleVotes: boolean;
+            Ballot_RequireAllPositions: boolean;
+            Ballot_ShowResults: boolean;
+            Ballot_ShowResultsAfter: Date | null;
+            Ballot_ShowLiveResults: boolean;
+            Ballot_AllowAbstain: boolean;
+            Ballot_CreatedBy: string;
+            Ballot_CreatedAt: Date;
+            Ballot_UpdatedAt: Date;
+            Ballot_DeletedAt: Date | null;
+            Ballot_IsDeleted: boolean;
+        };
+    } & {
+        id: string;
+        UserBallotHistory_VotedAt: Date | null;
+        UserBallotHistory_UserId: string;
+        UserBallotHistory_BallotId: string;
+        UserBallotHistory_VoteCount: number;
+        UserBallotHistory_IsCompleted: boolean;
+        UserBallotHistory_LastAccessed: Date;
+    })[]>;
+    castBallotVote(voteData: any, req: any): Promise<{
+        message: string;
+        votes: any[];
+        totalVotes: number;
+        ballot: {
+            id: string;
+            title: string;
+            status: import(".prisma/client").$Enums.BallotStatus;
+        };
+    }>;
+    getBallotById(id: string): Promise<{
+        ballotPositions: ({
+            position: {
+                id: string;
+                createdAt: Date;
+                updatedAt: Date;
+                deletedAt: Date | null;
+                isDeleted: boolean;
+                Position_Title: string;
+                Position_Description: string | null;
+                displayOrder: number;
+                voteLimit: number;
+            };
+        } & {
+            id: string;
+            BallotPosition_BallotId: string;
+            BallotPosition_PositionId: string;
+            BallotPosition_DisplayOrder: number;
+            BallotPosition_IsRequired: boolean;
+        })[];
+        createdByAdmin: {
+            id: string;
+            Admin_Username: string;
+            Admin_Email: string;
+        };
+        _count: {
+            votes: number;
+            userHistory: number;
+        };
+        ballotCandidates: ({
+            candidate: {
+                department: {
+                    id: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    Department_Name: string;
+                    Department_Description: string | null;
+                    deletedAt: Date | null;
+                    isDeleted: boolean;
+                    createdBy: string;
+                };
+                course: {
+                    id: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    deletedAt: Date | null;
+                    isDeleted: boolean;
+                    createdBy: string;
+                    Course_Name: string;
+                    Course_Code: string;
+                    Course_Description: string | null;
+                    departmentId: string;
+                };
+                position: {
+                    id: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    deletedAt: Date | null;
+                    isDeleted: boolean;
+                    Position_Title: string;
+                    Position_Description: string | null;
+                    displayOrder: number;
+                    voteLimit: number;
+                };
+            } & {
+                id: string;
+                createdAt: Date;
+                updatedAt: Date;
+                deletedAt: Date | null;
+                isDeleted: boolean;
+                departmentId: string | null;
+                courseId: string | null;
+                positionId: string;
+                Candidate_Name: string;
+                Candidate_Email: string;
+                Candidate_StudentId: string;
+                photo: string | null;
+                manifesto: string | null;
+                party_list_name: string | null;
+                partyListId: string | null;
+            };
+        } & {
+            id: string;
+            BallotCandidate_IsActive: boolean;
+            BallotCandidate_BallotId: string;
+            BallotCandidate_CandidateId: string;
+            BallotCandidate_PositionId: string;
+        })[];
+        results: {
+            resultDetails: ({
+                position: {
+                    id: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    deletedAt: Date | null;
+                    isDeleted: boolean;
+                    Position_Title: string;
+                    Position_Description: string | null;
+                    displayOrder: number;
+                    voteLimit: number;
+                };
+                candidate: {
+                    id: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    deletedAt: Date | null;
+                    isDeleted: boolean;
+                    departmentId: string | null;
+                    courseId: string | null;
+                    positionId: string;
+                    Candidate_Name: string;
+                    Candidate_Email: string;
+                    Candidate_StudentId: string;
+                    photo: string | null;
+                    manifesto: string | null;
+                    party_list_name: string | null;
+                    partyListId: string | null;
+                };
+            } & {
+                id: string;
+                BallotResultDetails_Rank: number;
+                BallotResultDetails_PositionId: string;
+                BallotResultDetails_BallotId: string;
+                BallotResultDetails_CandidateId: string;
+                BallotResultDetails_VoteCount: number;
+                BallotResultDetails_Percentage: number;
+                BallotResultDetails_LastUpdated: Date;
+            })[];
+        } & {
+            id: string;
+            BallotResults_BallotId: string;
+            BallotResults_TotalVotes: number;
+            BallotResults_TotalVoters: number;
+            BallotResults_VoterTurnout: number;
+            BallotResults_LastUpdated: Date;
+            BallotResults_IsFinal: boolean;
+        };
+    } & {
+        id: string;
+        Ballot_Title: string;
+        Ballot_Description: string | null;
+        Ballot_StartDate: Date;
+        Ballot_EndDate: Date;
+        Ballot_Status: import(".prisma/client").$Enums.BallotStatus;
+        Ballot_IsActive: boolean;
+        Ballot_MaxVotesPerUser: number;
+        Ballot_AllowMultipleVotes: boolean;
+        Ballot_RequireAllPositions: boolean;
+        Ballot_ShowResults: boolean;
+        Ballot_ShowResultsAfter: Date | null;
+        Ballot_ShowLiveResults: boolean;
+        Ballot_AllowAbstain: boolean;
+        Ballot_CreatedBy: string;
+        Ballot_CreatedAt: Date;
+        Ballot_UpdatedAt: Date;
+        Ballot_DeletedAt: Date | null;
+        Ballot_IsDeleted: boolean;
+    }>;
+    updateBallot(id: string, updateBallotDto: UpdateBallotDto, req: any): Promise<{
+        ballotPositions: ({
+            position: {
+                id: string;
+                createdAt: Date;
+                updatedAt: Date;
+                deletedAt: Date | null;
+                isDeleted: boolean;
+                Position_Title: string;
+                Position_Description: string | null;
+                displayOrder: number;
+                voteLimit: number;
+            };
+        } & {
+            id: string;
+            BallotPosition_BallotId: string;
+            BallotPosition_PositionId: string;
+            BallotPosition_DisplayOrder: number;
+            BallotPosition_IsRequired: boolean;
+        })[];
+        createdByAdmin: {
+            id: string;
+            Admin_Username: string;
+            Admin_Email: string;
+        };
+        _count: {
+            votes: number;
+            userHistory: number;
+        };
+        ballotCandidates: ({
+            candidate: {
+                department: {
+                    id: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    Department_Name: string;
+                    Department_Description: string | null;
+                    deletedAt: Date | null;
+                    isDeleted: boolean;
+                    createdBy: string;
+                };
+                course: {
+                    id: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    deletedAt: Date | null;
+                    isDeleted: boolean;
+                    createdBy: string;
+                    Course_Name: string;
+                    Course_Code: string;
+                    Course_Description: string | null;
+                    departmentId: string;
+                };
+                position: {
+                    id: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    deletedAt: Date | null;
+                    isDeleted: boolean;
+                    Position_Title: string;
+                    Position_Description: string | null;
+                    displayOrder: number;
+                    voteLimit: number;
+                };
+            } & {
+                id: string;
+                createdAt: Date;
+                updatedAt: Date;
+                deletedAt: Date | null;
+                isDeleted: boolean;
+                departmentId: string | null;
+                courseId: string | null;
+                positionId: string;
+                Candidate_Name: string;
+                Candidate_Email: string;
+                Candidate_StudentId: string;
+                photo: string | null;
+                manifesto: string | null;
+                party_list_name: string | null;
+                partyListId: string | null;
+            };
+        } & {
+            id: string;
+            BallotCandidate_IsActive: boolean;
+            BallotCandidate_BallotId: string;
+            BallotCandidate_CandidateId: string;
+            BallotCandidate_PositionId: string;
+        })[];
+        results: {
+            id: string;
+            BallotResults_BallotId: string;
+            BallotResults_TotalVotes: number;
+            BallotResults_TotalVoters: number;
+            BallotResults_VoterTurnout: number;
+            BallotResults_LastUpdated: Date;
+            BallotResults_IsFinal: boolean;
+        };
+    } & {
+        id: string;
+        Ballot_Title: string;
+        Ballot_Description: string | null;
+        Ballot_StartDate: Date;
+        Ballot_EndDate: Date;
+        Ballot_Status: import(".prisma/client").$Enums.BallotStatus;
+        Ballot_IsActive: boolean;
+        Ballot_MaxVotesPerUser: number;
+        Ballot_AllowMultipleVotes: boolean;
+        Ballot_RequireAllPositions: boolean;
+        Ballot_ShowResults: boolean;
+        Ballot_ShowResultsAfter: Date | null;
+        Ballot_ShowLiveResults: boolean;
+        Ballot_AllowAbstain: boolean;
+        Ballot_CreatedBy: string;
+        Ballot_CreatedAt: Date;
+        Ballot_UpdatedAt: Date;
+        Ballot_DeletedAt: Date | null;
+        Ballot_IsDeleted: boolean;
+    }>;
+    deleteBallot(id: string, req: any): Promise<{
+        id: string;
+        Ballot_Title: string;
+        Ballot_Description: string | null;
+        Ballot_StartDate: Date;
+        Ballot_EndDate: Date;
+        Ballot_Status: import(".prisma/client").$Enums.BallotStatus;
+        Ballot_IsActive: boolean;
+        Ballot_MaxVotesPerUser: number;
+        Ballot_AllowMultipleVotes: boolean;
+        Ballot_RequireAllPositions: boolean;
+        Ballot_ShowResults: boolean;
+        Ballot_ShowResultsAfter: Date | null;
+        Ballot_ShowLiveResults: boolean;
+        Ballot_AllowAbstain: boolean;
+        Ballot_CreatedBy: string;
+        Ballot_CreatedAt: Date;
+        Ballot_UpdatedAt: Date;
+        Ballot_DeletedAt: Date | null;
+        Ballot_IsDeleted: boolean;
+    }>;
+    activateBallot(id: string, req: any): Promise<{
+        id: string;
+        Ballot_Title: string;
+        Ballot_Description: string | null;
+        Ballot_StartDate: Date;
+        Ballot_EndDate: Date;
+        Ballot_Status: import(".prisma/client").$Enums.BallotStatus;
+        Ballot_IsActive: boolean;
+        Ballot_MaxVotesPerUser: number;
+        Ballot_AllowMultipleVotes: boolean;
+        Ballot_RequireAllPositions: boolean;
+        Ballot_ShowResults: boolean;
+        Ballot_ShowResultsAfter: Date | null;
+        Ballot_ShowLiveResults: boolean;
+        Ballot_AllowAbstain: boolean;
+        Ballot_CreatedBy: string;
+        Ballot_CreatedAt: Date;
+        Ballot_UpdatedAt: Date;
+        Ballot_DeletedAt: Date | null;
+        Ballot_IsDeleted: boolean;
+    }>;
+    pauseBallot(id: string, req: any): Promise<{
+        id: string;
+        Ballot_Title: string;
+        Ballot_Description: string | null;
+        Ballot_StartDate: Date;
+        Ballot_EndDate: Date;
+        Ballot_Status: import(".prisma/client").$Enums.BallotStatus;
+        Ballot_IsActive: boolean;
+        Ballot_MaxVotesPerUser: number;
+        Ballot_AllowMultipleVotes: boolean;
+        Ballot_RequireAllPositions: boolean;
+        Ballot_ShowResults: boolean;
+        Ballot_ShowResultsAfter: Date | null;
+        Ballot_ShowLiveResults: boolean;
+        Ballot_AllowAbstain: boolean;
+        Ballot_CreatedBy: string;
+        Ballot_CreatedAt: Date;
+        Ballot_UpdatedAt: Date;
+        Ballot_DeletedAt: Date | null;
+        Ballot_IsDeleted: boolean;
+    }>;
+    endBallot(id: string, req: any): Promise<{
+        id: string;
+        Ballot_Title: string;
+        Ballot_Description: string | null;
+        Ballot_StartDate: Date;
+        Ballot_EndDate: Date;
+        Ballot_Status: import(".prisma/client").$Enums.BallotStatus;
+        Ballot_IsActive: boolean;
+        Ballot_MaxVotesPerUser: number;
+        Ballot_AllowMultipleVotes: boolean;
+        Ballot_RequireAllPositions: boolean;
+        Ballot_ShowResults: boolean;
+        Ballot_ShowResultsAfter: Date | null;
+        Ballot_ShowLiveResults: boolean;
+        Ballot_AllowAbstain: boolean;
+        Ballot_CreatedBy: string;
+        Ballot_CreatedAt: Date;
+        Ballot_UpdatedAt: Date;
+        Ballot_DeletedAt: Date | null;
+        Ballot_IsDeleted: boolean;
+    }>;
+    getAvailableBallotsForUser(userId: string): Promise<({
+        ballotPositions: ({
+            position: {
+                id: string;
+                createdAt: Date;
+                updatedAt: Date;
+                deletedAt: Date | null;
+                isDeleted: boolean;
+                Position_Title: string;
+                Position_Description: string | null;
+                displayOrder: number;
+                voteLimit: number;
+            };
+        } & {
+            id: string;
+            BallotPosition_BallotId: string;
+            BallotPosition_PositionId: string;
+            BallotPosition_DisplayOrder: number;
+            BallotPosition_IsRequired: boolean;
+        })[];
+        _count: {
+            votes: number;
+            userHistory: number;
+        };
+        ballotCandidates: ({
+            candidate: {
+                department: {
+                    id: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    Department_Name: string;
+                    Department_Description: string | null;
+                    deletedAt: Date | null;
+                    isDeleted: boolean;
+                    createdBy: string;
+                };
+                course: {
+                    id: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    deletedAt: Date | null;
+                    isDeleted: boolean;
+                    createdBy: string;
+                    Course_Name: string;
+                    Course_Code: string;
+                    Course_Description: string | null;
+                    departmentId: string;
+                };
+                position: {
+                    id: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    deletedAt: Date | null;
+                    isDeleted: boolean;
+                    Position_Title: string;
+                    Position_Description: string | null;
+                    displayOrder: number;
+                    voteLimit: number;
+                };
+            } & {
+                id: string;
+                createdAt: Date;
+                updatedAt: Date;
+                deletedAt: Date | null;
+                isDeleted: boolean;
+                departmentId: string | null;
+                courseId: string | null;
+                positionId: string;
+                Candidate_Name: string;
+                Candidate_Email: string;
+                Candidate_StudentId: string;
+                photo: string | null;
+                manifesto: string | null;
+                party_list_name: string | null;
+                partyListId: string | null;
+            };
+        } & {
+            id: string;
+            BallotCandidate_IsActive: boolean;
+            BallotCandidate_BallotId: string;
+            BallotCandidate_CandidateId: string;
+            BallotCandidate_PositionId: string;
+        })[];
+        userHistory: {
+            id: string;
+            UserBallotHistory_VotedAt: Date | null;
+            UserBallotHistory_UserId: string;
+            UserBallotHistory_BallotId: string;
+            UserBallotHistory_VoteCount: number;
+            UserBallotHistory_IsCompleted: boolean;
+            UserBallotHistory_LastAccessed: Date;
+        }[];
+    } & {
+        id: string;
+        Ballot_Title: string;
+        Ballot_Description: string | null;
+        Ballot_StartDate: Date;
+        Ballot_EndDate: Date;
+        Ballot_Status: import(".prisma/client").$Enums.BallotStatus;
+        Ballot_IsActive: boolean;
+        Ballot_MaxVotesPerUser: number;
+        Ballot_AllowMultipleVotes: boolean;
+        Ballot_RequireAllPositions: boolean;
+        Ballot_ShowResults: boolean;
+        Ballot_ShowResultsAfter: Date | null;
+        Ballot_ShowLiveResults: boolean;
+        Ballot_AllowAbstain: boolean;
+        Ballot_CreatedBy: string;
+        Ballot_CreatedAt: Date;
+        Ballot_UpdatedAt: Date;
+        Ballot_DeletedAt: Date | null;
+        Ballot_IsDeleted: boolean;
+    })[]>;
+    getUserBallotHistory(userId: string): Promise<({
+        ballot: {
+            ballotPositions: ({
+                position: {
+                    id: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    deletedAt: Date | null;
+                    isDeleted: boolean;
+                    Position_Title: string;
+                    Position_Description: string | null;
+                    displayOrder: number;
+                    voteLimit: number;
+                };
+            } & {
+                id: string;
+                BallotPosition_BallotId: string;
+                BallotPosition_PositionId: string;
+                BallotPosition_DisplayOrder: number;
+                BallotPosition_IsRequired: boolean;
+            })[];
+            results: {
+                id: string;
+                BallotResults_BallotId: string;
+                BallotResults_TotalVotes: number;
+                BallotResults_TotalVoters: number;
+                BallotResults_VoterTurnout: number;
+                BallotResults_LastUpdated: Date;
+                BallotResults_IsFinal: boolean;
+            };
+        } & {
+            id: string;
+            Ballot_Title: string;
+            Ballot_Description: string | null;
+            Ballot_StartDate: Date;
+            Ballot_EndDate: Date;
+            Ballot_Status: import(".prisma/client").$Enums.BallotStatus;
+            Ballot_IsActive: boolean;
+            Ballot_MaxVotesPerUser: number;
+            Ballot_AllowMultipleVotes: boolean;
+            Ballot_RequireAllPositions: boolean;
+            Ballot_ShowResults: boolean;
+            Ballot_ShowResultsAfter: Date | null;
+            Ballot_ShowLiveResults: boolean;
+            Ballot_AllowAbstain: boolean;
+            Ballot_CreatedBy: string;
+            Ballot_CreatedAt: Date;
+            Ballot_UpdatedAt: Date;
+            Ballot_DeletedAt: Date | null;
+            Ballot_IsDeleted: boolean;
+        };
+    } & {
+        id: string;
+        UserBallotHistory_VotedAt: Date | null;
+        UserBallotHistory_UserId: string;
+        UserBallotHistory_BallotId: string;
+        UserBallotHistory_VoteCount: number;
+        UserBallotHistory_IsCompleted: boolean;
+        UserBallotHistory_LastAccessed: Date;
+    })[]>;
+    bulkActivateBallots(ballotIds: string[], req: any): Promise<{
+        totalProcessed: number;
+        successful: number;
+        failed: number;
+        results: any[];
+    }>;
+    bulkPauseBallots(ballotIds: string[], req: any): Promise<{
+        totalProcessed: number;
+        successful: number;
+        failed: number;
+        results: any[];
+    }>;
+    bulkEndBallots(ballotIds: string[], req: any): Promise<{
+        totalProcessed: number;
+        successful: number;
+        failed: number;
+        results: any[];
+    }>;
+    bulkDeleteBallots(ballotIds: string[], req: any): Promise<{
+        totalProcessed: number;
+        successful: number;
+        failed: number;
+        results: any[];
+    }>;
+    bulkUpdateBallotStatus(ballotIds: string[], status: string, req: any): Promise<{
+        totalProcessed: number;
+        successful: number;
+        failed: number;
+        results: any[];
+    }>;
+}
