@@ -27,10 +27,12 @@ const trash_module_1 = require("./trash/trash.module");
 const ballot_module_1 = require("./ballot/ballot.module");
 const ballot_template_module_1 = require("./ballot-template/ballot-template.module");
 const party_list_module_1 = require("./party-list/party-list.module");
+const analytics_module_1 = require("./analytics/analytics.module");
 const scheduler_service_1 = require("./services/scheduler.service");
 const timezone_service_1 = require("./services/timezone.service");
 const template_initialization_service_1 = require("./services/template-initialization.service");
 const position_initialization_service_1 = require("./services/position-initialization.service");
+const department_course_initialization_service_1 = require("./services/department-course-initialization.service");
 const timezone_controller_1 = require("./controllers/timezone.controller");
 const websocket_module_1 = require("./websocket/websocket.module");
 const health_module_1 = require("./health/health.module");
@@ -61,11 +63,12 @@ exports.AppModule = AppModule = __decorate([
             ballot_module_1.BallotModule,
             ballot_template_module_1.BallotTemplateModule,
             party_list_module_1.PartyListModule,
+            analytics_module_1.AnalyticsModule,
             websocket_module_1.WebsocketModule,
             health_module_1.HealthModule,
         ],
         controllers: [timezone_controller_1.TimezoneController],
-        providers: [scheduler_service_1.SchedulerService, timezone_service_1.TimezoneService, template_initialization_service_1.TemplateInitializationService, position_initialization_service_1.PositionInitializationService],
+        providers: [scheduler_service_1.SchedulerService, timezone_service_1.TimezoneService, template_initialization_service_1.TemplateInitializationService, position_initialization_service_1.PositionInitializationService, department_course_initialization_service_1.DepartmentCourseInitializationService],
     })
 ], AppModule);
 //# sourceMappingURL=app.module.js.map

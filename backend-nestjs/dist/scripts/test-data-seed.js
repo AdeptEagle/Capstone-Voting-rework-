@@ -3,6 +3,20 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const client_1 = require("@prisma/client");
 const bcrypt = require("bcryptjs");
 const prisma = new client_1.PrismaClient();
+function generatePositionId(positionTitle) {
+    const positionIdMap = {
+        'Student Council President': 'PRES',
+        'Student Council Vice President': 'V-PRES',
+        'Student Council Secretary': 'SEC',
+        'Student Council Treasurer': 'TREAS'
+    };
+    if (positionIdMap[positionTitle]) {
+        return positionIdMap[positionTitle];
+    }
+    const words = positionTitle.split(' ');
+    const id = words.map(word => word.substring(0, 3)).join('').toUpperCase();
+    return id.substring(0, 8);
+}
 function generateId() {
     const firstPart = Math.random().toString(36).substring(2, 6).toUpperCase();
     const secondPart = Math.random().toString(36).substring(2, 7).toUpperCase();
@@ -81,7 +95,7 @@ async function seedTestData() {
         const positions = await Promise.all([
             prisma.position.create({
                 data: {
-                    id: generateId(),
+                    id: generatePositionId('Student Council President'),
                     Position_Title: 'Student Council President',
                     Position_Description: 'Leader of the student body',
                     voteLimit: 1,
@@ -90,7 +104,7 @@ async function seedTestData() {
             }),
             prisma.position.create({
                 data: {
-                    id: generateId(),
+                    id: generatePositionId('Student Council Vice President'),
                     Position_Title: 'Student Council Vice President',
                     Position_Description: 'Assists the president',
                     voteLimit: 1,
@@ -99,7 +113,7 @@ async function seedTestData() {
             }),
             prisma.position.create({
                 data: {
-                    id: generateId(),
+                    id: generatePositionId('Student Council Secretary'),
                     Position_Title: 'Student Council Secretary',
                     Position_Description: 'Handles documentation',
                     voteLimit: 2,
@@ -108,7 +122,7 @@ async function seedTestData() {
             }),
             prisma.position.create({
                 data: {
-                    id: generateId(),
+                    id: generatePositionId('Student Council Treasurer'),
                     Position_Title: 'Student Council Treasurer',
                     Position_Description: 'Manages finances',
                     voteLimit: 3,

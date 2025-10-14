@@ -7,6 +7,7 @@ export declare class BallotService {
     constructor(prisma: PrismaService);
     createBallot(createBallotDto: CreateBallotDto, createdBy: string): Promise<{
         id: string;
+        electionId: string | null;
         Ballot_Title: string;
         Ballot_Description: string | null;
         Ballot_StartDate: Date;
@@ -140,6 +141,7 @@ export declare class BallotService {
         };
     } & {
         id: string;
+        electionId: string | null;
         Ballot_Title: string;
         Ballot_Description: string | null;
         Ballot_StartDate: Date;
@@ -309,6 +311,7 @@ export declare class BallotService {
         };
     } & {
         id: string;
+        electionId: string | null;
         Ballot_Title: string;
         Ballot_Description: string | null;
         Ballot_StartDate: Date;
@@ -438,6 +441,7 @@ export declare class BallotService {
         };
     } & {
         id: string;
+        electionId: string | null;
         Ballot_Title: string;
         Ballot_Description: string | null;
         Ballot_StartDate: Date;
@@ -459,6 +463,7 @@ export declare class BallotService {
     }>;
     deleteBallot(id: string, deletedBy: string): Promise<{
         id: string;
+        electionId: string | null;
         Ballot_Title: string;
         Ballot_Description: string | null;
         Ballot_StartDate: Date;
@@ -480,6 +485,7 @@ export declare class BallotService {
     }>;
     activateBallot(id: string, activatedBy: string): Promise<{
         id: string;
+        electionId: string | null;
         Ballot_Title: string;
         Ballot_Description: string | null;
         Ballot_StartDate: Date;
@@ -501,6 +507,7 @@ export declare class BallotService {
     }>;
     pauseBallot(id: string, pausedBy: string): Promise<{
         id: string;
+        electionId: string | null;
         Ballot_Title: string;
         Ballot_Description: string | null;
         Ballot_StartDate: Date;
@@ -522,6 +529,7 @@ export declare class BallotService {
     }>;
     endBallot(id: string, endedBy: string): Promise<{
         id: string;
+        electionId: string | null;
         Ballot_Title: string;
         Ballot_Description: string | null;
         Ballot_StartDate: Date;
@@ -543,6 +551,7 @@ export declare class BallotService {
     }>;
     cancelBallot(id: string, cancelledBy: string): Promise<{
         id: string;
+        electionId: string | null;
         Ballot_Title: string;
         Ballot_Description: string | null;
         Ballot_StartDate: Date;
@@ -667,6 +676,7 @@ export declare class BallotService {
         }[];
     } & {
         id: string;
+        electionId: string | null;
         Ballot_Title: string;
         Ballot_Description: string | null;
         Ballot_StartDate: Date;
@@ -791,6 +801,7 @@ export declare class BallotService {
         }[];
     } & {
         id: string;
+        electionId: string | null;
         Ballot_Title: string;
         Ballot_Description: string | null;
         Ballot_StartDate: Date;
@@ -842,6 +853,7 @@ export declare class BallotService {
             };
         } & {
             id: string;
+            electionId: string | null;
             Ballot_Title: string;
             Ballot_Description: string | null;
             Ballot_StartDate: Date;
@@ -927,6 +939,7 @@ export declare class BallotService {
     }>;
     createBallotFromTemplate(ballotData: any, createdBy: string): Promise<{
         id: string;
+        electionId: string | null;
         Ballot_Title: string;
         Ballot_Description: string | null;
         Ballot_StartDate: Date;

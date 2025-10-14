@@ -6,6 +6,7 @@ export declare class BallotController {
     constructor(ballotService: BallotService);
     createBallot(createBallotDto: CreateBallotDto, req: any): Promise<{
         id: string;
+        electionId: string | null;
         Ballot_Title: string;
         Ballot_Description: string | null;
         Ballot_StartDate: Date;
@@ -135,6 +136,7 @@ export declare class BallotController {
         };
     } & {
         id: string;
+        electionId: string | null;
         Ballot_Title: string;
         Ballot_Description: string | null;
         Ballot_StartDate: Date;
@@ -259,6 +261,7 @@ export declare class BallotController {
         }[];
     } & {
         id: string;
+        electionId: string | null;
         Ballot_Title: string;
         Ballot_Description: string | null;
         Ballot_StartDate: Date;
@@ -383,6 +386,7 @@ export declare class BallotController {
         }[];
     } & {
         id: string;
+        electionId: string | null;
         Ballot_Title: string;
         Ballot_Description: string | null;
         Ballot_StartDate: Date;
@@ -434,6 +438,7 @@ export declare class BallotController {
             };
         } & {
             id: string;
+            electionId: string | null;
             Ballot_Title: string;
             Ballot_Description: string | null;
             Ballot_StartDate: Date;
@@ -622,6 +627,7 @@ export declare class BallotController {
         };
     } & {
         id: string;
+        electionId: string | null;
         Ballot_Title: string;
         Ballot_Description: string | null;
         Ballot_StartDate: Date;
@@ -751,6 +757,7 @@ export declare class BallotController {
         };
     } & {
         id: string;
+        electionId: string | null;
         Ballot_Title: string;
         Ballot_Description: string | null;
         Ballot_StartDate: Date;
@@ -772,6 +779,7 @@ export declare class BallotController {
     }>;
     deleteBallot(id: string, req: any): Promise<{
         id: string;
+        electionId: string | null;
         Ballot_Title: string;
         Ballot_Description: string | null;
         Ballot_StartDate: Date;
@@ -793,6 +801,7 @@ export declare class BallotController {
     }>;
     activateBallot(id: string, req: any): Promise<{
         id: string;
+        electionId: string | null;
         Ballot_Title: string;
         Ballot_Description: string | null;
         Ballot_StartDate: Date;
@@ -814,6 +823,7 @@ export declare class BallotController {
     }>;
     pauseBallot(id: string, req: any): Promise<{
         id: string;
+        electionId: string | null;
         Ballot_Title: string;
         Ballot_Description: string | null;
         Ballot_StartDate: Date;
@@ -835,6 +845,7 @@ export declare class BallotController {
     }>;
     endBallot(id: string, req: any): Promise<{
         id: string;
+        electionId: string | null;
         Ballot_Title: string;
         Ballot_Description: string | null;
         Ballot_StartDate: Date;
@@ -959,6 +970,7 @@ export declare class BallotController {
         }[];
     } & {
         id: string;
+        electionId: string | null;
         Ballot_Title: string;
         Ballot_Description: string | null;
         Ballot_StartDate: Date;
@@ -1010,6 +1022,7 @@ export declare class BallotController {
             };
         } & {
             id: string;
+            electionId: string | null;
             Ballot_Title: string;
             Ballot_Description: string | null;
             Ballot_StartDate: Date;

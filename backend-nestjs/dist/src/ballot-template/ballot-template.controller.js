@@ -27,7 +27,7 @@ let BallotTemplateController = class BallotTemplateController {
         return this.ballotTemplateService.createTemplate(createTemplateDto, req.user.id);
     }
     async getAllTemplates(includePublic, req) {
-        const includePublicBool = includePublic === 'true';
+        const includePublicBool = includePublic === undefined ? true : includePublic === 'true';
         return this.ballotTemplateService.getAllTemplates(includePublicBool, req.user?.id);
     }
     async getTemplateById(id) {

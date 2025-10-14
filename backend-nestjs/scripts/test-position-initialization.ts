@@ -2,6 +2,45 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
+// Helper function to generate proper position IDs
+function generatePositionId(positionTitle: string): string {
+  // Create a mapping of position titles to proper IDs
+  const positionIdMap: { [key: string]: string } = {
+    'President': 'PRES',
+    'Vice-President': 'V-PRES',
+    'Secretary': 'SEC',
+    'Auditor': 'AUD',
+    'Treasurer': 'TREAS',
+    'PIO Internal': 'PIO-INT',
+    'PIO External': 'PIO-EXT',
+    'Senator': 'SEN',
+    'Internal Vice-President': 'INT-VP',
+    'External Vice-President': 'EXT-VP',
+    '1st Year Representative': '1YR-REP',
+    '2nd Year Representative': '2YR-REP',
+    '3rd Year Representative': '3YR-REP',
+    '4th Year Representative': '4YR-REP',
+    'Public Relations Officer': 'PRO'
+  };
+
+  // Return the mapped ID or generate a fallback based on title
+  if (positionIdMap[positionTitle]) {
+    return positionIdMap[positionTitle];
+  }
+
+  // Fallback: create ID from title (first 3 chars of each word, max 8 chars)
+  const words = positionTitle.split(' ');
+  const id = words.map(word => word.substring(0, 3)).join('').toUpperCase();
+  return id.substring(0, 8);
+}
+
+// Helper function to generate ID in format xxxx-xxxxx (for candidates)
+function generateId(): string {
+  const firstPart = Math.random().toString(36).substring(2, 6).toUpperCase();
+  const secondPart = Math.random().toString(36).substring(2, 7).toUpperCase();
+  return `${firstPart}-${secondPart}`;
+}
+
 async function testPositionInitialization() {
   try {
     console.log('🧪 Testing position initialization...\n');
@@ -84,7 +123,7 @@ async function testPositionInitialization() {
         console.log(`🔄 Creating: ${position.title}`);
         const createdPosition = await prisma.position.create({
           data: {
-            id: generateId(),
+            id: generatePositionId(position.title),
             Position_Title: position.title,
             Position_Description: position.description,
             voteLimit: position.voteLimit,
@@ -140,13 +179,7 @@ async function testPositionInitialization() {
   }
 }
 
-// Helper function to generate ID in format xxxx-xxxxx
-function generateId(): string {
-  const firstPart = Math.random().toString(36).substring(2, 6).toUpperCase();
-  const secondPart = Math.random().toString(36).substring(2, 7).toUpperCase();
-  return `${firstPart}-${secondPart}`;
-}
-
+ 
 testPositionInitialization()
   .then(() => {
     console.log('\n✅ Position initialization test completed!');

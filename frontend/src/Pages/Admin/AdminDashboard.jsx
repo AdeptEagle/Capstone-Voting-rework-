@@ -332,6 +332,12 @@ const AdminDashboard = () => {
                 >
                   Vote Traceability
                 </button>
+                <button 
+                  className="btn btn-outline-success btn-sm"
+                  onClick={() => navigate('/admin/analytics')}
+                >
+                  <i className="fas fa-chart-line"></i> Analytics
+                </button>
               </div>
             </div>
           </div>

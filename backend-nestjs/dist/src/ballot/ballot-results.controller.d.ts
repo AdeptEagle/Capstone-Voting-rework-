@@ -77,6 +77,7 @@ export declare class BallotResultsController {
         };
     } & {
         id: string;
+        electionId: string | null;
         Ballot_Title: string;
         Ballot_Description: string | null;
         Ballot_StartDate: Date;
@@ -230,6 +231,7 @@ export declare class BallotResultsController {
         };
     } & {
         id: string;
+        electionId: string | null;
         Ballot_Title: string;
         Ballot_Description: string | null;
         Ballot_StartDate: Date;
@@ -383,6 +385,7 @@ export declare class BallotResultsController {
         };
     } & {
         id: string;
+        electionId: string | null;
         Ballot_Title: string;
         Ballot_Description: string | null;
         Ballot_StartDate: Date;

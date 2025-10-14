@@ -1441,4 +1441,88 @@ export const getBallotAnalytics = async (ballotId) => {
   }
 };
 
+export const getAnalyticsData = async (ballotId = 'all', timeRange = 'all') => {
+  try {
+    const response = await api.get('/analytics', {
+      params: { ballotId, timeRange }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching analytics data:', error);
+    throw error;
+  }
+};
+
+export const getPositionAnalytics = async (ballotId = 'all', timeRange = 'all') => {
+  try {
+    const response = await api.get('/analytics/positions', {
+      params: { ballotId, timeRange }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching position analytics:', error);
+    throw error;
+  }
+};
+
+export const getDepartmentAnalytics = async (ballotId = 'all', timeRange = 'all') => {
+  try {
+    const response = await api.get('/analytics/departments', {
+      params: { ballotId, timeRange }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching department analytics:', error);
+    throw error;
+  }
+};
+
+export const getPartylistAnalytics = async (ballotId = 'all', timeRange = 'all') => {
+  try {
+    const response = await api.get('/analytics/partylists', {
+      params: { ballotId, timeRange }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching partylist analytics:', error);
+    throw error;
+  }
+};
+
+export const getVotingPatterns = async (ballotId = 'all', timeRange = 'all') => {
+  try {
+    const response = await api.get('/analytics/patterns', {
+      params: { ballotId, timeRange }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching voting patterns:', error);
+    throw error;
+  }
+};
+
+export const getTimeAnalytics = async (ballotId = 'all', timeRange = 'all') => {
+  try {
+    const response = await api.get('/analytics/time', {
+      params: { ballotId, timeRange }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching time analytics:', error);
+    throw error;
+  }
+};
+
+export const getSummaryAnalytics = async (ballotId = 'all', timeRange = 'all') => {
+  try {
+    const response = await api.get('/analytics/summary', {
+      params: { ballotId, timeRange }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching summary analytics:', error);
+    throw error;
+  }
+};
+
 export default api; 

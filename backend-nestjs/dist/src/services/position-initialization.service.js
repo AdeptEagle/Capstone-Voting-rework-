@@ -45,16 +45,41 @@ let PositionInitializationService = class PositionInitializationService {
                     { title: 'Public Relations Officer', description: 'Manages club public relations', voteLimit: 1, displayOrder: 15 },
                 ];
                 const existingPositions = await this.prisma.position.findMany({
-                    select: { Position_Title: true }
+                    select: { id: true, Position_Title: true }
                 });
-                const existingTitles = existingPositions.map(p => p.Position_Title);
-                const missingPositions = standardPositions.filter(position => !existingTitles.includes(position.title));
                 console.log(`📊 Found ${existingPositions.length} existing positions`);
-                console.log(`📊 Missing ${missingPositions.length} positions`);
-                if (missingPositions.length === 0) {
-                    console.log('✅ All standard positions are already present');
-                    return;
+                for (const def of standardPositions) {
+                    const desiredId = this.generatePositionId(def.title);
+                    const found = existingPositions.find(p => p.Position_Title === def.title);
+                    if (found && found.id !== desiredId) {
+                        try {
+                            const [candCnt, voteCnt, epCnt, bpCnt, rdCnt] = await Promise.all([
+                                this.prisma.candidate.count({ where: { positionId: found.id } }),
+                                this.prisma.vote.count({ where: { positionId: found.id } }),
+                                this.prisma.electionPosition.count({ where: { positionId: found.id } }),
+                                this.prisma.ballotPosition.count({ where: { BallotPosition_PositionId: found.id } }),
+                                this.prisma.ballotResultDetails.count({ where: { BallotResultDetails_PositionId: found.id } }),
+                            ]);
+                            const totalRefs = candCnt + voteCnt + epCnt + bpCnt + rdCnt;
+                            if (totalRefs === 0) {
+                                console.log(`🧼 Normalizing ID for '${def.title}' → ${desiredId}`);
+                                await this.prisma.position.update({
+                                    where: { id: found.id },
+                                    data: { id: desiredId },
+                                });
+                            }
+                            else {
+                                console.log(`⚠️ Cannot normalize ID for '${def.title}' (has ${totalRefs} references). Keeping existing id: ${found.id}`);
+                            }
+                        }
+                        catch (normErr) {
+                            console.error(`❌ Failed to normalize ID for '${def.title}':`, normErr);
+                        }
+                    }
                 }
+                const existingTitles = (await this.prisma.position.findMany({ select: { Position_Title: true } }))
+                    .map(p => p.Position_Title);
+                const missingPositions = standardPositions.filter(p => !existingTitles.includes(p.title));
                 console.log(`📋 Creating ${missingPositions.length} missing positions...`);
                 const createdPositions = [];
                 for (const position of missingPositions) {
@@ -62,7 +87,7 @@ let PositionInitializationService = class PositionInitializationService {
                         console.log(`🔄 Creating position: ${position.title}`);
                         const createdPosition = await this.prisma.position.create({
                             data: {
-                                id: this.generateId(),
+                                id: this.generatePositionId(position.title),
                                 Position_Title: position.title,
                                 Position_Description: position.description,
                                 voteLimit: position.voteLimit,
@@ -76,10 +101,12 @@ let PositionInitializationService = class PositionInitializationService {
                         console.error(`❌ Failed to create position ${position.title}:`, error);
                     }
                 }
-                console.log(`✅ Successfully created ${createdPositions.length} positions:`);
-                createdPositions.forEach(position => {
-                    console.log(`   - ${position.Position_Title}`);
-                });
+                if (createdPositions.length > 0) {
+                    console.log(`✅ Successfully created ${createdPositions.length} positions:`);
+                    createdPositions.forEach(position => {
+                        console.log(`   - ${position.Position_Title}`);
+                    });
+                }
                 const finalCheck = await this.prisma.position.findMany({
                     select: { Position_Title: true }
                 });
@@ -223,6 +250,31 @@ let PositionInitializationService = class PositionInitializationService {
             console.error('❌ Error creating candidates:', error);
             throw error;
         }
+    }
+    generatePositionId(positionTitle) {
+        const positionIdMap = {
+            'President': 'PRES',
+            'Vice-President': 'V-PRES',
+            'Secretary': 'SEC',
+            'Auditor': 'AUD',
+            'Treasurer': 'TREAS',
+            'PIO Internal': 'PIO-INT',
+            'PIO External': 'PIO-EXT',
+            'Senator': 'SEN',
+            'Internal Vice-President': 'INT-VP',
+            'External Vice-President': 'EXT-VP',
+            '1st Year Representative': '1YR-REP',
+            '2nd Year Representative': '2YR-REP',
+            '3rd Year Representative': '3YR-REP',
+            '4th Year Representative': '4YR-REP',
+            'Public Relations Officer': 'PRO'
+        };
+        if (positionIdMap[positionTitle]) {
+            return positionIdMap[positionTitle];
+        }
+        const words = positionTitle.split(' ');
+        const id = words.map(word => word.substring(0, 3)).join('').toUpperCase();
+        return id.substring(0, 8);
     }
     generateId() {
         const firstPart = Math.random().toString(36).substring(2, 6).toUpperCase();

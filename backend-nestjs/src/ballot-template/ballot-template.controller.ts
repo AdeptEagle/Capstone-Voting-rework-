@@ -20,7 +20,8 @@ export class BallotTemplateController {
     @Query('includePublic') includePublic?: string,
     @Request() req?: any,
   ) {
-    const includePublicBool = includePublic === 'true';
+    // Default to including public templates when query param is omitted
+    const includePublicBool = includePublic === undefined ? true : includePublic === 'true';
     return this.ballotTemplateService.getAllTemplates(includePublicBool, req.user?.id);
   }
 

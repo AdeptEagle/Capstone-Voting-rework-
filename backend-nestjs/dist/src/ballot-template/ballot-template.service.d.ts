@@ -93,6 +93,7 @@ export declare class BallotTemplateService {
     }>;
     createBallotFromTemplate(templateId: string, createBallotDto: CreateBallotFromTemplateDto, createdBy: string): Promise<{
         id: string;
+        electionId: string | null;
         Ballot_Title: string;
         Ballot_Description: string | null;
         Ballot_StartDate: Date;

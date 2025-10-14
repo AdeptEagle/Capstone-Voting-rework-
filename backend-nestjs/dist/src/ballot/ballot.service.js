@@ -604,22 +604,26 @@ let BallotService = class BallotService {
                     throw new common_1.BadRequestException(`Candidate ${candidateId} is not valid for position ${positionId} in this ballot`);
                 }
             }
+            const electionIdValue = ballot.electionId;
             return await this.prisma.$transaction(async (tx) => {
                 const createdVotes = [];
                 for (const vote of votes) {
                     const { positionId, candidateId } = vote;
+                    const voteData_create = {
+                        id: this.generateId(),
+                        voter: { connect: { id: userId } },
+                        candidate: { connect: { id: candidateId } },
+                        position: { connect: { id: positionId } },
+                        ballot: { connect: { id: ballotId } },
+                        ipAddress: voteData.ipAddress || null,
+                        userAgent: voteData.userAgent || null,
+                        sessionId: voteData.sessionId || null,
+                    };
+                    if (electionIdValue) {
+                        voteData_create.election = { connect: { id: electionIdValue } };
+                    }
                     const voteRecord = await tx.vote.create({
-                        data: {
-                            id: this.generateId(),
-                            voterId: userId,
-                            candidateId: candidateId,
-                            electionId: null,
-                            positionId: positionId,
-                            ballotId: ballotId,
-                            ipAddress: voteData.ipAddress || null,
-                            userAgent: voteData.userAgent || null,
-                            sessionId: voteData.sessionId || null,
-                        },
+                        data: voteData_create,
                         include: {
                             voter: {
                                 select: {

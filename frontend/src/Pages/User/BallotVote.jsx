@@ -31,6 +31,8 @@ const BallotVote = () => {
   const [success, setSuccess] = useState('');
   const [showVoteSummary, setShowVoteSummary] = useState(false);
   const [imgError, setImgError] = useState({});
+  const [showDebug, setShowDebug] = useState(false);
+  const [debugInfo, setDebugInfo] = useState({});
 
   useEffect(() => {
     fetchBallotData();
@@ -220,6 +222,12 @@ const BallotVote = () => {
         });
       });
 
+      // Client-side validation to prevent empty submissions
+      if (!votes.length) {
+        setError('No votes selected. Please select at least one candidate.');
+        return;
+      }
+
       // Submit votes with ballot context
       const voteData = {
         ballotId: ballotId,
@@ -229,22 +237,43 @@ const BallotVote = () => {
         sessionId: null // Could be added if needed
       };
 
+      // Capture debug details before submitting
+      setDebugInfo({
+        stage: 'submitting',
+        ballotId,
+        selectedVotes,
+        votes,
+        voteData
+      });
+
       await createBallotVote(voteData);
       
       setSuccess('Your vote has been submitted successfully!');
       setShowFinalScreen(true);
+      setDebugInfo(prev => ({ ...prev, stage: 'success' }));
       
     } catch (error) {
       console.error('Error submitting vote:', error);
       
       if (error.response?.status === 409) {
-        setError('You have already voted for this ballot.');
+        setError(error.response?.data?.message || 'You have already voted for this ballot.');
         setShowFinalScreen(true);
       } else if (error.response?.status === 400) {
-        setError('Invalid vote data. Please check your selections and try again.');
+        setError(error.response?.data?.message || 'Invalid vote data. Please check your selections and try again.');
       } else {
-        setError('Failed to submit vote. Please try again.');
+        setError(error.response?.data?.message || 'Failed to submit vote. Please try again.');
       }
+
+      // Capture error details for debugging
+      setDebugInfo(prev => ({
+        ...prev,
+        stage: 'error',
+        error: {
+          status: error.response?.status,
+          data: error.response?.data,
+          headers: error.response?.headers,
+        }
+      }));
     } finally {
       setSubmitting(false);
     }
@@ -263,9 +292,20 @@ const BallotVote = () => {
   if (loading) {
     return (
       <div className="ballot-vote-container">
-        <div className="loading-message">
+      <div className="loading-message">
           <p>Loading ballot...</p>
         </div>
+      <div style={{ marginTop: 12 }}>
+        <button
+          type="button"
+          onClick={() => setShowDebug(prev => !prev)}
+          className="btn btn-secondary"
+          disabled={submitting}
+        >
+          {showDebug ? 'Hide Debug' : 'Show Debug'}
+        </button>
+        {renderDebugPanel()}
+      </div>
       </div>
     );
   }
@@ -276,6 +316,57 @@ const BallotVote = () => {
         <div className="error-message">
           <i className="fas fa-exclamation-triangle"></i>
           <span>Ballot not found</span>
+        </div>
+        <div style={{ marginTop: 12 }}>
+          <button
+            type="button"
+            onClick={() => setShowDebug(prev => !prev)}
+            className="btn btn-secondary"
+            disabled={submitting}
+          >
+            {showDebug ? 'Hide Debug' : 'Show Debug'}
+          </button>
+          {renderDebugPanel()}
+        </div>
+      </div>
+    );
+  }
+
+  function renderDebugPanel() {
+    if (!showDebug) return null;
+    const safeStringify = (obj) => {
+      try { return JSON.stringify(obj, null, 2); } catch { return String(obj); }
+    };
+    return (
+      <div className="debug-panel" style={{ marginTop: '16px', padding: '12px', border: '1px dashed #888', borderRadius: '6px', background: '#0f172a', color: '#e2e8f0' }}>
+        <div style={{ marginBottom: '8px', fontWeight: 'bold' }}>Debug Info</div>
+        <div style={{ display: 'grid', gap: '8px' }}>
+          <div>
+            <div style={{ fontWeight: 600 }}>Stage</div>
+            <pre style={{ whiteSpace: 'pre-wrap', overflowX: 'auto' }}>{safeStringify(debugInfo.stage)}</pre>
+          </div>
+          <div>
+            <div style={{ fontWeight: 600 }}>ballotId</div>
+            <pre style={{ whiteSpace: 'pre-wrap', overflowX: 'auto' }}>{safeStringify(debugInfo.ballotId || ballotId)}</pre>
+          </div>
+          <div>
+            <div style={{ fontWeight: 600 }}>selectedVotes</div>
+            <pre style={{ whiteSpace: 'pre-wrap', overflowX: 'auto' }}>{safeStringify(debugInfo.selectedVotes || selectedVotes)}</pre>
+          </div>
+          <div>
+            <div style={{ fontWeight: 600 }}>votes</div>
+            <pre style={{ whiteSpace: 'pre-wrap', overflowX: 'auto' }}>{safeStringify(debugInfo.votes)}</pre>
+          </div>
+          <div>
+            <div style={{ fontWeight: 600 }}>request voteData</div>
+            <pre style={{ whiteSpace: 'pre-wrap', overflowX: 'auto' }}>{safeStringify(debugInfo.voteData)}</pre>
+          </div>
+          {debugInfo.error && (
+            <div>
+              <div style={{ fontWeight: 600, color: '#fca5a5' }}>error.response</div>
+              <pre style={{ whiteSpace: 'pre-wrap', overflowX: 'auto' }}>{safeStringify(debugInfo.error)}</pre>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -314,6 +405,17 @@ const BallotVote = () => {
               Back to Dashboard
             </button>
           </div>
+        </div>
+        <div style={{ marginTop: 12 }}>
+          <button
+            type="button"
+            onClick={() => setShowDebug(prev => !prev)}
+            className="btn btn-secondary"
+            disabled={submitting}
+          >
+            {showDebug ? 'Hide Debug' : 'Show Debug'}
+          </button>
+          {renderDebugPanel()}
         </div>
       </div>
     );
@@ -405,6 +507,18 @@ const BallotVote = () => {
 
   return (
     <div className="ballot-vote-container">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+        <h2 style={{ margin: 0 }}>Ballot Voting</h2>
+        <button
+          type="button"
+          onClick={() => setShowDebug(prev => !prev)}
+          className="btn btn-secondary"
+          disabled={submitting}
+        >
+          {showDebug ? 'Hide Debug' : 'Show Debug'}
+        </button>
+      </div>
+      {renderDebugPanel()}
       <div className="ballot-header">
         <h1>{ballot.Ballot_Title}</h1>
         {ballot.Ballot_Description && (

@@ -6,5 +6,6 @@ export declare class PositionInitializationService implements OnModuleInit {
     onModuleInit(): Promise<void>;
     private ensurePositionsExist;
     private ensureCandidatesForAllPositions;
+    private generatePositionId;
     private generateId;
 }

@@ -33,7 +33,7 @@ export declare class VoteService {
     } & {
         id: string;
         createdAt: Date;
-        electionId: string;
+        electionId: string | null;
         positionId: string;
         candidateId: string;
         ipAddress: string | null;
@@ -66,7 +66,7 @@ export declare class VoteService {
     } & {
         id: string;
         createdAt: Date;
-        electionId: string;
+        electionId: string | null;
         positionId: string;
         candidateId: string;
         ipAddress: string | null;
@@ -172,7 +172,7 @@ export declare class VoteService {
     } & {
         id: string;
         createdAt: Date;
-        electionId: string;
+        electionId: string | null;
         positionId: string;
         candidateId: string;
         ipAddress: string | null;
@@ -205,7 +205,7 @@ export declare class VoteService {
     } & {
         id: string;
         createdAt: Date;
-        electionId: string;
+        electionId: string | null;
         positionId: string;
         candidateId: string;
         ipAddress: string | null;

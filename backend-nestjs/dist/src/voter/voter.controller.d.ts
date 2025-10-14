@@ -238,7 +238,7 @@ export declare class VoterController {
         } & {
             id: string;
             createdAt: Date;
-            electionId: string;
+            electionId: string | null;
             positionId: string;
             candidateId: string;
             ipAddress: string | null;

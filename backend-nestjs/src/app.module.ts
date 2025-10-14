@@ -18,10 +18,12 @@ import { TrashModule } from './trash/trash.module';
 import { BallotModule } from './ballot/ballot.module';
 import { BallotTemplateModule } from './ballot-template/ballot-template.module';
 import { PartyListModule } from './party-list/party-list.module';
+import { AnalyticsModule } from './analytics/analytics.module';
 import { SchedulerService } from './services/scheduler.service';
 import { TimezoneService } from './services/timezone.service';
 import { TemplateInitializationService } from './services/template-initialization.service';
 import { PositionInitializationService } from './services/position-initialization.service';
+import { DepartmentCourseInitializationService } from './services/department-course-initialization.service';
 import { TimezoneController } from './controllers/timezone.controller';
 import { WebsocketModule } from './websocket/websocket.module';
 import { HealthModule } from './health/health.module';
@@ -49,10 +51,11 @@ import { HealthModule } from './health/health.module';
     BallotModule,
     BallotTemplateModule,
     PartyListModule,
+    AnalyticsModule,
     WebsocketModule,
     HealthModule,
   ],
   controllers: [TimezoneController],
-  providers: [SchedulerService, TimezoneService, TemplateInitializationService, PositionInitializationService],
+  providers: [SchedulerService, TimezoneService, TemplateInitializationService, PositionInitializationService, DepartmentCourseInitializationService],
 })
 export class AppModule {} 

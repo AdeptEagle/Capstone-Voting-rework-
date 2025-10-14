@@ -174,7 +174,7 @@ model Vote {
   createdAt        DateTime  @default(now()) @map("created_at")
   auditHash        String?   @db.VarChar(255)
   candidateId      String
-  electionId       String
+  electionId       String?
   ipAddress        String?   @db.VarChar(45)
   positionId       String
   sessionId        String?   @db.VarChar(255)
@@ -184,7 +184,7 @@ model Vote {
   ballotId         String?
   ballot           Ballot?   @relation(fields: [ballotId], references: [id])
   candidate        Candidate @relation(fields: [candidateId], references: [id])
-  election         Election  @relation(fields: [electionId], references: [id])
+  election         Election? @relation(fields: [electionId], references: [id])
   position         Position  @relation(fields: [positionId], references: [id])
   voter            Voter     @relation(fields: [voterId], references: [id])
 

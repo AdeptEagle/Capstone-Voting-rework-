@@ -10,6 +10,7 @@ import AdminDashboard from './Pages/Admin/AdminDashboard';
 import BallotManagement from './Pages/Admin/BallotManagement';
 import BallotDetails from './Pages/Admin/BallotDetails';
 import BallotTraceability from './Pages/Admin/BallotTraceability';
+import Analytics from './Pages/Admin/Analytics';
 import UserDashboard from './Pages/User/UserDashboard';
 import Positions from './Pages/Positions';
 import Candidates from './Pages/Candidates';
@@ -276,6 +277,13 @@ function App() {
               <AdminRoute>
                 <AdminLayout>
                   <BallotTraceability />
+                </AdminLayout>
+              </AdminRoute>
+            } />
+            <Route path="/admin/analytics" element={
+              <AdminRoute>
+                <AdminLayout>
+                  <Analytics />
                 </AdminLayout>
               </AdminRoute>
             } />

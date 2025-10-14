@@ -4,7 +4,7 @@ import {
   getBallotById,
   getBallotResults,
   getPartylistResults,
-  getBallotAnalytics,
+  getAnalyticsData,
   activateBallot,
   pauseBallot,
   endBallot,
@@ -44,7 +44,7 @@ const BallotDetails = () => {
     // Check for tab query parameter
     const urlParams = new URLSearchParams(location.search);
     const tab = urlParams.get('tab');
-    if (tab && ['overview', 'positions', 'results', 'settings'].includes(tab)) {
+    if (tab && ['overview', 'positions', 'results'].includes(tab)) {
       setActiveTab(tab);
     }
 
@@ -128,51 +128,31 @@ const BallotDetails = () => {
   }, [analytics, activeTab]);
 
   const initializeDepartmentCharts = () => {
-    console.log('Attempting to initialize charts...');
-    console.log('Chart.js available:', typeof window.Chart !== 'undefined');
-    console.log('Analytics data:', analytics);
-    console.log('Department analytics:', analytics?.departmentAnalytics);
-
     if (typeof window.Chart === 'undefined') {
-      console.log('Chart.js not loaded yet, retrying in 500ms...');
       setTimeout(() => initializeDepartmentCharts(), 500);
       return;
     }
 
     // Ensure Chart.js is fully loaded
     if (!window.Chart || typeof window.Chart.getChart !== 'function') {
-      console.log('Chart.js not fully loaded, retrying in 500ms...');
       setTimeout(() => initializeDepartmentCharts(), 500);
       return;
     }
 
     if (!analytics || !analytics.departmentAnalytics || analytics.departmentAnalytics.length === 0) {
-      console.log('No department analytics data available, using sample data for testing');
-      // Use sample data for testing charts
-      const sampleData = [
-        { departmentName: 'Computer Science', totalVotes: 150, participationRate: 85.5 },
-        { departmentName: 'Information Technology', totalVotes: 120, participationRate: 78.2 },
-        { departmentName: 'Business Administration', totalVotes: 90, participationRate: 72.1 },
-        { departmentName: 'Education', totalVotes: 75, participationRate: 65.8 },
-        { departmentName: 'Engineering', totalVotes: 60, participationRate: 58.3 }
-      ];
-      createChartsWithData(sampleData);
       return;
     }
 
-    console.log('Initializing department charts with data:', analytics.departmentAnalytics);
     createChartsWithData(analytics.departmentAnalytics);
   };
 
   const createChartsWithData = (departmentData) => {
-    console.log('Creating charts with data:', departmentData);
-
     // Destroy existing charts safely
     if (window.departmentVotesChart && typeof window.departmentVotesChart.destroy === 'function') {
       try {
         window.departmentVotesChart.destroy();
       } catch (error) {
-        console.log('Error destroying votes chart:', error);
+        // Silently handle chart destruction errors
       }
       window.departmentVotesChart = null;
     }
@@ -206,7 +186,7 @@ const BallotDetails = () => {
               labels: departmentData.map(dept => dept.departmentName),
               datasets: [{
                 label: 'Votes Cast',
-                data: departmentData.map(dept => dept.totalVotes),
+                data: departmentData.map(dept => dept.votesCast),
                 backgroundColor: '#A7D9F8', // Light pastel blue
                 borderColor: '#7DD3FC', // Slightly darker light blue for border
                 borderWidth: 1,
@@ -353,7 +333,7 @@ const BallotDetails = () => {
           console.log('Partylist results fetch failed (this is normal if no partylist data):', error);
           return null; // Partylist results might not exist yet
         }),
-        getBallotAnalytics(ballotId).catch((error) => {
+        getAnalyticsData(ballotId, 'all').catch((error) => {
           console.log('Analytics fetch failed (this is normal if no analytics data):', error);
           return null; // Analytics might not exist yet
         })
@@ -704,13 +684,6 @@ const BallotDetails = () => {
         >
           <i className="fas fa-chart-line"></i>
           Analytics
-        </button>
-        <button 
-          className={`tab-btn ${activeTab === 'settings' ? 'active' : ''}`}
-          onClick={() => setActiveTab('settings')}
-        >
-          <i className="fas fa-cog"></i>
-          Settings
         </button>
       </div>
 
@@ -1317,25 +1290,25 @@ const BallotDetails = () => {
                         <div className="position-stats">
                           <div className="stat-row">
                             <span>Total Votes:</span>
-                            <span>{position.totalVotes}</span>
+                            <span>{position.totalVotes || 0}</span>
                           </div>
                           <div className="stat-row">
                             <span>Candidates:</span>
-                            <span>{position.candidateCount}</span>
+                            <span>{position.candidateCount || 0}</span>
                           </div>
                           <div className="stat-row">
                             <span>Competitiveness:</span>
-                            <span className={`competitiveness ${position.competitiveness > 70 ? 'high' : position.competitiveness > 40 ? 'medium' : 'low'}`}>
-                              {position.competitiveness}%
+                            <span className={`competitiveness ${(position.competitiveness || 0) > 70 ? 'high' : (position.competitiveness || 0) > 40 ? 'medium' : 'low'}`}>
+                              {position.competitiveness || 0}%
                             </span>
                           </div>
                         </div>
                         <div className="top-candidates">
                           <h5>Top Candidates:</h5>
-                          {position.candidates.slice(0, 3).map((candidate, idx) => (
+                          {(position.candidates || []).slice(0, 3).map((candidate, idx) => (
                             <div key={idx} className="candidate-result">
                               <span className="candidate-name">{candidate.candidateName}</span>
-                              <span className="candidate-votes">{candidate.votes} votes ({candidate.percentage.toFixed(1)}%)</span>
+                              <span className="candidate-votes">{candidate.votes || 0} votes ({(candidate.percentage || 0).toFixed(1)}%)</span>
                             </div>
                           ))}
                         </div>
@@ -1349,40 +1322,6 @@ const BallotDetails = () => {
                   <div className="analytics-section">
                     <h3><i className="fas fa-building"></i> Department Performance Analytics</h3>
                     
-                    {/* Debug Information */}
-                    <div className="debug-info" style={{ background: '#f0f9ff', padding: '1rem', borderRadius: '0.5rem', marginBottom: '1rem', fontSize: '0.875rem' }}>
-                      <strong>Debug Info:</strong><br/>
-                      Analytics loaded: {analytics ? 'Yes' : 'No'}<br/>
-                      Department data: {analytics?.departmentAnalytics?.length || 0} departments<br/>
-                      Chart.js available: {typeof window.Chart !== 'undefined' ? 'Yes' : 'No'}<br/>
-                      <button 
-                        className="btn btn-sm btn-primary" 
-                        onClick={() => {
-                          console.log('Manual chart refresh triggered');
-                          initializeDepartmentCharts();
-                        }}
-                        style={{ marginTop: '0.5rem', marginRight: '0.5rem' }}
-                      >
-                        <i className="fas fa-sync-alt"></i> Force Refresh Charts
-                      </button>
-                      <button 
-                        className="btn btn-sm btn-secondary" 
-                        onClick={() => {
-                          console.log('Testing with sample data');
-                          const sampleData = [
-                            { departmentName: 'Computer Science', totalVotes: 150, participationRate: 85.5 },
-                            { departmentName: 'Information Technology', totalVotes: 120, participationRate: 78.2 },
-                            { departmentName: 'Business Administration', totalVotes: 90, participationRate: 72.1 },
-                            { departmentName: 'Education', totalVotes: 75, participationRate: 65.8 },
-                            { departmentName: 'Engineering', totalVotes: 60, participationRate: 58.3 }
-                          ];
-                          createChartsWithData(sampleData);
-                        }}
-                        style={{ marginTop: '0.5rem' }}
-                      >
-                        <i className="fas fa-chart-bar"></i> Test with Sample Data
-                      </button>
-                    </div>
                     
                     {/* Department Details Table - First */}
                     <div className="department-details-section">
@@ -1401,21 +1340,29 @@ const BallotDetails = () => {
                             </tr>
                           </thead>
                           <tbody>
-                            {analytics.departmentAnalytics.map((dept, index) => (
-                              <tr key={index}>
-                                <td className="dept-name">{dept.departmentName}</td>
-                                <td>{dept.registeredStudents.toLocaleString()}</td>
-                                <td>{dept.votedStudents.toLocaleString()}</td>
-                                <td>{dept.totalVotes.toLocaleString()}</td>
-                                <td>
-                                  <span className={`participation-rate ${dept.participationRate > 80 ? 'high' : dept.participationRate > 60 ? 'medium' : 'low'}`}>
-                                    {dept.participationRate.toFixed(1)}%
-                                  </span>
+                            {analytics.departmentAnalytics.filter(dept => dept.votesCast > 0).length > 0 ? (
+                              analytics.departmentAnalytics.filter(dept => dept.votesCast > 0).map((dept, index) => (
+                                <tr key={index}>
+                                  <td className="dept-name">{dept.departmentName}</td>
+                                  <td>{(dept.registeredVoters || 0).toLocaleString()}</td>
+                                  <td>{(dept.registeredVoters || 0).toLocaleString()}</td>
+                                  <td>{(dept.votesCast || 0).toLocaleString()}</td>
+                                  <td>
+                                    <span className={`participation-rate ${(dept.participationRate || 0) > 80 ? 'high' : (dept.participationRate || 0) > 60 ? 'medium' : 'low'}`}>
+                                      {(dept.participationRate || 0).toFixed(1)}%
+                                    </span>
+                                  </td>
+                                  <td>{dept.registeredVoters || 0}</td>
+                                  <td>{(dept.avgVotesPerVoter || 0).toFixed(1)}</td>
+                                </tr>
+                              ))
+                            ) : (
+                              <tr>
+                                <td colSpan="7" style={{ textAlign: 'center', padding: '2rem', color: '#6b7280' }}>
+                                  No department voting activity found
                                 </td>
-                                <td>{dept.uniqueCandidates}</td>
-                                <td>{dept.averageVotesPerVoter.toFixed(1)}</td>
                               </tr>
-                            ))}
+                            )}
                           </tbody>
                         </table>
                       </div>
@@ -1428,7 +1375,7 @@ const BallotDetails = () => {
                           <i className="fas fa-vote-yea"></i>
                         </div>
                         <div className="summary-content">
-                          <h4>{analytics.departmentAnalytics.reduce((sum, dept) => sum + dept.totalVotes, 0).toLocaleString()}</h4>
+                          <h4>{analytics.departmentAnalytics.filter(dept => dept.votesCast > 0).reduce((sum, dept) => sum + (dept.votesCast || 0), 0).toLocaleString()}</h4>
                           <p>Total Votes Cast</p>
                           <span className="summary-subtitle">Across all departments</span>
                         </div>
@@ -1438,7 +1385,7 @@ const BallotDetails = () => {
                           <i className="fas fa-users"></i>
                         </div>
                         <div className="summary-content">
-                          <h4>{analytics.departmentAnalytics.reduce((sum, dept) => sum + dept.registeredStudents, 0).toLocaleString()}</h4>
+                          <h4>{analytics.departmentAnalytics.filter(dept => dept.votesCast > 0).reduce((sum, dept) => sum + (dept.registeredVoters || 0), 0).toLocaleString()}</h4>
                           <p>Registered Students</p>
                           <span className="summary-subtitle">Students eligible to vote</span>
                         </div>
@@ -1448,9 +1395,13 @@ const BallotDetails = () => {
                           <i className="fas fa-percentage"></i>
                         </div>
                         <div className="summary-content">
-                          <h4>{analytics.departmentAnalytics.length > 0 ? 
-                            (analytics.departmentAnalytics.reduce((sum, dept) => sum + dept.votedStudents, 0) / 
-                             analytics.departmentAnalytics.reduce((sum, dept) => sum + dept.registeredStudents, 0) * 100).toFixed(1) : '0.0'}%</h4>
+                          <h4>{(() => {
+                            const activeDepts = analytics.departmentAnalytics.filter(dept => dept.votesCast > 0);
+                            if (activeDepts.length === 0) return '0.0';
+                            const totalRegistered = activeDepts.reduce((sum, dept) => sum + (dept.registeredVoters || 0), 0);
+                            const totalVotes = activeDepts.reduce((sum, dept) => sum + (dept.votesCast || 0), 0);
+                            return totalRegistered > 0 ? ((totalVotes / totalRegistered) * 100).toFixed(1) : '0.0';
+                          })()}%</h4>
                           <p>Overall Participation</p>
                           <span className="summary-subtitle">% of registered who voted</span>
                         </div>
@@ -1460,7 +1411,7 @@ const BallotDetails = () => {
                           <i className="fas fa-building"></i>
                         </div>
                         <div className="summary-content">
-                          <h4>{analytics.departmentAnalytics.length}</h4>
+                          <h4>{analytics.departmentAnalytics.filter(dept => dept.votesCast > 0).length}</h4>
                           <p>Departments</p>
                           <span className="summary-subtitle">Count of departments included</span>
                         </div>
@@ -1480,9 +1431,9 @@ const BallotDetails = () => {
                         </button>
                       </div>
                       <canvas id="departmentVotesChart" width="800" height="400"></canvas>
-                      {analytics.departmentAnalytics.length === 0 && (
+                      {analytics.departmentAnalytics.filter(dept => dept.votesCast > 0).length === 0 && (
                         <div className="chart-placeholder">
-                          <p>No department data available for chart</p>
+                          <p>No department voting activity found</p>
                         </div>
                       )}
                     </div>
@@ -1500,46 +1451,67 @@ const BallotDetails = () => {
                         </button>
                       </div>
                       <canvas id="departmentParticipationChart" width="600" height="400"></canvas>
-                      {analytics.departmentAnalytics.length === 0 && (
+                      {analytics.departmentAnalytics.filter(dept => dept.votesCast > 0).length === 0 && (
                         <div className="chart-placeholder">
-                          <p>No department data available for chart</p>
+                          <p>No department voting activity found</p>
                         </div>
                       )}
                     </div>
                   </div>
                 )}
 
-                {/* Partylist Analytics */}
-                {analytics.partylistAnalytics.length > 0 && (
+                {/* Partylist Performance */}
+                {analytics.partylistAnalytics && analytics.partylistAnalytics.length > 0 && (
                   <div className="analytics-section">
-                    <h3><i className="fas fa-flag"></i> Partylist Performance</h3>
-                    <div className="partylist-analytics-grid">
+                    <h2><i className="fas fa-users"></i> Partylist Performance</h2>
+                    <div className="partylist-performance-grid">
                       {analytics.partylistAnalytics.map((partylist, index) => (
                         <div key={index} className="partylist-card">
                           <div className="partylist-header">
-                            <div 
-                              className="partylist-color" 
-                              style={{ backgroundColor: partylist.partylistColor || '#6c757d' }}
-                            ></div>
-                            <h4>{partylist.partylistName}</h4>
+                            <div className="partylist-info">
+                              <h4>{partylist.partylistName}</h4>
+                              <span className="partylist-color" style={{ backgroundColor: partylist.partylistColor || partylist.color || '#6c757d' }}></span>
+                            </div>
+                            <span className="success-rate">{(partylist.successRate || 0)}%</span>
                           </div>
-                          <div className="partylist-stats">
-                            <div className="stat-row">
-                              <span>Total Votes:</span>
-                              <span>{partylist.totalVotes}</span>
+                          <div className="partylist-metrics">
+                            <div className="metric-row">
+                              <span>Total Candidates:</span>
+                              <span>{partylist.uniqueCandidates || partylist.totalCandidates || 0}</span>
                             </div>
-                            <div className="stat-row">
+                            <div className="metric-row">
+                              <span>Winning Candidates:</span>
+                              <span>{partylist.winningCandidates || 0}</span>
+                            </div>
+                            <div className="metric-row">
+                              <span>Total Votes Received:</span>
+                              <span>{partylist.totalVotes || 0}</span>
+                            </div>
+                            <div className="metric-row">
                               <span>Vote Share:</span>
-                              <span>{partylist.voteShare.toFixed(1)}%</span>
+                              <span>{(partylist.voteShare || 0).toFixed(1)}%</span>
                             </div>
-                            <div className="stat-row">
-                              <span>Candidates:</span>
-                              <span>{partylist.uniqueCandidates}</span>
+                            <div className="metric-row">
+                              <span>Success Rate:</span>
+                              <span className={`success ${(partylist.successRate || 0) > 70 ? 'high' : (partylist.successRate || 0) > 40 ? 'medium' : 'low'}`}>
+                                {(partylist.successRate || 0).toFixed(1)}%
+                              </span>
                             </div>
-                            <div className="stat-row">
-                              <span>Avg Votes/Candidate:</span>
-                              <span>{partylist.averageVotesPerCandidate.toFixed(1)}</span>
-                            </div>
+                          </div>
+                          <div className="partylist-positions">
+                            <h5>Performance by Position:</h5>
+                            {(partylist.positionPerformance || []).map((pos, idx) => (
+                              <div key={idx} className="position-performance">
+                                <span className="position-name">{pos.positionName}</span>
+                                <div className="performance-bar">
+                                  <div 
+                                    className="performance-fill" 
+                                    style={{ width: `${pos.performance || 0}%` }} 
+                                  ></div>
+                                </div>
+                                <span className="performance-value">{(pos.performance || 0).toFixed(1)}%</span>
+                              </div>
+                            ))}
                           </div>
                         </div>
                       ))}
@@ -1556,7 +1528,7 @@ const BallotDetails = () => {
                         <i className="fas fa-check-circle"></i>
                       </div>
                       <div className="pattern-content">
-                        <h4>{analytics.votingPatterns.completeVotingRate.toFixed(1)}%</h4>
+                        <h4>{(analytics.votingPatterns?.completeVotingRate || 0).toFixed(1)}%</h4>
                         <p>Complete Voting Rate</p>
                       </div>
                     </div>
@@ -1565,7 +1537,7 @@ const BallotDetails = () => {
                         <i className="fas fa-clock"></i>
                       </div>
                       <div className="pattern-content">
-                        <h4>{analytics.votingPatterns.partialVotingRate.toFixed(1)}%</h4>
+                        <h4>{(analytics.votingPatterns?.partialVotingRate || 0).toFixed(1)}%</h4>
                         <p>Partial Voting Rate</p>
                       </div>
                     </div>
@@ -1574,7 +1546,7 @@ const BallotDetails = () => {
                         <i className="fas fa-times-circle"></i>
                       </div>
                       <div className="pattern-content">
-                        <h4>{analytics.votingPatterns.abstentionRate.toFixed(1)}%</h4>
+                        <h4>{(analytics.votingPatterns?.abstentionRate || 0).toFixed(1)}%</h4>
                         <p>Abstention Rate</p>
                       </div>
                     </div>
@@ -1587,18 +1559,18 @@ const BallotDetails = () => {
                   <div className="time-analytics-grid">
                     <div className="time-card">
                       <h4>Ballot Duration</h4>
-                      <p>{analytics.timeAnalytics.duration} days</p>
+                      <p>{analytics.timeAnalytics?.duration || 0} days</p>
                     </div>
                     <div className="time-card">
                       <h4>Status</h4>
-                      <p className={`status ${analytics.timeAnalytics.isActive ? 'active' : analytics.timeAnalytics.isEnded ? 'ended' : 'scheduled'}`}>
-                        {analytics.timeAnalytics.isActive ? 'Active' : analytics.timeAnalytics.isEnded ? 'Ended' : 'Scheduled'}
+                      <p className={`status ${analytics.timeAnalytics?.isActive ? 'active' : analytics.timeAnalytics?.isEnded ? 'ended' : 'scheduled'}`}>
+                        {analytics.timeAnalytics?.isActive ? 'Active' : analytics.timeAnalytics?.isEnded ? 'Ended' : 'Scheduled'}
                       </p>
                     </div>
-                    {analytics.timeAnalytics.isActive && (
+                    {analytics.timeAnalytics?.isActive && (
                       <div className="time-card">
                         <h4>Time Remaining</h4>
-                        <p>{analytics.timeAnalytics.timeRemaining} days</p>
+                        <p>{analytics.timeAnalytics?.timeRemaining || 0} days</p>
                       </div>
                     )}
                     <div className="time-card">
@@ -1606,10 +1578,10 @@ const BallotDetails = () => {
                       <div className="progress-bar">
                         <div 
                           className="progress-fill" 
-                          style={{ width: `${analytics.timeAnalytics.votingProgress}%` }}
+                          style={{ width: `${analytics.timeAnalytics?.votingProgress || 0}%` }}
                         ></div>
                       </div>
-                      <p>{analytics.timeAnalytics.votingProgress.toFixed(1)}%</p>
+                      <p>{(analytics.timeAnalytics?.votingProgress || 0).toFixed(1)}%</p>
                     </div>
                   </div>
                 </div>
@@ -1624,65 +1596,6 @@ const BallotDetails = () => {
           </div>
         )}
 
-        {activeTab === 'settings' && (
-          <div className="settings-tab">
-            <div className="settings-grid">
-              <div className="setting-card">
-                <h3>Ballot Configuration</h3>
-                <div className="setting-item">
-                  <label>Ballot Title</label>
-                  <input type="text" value={ballot.Ballot_Title} readOnly />
-                </div>
-                <div className="setting-item">
-                  <label>Description</label>
-                  <textarea value={ballot.Ballot_Description || ''} readOnly />
-                </div>
-                <div className="setting-item">
-                  <label>Start Date</label>
-                  <input type="datetime-local" value={new Date(ballot.Ballot_StartDate).toISOString().slice(0, 16)} readOnly />
-                </div>
-                <div className="setting-item">
-                  <label>End Date</label>
-                  <input type="datetime-local" value={new Date(ballot.Ballot_EndDate).toISOString().slice(0, 16)} readOnly />
-                </div>
-              </div>
-
-              <div className="setting-card">
-                <h3>Voting Rules</h3>
-                <div className="setting-item">
-                  <label>Max Votes Per User</label>
-                  <input type="number" value={ballot.Ballot_MaxVotesPerUser} readOnly />
-                </div>
-                <div className="setting-item">
-                  <label>Allow Multiple Votes</label>
-                  <input type="checkbox" checked={ballot.Ballot_AllowMultipleVotes} readOnly />
-                </div>
-                <div className="setting-item">
-                  <label>Require All Positions</label>
-                  <input type="checkbox" checked={ballot.Ballot_RequireAllPositions} readOnly />
-                </div>
-              </div>
-
-              <div className="setting-card">
-                <h3>Results Configuration</h3>
-                <div className="setting-item">
-                  <label>Show Results</label>
-                  <input type="checkbox" checked={ballot.Ballot_ShowResults} readOnly />
-                </div>
-                <div className="setting-item">
-                  <label>Show Live Results</label>
-                  <input type="checkbox" checked={ballot.Ballot_ShowLiveResults} readOnly />
-                </div>
-                {ballot.Ballot_ShowResultsAfter && (
-                  <div className="setting-item">
-                    <label>Show Results After</label>
-                    <input type="datetime-local" value={new Date(ballot.Ballot_ShowResultsAfter).toISOString().slice(0, 16)} readOnly />
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Print Preview Component */}
         <PrintPreview ballot={ballot} results={results} />

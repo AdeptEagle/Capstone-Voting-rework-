@@ -736,6 +736,9 @@ export class BallotService {
         }
       }
 
+      // Check if ballot is linked to an election (optional)
+      const electionIdValue = (ballot as any).electionId as string | null | undefined;
+
       // Create votes using the existing Vote model with ballot context
       return await this.prisma.$transaction(async (tx) => {
         const createdVotes = [];
@@ -744,18 +747,26 @@ export class BallotService {
           const { positionId, candidateId } = vote;
           
           // Create vote record
+          const voteData_create: any = {
+            id: this.generateId(),
+            // Relation connections (preferred over raw FK fields for required relations)
+            voter: { connect: { id: userId } },
+            candidate: { connect: { id: candidateId } },
+            position: { connect: { id: positionId } },
+            ballot: { connect: { id: ballotId } },
+            // Metadata
+            ipAddress: voteData.ipAddress || null,
+            userAgent: voteData.userAgent || null,
+            sessionId: voteData.sessionId || null,
+          };
+
+          // Only add election connection if ballot has an election
+          if (electionIdValue) {
+            voteData_create.election = { connect: { id: electionIdValue } };
+          }
+
           const voteRecord = await tx.vote.create({
-            data: {
-              id: this.generateId(),
-              voterId: userId,
-              candidateId: candidateId,
-              electionId: null, // Ballots can be independent of elections
-              positionId: positionId,
-              ballotId: ballotId, // Use ballotId to make votes unique per ballot
-              ipAddress: voteData.ipAddress || null,
-              userAgent: voteData.userAgent || null,
-              sessionId: voteData.sessionId || null,
-            },
+            data: voteData_create,
             include: {
               voter: {
                 select: {

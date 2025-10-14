@@ -445,6 +445,12 @@ const Vote = () => {
         });
       });
       
+      // Client-side validation to prevent empty submissions
+      if (!votes.length) {
+        setError('No votes selected. Please select at least one candidate.');
+        return;
+      }
+
       console.log('Prepared votes for ballot submission:', votes);
       
       // Submit votes using ballot system
@@ -471,14 +477,7 @@ const Vote = () => {
       console.error('Error response headers:', err.response?.headers);
       
       // Try to get more detailed error information
-      let errorMessage = 'Failed to submit votes';
-      if (err.response?.data?.message) {
-        errorMessage = err.response.data.message;
-      } else if (err.response?.data?.error) {
-        errorMessage = err.response.data.error;
-      } else if (err.message) {
-        errorMessage = err.message;
-      }
+      let errorMessage = err.response?.data?.message || err.response?.data?.error || err.message || 'Failed to submit votes';
       
       setError(errorMessage);
     } finally {

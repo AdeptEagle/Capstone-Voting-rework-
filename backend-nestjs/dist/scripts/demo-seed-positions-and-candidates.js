@@ -2,6 +2,31 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const client_1 = require("@prisma/client");
 const prisma = new client_1.PrismaClient();
+function generatePositionId(positionTitle) {
+    const positionIdMap = {
+        'President': 'PRES',
+        'Vice-President': 'V-PRES',
+        'Secretary': 'SEC',
+        'Auditor': 'AUD',
+        'Treasurer': 'TREAS',
+        'PIO Internal': 'PIO-INT',
+        'PIO External': 'PIO-EXT',
+        'Senator': 'SEN',
+        'Internal Vice-President': 'INT-VP',
+        'External Vice-President': 'EXT-VP',
+        '1st Year Representative': '1YR-REP',
+        '2nd Year Representative': '2YR-REP',
+        '3rd Year Representative': '3YR-REP',
+        '4th Year Representative': '4YR-REP',
+        'Public Relations Officer': 'PRO'
+    };
+    if (positionIdMap[positionTitle]) {
+        return positionIdMap[positionTitle];
+    }
+    const words = positionTitle.split(' ');
+    const id = words.map(word => word.substring(0, 3)).join('').toUpperCase();
+    return id.substring(0, 8);
+}
 function generateId() {
     const firstPart = Math.random().toString(36).substring(2, 6).toUpperCase();
     const secondPart = Math.random().toString(36).substring(2, 7).toUpperCase();
@@ -60,7 +85,7 @@ async function demoSeedPositionsAndCandidates() {
                     console.log(`🔄 Creating: ${position.title}`);
                     const createdPosition = await prisma.position.create({
                         data: {
-                            id: generateId(),
+                            id: generatePositionId(position.title),
                             Position_Title: position.title,
                             Position_Description: position.description,
                             voteLimit: position.voteLimit,
