@@ -1270,7 +1270,7 @@ export const createBallotFromTemplate = async (templateId, ballotData) => {
 
 export const updateBallot = async (id, ballotData) => {
   try {
-    const response = await api.patch(`/ballots/${id}`, ballotData);
+    const response = await api.put(`/ballots/${id}`, ballotData);
     return response.data;
   } catch (error) {
     console.error('Error updating ballot:', error);

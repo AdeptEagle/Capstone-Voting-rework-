@@ -265,7 +265,7 @@ const BallotDetails = () => {
             data: {
               labels: departmentData.map(dept => dept.departmentName),
               datasets: [{
-                data: departmentData.map(dept => dept.participationRate),
+                data: departmentData.map(dept => dept.votesCast),
                 backgroundColor: [
                   '#A7D9F8', // Light pastel blue
                   '#F8A5C2', // Light pink/coral
@@ -298,7 +298,9 @@ const BallotDetails = () => {
                     label: function(context) {
                       const label = context.label || '';
                       const value = context.parsed;
-                      return `${label}: ${value.toFixed(1)}%`;
+                      const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                      const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
+                      return `${label}: ${value} votes (${percentage}%)`;
                     }
                   }
                 }
@@ -1005,7 +1007,65 @@ const BallotDetails = () => {
                   </div>
                 </div>
 
-                {/* Leading Candidates Quick Glance */}
+                {/* Detailed Results by Position - moved to top */}
+                <div className="detailed-results-section">
+                  <h3>Detailed Results by Position</h3>
+                  <div className="detailed-results-grid">
+                    {ballot.ballotPositions?.map(ballotPosition => {
+                      const positionResults = getPositionResults(ballotPosition.position.id);
+                      const totalPositionVotes = positionResults.reduce((sum, result) => sum + result.BallotResultDetails_VoteCount, 0);
+                      
+                      return (
+                        <div key={ballotPosition.position.id} className="detailed-result-card">
+                          <div className="detailed-result-header">
+                            <h4>{ballotPosition.position.Position_Title}</h4>
+                            <span className="total-votes">{totalPositionVotes} votes</span>
+                          </div>
+                          
+                          <div className="all-candidates-list">
+                            {positionResults.length > 0 ? (
+                              positionResults.map((result, index) => {
+                                const isWinner = index === 0 && result.BallotResultDetails_VoteCount > 0;
+                                const percentage = result.BallotResultDetails_Percentage || 0;
+                                
+                                return (
+                                  <div key={result.BallotResultDetails_CandidateId} className={`candidate-item ${isWinner ? 'winner' : ''}`}>
+                                    <div className="candidate-details">
+                                      <div className="candidate-name">
+                                        {isWinner && <i className="fas fa-crown"></i>}
+                                        {getCandidateName(result.BallotResultDetails_CandidateId)}
+                                      </div>
+                                      <div className="vote-stats">
+                                        <span className="vote-count">{result.BallotResultDetails_VoteCount} votes</span>
+                                        <span className="vote-percentage">{percentage.toFixed(1)}%</span>
+                                      </div>
+                                      <div className="progress-bar">
+                                        <div 
+                                          className="progress-fill"
+                                          style={{ 
+                                            width: '0%'
+                                          }}
+                                          data-percent={percentage}
+                                        ></div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              })
+                            ) : (
+                              <div className="no-candidates">
+                                <i className="fas fa-user-slash"></i>
+                                <span>No candidates yet</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Leading Candidates Quick Glance - moved below detailed */}
                 <div className="leading-candidates-section">
                   <h3>Leading Candidates by Position</h3>
                   <div className="leading-candidates-grid">
@@ -1048,7 +1108,7 @@ const BallotDetails = () => {
                   </div>
                 </div>
 
-                {/* Partylist Results Section */}
+                {/* Partylist Results Section - moved to bottom */}
                 {partylistResults && partylistResults.length > 0 && (
                   <div className="partylist-results-section">
                     <h3>Partylist Results</h3>
@@ -1118,7 +1178,7 @@ const BallotDetails = () => {
                                   className="progress-fill"
                                   style={{ 
                                     width: '0%',
-                                    backgroundColor: partylist.partylistColor || '#3b82f6'
+                                    backgroundColor: partylist.partylistColor || '#93c5fd'
                                   }}
                                   data-percent={partylist.percentage}
                                 ></div>
@@ -1130,139 +1190,6 @@ const BallotDetails = () => {
                     </div>
                   </div>
                 )}
-
-                {/* Analytics Section */}
-                <div className="analytics-section">
-                  <h3>Voting Analytics</h3>
-                  <div className="analytics-grid">
-                    <div className="analytics-card">
-                      <div className="analytics-header">
-                        <i className="fas fa-trophy"></i>
-                        <h4>Leading Position</h4>
-                      </div>
-                      <div className="analytics-content">
-                        <p className="analytics-value">{getLeadingPosition()}</p>
-                        <p className="analytics-label">Most competitive race</p>
-                      </div>
-                    </div>
-                    
-                    <div className="analytics-card">
-                      <div className="analytics-header">
-                        <i className="fas fa-balance-scale"></i>
-                        <h4>Vote Distribution</h4>
-                      </div>
-                      <div className="analytics-content">
-                        <p className="analytics-value">{getVoteDistribution()}</p>
-                        <p className="analytics-label">Vote spread analysis</p>
-                      </div>
-                    </div>
-                    
-                    <div className="analytics-card">
-                      <div className="analytics-header">
-                        <i className="fas fa-clock"></i>
-                        <h4>Voting Activity</h4>
-                      </div>
-                      <div className="analytics-content">
-                        <p className="analytics-value">{getVotingActivity()}</p>
-                        <p className="analytics-label">Peak voting time</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Trend Analysis */}
-                <div className="trend-analysis">
-                  <h3>Vote Distribution Analysis</h3>
-                  <div className="trend-grid">
-                    {ballot.ballotPositions?.map(ballotPosition => {
-                      const positionResults = getPositionResults(ballotPosition.position.id);
-                      const totalPositionVotes = positionResults.reduce((sum, result) => sum + result.BallotResultDetails_VoteCount, 0);
-                      const maxVotes = Math.max(...positionResults.map(r => r.BallotResultDetails_VoteCount));
-                      
-                      return (
-                        <div key={ballotPosition.position.id} className="trend-card">
-                          <div className="trend-header">
-                            <h4>{ballotPosition.position.Position_Title}</h4>
-                            <span className="trend-total">{totalPositionVotes} votes</span>
-                          </div>
-                          <div className="trend-bars">
-                            {positionResults.map((result, index) => {
-                              const percentage = totalPositionVotes > 0 ? (result.BallotResultDetails_VoteCount / totalPositionVotes) * 100 : 0;
-                              const isLeading = result.BallotResultDetails_VoteCount === maxVotes && maxVotes > 0;
-                              
-                              return (
-                                <div key={result.BallotResultDetails_CandidateId} className="trend-bar-item">
-                                  <div className="candidate-info">
-                                    <div className="candidate-name">{getCandidateName(result.BallotResultDetails_CandidateId)}</div>
-                                    <div className="vote-stats">
-                                      <span className="vote-count">{result.BallotResultDetails_VoteCount} votes</span>
-                                      <span className="vote-percentage">{percentage.toFixed(1)}%</span>
-                                    </div>
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div className="position-results">
-                  {ballot.ballotPositions?.map(ballotPosition => {
-                    const positionResults = getPositionResults(ballotPosition.position.id);
-                    
-                    return (
-                      <div key={ballotPosition.position.id} className="position-result-card">
-                        <h3>{ballotPosition.position.Position_Title}</h3>
-                        
-                        <div className="candidates-results">
-                          {positionResults.map((result, index) => {
-                            const isWinner = index === 0 && result.BallotResultDetails_VoteCount > 0;
-                            const percentage = result.BallotResultDetails_Percentage || 0;
-                            
-                            return (
-                              <div 
-                                key={result.BallotResultDetails_CandidateId}
-                                className={`candidate-result-card ${isWinner ? 'winner' : ''}`}
-                              >
-                                <div className="candidate-header">
-                                  <div className="candidate-name-section">
-                                    {isWinner && <i className="fas fa-crown winner-crown"></i>}
-                                    <span className="candidate-name">{getCandidateName(result.BallotResultDetails_CandidateId)}</span>
-                                  </div>
-                                  <div className="vote-count-display">
-                                    <span className="vote-number">{result.BallotResultDetails_VoteCount}</span>
-                                    <span className="vote-label">votes</span>
-                                  </div>
-                                </div>
-                                
-                                <div className="candidate-stats">
-                                  <div className="percentage-display">
-                                    <span className="percentage-number">{percentage.toFixed(1)}%</span>
-                                  </div>
-                                  <div className="progress-container">
-                                    <div className="progress-bar">
-                                      <div 
-                                        className="progress-fill"
-                                        style={{ 
-                                          width: '0%',
-                                          background: isWinner ? '#10b981' : '#3b82f6'
-                                        }}
-                                        data-percent={percentage}
-                                      ></div>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
               </div>
             ) : (
               <div className="no-results">
@@ -1296,21 +1223,17 @@ const BallotDetails = () => {
                             <span>Candidates:</span>
                             <span>{position.candidateCount || 0}</span>
                           </div>
-                          <div className="stat-row">
-                            <span>Competitiveness:</span>
-                            <span className={`competitiveness ${(position.competitiveness || 0) > 70 ? 'high' : (position.competitiveness || 0) > 40 ? 'medium' : 'low'}`}>
-                              {position.competitiveness || 0}%
-                            </span>
-                          </div>
+                          {/* Competitiveness metric removed per new spec */}
                         </div>
-                        <div className="top-candidates">
-                          <h5>Top Candidates:</h5>
-                          {(position.candidates || []).slice(0, 3).map((candidate, idx) => (
-                            <div key={idx} className="candidate-result">
-                              <span className="candidate-name">{candidate.candidateName}</span>
-                              <span className="candidate-votes">{candidate.votes || 0} votes ({(candidate.percentage || 0).toFixed(1)}%)</span>
-                            </div>
-                          ))}
+                        <div className="vote-distribution-section">
+                          <div className="vote-distribution-header">Vote Distribution:</div>
+                          <div className="vote-distribution">
+                            {position.topCandidates?.slice(0, 3).map((candidate, idx) => (
+                              <div key={idx} className="candidate-bar">
+                                <span className="candidate-name">{candidate.candidateName}</span> : <span className="vote-percentage">{candidate.percentage.toFixed(1)}%</span>
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -1472,7 +1395,7 @@ const BallotDetails = () => {
                               <h4>{partylist.partylistName}</h4>
                               <span className="partylist-color" style={{ backgroundColor: partylist.partylistColor || partylist.color || '#6c757d' }}></span>
                             </div>
-                            <span className="success-rate">{(partylist.successRate || 0)}%</span>
+                            <span className="success-rate">{(partylist.voteShare || 0).toFixed(1)}%</span>
                           </div>
                           <div className="partylist-metrics">
                             <div className="metric-row">
@@ -1491,12 +1414,7 @@ const BallotDetails = () => {
                               <span>Vote Share:</span>
                               <span>{(partylist.voteShare || 0).toFixed(1)}%</span>
                             </div>
-                            <div className="metric-row">
-                              <span>Success Rate:</span>
-                              <span className={`success ${(partylist.successRate || 0) > 70 ? 'high' : (partylist.successRate || 0) > 40 ? 'medium' : 'low'}`}>
-                                {(partylist.successRate || 0).toFixed(1)}%
-                              </span>
-                            </div>
+                            {/* Success Rate removed to match user analytics; header shows Vote Share */}
                           </div>
                           <div className="partylist-positions">
                             <h5>Performance by Position:</h5>
@@ -1519,72 +1437,7 @@ const BallotDetails = () => {
                   </div>
                 )}
 
-                {/* Voting Patterns */}
-                <div className="analytics-section">
-                  <h3><i className="fas fa-chart-line"></i> Voting Patterns</h3>
-                  <div className="voting-patterns-grid">
-                    <div className="pattern-card">
-                      <div className="pattern-icon">
-                        <i className="fas fa-check-circle"></i>
-                      </div>
-                      <div className="pattern-content">
-                        <h4>{(analytics.votingPatterns?.completeVotingRate || 0).toFixed(1)}%</h4>
-                        <p>Complete Voting Rate</p>
-                      </div>
-                    </div>
-                    <div className="pattern-card">
-                      <div className="pattern-icon">
-                        <i className="fas fa-clock"></i>
-                      </div>
-                      <div className="pattern-content">
-                        <h4>{(analytics.votingPatterns?.partialVotingRate || 0).toFixed(1)}%</h4>
-                        <p>Partial Voting Rate</p>
-                      </div>
-                    </div>
-                    <div className="pattern-card">
-                      <div className="pattern-icon">
-                        <i className="fas fa-times-circle"></i>
-                      </div>
-                      <div className="pattern-content">
-                        <h4>{(analytics.votingPatterns?.abstentionRate || 0).toFixed(1)}%</h4>
-                        <p>Abstention Rate</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Time Analytics */}
-                <div className="analytics-section">
-                  <h3><i className="fas fa-clock"></i> Time Analytics</h3>
-                  <div className="time-analytics-grid">
-                    <div className="time-card">
-                      <h4>Ballot Duration</h4>
-                      <p>{analytics.timeAnalytics?.duration || 0} days</p>
-                    </div>
-                    <div className="time-card">
-                      <h4>Status</h4>
-                      <p className={`status ${analytics.timeAnalytics?.isActive ? 'active' : analytics.timeAnalytics?.isEnded ? 'ended' : 'scheduled'}`}>
-                        {analytics.timeAnalytics?.isActive ? 'Active' : analytics.timeAnalytics?.isEnded ? 'Ended' : 'Scheduled'}
-                      </p>
-                    </div>
-                    {analytics.timeAnalytics?.isActive && (
-                      <div className="time-card">
-                        <h4>Time Remaining</h4>
-                        <p>{analytics.timeAnalytics?.timeRemaining || 0} days</p>
-                      </div>
-                    )}
-                    <div className="time-card">
-                      <h4>Progress</h4>
-                      <div className="progress-bar">
-                        <div 
-                          className="progress-fill" 
-                          style={{ width: `${analytics.timeAnalytics?.votingProgress || 0}%` }}
-                        ></div>
-                      </div>
-                      <p>{(analytics.timeAnalytics?.votingProgress || 0).toFixed(1)}%</p>
-                    </div>
-                  </div>
-                </div>
+                {/* Voting Patterns and Time Analytics sections removed */}
               </div>
             ) : (
               <div className="analytics-loading">

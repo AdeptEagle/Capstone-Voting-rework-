@@ -167,22 +167,26 @@ const BallotSelection = () => {
                   <p className="ballot-description">{election.Election_Description}</p>
                 )}
 
-                <div className="ballot-details">
-                  <div className="detail-item">
-                    <i className="fas fa-calendar-alt"></i>
-                    <span>Starts: {formatDate(election.startDate)}</span>
+                <div className="ballot-details two-column">
+                  <div className="details-row">
+                    <div className="detail-item">
+                      <i className="fas fa-calendar-alt"></i>
+                      <span>Starts: {formatDate(election.startDate)}</span>
+                    </div>
+                    <div className="detail-item">
+                      <i className="fas fa-calendar-check"></i>
+                      <span>Ends: {formatDate(election.endDate)}</span>
+                    </div>
                   </div>
-                  <div className="detail-item">
-                    <i className="fas fa-calendar-check"></i>
-                    <span>Ends: {formatDate(election.endDate)}</span>
-                  </div>
-                  <div className="detail-item">
-                    <i className="fas fa-users"></i>
-                    <span>Positions: {election.electionPositions?.length || 0}</span>
-                  </div>
-                  <div className="detail-item">
-                    <i className="fas fa-user-tie"></i>
-                    <span>Candidates: {election.electionCandidates?.length || 0}</span>
+                  <div className="details-row">
+                    <div className="detail-item">
+                      <i className="fas fa-users"></i>
+                      <span>Positions: {election.electionPositions?.length || 0}</span>
+                    </div>
+                    <div className="detail-item">
+                      <i className="fas fa-user-tie"></i>
+                      <span>Candidates: {election.electionCandidates?.length || 0}</span>
+                    </div>
                   </div>
                 </div>
 
@@ -219,22 +223,26 @@ const BallotSelection = () => {
                   <p className="ballot-description">{ballot.Ballot_Description}</p>
                 )}
 
-                <div className="ballot-details">
-                  <div className="detail-item">
-                    <i className="fas fa-calendar-alt"></i>
-                    <span>Starts: {formatDate(ballot.Ballot_StartDate)}</span>
+                <div className="ballot-details two-column">
+                  <div className="details-row">
+                    <div className="detail-item">
+                      <i className="fas fa-calendar-alt"></i>
+                      <span>Starts: {formatDate(ballot.Ballot_StartDate)}</span>
+                    </div>
+                    <div className="detail-item">
+                      <i className="fas fa-calendar-check"></i>
+                      <span>Ends: {formatDate(ballot.Ballot_EndDate)}</span>
+                    </div>
                   </div>
-                  <div className="detail-item">
-                    <i className="fas fa-calendar-check"></i>
-                    <span>Ends: {formatDate(ballot.Ballot_EndDate)}</span>
-                  </div>
-                  <div className="detail-item">
-                    <i className="fas fa-users"></i>
-                    <span>Positions: {ballot.ballotPositions?.length || 0}</span>
-                  </div>
-                  <div className="detail-item">
-                    <i className="fas fa-user-tie"></i>
-                    <span>Candidates: {ballot.ballotCandidates?.length || 0}</span>
+                  <div className="details-row">
+                    <div className="detail-item">
+                      <i className="fas fa-users"></i>
+                      <span>Positions: {ballot.ballotPositions?.length || 0}</span>
+                    </div>
+                    <div className="detail-item">
+                      <i className="fas fa-user-tie"></i>
+                      <span>Candidates: {ballot.ballotCandidates?.length || 0}</span>
+                    </div>
                   </div>
                 </div>
 

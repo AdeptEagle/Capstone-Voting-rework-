@@ -51,14 +51,14 @@
   margin-bottom: 1.5rem;
   font-size: 1.75rem;
   font-weight: 600;
-  border-bottom: 3px solid #3498db;
+  border-bottom: 3px solid #93c5fd;
   padding-bottom: 0.5rem;
 }
 
 /* Position Analytics */
 .position-analytics-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
   gap: 1.5rem;
 }
 
@@ -142,42 +142,34 @@
   color: #721c24;
 }
 
-.vote-distribution {
+.vote-distribution-section {
   margin-top: 1rem;
 }
 
-.candidate-bar {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+.vote-distribution-header {
+  font-size: 0.875rem;
+  color: #495057;
+  font-weight: 600;
   margin-bottom: 0.5rem;
 }
 
-.candidate-name {
-  flex: 1;
+.vote-distribution {
   font-size: 0.875rem;
   color: #495057;
+  line-height: 1.6;
 }
 
-.vote-bar {
-  flex: 2;
-  height: 8px;
-  background: #e9ecef;
-  border-radius: 4px;
-  overflow: hidden;
+.candidate-bar {
+  margin-bottom: 0.25rem;
 }
 
-.vote-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #3498db, #2980b9);
-  transition: width 0.3s ease;
+.candidate-name {
+  font-weight: 500;
 }
 
-.vote-count {
-  font-size: 0.75rem;
+.vote-percentage {
+  font-weight: 600;
   color: #6c757d;
-  min-width: 60px;
-  text-align: right;
 }
 
 /* Department Performance */
@@ -291,7 +283,7 @@
 .department-summary-cards .summary-icon {
   width: 3rem;
   height: 3rem;
-  background: #3b82f6;
+  background: #93c5fd;
   color: white;
   border-radius: 50%;
   display: flex;
@@ -588,7 +580,7 @@
   color: #2c3e50;
   margin-bottom: 1rem;
   font-size: 1.25rem;
-  border-bottom: 2px solid #3498db;
+  border-bottom: 2px solid #93c5fd;
   padding-bottom: 0.5rem;
 }
 
@@ -656,7 +648,7 @@
   color: #2c3e50;
   margin-bottom: 1rem;
   font-size: 1.25rem;
-  border-bottom: 2px solid #3498db;
+  border-bottom: 2px solid #93c5fd;
   padding-bottom: 0.5rem;
 }
 
@@ -715,7 +707,7 @@
   color: #2c3e50;
   margin-bottom: 1rem;
   font-size: 1.25rem;
-  border-bottom: 2px solid #3498db;
+  border-bottom: 2px solid #93c5fd;
   padding-bottom: 0.5rem;
 }
 
@@ -779,6 +771,10 @@
     grid-template-columns: 1fr;
   }
   
+  .vote-distribution {
+    font-size: 0.8rem;
+  }
+  
   .analytics-section {
     padding: 1.5rem;
   }
@@ -819,6 +815,10 @@
   .time-card,
   .summary-card {
     padding: 1rem;
+  }
+  
+  .vote-distribution {
+    font-size: 0.75rem;
   }
 }
 

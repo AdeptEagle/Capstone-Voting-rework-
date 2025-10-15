@@ -67,7 +67,7 @@
 
 .status-badge.upcoming {
   background-color: #dbeafe;
-  color: #1e40af;
+  color: #60a5fa;
 }
 
 .status-badge.cancelled {
@@ -109,9 +109,9 @@
 }
 
 .btn-primary {
-  background-color: #3b82f6;
+  background-color: #93c5fd;
   color: white;
-  border-color: #3b82f6;
+  border-color: #93c5fd;
 }
 
 .btn-primary:hover {
@@ -165,12 +165,12 @@
 
 .btn-outline {
   background-color: transparent;
-  color: #3b82f6;
-  border-color: #3b82f6;
+  color: #93c5fd;
+  border-color: #93c5fd;
 }
 
 .btn-outline:hover {
-  background-color: #3b82f6;
+  background-color: #93c5fd;
   color: white;
 }
 
@@ -245,7 +245,7 @@
 }
 
 .tab-btn.active {
-  color: #3b82f6;
+  color: #93c5fd;
   border-bottom-color: #3b82f6;
   background: #f9fafb;
 }
@@ -372,7 +372,7 @@
 }
 
 .action-btn.btn-primary {
-  background: #3b82f6;
+  background: #93c5fd;
   color: white;
 }
 
@@ -581,7 +581,7 @@
   justify-content: center;
   font-size: 1.25rem;
   color: white;
-  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  background: linear-gradient(135deg, #93c5fd, #60a5fa);
 }
 
 .summary-content h3 {
@@ -651,7 +651,7 @@
 }
 
 .analytics-header i {
-  color: #3b82f6;
+  color: #93c5fd;
   font-size: 1.125rem;
 }
 
@@ -784,9 +784,9 @@
 }
 
 .realtime-btn.active {
-  background: #3b82f6;
+  background: #93c5fd;
   color: white;
-  border-color: #3b82f6;
+  border-color: #93c5fd;
 }
 
 .realtime-btn.active:hover {
@@ -823,7 +823,7 @@
 }
 
 .last-updated i {
-  color: #3b82f6;
+  color: #93c5fd;
 }
 
 /* Leading Candidates Quick Glance */
@@ -936,7 +936,7 @@
 }
 
 .vote-count {
-  color: #3b82f6;
+  color: #93c5fd;
   font-size: 0.875rem;
   font-weight: 600;
   background: #dbeafe;
@@ -1086,7 +1086,7 @@
 }
 
 .candidate-info .vote-count {
-  color: #3b82f6;
+  color: #93c5fd;
   font-size: 0.875rem;
   font-weight: 600;
   background: #dbeafe;
@@ -1609,6 +1609,220 @@
   background-color: inherit;
   color: inherit;
   border-color: inherit;
+}
+
+/* Detailed Results Styles - Using Leading Candidates Design */
+.detailed-results-section {
+  background: white;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.detailed-results-section h3 {
+  color: #1f2937;
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0 0 1.5rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.detailed-results-section h3::before {
+  content: '📊';
+  font-size: 1.5rem;
+}
+
+.detailed-results-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.detailed-result-card {
+  background: #f8fafc;
+  border-radius: 0.5rem;
+  padding: 1.25rem;
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s;
+}
+
+.detailed-result-card:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.detailed-result-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.detailed-result-header h4 {
+  color: #1f2937;
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.total-votes {
+  background: #93c5fd;
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.all-candidates-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.candidate-item {
+  background: white;
+  border-radius: 0.375rem;
+  padding: 0.75rem;
+  border: 1px solid #e5e7eb;
+  transition: all 0.2s ease;
+}
+
+.candidate-item.winner {
+  background: #f0f9ff;
+  border-color: #93c5fd;
+  box-shadow: 0 2px 4px rgba(147, 197, 253, 0.2);
+}
+
+.candidate-item:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.candidate-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: stretch;
+  text-align: left;
+  width: 100%;
+}
+
+.candidate-name {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #1f2937;
+  font-size: 1rem;
+  font-weight: 600;
+  justify-content: flex-start;
+}
+
+.candidate-name i {
+  color: #f59e0b;
+  font-size: 1rem;
+}
+
+.vote-stats {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+}
+
+.vote-count {
+  color: #93c5fd;
+  font-size: 0.875rem;
+  font-weight: 600;
+  background: #dbeafe;
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.375rem;
+  flex: 1;
+  text-align: center;
+  min-width: 0;
+}
+
+.vote-percentage {
+  color: #059669;
+  font-size: 0.875rem;
+  font-weight: 600;
+  background: #dcfce7;
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.375rem;
+  flex: 1;
+  text-align: center;
+  min-width: 0;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 6px;
+  background: #e5e7eb;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-top: 0.5rem;
+  display: block;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #93c5fd, #60a5fa);
+  transition: width 0.3s ease;
+  border-radius: 3px;
+}
+
+.no-candidates {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  color: #6b7280;
+  font-style: italic;
+  padding: 1rem;
+  background: #f9fafb;
+  border-radius: 0.5rem;
+  border: 1px dashed #d1d5db;
+}
+
+.no-candidates i {
+  font-size: 1.25rem;
+}
+
+/* Responsive Design for Detailed Results */
+@media (max-width: 768px) {
+  .detailed-results-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .detailed-result-card {
+    padding: 1rem;
+  }
+  
+  .candidate-details {
+    gap: 0.5rem;
+  }
+  
+  .vote-stats {
+    gap: 0.5rem;
+  }
+  
+  .vote-count,
+  .vote-percentage {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+  }
+  
+  .progress-bar {
+    height: 4px;
+  }
 }
 
 /* Print Styles */
@@ -2340,7 +2554,7 @@
 }
 
 .analytics-section h3 i {
-  color: #3b82f6;
+  color: #93c5fd;
 }
 
 /* Basic Statistics Grid */
@@ -2369,7 +2583,7 @@
 .stat-icon {
   width: 3rem;
   height: 3rem;
-  background: #3b82f6;
+  background: #93c5fd;
   color: white;
   border-radius: 50%;
   display: flex;
@@ -2518,7 +2732,7 @@
 .department-summary-cards .summary-icon {
   width: 3rem;
   height: 3rem;
-  background: #3b82f6;
+  background: #93c5fd;
   color: white;
   border-radius: 50%;
   display: flex;
@@ -2894,7 +3108,7 @@
 
 .progress-fill {
   height: 100%;
-  background: #3b82f6;
+  background: #93c5fd;
   border-radius: 4px;
   transition: width 0.3s ease;
 }
@@ -2911,7 +3125,7 @@
 
 .analytics-loading i {
   font-size: 3rem;
-  color: #3b82f6;
+  color: #93c5fd;
   margin-bottom: 1rem;
 }
 
@@ -3085,7 +3299,7 @@
 }
 
 .rank-number {
-  background: #3b82f6;
+  background: #93c5fd;
   color: white;
   padding: 0.25rem 0.5rem;
   border-radius: 0.375rem;

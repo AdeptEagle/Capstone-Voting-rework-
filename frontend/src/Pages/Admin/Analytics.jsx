@@ -144,25 +144,13 @@ const Analytics = () => {
                       <span>Candidates:</span>
                       <span className="stat-value">{position.candidateCount}</span>
                     </div>
-                    <div className="stat-row">
-                      <span>Competitiveness:</span>
-                      <span className={`competitiveness ${position.competitiveness > 70 ? 'high' : position.competitiveness > 40 ? 'medium' : 'low'}`}>
-                        {position.competitiveness}%
-                      </span>
-                    </div>
-                    <div className="stat-row">
-                      <span>Vote Distribution:</span>
+                    {/* Competitiveness metric removed per new spec */}
+                    <div className="vote-distribution-section">
+                      <div className="vote-distribution-header">Vote Distribution:</div>
                       <div className="vote-distribution">
                         {position.topCandidates?.slice(0, 3).map((candidate, idx) => (
                           <div key={idx} className="candidate-bar">
-                            <span className="candidate-name">{candidate.candidateName}</span>
-                            <div className="vote-bar">
-                              <div 
-                                className="vote-fill" 
-                                style={{ width: `${candidate.percentage}%` }}
-                              ></div>
-                            </div>
-                            <span className="vote-count">{candidate.votes} ({candidate.percentage.toFixed(1)}%)</span>
+                            <span className="candidate-name">{candidate.candidateName}</span> : <span className="vote-percentage">{candidate.percentage.toFixed(1)}%</span>
                           </div>
                         ))}
                       </div>
@@ -221,13 +209,13 @@ const Analytics = () => {
             <div className="partylist-performance-grid">
               {analytics.partylistAnalytics?.map((partylist, index) => (
                 <div key={index} className="partylist-card">
-                  <div className="partylist-header">
-                    <div className="partylist-info">
-                      <h4>{partylist.partylistName}</h4>
-                      <span className="partylist-color" style={{ backgroundColor: partylist.color }}></span>
-                    </div>
-                    <span className="success-rate">{partylist.successRate}%</span>
-                  </div>
+                      <div className="partylist-header">
+                        <div className="partylist-info">
+                          <h4>{partylist.partylistName}</h4>
+                          <span className="partylist-color" style={{ backgroundColor: partylist.color }}></span>
+                        </div>
+                        <span className="success-rate">{partylist.voteShare.toFixed(1)}%</span>
+                      </div>
                   <div className="partylist-metrics">
                     <div className="metric-row">
                       <span>Total Candidates:</span>
@@ -245,12 +233,7 @@ const Analytics = () => {
                       <span>Vote Share:</span>
                       <span>{partylist.voteShare}%</span>
                     </div>
-                    <div className="metric-row">
-                      <span>Success Rate:</span>
-                      <span className={`success ${partylist.successRate > 70 ? 'high' : partylist.successRate > 40 ? 'medium' : 'low'}`}>
-                        {partylist.successRate}%
-                      </span>
-                    </div>
+                        {/* Success Rate removed to match user analytics; header shows Vote Share */}
                   </div>
                   <div className="partylist-positions">
                     <h5>Performance by Position:</h5>
@@ -444,4 +427,6 @@ const Analytics = () => {
 };
 
 export default Analytics;
+
+
 

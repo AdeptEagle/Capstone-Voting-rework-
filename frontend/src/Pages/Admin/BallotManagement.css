@@ -149,8 +149,8 @@
 .search-box input:focus {
   outline: none;
   ring: 2px;
-  ring-color: #3b82f6;
-  border-color: #3b82f6;
+  ring-color: #93c5fd;
+  border-color: #93c5fd;
 }
 
 .filter-buttons {
@@ -176,9 +176,9 @@
 }
 
 .filter-btn.active {
-  background-color: #3b82f6;
+  background-color: #93c5fd;
   color: white;
-  border-color: #3b82f6;
+  border-color: #93c5fd;
 }
 
 /* Table Styles */
@@ -290,7 +290,7 @@
 
 .status-badge.upcoming {
   background-color: #dbeafe;
-  color: #1e40af;
+  color: #60a5fa;
 }
 
 .table-actions {
@@ -390,7 +390,7 @@
   padding: 0.5rem 1rem;
   border: none;
   border-radius: 0.375rem;
-  background-color: #3b82f6;
+  background-color: #93c5fd;
   color: white;
   font-size: 0.875rem;
   font-weight: 500;
@@ -439,7 +439,7 @@
   width: 3.5rem;
   height: 3.5rem;
   border-radius: 50%;
-  background-color: #3b82f6;
+  background-color: #93c5fd;
   color: white;
   border: none;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -655,7 +655,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: #3b82f6;
+  background: #93c5fd;
   opacity: 0;
   transition: opacity 0.3s ease;
   z-index: 0;
@@ -666,7 +666,7 @@
 }
 
 .create-option-btn:hover {
-  border-color: #3b82f6;
+  border-color: #93c5fd;
   box-shadow: 0 10px 25px rgba(59, 130, 246, 0.15);
   transform: translateY(-3px);
 }
@@ -693,7 +693,7 @@
 
 .create-option-btn:hover .option-icon {
   background: #dbeafe;
-  color: #3b82f6;
+  color: #93c5fd;
   transform: scale(1.05);
 }
 
@@ -712,7 +712,7 @@
 }
 
 .create-option-btn:hover .option-content h3 {
-  color: #1e40af;
+  color: #60a5fa;
 }
 
 .option-content p {
@@ -962,7 +962,7 @@
 }
 
 .toggle-input:checked + .toggle-label {
-  background-color: #3b82f6;
+  background-color: #93c5fd;
 }
 
 .toggle-input:checked + .toggle-label .toggle-slider {
@@ -1085,7 +1085,7 @@
 
 .form-control:focus {
   outline: none;
-  border-color: #3b82f6;
+  border-color: #93c5fd;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
@@ -1123,7 +1123,7 @@
   margin: 0;
   width: 16px;
   height: 16px;
-  accent-color: #3b82f6;
+  accent-color: #93c5fd;
 }
 
 .checkbox-label {

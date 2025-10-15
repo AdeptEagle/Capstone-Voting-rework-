@@ -43,12 +43,11 @@
     "ensure:candidates": "ts-node scripts/ensure-candidates.ts",
     "setup:other": "ts-node scripts/setup-other-system.ts",
     "test:auto-candidates": "ts-node scripts/test-auto-candidate-creation.ts",
-    
     "create:superadmin": "ts-node src/scripts/create-default-superadmin.ts",
-    
     "init:project": "npm install && npm run setup:db && npm run start:dev",
     "deploy:init": "npm run db:push && npm run db:seed && npm run ensure:templates && npm run start:prod",
-    "deploy:demo": "npm run db:push && npm run db:seed && npm run start:prod"
+    "deploy:demo": "npm run db:push && npm run db:seed && npm run start:prod",
+    "railway:deploy": "npx prisma migrate deploy && npx prisma db seed && npm run start:prod"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",
@@ -83,6 +82,7 @@
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.1",
     "socket.io-client": "^4.8.1",
+    "sqlite3": "^5.1.7",
     "swagger-ui-express": "^5.0.0",
     "uuid": "^11.1.0"
   },

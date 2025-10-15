@@ -7,7 +7,6 @@ export declare class AnalyticsService {
             positionTitle: string;
             totalVotes: number;
             candidateCount: number;
-            competitiveness: number;
             topCandidates: {
                 candidateName: string;
                 votes: number;
@@ -24,13 +23,12 @@ export declare class AnalyticsService {
             topPosition: unknown;
         }[];
         partylistAnalytics: {
-            partylistName: string;
-            color: string;
-            totalCandidates: number;
+            partylistName: any;
+            color: any;
+            totalCandidates: any;
             winningCandidates: number;
-            totalVotes: number;
+            totalVotes: any;
             voteShare: number;
-            successRate: number;
             positionPerformance: {
                 positionName: any;
                 performance: number;

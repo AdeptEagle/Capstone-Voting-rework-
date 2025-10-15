@@ -109,22 +109,22 @@ export class AnalyticsService {
         const totalVotes = position.votes.length;
         const candidateCount = position.candidates.length;
         
-        // Calculate competitiveness (how evenly distributed votes are)
+        // Candidate vote breakdown for top list / bars
         const candidateVotes = position.candidates.map(candidate => ({
           candidateName: candidate.Candidate_Name,
           votes: candidate.votes.length,
           percentage: totalVotes > 0 ? (candidate.votes.length / totalVotes) * 100 : 0
         })).sort((a, b) => b.votes - a.votes);
 
-        // Calculate competitiveness using Gini coefficient approximation
-        const competitiveness = this.calculateCompetitiveness(candidateVotes);
-
         return {
           positionTitle: position.Position_Title,
           totalVotes,
           candidateCount,
-          competitiveness: Math.round(competitiveness * 100) / 100,
-          topCandidates: candidateVotes.slice(0, 3),
+          topCandidates: candidateVotes.slice(0, 3).map(c => ({
+            candidateName: c.candidateName,
+            votes: c.votes,
+            percentage: Math.round(c.percentage * 10) / 10
+          })),
           status: totalVotes > 0 ? 'Active' : 'No Votes'
         };
       })
@@ -244,7 +244,12 @@ export class AnalyticsService {
       }
     });
 
-    const partylistResults = await Promise.all(partylists.map(async (partylist) => {
+    // Build a global map of position winners across ALL partylists
+    // key: positionId -> { partylistId, votes, positionName }
+    const globalPositionWinners: Record<string, { partylistId: string, votes: number, positionName: string }> = {};
+
+    // First pass: collect candidates (filtered per ballot where applicable) and update global winners
+    const collected = await Promise.all(partylists.map(async (partylist) => {
       // Filter candidates to only include those in the specific ballot
       const ballotCandidates = whereClause.ballotId 
         ? partylist.candidates.filter(candidate => 
@@ -256,29 +261,44 @@ export class AnalyticsService {
       const totalVotes = ballotCandidates.reduce((total, candidate) => 
         total + candidate.votes.length, 0
       );
-
-      // Calculate winning candidates (assuming top vote getter per position wins)
-      const positionWinners = ballotCandidates.reduce((winners, candidate) => {
-        const positionId = candidate.positionId;
-        if (!winners[positionId] || candidate.votes.length > winners[positionId].votes) {
-          winners[positionId] = {
-            candidateId: candidate.id,
-            votes: candidate.votes.length,
+      
+      // Update global position winners across all parties
+      ballotCandidates.forEach(candidate => {
+        const positionId = candidate.positionId as unknown as string;
+        const candVotes = candidate.votes.length;
+        if (!globalPositionWinners[positionId] || candVotes > globalPositionWinners[positionId].votes) {
+          globalPositionWinners[positionId] = {
+            partylistId: partylist.id,
+            votes: candVotes,
             positionName: candidate.position.Position_Title
           };
         }
-        return winners;
-      }, {});
-
-      const winningCandidates = Object.keys(positionWinners).length;
-      const successRate = totalCandidates > 0 ? (winningCandidates / totalCandidates) * 100 : 0;
+      });
 
       // Calculate vote share (total votes by this partylist / total votes in system)
       const allVotes = await this.prisma.vote.count({ where: whereClause });
       const voteShare = allVotes > 0 ? (totalVotes / allVotes) * 100 : 0;
+      
+      // Return interim data to compute success after global winners are known
+      return {
+        partylist,
+        ballotCandidates,
+        totalCandidates,
+        totalVotes,
+        voteShare
+      };
+    }));
 
-      // Position performance - calculate vote share for each position
-      const positionPerformance = await Promise.all(Object.entries(positionWinners).map(async ([positionId, winner]: [string, any]) => {
+    // Second pass: compute party-specific success using the global winners map
+    const partylistResults = await Promise.all(collected.map(async (entry) => {
+      const { partylist, ballotCandidates, totalCandidates, totalVotes, voteShare } = entry as any;
+
+      const winningCandidates = Object.values(globalPositionWinners).filter(w => w.partylistId === partylist.id).length;
+      const positionsContested = new Set(ballotCandidates.map((c: any) => c.positionId)).size;
+      const successRate = positionsContested > 0 ? (winningCandidates / positionsContested) * 100 : 0;
+
+      // Position performance - calculate vote share for each position this party contested
+      const positionPerformance = await Promise.all(Array.from(new Set(ballotCandidates.map((c: any) => c.positionId))).map(async (positionId: any) => {
         // Get total votes for this position across all partylists
         const totalVotesForPosition = await this.prisma.vote.count({
           where: {
@@ -291,11 +311,11 @@ export class AnalyticsService {
         
         // Calculate this partylist's vote share for this position
         const partylistVotesForPosition = ballotCandidates
-          .filter(candidate => candidate.positionId === positionId)
-          .reduce((total, candidate) => total + candidate.votes.length, 0);
+          .filter((candidate: any) => candidate.positionId === positionId)
+          .reduce((total: number, candidate: any) => total + candidate.votes.length, 0);
         
         return {
-          positionName: winner.positionName,
+          positionName: ballotCandidates.find((c: any) => c.positionId === positionId)?.position?.Position_Title || 'N/A',
           performance: totalVotesForPosition > 0 ? (partylistVotesForPosition / totalVotesForPosition) * 100 : 0
         };
       }));
@@ -304,11 +324,13 @@ export class AnalyticsService {
         partylistName: partylist.name,
         color: partylist.color || '#3498db',
         totalCandidates,
-        winningCandidates,
+        winningCandidates, // kept for possible admin usage, not shown on user
         totalVotes,
-        voteShare: Math.round(voteShare * 100) / 100,
-        successRate: Math.round(successRate * 100) / 100,
-        positionPerformance
+        voteShare: Math.round(voteShare * 10) / 10,
+        positionPerformance: positionPerformance.map(p => ({
+          positionName: p.positionName,
+          performance: Math.round(p.performance * 10) / 10
+        }))
       };
     }));
 

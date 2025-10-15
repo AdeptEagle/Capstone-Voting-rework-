@@ -58,12 +58,12 @@
 }
 
 .ballot-card:hover {
-  border-color: #3b82f6;
+  border-color: #93c5fd;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .ballot-card.selected {
-  border-color: #3b82f6;
+  border-color: #93c5fd;
   background: white;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
@@ -99,7 +99,7 @@
 
 .status-badge.blue {
   background-color: #dbeafe;
-  color: #1e40af;
+  color: #60a5fa;
 }
 
 .status-badge.gray {
@@ -270,7 +270,7 @@
 
 .votes-header .search-box input:focus {
   outline: none;
-  border-color: #3b82f6;
+  border-color: #93c5fd;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
@@ -286,7 +286,7 @@
 
 .votes-header .filter-group select:focus {
   outline: none;
-  border-color: #3b82f6;
+  border-color: #93c5fd;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
@@ -362,7 +362,7 @@
 
 .student-id {
   font-family: monospace;
-  color: #3b82f6;
+  color: #93c5fd;
 }
 
 .position {
@@ -485,7 +485,7 @@
 
 .vote-count {
   font-weight: 600;
-  color: #3b82f6;
+  color: #93c5fd;
   text-align: center;
   width: 15%;
 }
@@ -553,7 +553,7 @@
 }
 
 .analysis-item .value {
-  color: #3b82f6;
+  color: #93c5fd;
   font-weight: 600;
   background: #f0f9ff;
   padding: 0.25rem 0.5rem;

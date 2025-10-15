@@ -103,13 +103,15 @@ let AnalyticsService = class AnalyticsService {
                 votes: candidate.votes.length,
                 percentage: totalVotes > 0 ? (candidate.votes.length / totalVotes) * 100 : 0
             })).sort((a, b) => b.votes - a.votes);
-            const competitiveness = this.calculateCompetitiveness(candidateVotes);
             return {
                 positionTitle: position.Position_Title,
                 totalVotes,
                 candidateCount,
-                competitiveness: Math.round(competitiveness * 100) / 100,
-                topCandidates: candidateVotes.slice(0, 3),
+                topCandidates: candidateVotes.slice(0, 3).map(c => ({
+                    candidateName: c.candidateName,
+                    votes: c.votes,
+                    percentage: Math.round(c.percentage * 10) / 10
+                })),
                 status: totalVotes > 0 ? 'Active' : 'No Votes'
             };
         })
@@ -208,28 +210,40 @@ let AnalyticsService = class AnalyticsService {
                 }
             }
         });
-        const partylistResults = await Promise.all(partylists.map(async (partylist) => {
+        const globalPositionWinners = {};
+        const collected = await Promise.all(partylists.map(async (partylist) => {
             const ballotCandidates = whereClause.ballotId
                 ? partylist.candidates.filter(candidate => candidate.ballotCandidates?.some(bc => bc.BallotCandidate_BallotId === whereClause.ballotId))
                 : partylist.candidates;
             const totalCandidates = ballotCandidates.length;
             const totalVotes = ballotCandidates.reduce((total, candidate) => total + candidate.votes.length, 0);
-            const positionWinners = ballotCandidates.reduce((winners, candidate) => {
+            ballotCandidates.forEach(candidate => {
                 const positionId = candidate.positionId;
-                if (!winners[positionId] || candidate.votes.length > winners[positionId].votes) {
-                    winners[positionId] = {
-                        candidateId: candidate.id,
-                        votes: candidate.votes.length,
+                const candVotes = candidate.votes.length;
+                if (!globalPositionWinners[positionId] || candVotes > globalPositionWinners[positionId].votes) {
+                    globalPositionWinners[positionId] = {
+                        partylistId: partylist.id,
+                        votes: candVotes,
                         positionName: candidate.position.Position_Title
                     };
                 }
-                return winners;
-            }, {});
-            const winningCandidates = Object.keys(positionWinners).length;
-            const successRate = totalCandidates > 0 ? (winningCandidates / totalCandidates) * 100 : 0;
+            });
             const allVotes = await this.prisma.vote.count({ where: whereClause });
             const voteShare = allVotes > 0 ? (totalVotes / allVotes) * 100 : 0;
-            const positionPerformance = await Promise.all(Object.entries(positionWinners).map(async ([positionId, winner]) => {
+            return {
+                partylist,
+                ballotCandidates,
+                totalCandidates,
+                totalVotes,
+                voteShare
+            };
+        }));
+        const partylistResults = await Promise.all(collected.map(async (entry) => {
+            const { partylist, ballotCandidates, totalCandidates, totalVotes, voteShare } = entry;
+            const winningCandidates = Object.values(globalPositionWinners).filter(w => w.partylistId === partylist.id).length;
+            const positionsContested = new Set(ballotCandidates.map((c) => c.positionId)).size;
+            const successRate = positionsContested > 0 ? (winningCandidates / positionsContested) * 100 : 0;
+            const positionPerformance = await Promise.all(Array.from(new Set(ballotCandidates.map((c) => c.positionId))).map(async (positionId) => {
                 const totalVotesForPosition = await this.prisma.vote.count({
                     where: {
                         ...whereClause,
@@ -239,10 +253,10 @@ let AnalyticsService = class AnalyticsService {
                     }
                 });
                 const partylistVotesForPosition = ballotCandidates
-                    .filter(candidate => candidate.positionId === positionId)
+                    .filter((candidate) => candidate.positionId === positionId)
                     .reduce((total, candidate) => total + candidate.votes.length, 0);
                 return {
-                    positionName: winner.positionName,
+                    positionName: ballotCandidates.find((c) => c.positionId === positionId)?.position?.Position_Title || 'N/A',
                     performance: totalVotesForPosition > 0 ? (partylistVotesForPosition / totalVotesForPosition) * 100 : 0
                 };
             }));
@@ -252,9 +266,11 @@ let AnalyticsService = class AnalyticsService {
                 totalCandidates,
                 winningCandidates,
                 totalVotes,
-                voteShare: Math.round(voteShare * 100) / 100,
-                successRate: Math.round(successRate * 100) / 100,
-                positionPerformance
+                voteShare: Math.round(voteShare * 10) / 10,
+                positionPerformance: positionPerformance.map(p => ({
+                    positionName: p.positionName,
+                    performance: Math.round(p.performance * 10) / 10
+                }))
             };
         }));
         return partylistResults.filter(partylist => partylist.totalVotes > 0);

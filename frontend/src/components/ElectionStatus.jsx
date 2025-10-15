@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getBallots, getAvailableBallots, getVotes, getVoters, updateBallot } from '../services/api';
+import { getBallots, getAvailableBallots, getBallotResults, pauseBallot, endBallot, activateBallot } from '../services/api';
 import './ElectionStatus.css';
 
 const ElectionStatus = () => {
@@ -17,11 +17,9 @@ const ElectionStatus = () => {
   const fetchBallotData = async () => {
     try {
       setLoading(true);
-      const [ballots, activeBallot, votes, voters] = await Promise.all([
+      const [ballots, activeBallot] = await Promise.all([
         getBallots(),
-        getAvailableBallots(),
-        getVotes(),
-        getVoters()
+        getAvailableBallots()
       ]);
 
       console.log('All ballots:', ballots);
@@ -29,27 +27,59 @@ const ElectionStatus = () => {
 
       setBallots(ballots || []);
       
-      // Only set active ballot if it exists and has valid data
+      // Find the current active ballot from all ballots (including paused ones)
+      let currentActiveBallot = null;
+      
+      // First, try to get from available ballots (truly active)
       if (activeBallot && Array.isArray(activeBallot) && activeBallot.length > 0 && activeBallot[0]) {
-        setActiveBallot(activeBallot[0]);
+        // Find the corresponding ballot in the main ballots list to get admin data
+        const availableBallotId = activeBallot[0].id;
+        const fullBallotData = ballots.find(ballot => ballot.id === availableBallotId);
+        currentActiveBallot = fullBallotData || activeBallot[0];
       } else {
-        setActiveBallot(null);
+        // If no available ballot, look for paused ballots in the main ballots list
+        const pausedBallot = ballots.find(ballot => 
+          ballot.Ballot_Status === 'PAUSED' || 
+          (ballot.Ballot_Status === 'ACTIVE' && !ballot.Ballot_IsActive)
+        );
+        if (pausedBallot) {
+          currentActiveBallot = pausedBallot;
+        }
       }
       
-      // Calculate voting statistics only if we have a valid active ballot
-      if (activeBallot && Array.isArray(activeBallot) && activeBallot.length > 0 && activeBallot[0]) {
-        const totalVotes = votes.length;
-        const totalVoters = voters.length;
-        const votedVoters = voters.filter(voter => voter.hasVoted).length;
-        
-        // Update active election with voting stats
-        setActiveBallot({
-          ...activeBallot[0],
-          totalVotes,
-          totalVoters,
-          votedVoters,
-          turnoutPercentage: totalVoters > 0 ? Math.round((votedVoters / totalVoters) * 100) : 0
-        });
+      // Get voting statistics for the active ballot if it exists
+      if (currentActiveBallot) {
+        try {
+          const ballotResults = await getBallotResults(currentActiveBallot.id);
+          console.log('Ballot results:', ballotResults);
+          
+          // Extract voting statistics from ballot results
+          const totalVotes = ballotResults.results?.BallotResults_TotalVotes || 0;
+          const totalVoters = ballotResults._count?.userHistory || 0; // Total registered voters for this ballot
+          const votedVoters = ballotResults.results?.BallotResults_TotalVoters || 0; // Unique voters who actually voted
+          const turnoutPercentage = totalVoters > 0 ? Math.round((votedVoters / totalVoters) * 100) : 0;
+          
+          // Update active election with voting stats
+          setActiveBallot({
+            ...currentActiveBallot,
+            totalVotes,
+            totalVoters,
+            votedVoters,
+            turnoutPercentage
+          });
+        } catch (resultsError) {
+          console.error('Error fetching ballot results:', resultsError);
+          // Set default values if results can't be fetched
+          setActiveBallot({
+            ...currentActiveBallot,
+            totalVotes: 0,
+            totalVoters: 0,
+            votedVoters: 0,
+            turnoutPercentage: 0
+          });
+        }
+      } else {
+        setActiveBallot(null);
       }
     } catch (error) {
       console.error('Error fetching election data:', error);
@@ -127,21 +157,27 @@ const ElectionStatus = () => {
         return;
       }
 
-      // Update the election status
-      await updateBallot(electionId, {
-        Election_Title: election.Election_Title,
-        Election_Description: election.Election_Description,
-        startDate: election.startDate,
-        endDate: election.endDate,
-        status: newStatus
-      });
+      // Use the appropriate API call based on the action
+      switch (newStatus) {
+        case 'active':
+          await activateBallot(electionId);
+          break;
+        case 'paused':
+          await pauseBallot(electionId);
+          break;
+        case 'ended':
+          await endBallot(electionId);
+          break;
+        default:
+          throw new Error(`Unsupported status: ${newStatus}`);
+      }
 
       // Refresh the data
       await fetchBallotData();
       
       // Show success message
       const statusText = newStatus.charAt(0).toUpperCase() + newStatus.slice(1);
-              setSuccess(`Election "${election.Election_Title}" has been ${statusText.toLowerCase()}`);
+      setSuccess(`Election "${election.Ballot_Title}" has been ${statusText.toLowerCase()}`);
       
       // Clear success message after 3 seconds
       setTimeout(() => setSuccess(''), 3000);
@@ -185,7 +221,7 @@ const ElectionStatus = () => {
           <button
             key="pause"
             className="btn btn-warning btn-sm me-2"
-            onClick={() => handleStatusChange(election.id, 'draft')}
+            onClick={() => handleStatusChange(election.id, 'paused')}
             disabled={updatingBallot === election.id}
           >
             {updatingBallot === election.id ? (
@@ -281,16 +317,16 @@ const ElectionStatus = () => {
       {/* Current Election Status */}
       {activeBallot && activeBallot.id ? (
         <div className="card mb-4">
-          <div className="card-header bg-success text-white">
+          <div className={`card-header ${activeBallot.Ballot_Status === 'PAUSED' ? 'bg-warning text-dark' : 'bg-success text-white'}`}>
             <h5 className="mb-0">
-              <i className="fas fa-vote-yea me-2"></i>
-              Active Election
+              <i className={`fas ${activeBallot.Ballot_Status === 'PAUSED' ? 'fa-pause-circle' : 'fa-vote-yea'} me-2`}></i>
+              {activeBallot.Ballot_Status === 'PAUSED' ? 'Paused Election' : 'Active Election'}
             </h5>
           </div>
           <div className="card-body">
             <div className="row">
               <div className="col-md-8">
-                                   <h4 className="text-success">{activeBallot.Ballot_Title}</h4>
+                                   <h4 className={activeBallot.Ballot_Status === 'PAUSED' ? 'text-warning' : 'text-success'}>{activeBallot.Ballot_Title}</h4>
                    <p className="text-muted">{activeBallot.Ballot_Description}</p>
                 <div className="election-details">
                   <div className="detail-item">
@@ -309,34 +345,65 @@ const ElectionStatus = () => {
                   </div>
                   <div className="detail-item">
                     <span className="detail-label">Created By:</span>
-                    <span className="detail-value">{activeBallot.Ballot_CreatedBy || 'Unknown'}</span>
+                    <span className="detail-value">{activeBallot.createdByAdmin?.Admin_Username || 'Unknown'}</span>
                   </div>
                 </div>
                 <div className="active-election-actions mt-3">
-                  <button
-                    className="btn btn-warning btn-sm me-2"
-                    onClick={() => handleStatusChange(activeBallot.id, 'draft')}
-                    disabled={updatingBallot === activeBallot.id}
-                  >
-                    {updatingBallot === activeBallot.id ? (
-                      <i className="fas fa-spinner fa-spin me-1"></i>
-                    ) : (
-                      <i className="fas fa-pause me-1"></i>
-                    )}
-                    Pause Ballot
-                  </button>
-                  <button
-                    className="btn btn-danger btn-sm"
-                    onClick={() => handleStatusChange(activeBallot.id, 'ended')}
-                    disabled={updatingBallot === activeBallot.id}
-                  >
-                    {updatingBallot === activeBallot.id ? (
-                      <i className="fas fa-spinner fa-spin me-1"></i>
-                    ) : (
-                      <i className="fas fa-stop me-1"></i>
-                    )}
-                    End Ballot
-                  </button>
+                  {activeBallot.Ballot_Status === 'PAUSED' ? (
+                    <>
+                      <button
+                        className="btn btn-success btn-sm me-2"
+                        onClick={() => handleStatusChange(activeBallot.id, 'active')}
+                        disabled={updatingBallot === activeBallot.id}
+                      >
+                        {updatingBallot === activeBallot.id ? (
+                          <i className="fas fa-spinner fa-spin me-1"></i>
+                        ) : (
+                          <i className="fas fa-play me-1"></i>
+                        )}
+                        Resume Ballot
+                      </button>
+                      <button
+                        className="btn btn-danger btn-sm"
+                        onClick={() => handleStatusChange(activeBallot.id, 'ended')}
+                        disabled={updatingBallot === activeBallot.id}
+                      >
+                        {updatingBallot === activeBallot.id ? (
+                          <i className="fas fa-spinner fa-spin me-1"></i>
+                        ) : (
+                          <i className="fas fa-stop me-1"></i>
+                        )}
+                        End Ballot
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        className="btn btn-warning btn-sm me-2"
+                        onClick={() => handleStatusChange(activeBallot.id, 'paused')}
+                        disabled={updatingBallot === activeBallot.id}
+                      >
+                        {updatingBallot === activeBallot.id ? (
+                          <i className="fas fa-spinner fa-spin me-1"></i>
+                        ) : (
+                          <i className="fas fa-pause me-1"></i>
+                        )}
+                        Pause Ballot
+                      </button>
+                      <button
+                        className="btn btn-danger btn-sm"
+                        onClick={() => handleStatusChange(activeBallot.id, 'ended')}
+                        disabled={updatingBallot === activeBallot.id}
+                      >
+                        {updatingBallot === activeBallot.id ? (
+                          <i className="fas fa-spinner fa-spin me-1"></i>
+                        ) : (
+                          <i className="fas fa-stop me-1"></i>
+                        )}
+                        End Ballot
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
               <div className="col-md-4">
@@ -394,13 +461,15 @@ const ElectionStatus = () => {
           </h5>
         </div>
         <div className="card-body">
-          {ballots.length > 0 ? (
+          {ballots.filter(election => !activeBallot || election.id !== activeBallot.id).length > 0 ? (
             <div className="elections-list">
-              {ballots.map((election) => (
+              {ballots
+                .filter(election => !activeBallot || election.id !== activeBallot.id)
+                .map((election) => (
                 <div key={election.id} className="election-item">
                   <div className="election-header">
                     <div className="election-title">
-                      <h6 className="mb-1">{election.Election_Title || 'Untitled Election'}</h6>
+                      <h6 className="mb-1">{election.Ballot_Title || 'Untitled Election'}</h6>
                       <span className={`status-badge ${getStatusColor(election.status)}`}>
                         <i className={`${getStatusIcon(election.status)} me-1`}></i>
                         {election.status ? election.status.charAt(0).toUpperCase() + election.status.slice(1) : 'Unknown'}
@@ -408,7 +477,7 @@ const ElectionStatus = () => {
                     </div>
                     <div className="election-meta">
                       <small className="text-muted">
-                        Created by {election.admin?.Admin_Username || 'Unknown'}
+                        Created by {election.createdByAdmin?.Admin_Username || 'Unknown'}
                       </small>
                     </div>
                   </div>
@@ -416,7 +485,7 @@ const ElectionStatus = () => {
                     {getStatusActions(election)}
                   </div>
                                       <div className="election-info">
-                      <p className="election-description">{election.Election_Description || 'No description available'}</p>
+                      <p className="election-description">{election.Ballot_Description || 'No description available'}</p>
                       <div className="election-dates">
                         <span className="date-item">
                           <i className="fas fa-calendar-plus me-1"></i>
@@ -438,7 +507,7 @@ const ElectionStatus = () => {
               ))}
             </div>
           ) : (
-            <p className="text-muted text-center">No elections found.</p>
+            <p className="text-muted text-center">No other elections found.</p>
           )}
         </div>
       </div>
