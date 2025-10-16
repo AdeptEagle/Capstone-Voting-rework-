@@ -21,17 +21,22 @@ async function bootstrap() {
         allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
     });
     app.use(cookieParser());
-    app.get('/', (req, res) => {
-        res.json({
-            message: 'Voting System API v2.0',
-            status: 'running',
-            timestamp: new Date().toISOString(),
-            endpoints: {
-                health: '/health',
-                api: '/api',
-                docs: '/api'
-            }
-        });
+    app.use('/', (req, res, next) => {
+        if (req.method === 'GET' && req.path === '/') {
+            res.json({
+                message: 'Voting System API v2.0',
+                status: 'running',
+                timestamp: new Date().toISOString(),
+                endpoints: {
+                    health: '/health',
+                    api: '/api',
+                    docs: '/api'
+                }
+            });
+        }
+        else {
+            next();
+        }
     });
     app.useStaticAssets((0, path_1.join)(process.cwd(), 'uploads'), {
         prefix: '/uploads/',

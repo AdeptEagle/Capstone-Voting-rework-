@@ -26,18 +26,22 @@ async function bootstrap() {
   // Add cookie parser middleware
   app.use(cookieParser());
 
-  // Add root route
-  app.get('/', (req, res) => {
-    res.json({
-      message: 'Voting System API v2.0',
-      status: 'running',
-      timestamp: new Date().toISOString(),
-      endpoints: {
-        health: '/health',
-        api: '/api',
-        docs: '/api'
-      }
-    });
+  // Add root route using NestJS approach
+  app.use('/', (req: any, res: any, next: any) => {
+    if (req.method === 'GET' && req.path === '/') {
+      res.json({
+        message: 'Voting System API v2.0',
+        status: 'running',
+        timestamp: new Date().toISOString(),
+        endpoints: {
+          health: '/health',
+          api: '/api',
+          docs: '/api'
+        }
+      });
+    } else {
+      next();
+    }
   });
 
   // Serve static files from uploads directory
