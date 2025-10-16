@@ -53,5 +53,8 @@ RUN npm prune --production
 # Expose port
 EXPOSE 3001
 
-# Start the application with fallback
-CMD ["sh", "-c", "if [ -f dist/main.js ]; then node dist/main.js; elif [ -f dist/src/main.js ]; then node dist/src/main.js; else echo 'No main file found' && ls -la dist/ && exit 1; fi"]
+# Override the start:prod script to use our fallback
+RUN npm pkg set scripts.start:prod="sh -c 'if [ -f dist/main.js ]; then node dist/main.js; elif [ -f dist/src/main.js ]; then node dist/src/main.js; else echo \"No main file found\" && ls -la dist/ && exit 1; fi'"
+
+# Start the application
+CMD ["npm", "run", "start:prod"]
