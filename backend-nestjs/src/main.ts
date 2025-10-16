@@ -149,9 +149,13 @@ fetch('/api/votes', {
   });
 
   const port = process.env.PORT || 3001;
-  await app.listen(port);
-  console.log(`🚀 Application is running on: http://localhost:${port}`);
-  console.log(`📚 Swagger documentation: http://localhost:${port}/api`);
+  console.log(`🔧 Port Configuration:`);
+  console.log(`PORT env var: ${process.env.PORT}`);
+  console.log(`Using port: ${port}`);
+  
+  await app.listen(port, '0.0.0.0'); // Bind to all interfaces
+  console.log(`🚀 Application is running on: http://0.0.0.0:${port}`);
+  console.log(`📚 Swagger documentation: http://0.0.0.0:${port}/api`);
   console.log(`🔒 Security: HTTP-only cookies enabled`);
 }
 
