@@ -54,7 +54,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
       // Fallback: try to push the schema directly
       try {
         console.log('🔄 Attempting schema push as fallback...');
-        this.runPrismaCommand('db push');
+        this.runPrismaCommand('db push --accept-data-loss');
         console.log('✅ Schema push completed');
       } catch (pushError) {
         console.error('❌ Schema push also failed:', pushError.message);
