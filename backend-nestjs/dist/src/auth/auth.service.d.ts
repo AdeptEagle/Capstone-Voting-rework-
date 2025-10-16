@@ -9,6 +9,9 @@ export declare class AuthService {
     private idGenerator;
     private emailService;
     constructor(prisma: PrismaService, jwtService: JwtService, idGenerator: IdGeneratorService, emailService: EmailService);
+    validateToken(token: string): Promise<boolean>;
+    isTokenExpired(token: string): boolean;
+    private logSecurityEvent;
     checkAuthStatus(req: any): Promise<{
         isAuthenticated: boolean;
         role: import(".prisma/client").$Enums.Role;

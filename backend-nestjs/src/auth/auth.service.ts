@@ -16,6 +16,37 @@ export class AuthService {
     private emailService: EmailService,
   ) {}
 
+  // Token validation method
+  async validateToken(token: string): Promise<boolean> {
+    try {
+      const decoded = this.jwtService.verify(token);
+      return decoded && decoded.sub;
+    } catch (error) {
+      console.error('Invalid token:', error);
+      return false;
+    }
+  }
+
+  // Token expiry check
+  isTokenExpired(token: string): boolean {
+    try {
+      const decoded = this.jwtService.decode(token) as any;
+      return decoded.exp < Date.now() / 1000;
+    } catch {
+      return true;
+    }
+  }
+
+  // Security event logging
+  private logSecurityEvent(event: string, details: any) {
+    console.log(`🔒 SECURITY: ${event}`, {
+      timestamp: new Date().toISOString(),
+      event,
+      details,
+      ip: details.ip || 'unknown'
+    });
+  }
+
   async checkAuthStatus(req: any) {
     try {
       // Extract token from HTTP-only cookie

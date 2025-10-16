@@ -52,7 +52,7 @@ const Vote = () => {
         // Get user info from auth status endpoint instead of localStorage
         let userId = null;
         try {
-          const authResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'}/auth/status`, {
+          const authResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'https://backend-production-1960.up.railway.app'}/auth/status`, {
             credentials: 'include'
           });
           if (authResponse.ok) {
@@ -111,7 +111,7 @@ const Vote = () => {
           
           // First, test if backend is accessible
           try {
-            const testResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'}/auth/status`, { credentials: 'include' });
+            const testResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'https://backend-production-1960.up.railway.app'}/auth/status`, { credentials: 'include' });
             console.log('Backend connectivity test response:', testResponse.status);
             
             if (testResponse.status !== 200) {
@@ -129,7 +129,7 @@ const Vote = () => {
           
           // Test if the ballot exists in the database
           try {
-            const ballotTestResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'}/ballots/${ballotToUse.id}`, { credentials: 'include' });
+            const ballotTestResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'https://backend-production-1960.up.railway.app'}/ballots/${ballotToUse.id}`, { credentials: 'include' });
             console.log('Ballot existence check response:', ballotTestResponse.status);
             
             if (ballotTestResponse.status === 404) {
@@ -233,7 +233,7 @@ const Vote = () => {
         if (!voter) {
           // Try finding by email if available
           try {
-            const authData = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'}/auth/status`, { credentials: 'include' });
+            const authData = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'https://backend-production-1960.up.railway.app'}/auth/status`, { credentials: 'include' });
             if (authData.ok) {
               const userData = await authData.json();
               console.log('Auth user data for email search:', userData);
@@ -251,7 +251,7 @@ const Vote = () => {
         if (!voter) {
           // Try finding by student ID if available
           try {
-            const authData = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'}/auth/status`, { credentials: 'include' });
+            const authData = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'https://backend-production-1960.up.railway.app'}/auth/status`, { credentials: 'include' });
             if (authData.ok) {
               const userData = await authData.json();
               console.log('Auth user data for student ID search:', userData);
@@ -289,7 +289,7 @@ const Vote = () => {
         if (!voter) {
           try {
             console.log('Trying direct API call to get voter by ID:', userId);
-            const directVoterResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'}/voters/${userId}`, { credentials: 'include' });
+            const directVoterResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'https://backend-production-1960.up.railway.app'}/voters/${userId}`, { credentials: 'include' });
             console.log('Direct voter API response status:', directVoterResponse.status);
             
             if (directVoterResponse.ok) {

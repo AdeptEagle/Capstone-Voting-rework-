@@ -1,9 +1,9 @@
 // Centralized configuration for API endpoints and URLs
 export const API_CONFIG = {
-  BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001',
-  WS_URL: import.meta.env.VITE_WS_URL || 'http://localhost:3001',
-  UPLOADS_URL: `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'}/uploads`,
-  LOGOS_URL: `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'}/api/Logos`
+  BASE_URL: import.meta.env.VITE_API_BASE_URL || 'https://backend-production-1960.up.railway.app',
+  WS_URL: import.meta.env.VITE_WS_URL || 'https://backend-production-1960.up.railway.app',
+  UPLOADS_URL: `${import.meta.env.VITE_API_BASE_URL || 'https://backend-production-1960.up.railway.app'}/uploads`,
+  LOGOS_URL: `${import.meta.env.VITE_API_BASE_URL || 'https://backend-production-1960.up.railway.app'}/api/Logos`
 };
 
 // Helper functions

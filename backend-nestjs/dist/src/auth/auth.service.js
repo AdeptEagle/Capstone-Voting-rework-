@@ -24,6 +24,33 @@ let AuthService = class AuthService {
         this.idGenerator = idGenerator;
         this.emailService = emailService;
     }
+    async validateToken(token) {
+        try {
+            const decoded = this.jwtService.verify(token);
+            return decoded && decoded.sub;
+        }
+        catch (error) {
+            console.error('Invalid token:', error);
+            return false;
+        }
+    }
+    isTokenExpired(token) {
+        try {
+            const decoded = this.jwtService.decode(token);
+            return decoded.exp < Date.now() / 1000;
+        }
+        catch {
+            return true;
+        }
+    }
+    logSecurityEvent(event, details) {
+        console.log(`🔒 SECURITY: ${event}`, {
+            timestamp: new Date().toISOString(),
+            event,
+            details,
+            ip: details.ip || 'unknown'
+        });
+    }
     async checkAuthStatus(req) {
         try {
             const token = req.cookies?.access_token;

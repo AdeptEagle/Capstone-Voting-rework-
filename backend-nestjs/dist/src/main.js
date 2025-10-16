@@ -6,7 +6,25 @@ const swagger_1 = require("@nestjs/swagger");
 const app_module_1 = require("./app.module");
 const cookieParser = require("cookie-parser");
 const path_1 = require("path");
+const validateEnvironment = () => {
+    const required = ['JWT_SECRET', 'DATABASE_URL'];
+    const missing = required.filter(key => !process.env[key]);
+    if (missing.length > 0) {
+        console.error(`❌ Missing required environment variables: ${missing.join(', ')}`);
+        process.exit(1);
+    }
+    if (process.env.JWT_SECRET.length < 32) {
+        console.error('❌ JWT_SECRET must be at least 32 characters');
+        process.exit(1);
+    }
+    if (process.env.JWT_SECRET === 'voting-system-jwt-secret-key-2024') {
+        console.error('❌ CRITICAL: Default JWT secret detected. Change immediately!');
+        process.exit(1);
+    }
+    console.log('✅ Environment validation passed');
+};
 async function bootstrap() {
+    validateEnvironment();
     const app = await core_1.NestFactory.create(app_module_1.AppModule);
     app.enableCors({
         origin: [
@@ -25,6 +43,15 @@ async function bootstrap() {
         if (req.cookies && req.cookies.access_token) {
             console.log('Cookie detected:', req.cookies.access_token ? 'Present' : 'Missing');
         }
+        next();
+    });
+    app.use((req, res, next) => {
+        res.setHeader('X-Content-Type-Options', 'nosniff');
+        res.setHeader('X-Frame-Options', 'DENY');
+        res.setHeader('X-XSS-Protection', '1; mode=block');
+        res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+        res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+        res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
         next();
     });
     app.use('/', (req, res, next) => {

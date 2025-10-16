@@ -49,7 +49,7 @@ const Register = () => {
   // WebSocket connection setup
   useEffect(() => {
     console.log('🔌 [LandingPage Register] Setting up WebSocket connection...');
-    const newSocket = io(import.meta.env.VITE_WS_URL || 'http://localhost:3001', {
+    const newSocket = io(import.meta.env.VITE_WS_URL || 'https://backend-production-1960.up.railway.app', {
       withCredentials: true,
       transports: ['websocket', 'polling'],
       timeout: 20000,
