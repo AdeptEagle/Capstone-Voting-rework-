@@ -7,6 +7,12 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 
 async function bootstrap() {
+  console.log('🚀 Starting application...');
+  console.log('Environment variables:');
+  console.log('NODE_ENV:', process.env.NODE_ENV);
+  console.log('FRONTEND_URL:', process.env.FRONTEND_URL);
+  console.log('DATABASE_URL:', process.env.DATABASE_URL ? 'Set' : 'Not set');
+  
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   // Enable CORS with credentials
