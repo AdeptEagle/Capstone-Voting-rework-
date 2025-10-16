@@ -51,8 +51,8 @@ let BallotController = class BallotController {
     getUserBallotHistoryFromAuth(req) {
         return this.ballotService.getUserBallotHistory(req.user.id);
     }
-    castBallotVote(voteData, req) {
-        return this.ballotService.castBallotVote(voteData, req.user.id);
+    castBallotVote(castVoteDto, req) {
+        return this.ballotService.castBallotVote(castVoteDto, req.user.id);
     }
     getBallotById(id) {
         return this.ballotService.getBallotById(id);

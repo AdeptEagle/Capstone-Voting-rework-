@@ -15,6 +15,7 @@ import {
 import { BallotService } from './ballot.service';
 import { CreateBallotDto } from './dto/create-ballot.dto';
 import { UpdateBallotDto } from './dto/update-ballot.dto';
+import { CastVoteDto } from './dto/cast-vote.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -66,8 +67,8 @@ export class BallotController {
   }
 
   @Post('cast-vote')
-  castBallotVote(@Body() voteData: any, @Request() req) {
-    return this.ballotService.castBallotVote(voteData, req.user.id);
+  castBallotVote(@Body() castVoteDto: any, @Request() req) {
+    return this.ballotService.castBallotVote(castVoteDto, req.user.id);
   }
 
   @Get(':id')

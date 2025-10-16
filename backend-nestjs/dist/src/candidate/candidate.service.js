@@ -63,7 +63,7 @@ let CandidateService = class CandidateService {
     async createCandidate(createCandidateDto, photo) {
         console.log('createCandidate called with photo:', photo);
         console.log('createCandidateDto:', createCandidateDto);
-        const { Candidate_Name, Candidate_Email, Candidate_StudentId, positionId, departmentId, courseId, partyListId } = createCandidateDto;
+        const { Candidate_Name, Candidate_Email, Candidate_StudentId, positionId, departmentId, courseId, partyListId, party_list_name, manifesto } = createCandidateDto;
         const position = await this.prisma.position.findUnique({
             where: { id: positionId },
         });
@@ -82,11 +82,13 @@ let CandidateService = class CandidateService {
         if (!course) {
             throw new common_1.NotFoundException('Course not found');
         }
-        const partyList = await this.prisma.partyList.findUnique({
-            where: { id: partyListId },
-        });
-        if (!partyList) {
-            throw new common_1.NotFoundException('Party list not found');
+        if (partyListId) {
+            const partyList = await this.prisma.partyList.findUnique({
+                where: { id: partyListId },
+            });
+            if (!partyList) {
+                throw new common_1.NotFoundException('Party list not found');
+            }
         }
         const existingCandidate = await this.prisma.candidate.findFirst({
             where: { Candidate_StudentId: Candidate_StudentId },
@@ -146,6 +148,8 @@ let CandidateService = class CandidateService {
                 courseId,
                 photo: photoUrl,
                 partyListId,
+                party_list_name,
+                manifesto,
             },
             include: {
                 position: {
@@ -214,7 +218,7 @@ let CandidateService = class CandidateService {
         return candidate;
     }
     async updateCandidate(id, updateCandidateDto, photo) {
-        const { Candidate_Name, Candidate_Email, Candidate_StudentId, positionId, departmentId, courseId, partyListId } = updateCandidateDto;
+        const { Candidate_Name, Candidate_Email, Candidate_StudentId, positionId, departmentId, courseId, partyListId, party_list_name, manifesto } = updateCandidateDto;
         const existingCandidate = await this.prisma.candidate.findUnique({
             where: { id },
         });
@@ -243,6 +247,14 @@ let CandidateService = class CandidateService {
             });
             if (!course) {
                 throw new common_1.NotFoundException('Course not found');
+            }
+        }
+        if (partyListId) {
+            const partyList = await this.prisma.partyList.findUnique({
+                where: { id: partyListId },
+            });
+            if (!partyList) {
+                throw new common_1.NotFoundException('Party list not found');
             }
         }
         if (Candidate_StudentId && Candidate_StudentId !== existingCandidate.Candidate_StudentId) {
@@ -322,6 +334,8 @@ let CandidateService = class CandidateService {
                 courseId,
                 photo: photoUrl,
                 partyListId,
+                party_list_name,
+                manifesto,
             },
             include: {
                 position: {

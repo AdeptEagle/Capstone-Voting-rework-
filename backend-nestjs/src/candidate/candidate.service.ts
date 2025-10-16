@@ -56,7 +56,7 @@ export class CandidateService {
   async createCandidate(createCandidateDto: CreateCandidateDto, photo?: any) {
     console.log('createCandidate called with photo:', photo);
     console.log('createCandidateDto:', createCandidateDto);
-    const { Candidate_Name, Candidate_Email, Candidate_StudentId, positionId, departmentId, courseId, partyListId } = createCandidateDto;
+    const { Candidate_Name, Candidate_Email, Candidate_StudentId, positionId, departmentId, courseId, partyListId, party_list_name, manifesto } = createCandidateDto;
 
     // Check if position exists
     const position = await this.prisma.position.findUnique({
@@ -85,13 +85,15 @@ export class CandidateService {
       throw new NotFoundException('Course not found');
     }
 
-    // Check if party list exists (now required)
-    const partyList = await this.prisma.partyList.findUnique({
-      where: { id: partyListId },
-    });
+    // Check if party list exists if provided
+    if (partyListId) {
+      const partyList = await this.prisma.partyList.findUnique({
+        where: { id: partyListId },
+      });
 
-    if (!partyList) {
-      throw new NotFoundException('Party list not found');
+      if (!partyList) {
+        throw new NotFoundException('Party list not found');
+      }
     }
 
     // Check if candidate with this student ID already exists
@@ -159,6 +161,8 @@ export class CandidateService {
         courseId,
         photo: photoUrl,
         partyListId,
+        party_list_name,
+        manifesto,
       },
       include: {
         position: {
@@ -234,7 +238,7 @@ export class CandidateService {
   }
 
   async updateCandidate(id: string, updateCandidateDto: UpdateCandidateDto, photo?: any) {
-    const { Candidate_Name, Candidate_Email, Candidate_StudentId, positionId, departmentId, courseId, partyListId } = updateCandidateDto;
+    const { Candidate_Name, Candidate_Email, Candidate_StudentId, positionId, departmentId, courseId, partyListId, party_list_name, manifesto } = updateCandidateDto;
 
     // Check if candidate exists
     const existingCandidate = await this.prisma.candidate.findUnique({
@@ -275,6 +279,17 @@ export class CandidateService {
 
       if (!course) {
         throw new NotFoundException('Course not found');
+      }
+    }
+
+    // Check if party list exists if provided
+    if (partyListId) {
+      const partyList = await this.prisma.partyList.findUnique({
+        where: { id: partyListId },
+      });
+
+      if (!partyList) {
+        throw new NotFoundException('Party list not found');
       }
     }
 
@@ -364,6 +379,8 @@ export class CandidateService {
         courseId,
         photo: photoUrl,
         partyListId,
+        party_list_name,
+        manifesto,
       },
       include: {
         position: {

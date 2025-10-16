@@ -33,10 +33,15 @@ export class CreateCandidateDto {
   @IsOptional()
   party_list_name?: string;
 
-  @ApiProperty({ description: 'Party list ID', example: 'clx1234567890', required: true })
+  @ApiProperty({ description: 'Party list ID', example: 'clx1234567890', required: false })
   @IsString()
-  partyListId: string;
+  @IsOptional()
+  partyListId?: string;
 
+  @ApiProperty({ description: 'Candidate manifesto', example: 'I will work for better education...', required: false })
+  @IsString()
+  @IsOptional()
+  manifesto?: string;
 
   @ApiProperty({ description: 'Candidate photo URL', example: '/uploads/images/candidate-photo.jpg', required: false })
   @IsString()

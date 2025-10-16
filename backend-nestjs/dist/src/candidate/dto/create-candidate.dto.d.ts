@@ -6,6 +6,7 @@ export declare class CreateCandidateDto {
     departmentId: string;
     courseId: string;
     party_list_name?: string;
-    partyListId: string;
+    partyListId?: string;
+    manifesto?: string;
     photo?: string;
 }

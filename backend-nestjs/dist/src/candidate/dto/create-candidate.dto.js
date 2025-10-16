@@ -54,10 +54,17 @@ __decorate([
     __metadata("design:type", String)
 ], CreateCandidateDto.prototype, "party_list_name", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Party list ID', example: 'clx1234567890', required: true }),
+    (0, swagger_1.ApiProperty)({ description: 'Party list ID', example: 'clx1234567890', required: false }),
     (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], CreateCandidateDto.prototype, "partyListId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Candidate manifesto', example: 'I will work for better education...', required: false }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], CreateCandidateDto.prototype, "manifesto", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({ description: 'Candidate photo URL', example: '/uploads/images/candidate-photo.jpg', required: false }),
     (0, class_validator_1.IsString)(),

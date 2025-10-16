@@ -8,19 +8,19 @@ datasource db {
 }
 
 model Admin {
-  id             String       @id @db.VarChar(50)
-  Admin_Username String       @unique @map("admin_username") @db.VarChar(255)
-  Admin_Email    String?      @unique @map("admin_email") @db.VarChar(255)
-  password       String       @db.VarChar(255)
-  role           Role         @default(ADMIN)
-  createdAt      DateTime     @default(now()) @map("created_at")
-  updatedAt      DateTime     @updatedAt @map("updated_at")
-  ballots        Ballot[]
+  id              String           @id @db.VarChar(50)
+  Admin_Username  String           @unique @map("admin_username") @db.VarChar(255)
+  Admin_Email     String?          @unique @map("admin_email") @db.VarChar(255)
+  password        String           @db.VarChar(255)
+  role            Role             @default(ADMIN)
+  createdAt       DateTime         @default(now()) @map("created_at")
+  updatedAt       DateTime         @updatedAt @map("updated_at")
+  loginLogs       AdminLoginLog[]
   ballotTemplates BallotTemplate[]
-  courses        Course[]
-  departments    Department[]
-  elections      Election[]
-  loginLogs      AdminLoginLog[]
+  ballots         Ballot[]
+  courses         Course[]
+  departments     Department[]
+  elections       Election[]
 
   @@map("admins")
 }
@@ -84,7 +84,7 @@ model PartyList {
   id          String      @id @db.VarChar(50)
   name        String      @db.VarChar(255)
   description String?
-  color       String?     @db.VarChar(7) // Hex color code
+  color       String?     @db.VarChar(7)
   logo        String?     @db.VarChar(255)
   createdAt   DateTime    @default(now()) @map("created_at")
   updatedAt   DateTime    @updatedAt @map("updated_at")
@@ -103,7 +103,6 @@ model Candidate {
   photo               String?               @db.VarChar(255)
   manifesto           String?
   party_list_name     String?               @map("party_list_name") @db.VarChar(255)
-  partyListId         String?               @map("party_list_id") @db.VarChar(50)
   createdAt           DateTime              @default(now()) @map("created_at")
   updatedAt           DateTime              @updatedAt @map("updated_at")
   deletedAt           DateTime?             @map("deleted_at")
@@ -111,12 +110,13 @@ model Candidate {
   courseId            String?
   departmentId        String?
   positionId          String
+  partyListId         String?               @map("party_list_id") @db.VarChar(50)
   ballotCandidates    BallotCandidate[]
   resultDetails       BallotResultDetails[]
   course              Course?               @relation(fields: [courseId], references: [id])
   department          Department?           @relation(fields: [departmentId], references: [id])
-  position            Position              @relation(fields: [positionId], references: [id])
   partyList           PartyList?            @relation(fields: [partyListId], references: [id])
+  position            Position              @relation(fields: [positionId], references: [id])
   electionCandidates  ElectionCandidate[]
   votes               Vote[]
 
@@ -162,7 +162,6 @@ model Election {
   auditLogs            AuditLog[]
   electionCandidates   ElectionCandidate[]
   electionPositions    ElectionPosition[]
-  ballots              Ballot[]
   admin                Admin               @relation(fields: [createdBy], references: [id])
   votes                Vote[]
 
@@ -188,7 +187,7 @@ model Vote {
   position         Position  @relation(fields: [positionId], references: [id])
   voter            Voter     @relation(fields: [voterId], references: [id])
 
-  @@unique([voterId, positionId, candidateId, ballotId])
+  @@unique([voterId, electionId, positionId, candidateId, ballotId])
   @@map("votes")
 }
 
@@ -263,13 +262,11 @@ model Ballot {
   Ballot_UpdatedAt           DateTime              @updatedAt @map("ballot_updated_at")
   Ballot_DeletedAt           DateTime?             @map("ballot_deleted_at")
   Ballot_IsDeleted           Boolean               @default(false) @map("ballot_is_deleted")
-  electionId                 String?               @map("election_id") @db.VarChar(50)
   ballotCandidates           BallotCandidate[]
   ballotPositions            BallotPosition[]
   resultDetails              BallotResultDetails[]
   results                    BallotResults?
   createdByAdmin             Admin                 @relation(fields: [Ballot_CreatedBy], references: [id])
-  election                   Election?             @relation(fields: [electionId], references: [id])
   userHistory                UserBallotHistory[]
   votes                      Vote[]
 
@@ -351,6 +348,56 @@ model BallotResultDetails {
   @@map("ballot_result_details")
 }
 
+model BallotTemplate {
+  id                         String    @id @db.VarChar(50)
+  BallotTemplate_Name        String    @map("ballot_template_name") @db.VarChar(255)
+  BallotTemplate_Description String?   @map("ballot_template_description")
+  BallotTemplate_Data        Json      @map("ballot_template_data")
+  BallotTemplate_IsPublic    Boolean   @default(false) @map("ballot_template_is_public")
+  BallotTemplate_CreatedBy   String    @map("ballot_template_created_by")
+  BallotTemplate_CreatedAt   DateTime  @default(now()) @map("ballot_template_created_at")
+  BallotTemplate_UpdatedAt   DateTime  @updatedAt @map("ballot_template_updated_at")
+  BallotTemplate_DeletedAt   DateTime? @map("ballot_template_deleted_at")
+  BallotTemplate_IsDeleted   Boolean   @default(false) @map("ballot_template_is_deleted")
+  createdByAdmin             Admin     @relation(fields: [BallotTemplate_CreatedBy], references: [id])
+
+  @@map("ballot_templates")
+}
+
+model AdminLoginLog {
+  id         String    @id @db.VarChar(50)
+  adminId    String    @map("admin_id") @db.VarChar(50)
+  loginTime  DateTime  @map("login_time")
+  logoutTime DateTime? @map("logout_time")
+  duration   Int?      @map("duration")
+  ipAddress  String?   @map("ip_address") @db.VarChar(45)
+  userAgent  String?   @map("user_agent")
+  sessionId  String?   @map("session_id") @db.VarChar(255)
+  isActive   Boolean   @default(true) @map("is_active")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+  admin      Admin     @relation(fields: [adminId], references: [id])
+
+  @@map("admin_login_logs")
+}
+
+model UserLoginLog {
+  id         String    @id @db.VarChar(50)
+  userId     String    @map("user_id") @db.VarChar(50)
+  loginTime  DateTime  @map("login_time")
+  logoutTime DateTime? @map("logout_time")
+  duration   Int?      @map("duration")
+  ipAddress  String?   @map("ip_address") @db.VarChar(45)
+  userAgent  String?   @map("user_agent")
+  sessionId  String?   @map("session_id") @db.VarChar(255)
+  isActive   Boolean   @default(true) @map("is_active")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+  user       Voter     @relation(fields: [userId], references: [id])
+
+  @@map("user_login_logs")
+}
+
 enum BallotStatus {
   DRAFT
   SCHEDULED
@@ -358,56 +405,6 @@ enum BallotStatus {
   PAUSED
   ENDED
   CANCELLED
-}
-
-model BallotTemplate {
-  id                    String   @id @db.VarChar(50)
-  BallotTemplate_Name   String   @map("ballot_template_name") @db.VarChar(255)
-  BallotTemplate_Description String? @map("ballot_template_description")
-  BallotTemplate_Data   Json     @map("ballot_template_data") // Stores template configuration
-  BallotTemplate_IsPublic Boolean @default(false) @map("ballot_template_is_public")
-  BallotTemplate_CreatedBy String @map("ballot_template_created_by")
-  BallotTemplate_CreatedAt DateTime @default(now()) @map("ballot_template_created_at")
-  BallotTemplate_UpdatedAt DateTime @updatedAt @map("ballot_template_updated_at")
-  BallotTemplate_DeletedAt DateTime? @map("ballot_template_deleted_at")
-  BallotTemplate_IsDeleted Boolean @default(false) @map("ballot_template_is_deleted")
-  createdByAdmin        Admin    @relation(fields: [BallotTemplate_CreatedBy], references: [id])
-
-  @@map("ballot_templates")
-}
-
-model AdminLoginLog {
-  id            String    @id @db.VarChar(50)
-  adminId       String    @map("admin_id") @db.VarChar(50)
-  loginTime     DateTime  @map("login_time")
-  logoutTime    DateTime? @map("logout_time")
-  duration      Int?      @map("duration") // Duration in seconds
-  ipAddress     String?   @map("ip_address") @db.VarChar(45)
-  userAgent     String?   @map("user_agent") @db.Text
-  sessionId     String?   @map("session_id") @db.VarChar(255)
-  isActive      Boolean   @default(true) @map("is_active")
-  createdAt     DateTime  @default(now()) @map("created_at")
-  updatedAt     DateTime  @updatedAt @map("updated_at")
-  admin         Admin     @relation(fields: [adminId], references: [id])
-
-  @@map("admin_login_logs")
-}
-
-model UserLoginLog {
-  id            String    @id @db.VarChar(50)
-  userId        String    @map("user_id") @db.VarChar(50)
-  loginTime     DateTime  @map("login_time")
-  logoutTime    DateTime? @map("logout_time")
-  duration      Int?      @map("duration") // Duration in seconds
-  ipAddress     String?   @map("ip_address") @db.VarChar(45)
-  userAgent     String?   @map("user_agent") @db.Text
-  sessionId     String?   @map("session_id") @db.VarChar(255)
-  isActive      Boolean   @default(true) @map("is_active")
-  createdAt     DateTime  @default(now()) @map("created_at")
-  updatedAt     DateTime  @updatedAt @map("updated_at")
-  user          Voter     @relation(fields: [userId], references: [id])
-
-  @@map("user_login_logs")
 }
 
 enum Role {

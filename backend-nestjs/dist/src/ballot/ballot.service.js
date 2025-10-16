@@ -541,11 +541,24 @@ let BallotService = class BallotService {
             },
         });
     }
-    async castBallotVote(voteData, userId) {
+    async castBallotVote(castVoteDto, userId) {
         try {
-            console.log('🗳️ Casting ballot vote:', voteData);
+            console.log('🗳️ ===== VOTE SUBMISSION START =====');
+            console.log('🗳️ Casting ballot vote:', JSON.stringify(castVoteDto, null, 2));
             console.log('👤 User ID:', userId);
-            const { ballotId, votes } = voteData;
+            console.log('⏰ Timestamp:', new Date().toISOString());
+            if (!castVoteDto.ballotId) {
+                console.error('❌ Missing ballotId in request');
+                throw new common_1.BadRequestException('Ballot ID is required');
+            }
+            if (!castVoteDto.votes || !Array.isArray(castVoteDto.votes) || castVoteDto.votes.length === 0) {
+                console.error('❌ Invalid votes array:', castVoteDto.votes);
+                throw new common_1.BadRequestException('Votes array is required and must not be empty');
+            }
+            const { ballotId, votes } = castVoteDto;
+            console.log('🔍 Extracted ballotId:', ballotId);
+            console.log('🔍 Extracted votes:', votes);
+            console.log('🔍 Querying ballot from database...');
             const ballot = await this.prisma.ballot.findUnique({
                 where: {
                     id: ballotId,
@@ -569,15 +582,45 @@ let BallotService = class BallotService {
                 }
             });
             if (!ballot) {
+                console.error('❌ Ballot not found:', ballotId);
                 throw new common_1.BadRequestException('Ballot not found');
             }
+            console.log('📋 Ballot found:', {
+                id: ballot.id,
+                title: ballot.Ballot_Title,
+                isActive: ballot.Ballot_IsActive,
+                status: ballot.Ballot_Status,
+                startDate: ballot.Ballot_StartDate,
+                endDate: ballot.Ballot_EndDate,
+                allowAbstain: ballot.Ballot_AllowAbstain
+            });
+            console.log('🔍 Ballot validation details:');
+            console.log('  - Is Active:', ballot.Ballot_IsActive);
+            console.log('  - Status:', ballot.Ballot_Status);
+            console.log('  - Start Date:', ballot.Ballot_StartDate);
+            console.log('  - End Date:', ballot.Ballot_EndDate);
+            console.log('  - Allow Abstain:', ballot.Ballot_AllowAbstain);
             if (!ballot.Ballot_IsActive || ballot.Ballot_Status !== 'ACTIVE') {
+                console.error('❌ Ballot is not active:', {
+                    isActive: ballot.Ballot_IsActive,
+                    status: ballot.Ballot_Status
+                });
                 throw new common_1.BadRequestException('Ballot is not active');
             }
             const now = new Date();
+            console.log('🕐 Time check:', {
+                now: now.toISOString(),
+                startDate: ballot.Ballot_StartDate.toISOString(),
+                endDate: ballot.Ballot_EndDate.toISOString(),
+                isWithinPeriod: now >= ballot.Ballot_StartDate && now <= ballot.Ballot_EndDate
+            });
             if (now < ballot.Ballot_StartDate || now > ballot.Ballot_EndDate) {
+                console.error('❌ Ballot is not within voting period');
                 throw new common_1.BadRequestException('Ballot is not within voting period');
             }
+            console.log('🔍 Checking user ballot history...');
+            console.log('👤 User ID:', userId);
+            console.log('🗳️ Ballot ID:', ballotId);
             const existingHistory = await this.prisma.userBallotHistory.findUnique({
                 where: {
                     UserBallotHistory_UserId_UserBallotHistory_BallotId: {
@@ -586,68 +629,128 @@ let BallotService = class BallotService {
                     }
                 }
             });
+            console.log('👤 Checking existing vote history:', {
+                userId,
+                ballotId,
+                existingHistory: existingHistory ? {
+                    id: existingHistory.id,
+                    isCompleted: existingHistory.UserBallotHistory_IsCompleted,
+                    votedAt: existingHistory.UserBallotHistory_VotedAt,
+                    voteCount: existingHistory.UserBallotHistory_VoteCount
+                } : null
+            });
+            if (existingHistory) {
+                console.log('⚠️ User has already voted on this ballot!');
+                console.log('  - Vote completed:', existingHistory.UserBallotHistory_IsCompleted);
+                console.log('  - Vote count:', existingHistory.UserBallotHistory_VoteCount);
+                console.log('  - Voted at:', existingHistory.UserBallotHistory_VotedAt);
+                console.log('❌ BLOCKING: User cannot vote again on this ballot');
+            }
+            else {
+                console.log('✅ User has NOT voted on this ballot yet - proceeding with vote');
+            }
             if (existingHistory && existingHistory.UserBallotHistory_IsCompleted) {
+                console.error('❌ User has already voted on this specific ballot:', {
+                    userId,
+                    ballotId,
+                    isCompleted: existingHistory.UserBallotHistory_IsCompleted,
+                    votedAt: existingHistory.UserBallotHistory_VotedAt
+                });
                 throw new common_1.ConflictException('User has already completed voting for this ballot');
             }
-            if (!votes || !Array.isArray(votes) || votes.length === 0) {
-                throw new common_1.BadRequestException('No votes provided');
+            console.log('🔍 Validating votes...');
+            console.log('  - Votes array:', votes);
+            console.log('  - Votes length:', votes.length);
+            console.log('  - Ballot allows abstain:', ballot.Ballot_AllowAbstain);
+            if (!votes || !Array.isArray(votes)) {
+                console.error('❌ Votes must be an array');
+                throw new common_1.BadRequestException('Votes must be an array');
             }
+            if (votes.length === 0 && !ballot.Ballot_AllowAbstain) {
+                console.error('❌ No votes provided and ballot does not allow abstaining');
+                throw new common_1.BadRequestException('No votes provided and ballot does not allow abstaining');
+            }
+            if (votes.length === 0 && ballot.Ballot_AllowAbstain) {
+                console.log('🗳️ User is abstaining (no votes submitted) - this counts as their one vote for this ballot');
+            }
+            console.log('🗳️ Validating votes:', votes);
             for (const vote of votes) {
                 const { positionId, candidateId } = vote;
+                console.log('🔍 Validating vote:', { positionId, candidateId });
                 const ballotPosition = ballot.ballotPositions.find(bp => bp.BallotPosition_PositionId === positionId);
                 if (!ballotPosition) {
+                    console.error('❌ Position not in ballot:', {
+                        positionId,
+                        availablePositions: ballot.ballotPositions.map(bp => bp.BallotPosition_PositionId)
+                    });
                     throw new common_1.BadRequestException(`Position ${positionId} is not in this ballot`);
                 }
                 const ballotCandidate = ballot.ballotCandidates.find(bc => bc.BallotCandidate_CandidateId === candidateId &&
                     bc.BallotCandidate_PositionId === positionId);
                 if (!ballotCandidate) {
+                    console.error('❌ Candidate not valid for position:', {
+                        candidateId,
+                        positionId,
+                        availableCandidates: ballot.ballotCandidates
+                            .filter(bc => bc.BallotCandidate_PositionId === positionId)
+                            .map(bc => bc.BallotCandidate_CandidateId)
+                    });
                     throw new common_1.BadRequestException(`Candidate ${candidateId} is not valid for position ${positionId} in this ballot`);
                 }
             }
             const electionIdValue = ballot.electionId;
+            console.log('💾 Starting database transaction...');
+            console.log('🔄 Starting database transaction...');
             return await this.prisma.$transaction(async (tx) => {
+                console.log('✅ Database transaction started');
                 const createdVotes = [];
-                for (const vote of votes) {
-                    const { positionId, candidateId } = vote;
-                    const voteData_create = {
-                        id: this.generateId(),
-                        voter: { connect: { id: userId } },
-                        candidate: { connect: { id: candidateId } },
-                        position: { connect: { id: positionId } },
-                        ballot: { connect: { id: ballotId } },
-                        ipAddress: voteData.ipAddress || null,
-                        userAgent: voteData.userAgent || null,
-                        sessionId: voteData.sessionId || null,
-                    };
-                    if (electionIdValue) {
-                        voteData_create.election = { connect: { id: electionIdValue } };
-                    }
-                    const voteRecord = await tx.vote.create({
-                        data: voteData_create,
-                        include: {
-                            voter: {
-                                select: {
-                                    id: true,
-                                    Voter_Name: true,
-                                    Voter_StudentId: true,
-                                }
-                            },
-                            candidate: {
-                                select: {
-                                    id: true,
-                                    Candidate_Name: true,
-                                    Candidate_StudentId: true,
-                                }
-                            },
-                            position: {
-                                select: {
-                                    id: true,
-                                    Position_Title: true,
+                if (votes.length === 0) {
+                    console.log('🗳️ Processing abstaining vote (no votes to create)');
+                }
+                else {
+                    for (const vote of votes) {
+                        const { positionId, candidateId } = vote;
+                        console.log('🗳️ Creating vote for:', { positionId, candidateId });
+                        const voteData_create = {
+                            id: this.generateId(),
+                            voter: { connect: { id: userId } },
+                            candidate: { connect: { id: candidateId } },
+                            position: { connect: { id: positionId } },
+                            ballot: { connect: { id: ballotId } },
+                            ipAddress: castVoteDto.ipAddress || null,
+                            userAgent: castVoteDto.userAgent || null,
+                            sessionId: castVoteDto.sessionId || null,
+                        };
+                        if (electionIdValue) {
+                            voteData_create.election = { connect: { id: electionIdValue } };
+                        }
+                        const voteRecord = await tx.vote.create({
+                            data: voteData_create,
+                            include: {
+                                voter: {
+                                    select: {
+                                        id: true,
+                                        Voter_Name: true,
+                                        Voter_StudentId: true,
+                                    }
+                                },
+                                candidate: {
+                                    select: {
+                                        id: true,
+                                        Candidate_Name: true,
+                                        Candidate_StudentId: true,
+                                    }
+                                },
+                                position: {
+                                    select: {
+                                        id: true,
+                                        Position_Title: true,
+                                    }
                                 }
                             }
-                        }
-                    });
-                    createdVotes.push(voteRecord);
+                        });
+                        createdVotes.push(voteRecord);
+                    }
                 }
                 const totalVotes = createdVotes.length;
                 await tx.userBallotHistory.upsert({
@@ -673,6 +776,11 @@ let BallotService = class BallotService {
                         UserBallotHistory_LastAccessed: new Date(),
                     }
                 });
+                console.log('✅ Vote submission completed successfully!');
+                console.log('  - Total votes created:', totalVotes);
+                console.log('  - Created votes:', createdVotes.length);
+                console.log('  - Ballot ID:', ballot.id);
+                console.log('  - User ID:', userId);
                 return {
                     message: 'Vote cast successfully!',
                     votes: createdVotes,
@@ -686,7 +794,13 @@ let BallotService = class BallotService {
             });
         }
         catch (error) {
+            console.error('❌ ===== VOTE SUBMISSION FAILED =====');
             console.error('❌ Error casting ballot vote:', error);
+            console.error('❌ Error details:', {
+                message: error.message,
+                stack: error.stack,
+                name: error.name
+            });
             if (error instanceof common_1.BadRequestException || error instanceof common_1.ConflictException) {
                 throw error;
             }
