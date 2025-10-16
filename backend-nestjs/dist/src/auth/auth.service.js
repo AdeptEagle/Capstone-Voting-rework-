@@ -130,6 +130,7 @@ let AuthService = class AuthService {
             sameSite: 'lax',
             maxAge: 24 * 60 * 60 * 1000,
             path: '/',
+            domain: process.env.NODE_ENV === 'production' ? '.up.railway.app' : undefined,
         });
         try {
             const loginLogId = await this.idGenerator.generateId('admin_login_log', 'simple');
@@ -236,6 +237,7 @@ let AuthService = class AuthService {
             sameSite: 'lax',
             maxAge: 24 * 60 * 60 * 1000,
             path: '/',
+            domain: process.env.NODE_ENV === 'production' ? '.up.railway.app' : undefined,
         });
         try {
             const loginLogId = await this.idGenerator.generateId('user_login_log', 'simple');
@@ -399,6 +401,7 @@ let AuthService = class AuthService {
                 sameSite: 'lax',
                 maxAge: 24 * 60 * 60 * 1000,
                 path: '/',
+                domain: process.env.NODE_ENV === 'production' ? '.up.railway.app' : undefined,
             });
             return {
                 message: 'User registration successful',

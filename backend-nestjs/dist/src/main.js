@@ -21,6 +21,12 @@ async function bootstrap() {
         allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
     });
     app.use(cookieParser());
+    app.use((req, res, next) => {
+        if (req.cookies && req.cookies.access_token) {
+            console.log('Cookie detected:', req.cookies.access_token ? 'Present' : 'Missing');
+        }
+        next();
+    });
     app.use('/', (req, res, next) => {
         if (req.method === 'GET' && req.path === '/') {
             res.json({

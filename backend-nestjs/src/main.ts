@@ -26,6 +26,16 @@ async function bootstrap() {
   // Add cookie parser middleware
   app.use(cookieParser());
 
+  // Security middleware for cookies
+  app.use((req, res, next) => {
+    // Ensure cookies are properly handled
+    if (req.cookies && req.cookies.access_token) {
+      // Log cookie presence for debugging (remove in production)
+      console.log('Cookie detected:', req.cookies.access_token ? 'Present' : 'Missing');
+    }
+    next();
+  });
+
   // Add root route using NestJS approach
   app.use('/', (req: any, res: any, next: any) => {
     if (req.method === 'GET' && req.path === '/') {

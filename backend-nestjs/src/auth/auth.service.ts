@@ -139,6 +139,7 @@ export class AuthService {
       sameSite: 'lax', // Changed from 'strict' to 'lax' to allow cross-origin requests
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
       path: '/',
+      domain: process.env.NODE_ENV === 'production' ? '.up.railway.app' : undefined, // Set domain for Railway
     });
 
     // Log admin login
@@ -264,6 +265,7 @@ export class AuthService {
       sameSite: 'lax', // Changed from 'strict' to 'lax' to allow cross-origin requests
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
       path: '/',
+      domain: process.env.NODE_ENV === 'production' ? '.up.railway.app' : undefined, // Set domain for Railway
     });
 
     // Log user login
@@ -476,6 +478,7 @@ export class AuthService {
       sameSite: 'lax', // Changed from 'strict' to 'lax' to allow cross-origin requests
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
       path: '/',
+      domain: process.env.NODE_ENV === 'production' ? '.up.railway.app' : undefined, // Set domain for Railway
     });
 
       return {
