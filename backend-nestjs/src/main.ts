@@ -7,23 +7,11 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 
 async function bootstrap() {
-  console.log('🚀 Starting application...');
-  console.log('Environment variables:');
-  console.log('NODE_ENV:', process.env.NODE_ENV);
-  console.log('FRONTEND_URL:', process.env.FRONTEND_URL);
-  console.log('DATABASE_URL:', process.env.DATABASE_URL ? 'Set' : 'Not set');
-  
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   // Enable CORS with credentials
-  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5174';
-  console.log('🔧 CORS Configuration:');
-  console.log('FRONTEND_URL env var:', process.env.FRONTEND_URL);
-  console.log('Using frontend URL for CORS:', frontendUrl);
-  
-  // Temporarily allow all origins for debugging
   app.enableCors({
-    origin: true, // Allow all origins temporarily
+    origin: process.env.FRONTEND_URL || 'http://localhost:5174',
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
@@ -149,11 +137,7 @@ fetch('/api/votes', {
   });
 
   const port = process.env.PORT || 3001;
-  console.log(`🔧 Port Configuration:`);
-  console.log(`PORT env var: ${process.env.PORT}`);
-  console.log(`Using port: ${port}`);
-  
-  await app.listen(port, '0.0.0.0'); // Bind to all interfaces
+  await app.listen(port, '0.0.0.0');
   console.log(`🚀 Application is running on: http://0.0.0.0:${port}`);
   console.log(`📚 Swagger documentation: http://0.0.0.0:${port}/api`);
   console.log(`🔒 Security: HTTP-only cookies enabled`);
