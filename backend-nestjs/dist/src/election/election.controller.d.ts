@@ -6,11 +6,6 @@ export declare class ElectionController {
     private readonly prisma;
     constructor(electionService: ElectionService, prisma: PrismaService);
     getAllElections(): Promise<({
-        admin: {
-            id: string;
-            Admin_Username: string;
-            Admin_Email: string;
-        };
         electionPositions: ({
             position: {
                 id: string;
@@ -35,9 +30,14 @@ export declare class ElectionController {
         } & {
             id: string;
             createdAt: Date;
-            electionId: string;
             candidateId: string;
+            electionId: string;
         })[];
+        admin: {
+            id: string;
+            Admin_Username: string;
+            Admin_Email: string;
+        };
     } & {
         id: string;
         createdAt: Date;
@@ -45,12 +45,12 @@ export declare class ElectionController {
         deletedAt: Date | null;
         isDeleted: boolean;
         createdBy: string;
+        status: string;
         Election_Title: string;
         Election_Description: string | null;
         endDate: Date;
         isActive: boolean;
         startDate: Date;
-        status: string;
     })[]>;
     getElectionHistory(): Promise<{
         message: string;
@@ -131,11 +131,6 @@ export declare class ElectionController {
         };
     }>;
     getElectionById(id: string): Promise<{
-        admin: {
-            id: string;
-            Admin_Username: string;
-            Admin_Email: string;
-        };
         electionPositions: ({
             position: {
                 id: string;
@@ -160,9 +155,14 @@ export declare class ElectionController {
         } & {
             id: string;
             createdAt: Date;
-            electionId: string;
             candidateId: string;
+            electionId: string;
         })[];
+        admin: {
+            id: string;
+            Admin_Username: string;
+            Admin_Email: string;
+        };
     } & {
         id: string;
         createdAt: Date;
@@ -170,12 +170,12 @@ export declare class ElectionController {
         deletedAt: Date | null;
         isDeleted: boolean;
         createdBy: string;
+        status: string;
         Election_Title: string;
         Election_Description: string | null;
         endDate: Date;
         isActive: boolean;
         startDate: Date;
-        status: string;
     }>;
     updateElection(id: string, updateElectionDto: UpdateElectionDto): Promise<{
         message: string;
@@ -192,23 +192,18 @@ export declare class ElectionController {
             deletedAt: Date | null;
             isDeleted: boolean;
             createdBy: string;
+            status: string;
             Election_Title: string;
             Election_Description: string | null;
             endDate: Date;
             isActive: boolean;
             startDate: Date;
-            status: string;
         };
     }>;
     deleteElection(id: string): Promise<{
         message: string;
     }>;
     getDeletedElections(): Promise<({
-        admin: {
-            id: string;
-            Admin_Username: string;
-            Admin_Email: string;
-        };
         electionPositions: ({
             position: {
                 id: string;
@@ -233,9 +228,14 @@ export declare class ElectionController {
         } & {
             id: string;
             createdAt: Date;
-            electionId: string;
             candidateId: string;
+            electionId: string;
         })[];
+        admin: {
+            id: string;
+            Admin_Username: string;
+            Admin_Email: string;
+        };
     } & {
         id: string;
         createdAt: Date;
@@ -243,12 +243,12 @@ export declare class ElectionController {
         deletedAt: Date | null;
         isDeleted: boolean;
         createdBy: string;
+        status: string;
         Election_Title: string;
         Election_Description: string | null;
         endDate: Date;
         isActive: boolean;
         startDate: Date;
-        status: string;
     })[]>;
     restoreElection(id: string): Promise<{
         message: string;
@@ -259,12 +259,12 @@ export declare class ElectionController {
             deletedAt: Date | null;
             isDeleted: boolean;
             createdBy: string;
+            status: string;
             Election_Title: string;
             Election_Description: string | null;
             endDate: Date;
             isActive: boolean;
             startDate: Date;
-            status: string;
         };
     }>;
     permanentlyDeleteElection(id: string): Promise<{
@@ -279,12 +279,12 @@ export declare class ElectionController {
             deletedAt: Date | null;
             isDeleted: boolean;
             createdBy: string;
+            status: string;
             Election_Title: string;
             Election_Description: string | null;
             endDate: Date;
             isActive: boolean;
             startDate: Date;
-            status: string;
         };
     }>;
     deactivateElection(id: string): Promise<{
@@ -296,12 +296,12 @@ export declare class ElectionController {
             deletedAt: Date | null;
             isDeleted: boolean;
             createdBy: string;
+            status: string;
             Election_Title: string;
             Election_Description: string | null;
             endDate: Date;
             isActive: boolean;
             startDate: Date;
-            status: string;
         };
     }>;
     checkAndAutoEndElections(): Promise<{
@@ -383,8 +383,8 @@ export declare class ElectionController {
         } & {
             id: string;
             createdAt: Date;
-            electionId: string;
             candidateId: string;
+            electionId: string;
         };
     }>;
     removePositionFromElection(id: string, positionId: string): Promise<{

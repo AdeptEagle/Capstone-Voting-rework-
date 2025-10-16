@@ -4,27 +4,27 @@ export declare class VoterController {
     private readonly voterService;
     constructor(voterService: VoterService);
     getAllVoters(): Promise<({
-        department: {
-            id: string;
-            Department_Name: string;
-        };
         course: {
             id: string;
             Course_Name: string;
             Course_Code: string;
         };
+        department: {
+            id: string;
+            Department_Name: string;
+        };
     } & {
         id: string;
-        password: string | null;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
         isDeleted: boolean;
+        courseId: string;
         departmentId: string;
         Voter_Name: string;
         Voter_Email: string;
         Voter_StudentId: string;
-        courseId: string;
+        password: string | null;
         hasVoted: boolean;
     })[]>;
     createVoter(createVoterDto: CreateVoterDto): Promise<{
@@ -49,77 +49,77 @@ export declare class VoterController {
         };
     }>;
     getVoterById(id: string): Promise<{
-        department: {
-            id: string;
-            Department_Name: string;
-        };
         course: {
             id: string;
             Course_Name: string;
             Course_Code: string;
         };
+        department: {
+            id: string;
+            Department_Name: string;
+        };
     } & {
         id: string;
-        password: string | null;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
         isDeleted: boolean;
+        courseId: string;
         departmentId: string;
         Voter_Name: string;
         Voter_Email: string;
         Voter_StudentId: string;
-        courseId: string;
+        password: string | null;
         hasVoted: boolean;
     }>;
     getVoterByStudentId(studentId: string): Promise<{
-        department: {
-            id: string;
-            Department_Name: string;
-        };
         course: {
             id: string;
             Course_Name: string;
             Course_Code: string;
         };
+        department: {
+            id: string;
+            Department_Name: string;
+        };
     } & {
         id: string;
-        password: string | null;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
         isDeleted: boolean;
+        courseId: string;
         departmentId: string;
         Voter_Name: string;
         Voter_Email: string;
         Voter_StudentId: string;
-        courseId: string;
+        password: string | null;
         hasVoted: boolean;
     }>;
     updateVoter(id: string, updateVoterDto: UpdateVoterDto): Promise<{
         message: string;
         voter: {
-            department: {
-                id: string;
-                Department_Name: string;
-            };
             course: {
                 id: string;
                 Course_Name: string;
                 Course_Code: string;
             };
+            department: {
+                id: string;
+                Department_Name: string;
+            };
         } & {
             id: string;
-            password: string | null;
             createdAt: Date;
             updatedAt: Date;
             deletedAt: Date | null;
             isDeleted: boolean;
+            courseId: string;
             departmentId: string;
             Voter_Name: string;
             Voter_Email: string;
             Voter_StudentId: string;
-            courseId: string;
+            password: string | null;
             hasVoted: boolean;
         };
     }>;
@@ -130,16 +130,16 @@ export declare class VoterController {
         message: string;
         voter: {
             id: string;
-            password: string | null;
             createdAt: Date;
             updatedAt: Date;
             deletedAt: Date | null;
             isDeleted: boolean;
+            courseId: string;
             departmentId: string;
             Voter_Name: string;
             Voter_Email: string;
             Voter_StudentId: string;
-            courseId: string;
+            password: string | null;
             hasVoted: boolean;
         };
     }>;
@@ -147,16 +147,16 @@ export declare class VoterController {
         message: string;
         voter: {
             id: string;
-            password: string | null;
             createdAt: Date;
             updatedAt: Date;
             deletedAt: Date | null;
             isDeleted: boolean;
+            courseId: string;
             departmentId: string;
             Voter_Name: string;
             Voter_Email: string;
             Voter_StudentId: string;
-            courseId: string;
+            password: string | null;
             hasVoted: boolean;
         };
     }>;
@@ -214,9 +214,9 @@ export declare class VoterController {
             };
         } & {
             id: string;
-            UserBallotHistory_VotedAt: Date | null;
             UserBallotHistory_UserId: string;
             UserBallotHistory_BallotId: string;
+            UserBallotHistory_VotedAt: Date | null;
             UserBallotHistory_VoteCount: number;
             UserBallotHistory_IsCompleted: boolean;
             UserBallotHistory_LastAccessed: Date;
@@ -226,25 +226,25 @@ export declare class VoterController {
                 id: string;
                 Position_Title: string;
             };
-            election: {
-                id: string;
-                Election_Title: string;
-            };
             candidate: {
                 id: string;
                 Candidate_Name: string;
                 Candidate_StudentId: string;
             };
+            election: {
+                id: string;
+                Election_Title: string;
+            };
         } & {
             id: string;
             createdAt: Date;
-            electionId: string | null;
-            positionId: string;
-            candidateId: string;
-            ipAddress: string | null;
-            userAgent: string | null;
-            sessionId: string | null;
             auditHash: string | null;
+            candidateId: string;
+            electionId: string | null;
+            ipAddress: string | null;
+            positionId: string;
+            sessionId: string | null;
+            userAgent: string | null;
             verificationCode: string | null;
             voterId: string;
             ballotId: string | null;

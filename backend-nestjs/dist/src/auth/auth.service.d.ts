@@ -87,14 +87,14 @@ export declare class AuthService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        ipAddress: string | null;
+        sessionId: string | null;
+        userAgent: string | null;
         isActive: boolean;
         userId: string;
         loginTime: Date;
         logoutTime: Date | null;
         duration: number | null;
-        ipAddress: string | null;
-        userAgent: string | null;
-        sessionId: string | null;
     }>;
     userRegister(userRegisterDto: {
         Voter_Name: string;

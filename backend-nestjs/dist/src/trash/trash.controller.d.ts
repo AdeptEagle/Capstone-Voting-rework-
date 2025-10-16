@@ -12,15 +12,16 @@ export declare class TrashController {
         total: number;
     }>;
     getDeletedCandidates(): Promise<({
-        department: {
+        position: {
             id: string;
+            Position_Title: string;
+            Position_Description: string | null;
             createdAt: Date;
             updatedAt: Date;
-            Department_Name: string;
-            Department_Description: string | null;
             deletedAt: Date | null;
             isDeleted: boolean;
-            createdBy: string;
+            displayOrder: number;
+            voteLimit: number;
         };
         course: {
             id: string;
@@ -28,22 +29,21 @@ export declare class TrashController {
             updatedAt: Date;
             deletedAt: Date | null;
             isDeleted: boolean;
+            departmentId: string;
             createdBy: string;
             Course_Name: string;
             Course_Code: string;
             Course_Description: string | null;
-            departmentId: string;
         };
-        position: {
+        department: {
             id: string;
             createdAt: Date;
             updatedAt: Date;
             deletedAt: Date | null;
             isDeleted: boolean;
-            Position_Title: string;
-            Position_Description: string | null;
-            displayOrder: number;
-            voteLimit: number;
+            Department_Name: string;
+            Department_Description: string | null;
+            createdBy: string;
         };
     } & {
         id: string;
@@ -51,8 +51,6 @@ export declare class TrashController {
         updatedAt: Date;
         deletedAt: Date | null;
         isDeleted: boolean;
-        departmentId: string | null;
-        courseId: string | null;
         positionId: string;
         Candidate_Name: string;
         Candidate_Email: string;
@@ -60,16 +58,18 @@ export declare class TrashController {
         photo: string | null;
         manifesto: string | null;
         party_list_name: string | null;
+        courseId: string | null;
+        departmentId: string | null;
         partyListId: string | null;
     })[]>;
     getDeletedPositions(): Promise<{
         id: string;
+        Position_Title: string;
+        Position_Description: string | null;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
         isDeleted: boolean;
-        Position_Title: string;
-        Position_Description: string | null;
         displayOrder: number;
         voteLimit: number;
     }[]>;
@@ -81,25 +81,25 @@ export declare class TrashController {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        Department_Name: string;
-        Department_Description: string | null;
         deletedAt: Date | null;
         isDeleted: boolean;
+        Department_Name: string;
+        Department_Description: string | null;
         createdBy: string;
     })[]>;
     getDeletedCourses(): Promise<({
-        admin: {
-            Admin_Username: string;
-        };
         department: {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            Department_Name: string;
-            Department_Description: string | null;
             deletedAt: Date | null;
             isDeleted: boolean;
+            Department_Name: string;
+            Department_Description: string | null;
             createdBy: string;
+        };
+        admin: {
+            Admin_Username: string;
         };
     } & {
         id: string;
@@ -107,55 +107,50 @@ export declare class TrashController {
         updatedAt: Date;
         deletedAt: Date | null;
         isDeleted: boolean;
+        departmentId: string;
         createdBy: string;
         Course_Name: string;
         Course_Code: string;
         Course_Description: string | null;
-        departmentId: string;
     })[]>;
     getDeletedVoters(): Promise<({
-        department: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            Department_Name: string;
-            Department_Description: string | null;
-            deletedAt: Date | null;
-            isDeleted: boolean;
-            createdBy: string;
-        };
         course: {
             id: string;
             createdAt: Date;
             updatedAt: Date;
             deletedAt: Date | null;
             isDeleted: boolean;
+            departmentId: string;
             createdBy: string;
             Course_Name: string;
             Course_Code: string;
             Course_Description: string | null;
-            departmentId: string;
+        };
+        department: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            deletedAt: Date | null;
+            isDeleted: boolean;
+            Department_Name: string;
+            Department_Description: string | null;
+            createdBy: string;
         };
     } & {
         id: string;
-        password: string | null;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
         isDeleted: boolean;
+        courseId: string;
         departmentId: string;
         Voter_Name: string;
         Voter_Email: string;
         Voter_StudentId: string;
-        courseId: string;
+        password: string | null;
         hasVoted: boolean;
     })[]>;
     getDeletedElections(): Promise<({
-        admin: {
-            id: string;
-            Admin_Username: string;
-            Admin_Email: string;
-        };
         electionPositions: ({
             position: {
                 id: string;
@@ -180,9 +175,14 @@ export declare class TrashController {
         } & {
             id: string;
             createdAt: Date;
-            electionId: string;
             candidateId: string;
+            electionId: string;
         })[];
+        admin: {
+            id: string;
+            Admin_Username: string;
+            Admin_Email: string;
+        };
     } & {
         id: string;
         createdAt: Date;
@@ -190,23 +190,24 @@ export declare class TrashController {
         deletedAt: Date | null;
         isDeleted: boolean;
         createdBy: string;
+        status: string;
         Election_Title: string;
         Election_Description: string | null;
         endDate: Date;
         isActive: boolean;
         startDate: Date;
-        status: string;
     })[]>;
     restoreCandidate(id: string): Promise<{
-        department: {
+        position: {
             id: string;
+            Position_Title: string;
+            Position_Description: string | null;
             createdAt: Date;
             updatedAt: Date;
-            Department_Name: string;
-            Department_Description: string | null;
             deletedAt: Date | null;
             isDeleted: boolean;
-            createdBy: string;
+            displayOrder: number;
+            voteLimit: number;
         };
         course: {
             id: string;
@@ -214,22 +215,21 @@ export declare class TrashController {
             updatedAt: Date;
             deletedAt: Date | null;
             isDeleted: boolean;
+            departmentId: string;
             createdBy: string;
             Course_Name: string;
             Course_Code: string;
             Course_Description: string | null;
-            departmentId: string;
         };
-        position: {
+        department: {
             id: string;
             createdAt: Date;
             updatedAt: Date;
             deletedAt: Date | null;
             isDeleted: boolean;
-            Position_Title: string;
-            Position_Description: string | null;
-            displayOrder: number;
-            voteLimit: number;
+            Department_Name: string;
+            Department_Description: string | null;
+            createdBy: string;
         };
     } & {
         id: string;
@@ -237,8 +237,6 @@ export declare class TrashController {
         updatedAt: Date;
         deletedAt: Date | null;
         isDeleted: boolean;
-        departmentId: string | null;
-        courseId: string | null;
         positionId: string;
         Candidate_Name: string;
         Candidate_Email: string;
@@ -246,16 +244,18 @@ export declare class TrashController {
         photo: string | null;
         manifesto: string | null;
         party_list_name: string | null;
+        courseId: string | null;
+        departmentId: string | null;
         partyListId: string | null;
     }>;
     restorePosition(id: string): Promise<{
         id: string;
+        Position_Title: string;
+        Position_Description: string | null;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
         isDeleted: boolean;
-        Position_Title: string;
-        Position_Description: string | null;
         displayOrder: number;
         voteLimit: number;
     }>;
@@ -263,10 +263,10 @@ export declare class TrashController {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        Department_Name: string;
-        Department_Description: string | null;
         deletedAt: Date | null;
         isDeleted: boolean;
+        Department_Name: string;
+        Department_Description: string | null;
         createdBy: string;
     }>;
     restoreCourse(id: string): Promise<{
@@ -274,10 +274,10 @@ export declare class TrashController {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            Department_Name: string;
-            Department_Description: string | null;
             deletedAt: Date | null;
             isDeleted: boolean;
+            Department_Name: string;
+            Department_Description: string | null;
             createdBy: string;
         };
     } & {
@@ -286,47 +286,47 @@ export declare class TrashController {
         updatedAt: Date;
         deletedAt: Date | null;
         isDeleted: boolean;
+        departmentId: string;
         createdBy: string;
         Course_Name: string;
         Course_Code: string;
         Course_Description: string | null;
-        departmentId: string;
     }>;
     restoreVoter(id: string): Promise<{
-        department: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            Department_Name: string;
-            Department_Description: string | null;
-            deletedAt: Date | null;
-            isDeleted: boolean;
-            createdBy: string;
-        };
         course: {
             id: string;
             createdAt: Date;
             updatedAt: Date;
             deletedAt: Date | null;
             isDeleted: boolean;
+            departmentId: string;
             createdBy: string;
             Course_Name: string;
             Course_Code: string;
             Course_Description: string | null;
-            departmentId: string;
+        };
+        department: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            deletedAt: Date | null;
+            isDeleted: boolean;
+            Department_Name: string;
+            Department_Description: string | null;
+            createdBy: string;
         };
     } & {
         id: string;
-        password: string | null;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
         isDeleted: boolean;
+        courseId: string;
         departmentId: string;
         Voter_Name: string;
         Voter_Email: string;
         Voter_StudentId: string;
-        courseId: string;
+        password: string | null;
         hasVoted: boolean;
     }>;
     restoreElection(id: string): Promise<{
@@ -336,12 +336,12 @@ export declare class TrashController {
         deletedAt: Date | null;
         isDeleted: boolean;
         createdBy: string;
+        status: string;
         Election_Title: string;
         Election_Description: string | null;
         endDate: Date;
         isActive: boolean;
         startDate: Date;
-        status: string;
     }>;
     bulkRestore(body: {
         itemIds: string[];
@@ -358,8 +358,6 @@ export declare class TrashController {
         updatedAt: Date;
         deletedAt: Date | null;
         isDeleted: boolean;
-        departmentId: string | null;
-        courseId: string | null;
         positionId: string;
         Candidate_Name: string;
         Candidate_Email: string;
@@ -367,16 +365,18 @@ export declare class TrashController {
         photo: string | null;
         manifesto: string | null;
         party_list_name: string | null;
+        courseId: string | null;
+        departmentId: string | null;
         partyListId: string | null;
     }>;
     permanentlyDeletePosition(id: string): Promise<{
         id: string;
+        Position_Title: string;
+        Position_Description: string | null;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
         isDeleted: boolean;
-        Position_Title: string;
-        Position_Description: string | null;
         displayOrder: number;
         voteLimit: number;
     }>;
@@ -384,10 +384,10 @@ export declare class TrashController {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        Department_Name: string;
-        Department_Description: string | null;
         deletedAt: Date | null;
         isDeleted: boolean;
+        Department_Name: string;
+        Department_Description: string | null;
         createdBy: string;
     }>;
     permanentlyDeleteCourse(id: string): Promise<{
@@ -396,24 +396,24 @@ export declare class TrashController {
         updatedAt: Date;
         deletedAt: Date | null;
         isDeleted: boolean;
+        departmentId: string;
         createdBy: string;
         Course_Name: string;
         Course_Code: string;
         Course_Description: string | null;
-        departmentId: string;
     }>;
     permanentlyDeleteVoter(id: string): Promise<{
         id: string;
-        password: string | null;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
         isDeleted: boolean;
+        courseId: string;
         departmentId: string;
         Voter_Name: string;
         Voter_Email: string;
         Voter_StudentId: string;
-        courseId: string;
+        password: string | null;
         hasVoted: boolean;
     }>;
     permanentlyDeleteElection(id: string): Promise<{
@@ -423,12 +423,12 @@ export declare class TrashController {
         deletedAt: Date | null;
         isDeleted: boolean;
         createdBy: string;
+        status: string;
         Election_Title: string;
         Election_Description: string | null;
         endDate: Date;
         isActive: boolean;
         startDate: Date;
-        status: string;
     }>;
     emptyTrash(): Promise<{
         message: string;

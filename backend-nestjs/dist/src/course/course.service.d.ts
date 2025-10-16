@@ -6,18 +6,18 @@ export declare class CourseService {
     private idGenerator;
     constructor(prisma: PrismaService, idGenerator: IdGeneratorService);
     getAllCourses(): Promise<({
-        admin: {
-            id: string;
-            Admin_Username: string;
-            Admin_Email: string;
+        _count: {
+            candidates: number;
+            voters: number;
         };
         department: {
             id: string;
             Department_Name: string;
         };
-        _count: {
-            candidates: number;
-            voters: number;
+        admin: {
+            id: string;
+            Admin_Username: string;
+            Admin_Email: string;
         };
     } & {
         id: string;
@@ -25,23 +25,23 @@ export declare class CourseService {
         updatedAt: Date;
         deletedAt: Date | null;
         isDeleted: boolean;
+        departmentId: string;
         createdBy: string;
         Course_Name: string;
         Course_Code: string;
         Course_Description: string | null;
-        departmentId: string;
     })[]>;
     createCourse(createCourseDto: CreateCourseDto, adminId: string): Promise<{
         message: string;
         course: {
+            department: {
+                id: string;
+                Department_Name: string;
+            };
             admin: {
                 id: string;
                 Admin_Username: string;
                 Admin_Email: string;
-            };
-            department: {
-                id: string;
-                Department_Name: string;
             };
         } & {
             id: string;
@@ -49,26 +49,26 @@ export declare class CourseService {
             updatedAt: Date;
             deletedAt: Date | null;
             isDeleted: boolean;
+            departmentId: string;
             createdBy: string;
             Course_Name: string;
             Course_Code: string;
             Course_Description: string | null;
-            departmentId: string;
         };
     }>;
     getCourseById(id: string): Promise<{
-        admin: {
-            id: string;
-            Admin_Username: string;
-            Admin_Email: string;
+        _count: {
+            candidates: number;
+            voters: number;
         };
         department: {
             id: string;
             Department_Name: string;
         };
-        _count: {
-            candidates: number;
-            voters: number;
+        admin: {
+            id: string;
+            Admin_Username: string;
+            Admin_Email: string;
         };
     } & {
         id: string;
@@ -76,23 +76,23 @@ export declare class CourseService {
         updatedAt: Date;
         deletedAt: Date | null;
         isDeleted: boolean;
+        departmentId: string;
         createdBy: string;
         Course_Name: string;
         Course_Code: string;
         Course_Description: string | null;
-        departmentId: string;
     }>;
     updateCourse(id: string, updateCourseDto: UpdateCourseDto): Promise<{
         message: string;
         course: {
+            department: {
+                id: string;
+                Department_Name: string;
+            };
             admin: {
                 id: string;
                 Admin_Username: string;
                 Admin_Email: string;
-            };
-            department: {
-                id: string;
-                Department_Name: string;
             };
         } & {
             id: string;
@@ -100,25 +100,25 @@ export declare class CourseService {
             updatedAt: Date;
             deletedAt: Date | null;
             isDeleted: boolean;
+            departmentId: string;
             createdBy: string;
             Course_Name: string;
             Course_Code: string;
             Course_Description: string | null;
-            departmentId: string;
         };
     }>;
     deleteCourse(id: string): Promise<{
         message: string;
     }>;
     getCoursesByDepartment(departmentId: string): Promise<({
+        _count: {
+            candidates: number;
+            voters: number;
+        };
         admin: {
             id: string;
             Admin_Username: string;
             Admin_Email: string;
-        };
-        _count: {
-            candidates: number;
-            voters: number;
         };
     } & {
         id: string;
@@ -126,11 +126,11 @@ export declare class CourseService {
         updatedAt: Date;
         deletedAt: Date | null;
         isDeleted: boolean;
+        departmentId: string;
         createdBy: string;
         Course_Name: string;
         Course_Code: string;
         Course_Description: string | null;
-        departmentId: string;
     })[]>;
     getCourseVoters(id: string): Promise<{
         id: string;
@@ -142,13 +142,13 @@ export declare class CourseService {
         hasVoted: boolean;
     }[]>;
     getCourseCandidates(id: string): Promise<({
-        department: {
-            id: string;
-            Department_Name: string;
-        };
         position: {
             id: string;
             Position_Title: string;
+        };
+        department: {
+            id: string;
+            Department_Name: string;
         };
     } & {
         id: string;
@@ -156,8 +156,6 @@ export declare class CourseService {
         updatedAt: Date;
         deletedAt: Date | null;
         isDeleted: boolean;
-        departmentId: string | null;
-        courseId: string | null;
         positionId: string;
         Candidate_Name: string;
         Candidate_Email: string;
@@ -165,6 +163,8 @@ export declare class CourseService {
         photo: string | null;
         manifesto: string | null;
         party_list_name: string | null;
+        courseId: string | null;
+        departmentId: string | null;
         partyListId: string | null;
     })[]>;
 }

@@ -31,17 +31,41 @@ export declare class BallotService {
         isActive?: boolean;
         createdBy?: string;
     }): Promise<({
+        ballotPositions: ({
+            position: {
+                id: string;
+                Position_Title: string;
+                Position_Description: string | null;
+                createdAt: Date;
+                updatedAt: Date;
+                deletedAt: Date | null;
+                isDeleted: boolean;
+                displayOrder: number;
+                voteLimit: number;
+            };
+        } & {
+            id: string;
+            BallotPosition_BallotId: string;
+            BallotPosition_PositionId: string;
+            BallotPosition_DisplayOrder: number;
+            BallotPosition_IsRequired: boolean;
+        })[];
+        _count: {
+            votes: number;
+            userHistory: number;
+        };
         ballotCandidates: ({
             candidate: {
-                department: {
+                position: {
                     id: string;
+                    Position_Title: string;
+                    Position_Description: string | null;
                     createdAt: Date;
                     updatedAt: Date;
                     deletedAt: Date | null;
                     isDeleted: boolean;
-                    Department_Name: string;
-                    Department_Description: string | null;
-                    createdBy: string;
+                    displayOrder: number;
+                    voteLimit: number;
                 };
                 course: {
                     id: string;
@@ -55,24 +79,23 @@ export declare class BallotService {
                     Course_Code: string;
                     Course_Description: string | null;
                 };
-                position: {
+                department: {
                     id: string;
                     createdAt: Date;
                     updatedAt: Date;
                     deletedAt: Date | null;
                     isDeleted: boolean;
-                    Position_Title: string;
-                    Position_Description: string | null;
-                    displayOrder: number;
-                    voteLimit: number;
+                    Department_Name: string;
+                    Department_Description: string | null;
+                    createdBy: string;
                 };
                 partyList: {
                     id: string;
-                    name: string;
                     createdAt: Date;
                     updatedAt: Date;
                     deletedAt: Date | null;
                     isDeleted: boolean;
+                    name: string;
                     description: string | null;
                     color: string | null;
                     logo: string | null;
@@ -81,17 +104,17 @@ export declare class BallotService {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
+                deletedAt: Date | null;
+                isDeleted: boolean;
+                positionId: string;
                 Candidate_Name: string;
                 Candidate_Email: string;
                 Candidate_StudentId: string;
                 photo: string | null;
                 manifesto: string | null;
                 party_list_name: string | null;
-                deletedAt: Date | null;
-                isDeleted: boolean;
                 courseId: string | null;
                 departmentId: string | null;
-                positionId: string;
                 partyListId: string | null;
             };
         } & {
@@ -101,25 +124,11 @@ export declare class BallotService {
             BallotCandidate_PositionId: string;
             BallotCandidate_IsActive: boolean;
         })[];
-        ballotPositions: ({
-            position: {
-                id: string;
-                createdAt: Date;
-                updatedAt: Date;
-                deletedAt: Date | null;
-                isDeleted: boolean;
-                Position_Title: string;
-                Position_Description: string | null;
-                displayOrder: number;
-                voteLimit: number;
-            };
-        } & {
+        createdByAdmin: {
             id: string;
-            BallotPosition_DisplayOrder: number;
-            BallotPosition_BallotId: string;
-            BallotPosition_PositionId: string;
-            BallotPosition_IsRequired: boolean;
-        })[];
+            Admin_Username: string;
+            Admin_Email: string;
+        };
         results: {
             id: string;
             BallotResults_BallotId: string;
@@ -128,15 +137,6 @@ export declare class BallotService {
             BallotResults_VoterTurnout: number;
             BallotResults_LastUpdated: Date;
             BallotResults_IsFinal: boolean;
-        };
-        createdByAdmin: {
-            id: string;
-            Admin_Username: string;
-            Admin_Email: string;
-        };
-        _count: {
-            userHistory: number;
-            votes: number;
         };
     } & {
         id: string;
@@ -160,17 +160,41 @@ export declare class BallotService {
         Ballot_CreatedBy: string;
     })[]>;
     getBallotById(id: string): Promise<{
+        ballotPositions: ({
+            position: {
+                id: string;
+                Position_Title: string;
+                Position_Description: string | null;
+                createdAt: Date;
+                updatedAt: Date;
+                deletedAt: Date | null;
+                isDeleted: boolean;
+                displayOrder: number;
+                voteLimit: number;
+            };
+        } & {
+            id: string;
+            BallotPosition_BallotId: string;
+            BallotPosition_PositionId: string;
+            BallotPosition_DisplayOrder: number;
+            BallotPosition_IsRequired: boolean;
+        })[];
+        _count: {
+            votes: number;
+            userHistory: number;
+        };
         ballotCandidates: ({
             candidate: {
-                department: {
+                position: {
                     id: string;
+                    Position_Title: string;
+                    Position_Description: string | null;
                     createdAt: Date;
                     updatedAt: Date;
                     deletedAt: Date | null;
                     isDeleted: boolean;
-                    Department_Name: string;
-                    Department_Description: string | null;
-                    createdBy: string;
+                    displayOrder: number;
+                    voteLimit: number;
                 };
                 course: {
                     id: string;
@@ -184,24 +208,23 @@ export declare class BallotService {
                     Course_Code: string;
                     Course_Description: string | null;
                 };
-                position: {
+                department: {
                     id: string;
                     createdAt: Date;
                     updatedAt: Date;
                     deletedAt: Date | null;
                     isDeleted: boolean;
-                    Position_Title: string;
-                    Position_Description: string | null;
-                    displayOrder: number;
-                    voteLimit: number;
+                    Department_Name: string;
+                    Department_Description: string | null;
+                    createdBy: string;
                 };
                 partyList: {
                     id: string;
-                    name: string;
                     createdAt: Date;
                     updatedAt: Date;
                     deletedAt: Date | null;
                     isDeleted: boolean;
+                    name: string;
                     description: string | null;
                     color: string | null;
                     logo: string | null;
@@ -210,17 +233,17 @@ export declare class BallotService {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
+                deletedAt: Date | null;
+                isDeleted: boolean;
+                positionId: string;
                 Candidate_Name: string;
                 Candidate_Email: string;
                 Candidate_StudentId: string;
                 photo: string | null;
                 manifesto: string | null;
                 party_list_name: string | null;
-                deletedAt: Date | null;
-                isDeleted: boolean;
                 courseId: string | null;
                 departmentId: string | null;
-                positionId: string;
                 partyListId: string | null;
             };
         } & {
@@ -230,35 +253,21 @@ export declare class BallotService {
             BallotCandidate_PositionId: string;
             BallotCandidate_IsActive: boolean;
         })[];
-        ballotPositions: ({
-            position: {
-                id: string;
-                createdAt: Date;
-                updatedAt: Date;
-                deletedAt: Date | null;
-                isDeleted: boolean;
-                Position_Title: string;
-                Position_Description: string | null;
-                displayOrder: number;
-                voteLimit: number;
-            };
-        } & {
+        createdByAdmin: {
             id: string;
-            BallotPosition_DisplayOrder: number;
-            BallotPosition_BallotId: string;
-            BallotPosition_PositionId: string;
-            BallotPosition_IsRequired: boolean;
-        })[];
+            Admin_Username: string;
+            Admin_Email: string;
+        };
         results: {
             resultDetails: ({
                 position: {
                     id: string;
+                    Position_Title: string;
+                    Position_Description: string | null;
                     createdAt: Date;
                     updatedAt: Date;
                     deletedAt: Date | null;
                     isDeleted: boolean;
-                    Position_Title: string;
-                    Position_Description: string | null;
                     displayOrder: number;
                     voteLimit: number;
                 };
@@ -266,17 +275,17 @@ export declare class BallotService {
                     id: string;
                     createdAt: Date;
                     updatedAt: Date;
+                    deletedAt: Date | null;
+                    isDeleted: boolean;
+                    positionId: string;
                     Candidate_Name: string;
                     Candidate_Email: string;
                     Candidate_StudentId: string;
                     photo: string | null;
                     manifesto: string | null;
                     party_list_name: string | null;
-                    deletedAt: Date | null;
-                    isDeleted: boolean;
                     courseId: string | null;
                     departmentId: string | null;
-                    positionId: string;
                     partyListId: string | null;
                 };
             } & {
@@ -297,15 +306,6 @@ export declare class BallotService {
             BallotResults_VoterTurnout: number;
             BallotResults_LastUpdated: Date;
             BallotResults_IsFinal: boolean;
-        };
-        createdByAdmin: {
-            id: string;
-            Admin_Username: string;
-            Admin_Email: string;
-        };
-        _count: {
-            userHistory: number;
-            votes: number;
         };
     } & {
         id: string;
@@ -329,17 +329,41 @@ export declare class BallotService {
         Ballot_CreatedBy: string;
     }>;
     updateBallot(id: string, updateBallotDto: UpdateBallotDto, updatedBy: string): Promise<{
+        ballotPositions: ({
+            position: {
+                id: string;
+                Position_Title: string;
+                Position_Description: string | null;
+                createdAt: Date;
+                updatedAt: Date;
+                deletedAt: Date | null;
+                isDeleted: boolean;
+                displayOrder: number;
+                voteLimit: number;
+            };
+        } & {
+            id: string;
+            BallotPosition_BallotId: string;
+            BallotPosition_PositionId: string;
+            BallotPosition_DisplayOrder: number;
+            BallotPosition_IsRequired: boolean;
+        })[];
+        _count: {
+            votes: number;
+            userHistory: number;
+        };
         ballotCandidates: ({
             candidate: {
-                department: {
+                position: {
                     id: string;
+                    Position_Title: string;
+                    Position_Description: string | null;
                     createdAt: Date;
                     updatedAt: Date;
                     deletedAt: Date | null;
                     isDeleted: boolean;
-                    Department_Name: string;
-                    Department_Description: string | null;
-                    createdBy: string;
+                    displayOrder: number;
+                    voteLimit: number;
                 };
                 course: {
                     id: string;
@@ -353,24 +377,23 @@ export declare class BallotService {
                     Course_Code: string;
                     Course_Description: string | null;
                 };
-                position: {
+                department: {
                     id: string;
                     createdAt: Date;
                     updatedAt: Date;
                     deletedAt: Date | null;
                     isDeleted: boolean;
-                    Position_Title: string;
-                    Position_Description: string | null;
-                    displayOrder: number;
-                    voteLimit: number;
+                    Department_Name: string;
+                    Department_Description: string | null;
+                    createdBy: string;
                 };
                 partyList: {
                     id: string;
-                    name: string;
                     createdAt: Date;
                     updatedAt: Date;
                     deletedAt: Date | null;
                     isDeleted: boolean;
+                    name: string;
                     description: string | null;
                     color: string | null;
                     logo: string | null;
@@ -379,17 +402,17 @@ export declare class BallotService {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
+                deletedAt: Date | null;
+                isDeleted: boolean;
+                positionId: string;
                 Candidate_Name: string;
                 Candidate_Email: string;
                 Candidate_StudentId: string;
                 photo: string | null;
                 manifesto: string | null;
                 party_list_name: string | null;
-                deletedAt: Date | null;
-                isDeleted: boolean;
                 courseId: string | null;
                 departmentId: string | null;
-                positionId: string;
                 partyListId: string | null;
             };
         } & {
@@ -399,25 +422,11 @@ export declare class BallotService {
             BallotCandidate_PositionId: string;
             BallotCandidate_IsActive: boolean;
         })[];
-        ballotPositions: ({
-            position: {
-                id: string;
-                createdAt: Date;
-                updatedAt: Date;
-                deletedAt: Date | null;
-                isDeleted: boolean;
-                Position_Title: string;
-                Position_Description: string | null;
-                displayOrder: number;
-                voteLimit: number;
-            };
-        } & {
+        createdByAdmin: {
             id: string;
-            BallotPosition_DisplayOrder: number;
-            BallotPosition_BallotId: string;
-            BallotPosition_PositionId: string;
-            BallotPosition_IsRequired: boolean;
-        })[];
+            Admin_Username: string;
+            Admin_Email: string;
+        };
         results: {
             id: string;
             BallotResults_BallotId: string;
@@ -426,15 +435,6 @@ export declare class BallotService {
             BallotResults_VoterTurnout: number;
             BallotResults_LastUpdated: Date;
             BallotResults_IsFinal: boolean;
-        };
-        createdByAdmin: {
-            id: string;
-            Admin_Username: string;
-            Admin_Email: string;
-        };
-        _count: {
-            userHistory: number;
-            votes: number;
         };
     } & {
         id: string;
@@ -563,17 +563,41 @@ export declare class BallotService {
         Ballot_CreatedBy: string;
     }>;
     getAvailableBallotsForUser(userId: string): Promise<({
+        ballotPositions: ({
+            position: {
+                id: string;
+                Position_Title: string;
+                Position_Description: string | null;
+                createdAt: Date;
+                updatedAt: Date;
+                deletedAt: Date | null;
+                isDeleted: boolean;
+                displayOrder: number;
+                voteLimit: number;
+            };
+        } & {
+            id: string;
+            BallotPosition_BallotId: string;
+            BallotPosition_PositionId: string;
+            BallotPosition_DisplayOrder: number;
+            BallotPosition_IsRequired: boolean;
+        })[];
+        _count: {
+            votes: number;
+            userHistory: number;
+        };
         ballotCandidates: ({
             candidate: {
-                department: {
+                position: {
                     id: string;
+                    Position_Title: string;
+                    Position_Description: string | null;
                     createdAt: Date;
                     updatedAt: Date;
                     deletedAt: Date | null;
                     isDeleted: boolean;
-                    Department_Name: string;
-                    Department_Description: string | null;
-                    createdBy: string;
+                    displayOrder: number;
+                    voteLimit: number;
                 };
                 course: {
                     id: string;
@@ -587,24 +611,23 @@ export declare class BallotService {
                     Course_Code: string;
                     Course_Description: string | null;
                 };
-                position: {
+                department: {
                     id: string;
                     createdAt: Date;
                     updatedAt: Date;
                     deletedAt: Date | null;
                     isDeleted: boolean;
-                    Position_Title: string;
-                    Position_Description: string | null;
-                    displayOrder: number;
-                    voteLimit: number;
+                    Department_Name: string;
+                    Department_Description: string | null;
+                    createdBy: string;
                 };
                 partyList: {
                     id: string;
-                    name: string;
                     createdAt: Date;
                     updatedAt: Date;
                     deletedAt: Date | null;
                     isDeleted: boolean;
+                    name: string;
                     description: string | null;
                     color: string | null;
                     logo: string | null;
@@ -613,17 +636,17 @@ export declare class BallotService {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
+                deletedAt: Date | null;
+                isDeleted: boolean;
+                positionId: string;
                 Candidate_Name: string;
                 Candidate_Email: string;
                 Candidate_StudentId: string;
                 photo: string | null;
                 manifesto: string | null;
                 party_list_name: string | null;
-                deletedAt: Date | null;
-                isDeleted: boolean;
                 courseId: string | null;
                 departmentId: string | null;
-                positionId: string;
                 partyListId: string | null;
             };
         } & {
@@ -632,25 +655,6 @@ export declare class BallotService {
             BallotCandidate_CandidateId: string;
             BallotCandidate_PositionId: string;
             BallotCandidate_IsActive: boolean;
-        })[];
-        ballotPositions: ({
-            position: {
-                id: string;
-                createdAt: Date;
-                updatedAt: Date;
-                deletedAt: Date | null;
-                isDeleted: boolean;
-                Position_Title: string;
-                Position_Description: string | null;
-                displayOrder: number;
-                voteLimit: number;
-            };
-        } & {
-            id: string;
-            BallotPosition_DisplayOrder: number;
-            BallotPosition_BallotId: string;
-            BallotPosition_PositionId: string;
-            BallotPosition_IsRequired: boolean;
         })[];
         userHistory: {
             id: string;
@@ -661,10 +665,6 @@ export declare class BallotService {
             UserBallotHistory_IsCompleted: boolean;
             UserBallotHistory_LastAccessed: Date;
         }[];
-        _count: {
-            userHistory: number;
-            votes: number;
-        };
     } & {
         id: string;
         Ballot_Title: string;
@@ -687,17 +687,41 @@ export declare class BallotService {
         Ballot_CreatedBy: string;
     })[]>;
     getUpcomingBallotsForUser(userId: string): Promise<({
+        ballotPositions: ({
+            position: {
+                id: string;
+                Position_Title: string;
+                Position_Description: string | null;
+                createdAt: Date;
+                updatedAt: Date;
+                deletedAt: Date | null;
+                isDeleted: boolean;
+                displayOrder: number;
+                voteLimit: number;
+            };
+        } & {
+            id: string;
+            BallotPosition_BallotId: string;
+            BallotPosition_PositionId: string;
+            BallotPosition_DisplayOrder: number;
+            BallotPosition_IsRequired: boolean;
+        })[];
+        _count: {
+            votes: number;
+            userHistory: number;
+        };
         ballotCandidates: ({
             candidate: {
-                department: {
+                position: {
                     id: string;
+                    Position_Title: string;
+                    Position_Description: string | null;
                     createdAt: Date;
                     updatedAt: Date;
                     deletedAt: Date | null;
                     isDeleted: boolean;
-                    Department_Name: string;
-                    Department_Description: string | null;
-                    createdBy: string;
+                    displayOrder: number;
+                    voteLimit: number;
                 };
                 course: {
                     id: string;
@@ -711,24 +735,23 @@ export declare class BallotService {
                     Course_Code: string;
                     Course_Description: string | null;
                 };
-                position: {
+                department: {
                     id: string;
                     createdAt: Date;
                     updatedAt: Date;
                     deletedAt: Date | null;
                     isDeleted: boolean;
-                    Position_Title: string;
-                    Position_Description: string | null;
-                    displayOrder: number;
-                    voteLimit: number;
+                    Department_Name: string;
+                    Department_Description: string | null;
+                    createdBy: string;
                 };
                 partyList: {
                     id: string;
-                    name: string;
                     createdAt: Date;
                     updatedAt: Date;
                     deletedAt: Date | null;
                     isDeleted: boolean;
+                    name: string;
                     description: string | null;
                     color: string | null;
                     logo: string | null;
@@ -737,17 +760,17 @@ export declare class BallotService {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
+                deletedAt: Date | null;
+                isDeleted: boolean;
+                positionId: string;
                 Candidate_Name: string;
                 Candidate_Email: string;
                 Candidate_StudentId: string;
                 photo: string | null;
                 manifesto: string | null;
                 party_list_name: string | null;
-                deletedAt: Date | null;
-                isDeleted: boolean;
                 courseId: string | null;
                 departmentId: string | null;
-                positionId: string;
                 partyListId: string | null;
             };
         } & {
@@ -756,25 +779,6 @@ export declare class BallotService {
             BallotCandidate_CandidateId: string;
             BallotCandidate_PositionId: string;
             BallotCandidate_IsActive: boolean;
-        })[];
-        ballotPositions: ({
-            position: {
-                id: string;
-                createdAt: Date;
-                updatedAt: Date;
-                deletedAt: Date | null;
-                isDeleted: boolean;
-                Position_Title: string;
-                Position_Description: string | null;
-                displayOrder: number;
-                voteLimit: number;
-            };
-        } & {
-            id: string;
-            BallotPosition_DisplayOrder: number;
-            BallotPosition_BallotId: string;
-            BallotPosition_PositionId: string;
-            BallotPosition_IsRequired: boolean;
         })[];
         userHistory: {
             id: string;
@@ -785,10 +789,6 @@ export declare class BallotService {
             UserBallotHistory_IsCompleted: boolean;
             UserBallotHistory_LastAccessed: Date;
         }[];
-        _count: {
-            userHistory: number;
-            votes: number;
-        };
     } & {
         id: string;
         Ballot_Title: string;
@@ -815,20 +815,20 @@ export declare class BallotService {
             ballotPositions: ({
                 position: {
                     id: string;
+                    Position_Title: string;
+                    Position_Description: string | null;
                     createdAt: Date;
                     updatedAt: Date;
                     deletedAt: Date | null;
                     isDeleted: boolean;
-                    Position_Title: string;
-                    Position_Description: string | null;
                     displayOrder: number;
                     voteLimit: number;
                 };
             } & {
                 id: string;
-                BallotPosition_DisplayOrder: number;
                 BallotPosition_BallotId: string;
                 BallotPosition_PositionId: string;
+                BallotPosition_DisplayOrder: number;
                 BallotPosition_IsRequired: boolean;
             })[];
             results: {

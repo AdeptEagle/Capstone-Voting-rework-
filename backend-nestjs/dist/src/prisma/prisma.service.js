@@ -55,7 +55,7 @@ let PrismaService = class PrismaService extends client_1.PrismaClient {
             console.error('❌ Database schema setup failed:', error.message);
             try {
                 console.log('🔄 Attempting schema push as fallback...');
-                this.runPrismaCommand('db push');
+                this.runPrismaCommand('db push --accept-data-loss');
                 console.log('✅ Schema push completed');
             }
             catch (pushError) {

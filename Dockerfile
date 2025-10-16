@@ -32,6 +32,13 @@ RUN if [ -d "backend-nestjs" ]; then \
         echo "No backend-nestjs directory found, assuming we're in backend directory"; \
     fi
 
+# Debug: Show what files are available after moving
+RUN echo "=== After moving files ==="
+RUN ls -la
+RUN echo "=== package.json content ==="
+RUN cat package.json || echo "No package.json found"
+RUN echo "=== End debug ==="
+
 # Install dependencies
 RUN npm ci
 

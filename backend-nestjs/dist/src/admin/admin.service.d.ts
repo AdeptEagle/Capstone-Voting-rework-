@@ -7,11 +7,11 @@ export declare class AdminService {
     constructor(prisma: PrismaService, idGenerator: IdGeneratorService);
     getAllAdmins(): Promise<{
         id: string;
+        createdAt: Date;
+        updatedAt: Date;
         Admin_Username: string;
         Admin_Email: string;
         role: import(".prisma/client").$Enums.Role;
-        createdAt: Date;
-        updatedAt: Date;
     }[]>;
     createAdmin(createAdminDto: CreateAdminDto): Promise<{
         message: string;
@@ -82,21 +82,21 @@ export declare class AdminService {
     }>;
     getAdminById(id: string): Promise<{
         id: string;
+        createdAt: Date;
+        updatedAt: Date;
         Admin_Username: string;
         Admin_Email: string;
         role: import(".prisma/client").$Enums.Role;
-        createdAt: Date;
-        updatedAt: Date;
     }>;
     updateAdmin(id: string, updateAdminDto: UpdateAdminDto): Promise<{
         message: string;
         admin: {
             id: string;
+            createdAt: Date;
+            updatedAt: Date;
             Admin_Username: string;
             Admin_Email: string;
             role: import(".prisma/client").$Enums.Role;
-            createdAt: Date;
-            updatedAt: Date;
         };
     }>;
     deleteAdmin(id: string): Promise<{
@@ -104,21 +104,21 @@ export declare class AdminService {
     }>;
     getAdminByUsername(username: string): Promise<{
         id: string;
-        Admin_Username: string;
-        Admin_Email: string | null;
-        password: string;
-        role: import(".prisma/client").$Enums.Role;
         createdAt: Date;
         updatedAt: Date;
+        password: string;
+        Admin_Username: string;
+        Admin_Email: string | null;
+        role: import(".prisma/client").$Enums.Role;
     }>;
     getAdminByEmail(email: string): Promise<{
         id: string;
-        Admin_Username: string;
-        Admin_Email: string | null;
-        password: string;
-        role: import(".prisma/client").$Enums.Role;
         createdAt: Date;
         updatedAt: Date;
+        password: string;
+        Admin_Username: string;
+        Admin_Email: string | null;
+        role: import(".prisma/client").$Enums.Role;
     }>;
     createSuperAdmin(createAdminDto: CreateAdminDto): Promise<{
         message: string;
@@ -143,15 +143,13 @@ export declare class AdminService {
             newAdmins: number;
             recentAdmins: {
                 id: string;
+                createdAt: Date;
                 Admin_Username: string;
                 role: import(".prisma/client").$Enums.Role;
-                createdAt: Date;
             }[];
         };
         adminActivity: {
             id: string;
-            Admin_Username: string;
-            role: import(".prisma/client").$Enums.Role;
             createdAt: Date;
             updatedAt: Date;
             _count: {
@@ -159,6 +157,8 @@ export declare class AdminService {
                 departments: number;
                 elections: number;
             };
+            Admin_Username: string;
+            role: import(".prisma/client").$Enums.Role;
         }[];
     }>;
     getAdminLoginLogs(page?: number, limit?: number, adminId?: string): Promise<{
@@ -173,14 +173,14 @@ export declare class AdminService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            ipAddress: string | null;
+            sessionId: string | null;
+            userAgent: string | null;
             isActive: boolean;
+            adminId: string;
             loginTime: Date;
             logoutTime: Date | null;
             duration: number | null;
-            ipAddress: string | null;
-            userAgent: string | null;
-            sessionId: string | null;
-            adminId: string;
         })[];
         pagination: {
             page: number;
@@ -203,14 +203,14 @@ export declare class AdminService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            ipAddress: string | null;
+            sessionId: string | null;
+            userAgent: string | null;
             isActive: boolean;
+            adminId: string;
             loginTime: Date;
             logoutTime: Date | null;
             duration: number | null;
-            ipAddress: string | null;
-            userAgent: string | null;
-            sessionId: string | null;
-            adminId: string;
         })[];
     }>;
     getAdminLoginLogById(id: string): Promise<{
@@ -224,24 +224,24 @@ export declare class AdminService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        ipAddress: string | null;
+        sessionId: string | null;
+        userAgent: string | null;
         isActive: boolean;
+        adminId: string;
         loginTime: Date;
         logoutTime: Date | null;
         duration: number | null;
-        ipAddress: string | null;
-        userAgent: string | null;
-        sessionId: string | null;
-        adminId: string;
     }>;
     getUserLoginLogs(page?: number, limit?: number, searchTerm?: string, department?: string, course?: string): Promise<{
         loginLogs: ({
             user: {
                 id: string;
-                department: {
-                    Department_Name: string;
-                };
                 course: {
                     Course_Name: string;
+                };
+                department: {
+                    Department_Name: string;
                 };
                 Voter_Name: string;
                 Voter_Email: string;
@@ -251,14 +251,14 @@ export declare class AdminService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            ipAddress: string | null;
+            sessionId: string | null;
+            userAgent: string | null;
             isActive: boolean;
             userId: string;
             loginTime: Date;
             logoutTime: Date | null;
             duration: number | null;
-            ipAddress: string | null;
-            userAgent: string | null;
-            sessionId: string | null;
         })[];
         pagination: {
             page: number;
@@ -284,24 +284,24 @@ export declare class AdminService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            ipAddress: string | null;
+            sessionId: string | null;
+            userAgent: string | null;
             isActive: boolean;
             userId: string;
             loginTime: Date;
             logoutTime: Date | null;
             duration: number | null;
-            ipAddress: string | null;
-            userAgent: string | null;
-            sessionId: string | null;
         })[];
     }>;
     getUserLoginLogById(id: string): Promise<{
         user: {
             id: string;
-            department: {
-                Department_Name: string;
-            };
             course: {
                 Course_Name: string;
+            };
+            department: {
+                Department_Name: string;
             };
             Voter_Name: string;
             Voter_Email: string;
@@ -311,13 +311,13 @@ export declare class AdminService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        ipAddress: string | null;
+        sessionId: string | null;
+        userAgent: string | null;
         isActive: boolean;
         userId: string;
         loginTime: Date;
         logoutTime: Date | null;
         duration: number | null;
-        ipAddress: string | null;
-        userAgent: string | null;
-        sessionId: string | null;
     }>;
 }
