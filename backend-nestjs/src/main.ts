@@ -153,10 +153,16 @@ fetch('/api/votes', {
   console.log(`PORT env var: ${process.env.PORT}`);
   console.log(`Using port: ${port}`);
   
+  // Add a simple test endpoint before starting the server
+  app.get('/test', (req, res) => {
+    res.json({ status: 'ok', message: 'Backend is working!' });
+  });
+  
   await app.listen(port, '0.0.0.0'); // Bind to all interfaces
   console.log(`🚀 Application is running on: http://0.0.0.0:${port}`);
   console.log(`📚 Swagger documentation: http://0.0.0.0:${port}/api`);
   console.log(`🔒 Security: HTTP-only cookies enabled`);
+  console.log(`🧪 Test endpoint: http://0.0.0.0:${port}/test`);
 }
 
 bootstrap(); 
