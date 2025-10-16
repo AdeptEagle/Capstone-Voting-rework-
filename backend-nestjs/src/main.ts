@@ -15,8 +15,9 @@ async function bootstrap() {
   console.log('FRONTEND_URL env var:', process.env.FRONTEND_URL);
   console.log('Using frontend URL for CORS:', frontendUrl);
   
+  // Temporarily allow all origins for debugging
   app.enableCors({
-    origin: frontendUrl,
+    origin: true, // Allow all origins temporarily
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
