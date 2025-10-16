@@ -39,13 +39,13 @@ export declare class AuditService {
         id: string;
         createdAt: Date;
         electionId: string | null;
+        userId: string | null;
+        timestamp: Date;
         action: string;
         details: import("@prisma/client/runtime/library").JsonValue | null;
         eventType: string;
         metadata: import("@prisma/client/runtime/library").JsonValue | null;
         severity: string;
-        timestamp: Date;
-        userId: string | null;
     }[]>;
     generateVerificationCode(): string;
     generateAuditHash(voteData: {

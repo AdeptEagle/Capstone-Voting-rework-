@@ -9,83 +9,83 @@ export declare class PartyListService {
     constructor(prisma: PrismaService, idGenerator: IdGeneratorService, fileUploadService: FileUploadService);
     create(createPartyListDto: CreatePartyListDto, logo?: Express.Multer.File): Promise<{
         candidates: {
+            id: string;
             position: {
                 Position_Title: string;
             };
-            id: string;
             Candidate_Name: string;
         }[];
     } & {
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        name: string;
         deletedAt: Date | null;
         isDeleted: boolean;
-        name: string;
         description: string | null;
         color: string | null;
         logo: string | null;
     }>;
     findAll(): Promise<({
         candidates: {
+            id: string;
             position: {
                 Position_Title: string;
             };
-            id: string;
             Candidate_Name: string;
         }[];
     } & {
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        name: string;
         deletedAt: Date | null;
         isDeleted: boolean;
-        name: string;
         description: string | null;
         color: string | null;
         logo: string | null;
     })[]>;
     findOne(id: string): Promise<{
         candidates: {
-            position: {
-                Position_Title: string;
-            };
             id: string;
-            Candidate_Name: string;
-            Candidate_Email: string;
-            course: {
-                Course_Name: string;
-            };
             department: {
                 Department_Name: string;
             };
+            course: {
+                Course_Name: string;
+            };
+            position: {
+                Position_Title: string;
+            };
+            Candidate_Name: string;
+            Candidate_Email: string;
         }[];
     } & {
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        name: string;
         deletedAt: Date | null;
         isDeleted: boolean;
-        name: string;
         description: string | null;
         color: string | null;
         logo: string | null;
     }>;
     update(id: string, updatePartyListDto: UpdatePartyListDto, logo?: Express.Multer.File): Promise<{
         candidates: {
+            id: string;
             position: {
                 Position_Title: string;
             };
-            id: string;
             Candidate_Name: string;
         }[];
     } & {
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        name: string;
         deletedAt: Date | null;
         isDeleted: boolean;
-        name: string;
         description: string | null;
         color: string | null;
         logo: string | null;
@@ -94,9 +94,9 @@ export declare class PartyListService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        name: string;
         deletedAt: Date | null;
         isDeleted: boolean;
-        name: string;
         description: string | null;
         color: string | null;
         logo: string | null;
@@ -105,10 +105,10 @@ export declare class PartyListService {
         totalPartyLists: number;
         partyLists: {
             id: string;
+            name: string;
             _count: {
                 candidates: number;
             };
-            name: string;
             color: string;
         }[];
     }>;

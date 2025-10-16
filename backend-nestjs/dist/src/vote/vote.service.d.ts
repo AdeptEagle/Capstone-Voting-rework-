@@ -16,30 +16,30 @@ export declare class VoteService {
             id: string;
             Position_Title: string;
         };
-        candidate: {
-            id: string;
-            Candidate_Name: string;
-            Candidate_StudentId: string;
-        };
-        election: {
-            id: string;
-            Election_Title: string;
-        };
         voter: {
             id: string;
             Voter_Name: string;
             Voter_StudentId: string;
         };
+        election: {
+            id: string;
+            Election_Title: string;
+        };
+        candidate: {
+            id: string;
+            Candidate_Name: string;
+            Candidate_StudentId: string;
+        };
     } & {
         id: string;
         createdAt: Date;
-        auditHash: string | null;
-        candidateId: string;
         electionId: string | null;
-        ipAddress: string | null;
         positionId: string;
-        sessionId: string | null;
+        candidateId: string;
+        ipAddress: string | null;
         userAgent: string | null;
+        sessionId: string | null;
+        auditHash: string | null;
         verificationCode: string | null;
         voterId: string;
         ballotId: string | null;
@@ -49,30 +49,30 @@ export declare class VoteService {
             id: string;
             Position_Title: string;
         };
-        candidate: {
-            id: string;
-            Candidate_Name: string;
-            Candidate_StudentId: string;
-        };
-        election: {
-            id: string;
-            Election_Title: string;
-        };
         voter: {
             id: string;
             Voter_Name: string;
             Voter_StudentId: string;
         };
+        election: {
+            id: string;
+            Election_Title: string;
+        };
+        candidate: {
+            id: string;
+            Candidate_Name: string;
+            Candidate_StudentId: string;
+        };
     } & {
         id: string;
         createdAt: Date;
-        auditHash: string | null;
-        candidateId: string;
         electionId: string | null;
-        ipAddress: string | null;
         positionId: string;
-        sessionId: string | null;
+        candidateId: string;
+        ipAddress: string | null;
         userAgent: string | null;
+        sessionId: string | null;
+        auditHash: string | null;
         verificationCode: string | null;
         voterId: string;
         ballotId: string | null;
@@ -155,30 +155,30 @@ export declare class VoteService {
             id: string;
             Position_Title: string;
         };
-        candidate: {
-            id: string;
-            Candidate_Name: string;
-            Candidate_StudentId: string;
-        };
-        election: {
-            id: string;
-            Election_Title: string;
-        };
         voter: {
             id: string;
             Voter_Name: string;
             Voter_StudentId: string;
         };
+        election: {
+            id: string;
+            Election_Title: string;
+        };
+        candidate: {
+            id: string;
+            Candidate_Name: string;
+            Candidate_StudentId: string;
+        };
     } & {
         id: string;
         createdAt: Date;
-        auditHash: string | null;
-        candidateId: string;
         electionId: string | null;
-        ipAddress: string | null;
         positionId: string;
-        sessionId: string | null;
+        candidateId: string;
+        ipAddress: string | null;
         userAgent: string | null;
+        sessionId: string | null;
+        auditHash: string | null;
         verificationCode: string | null;
         voterId: string;
         ballotId: string | null;
@@ -188,30 +188,30 @@ export declare class VoteService {
             id: string;
             Position_Title: string;
         };
-        candidate: {
-            id: string;
-            Candidate_Name: string;
-            Candidate_StudentId: string;
-        };
-        election: {
-            id: string;
-            Election_Title: string;
-        };
         voter: {
             id: string;
             Voter_Name: string;
             Voter_StudentId: string;
         };
+        election: {
+            id: string;
+            Election_Title: string;
+        };
+        candidate: {
+            id: string;
+            Candidate_Name: string;
+            Candidate_StudentId: string;
+        };
     } & {
         id: string;
         createdAt: Date;
-        auditHash: string | null;
-        candidateId: string;
         electionId: string | null;
-        ipAddress: string | null;
         positionId: string;
-        sessionId: string | null;
+        candidateId: string;
+        ipAddress: string | null;
         userAgent: string | null;
+        sessionId: string | null;
+        auditHash: string | null;
         verificationCode: string | null;
         voterId: string;
         ballotId: string | null;

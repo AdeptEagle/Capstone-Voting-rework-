@@ -8,6 +8,15 @@ export declare class CandidateService {
     private fileUploadService;
     constructor(prisma: PrismaService, idGenerator: IdGeneratorService, fileUploadService: FileUploadService);
     getAllCandidates(showAll?: boolean): Promise<({
+        department: {
+            id: string;
+            Department_Name: string;
+        };
+        course: {
+            id: string;
+            Course_Name: string;
+            Course_Code: string;
+        };
         position: {
             id: string;
             Position_Title: string;
@@ -15,15 +24,6 @@ export declare class CandidateService {
         _count: {
             votes: number;
             electionCandidates: number;
-        };
-        course: {
-            id: string;
-            Course_Name: string;
-            Course_Code: string;
-        };
-        department: {
-            id: string;
-            Department_Name: string;
         };
         partyList: {
             id: string;
@@ -37,6 +37,8 @@ export declare class CandidateService {
         updatedAt: Date;
         deletedAt: Date | null;
         isDeleted: boolean;
+        departmentId: string | null;
+        courseId: string | null;
         positionId: string;
         Candidate_Name: string;
         Candidate_Email: string;
@@ -44,25 +46,23 @@ export declare class CandidateService {
         photo: string | null;
         manifesto: string | null;
         party_list_name: string | null;
-        courseId: string | null;
-        departmentId: string | null;
         partyListId: string | null;
     })[]>;
     createCandidate(createCandidateDto: CreateCandidateDto, photo?: any): Promise<{
         message: string;
         candidate: {
-            position: {
+            department: {
                 id: string;
-                Position_Title: string;
+                Department_Name: string;
             };
             course: {
                 id: string;
                 Course_Name: string;
                 Course_Code: string;
             };
-            department: {
+            position: {
                 id: string;
-                Department_Name: string;
+                Position_Title: string;
             };
         } & {
             id: string;
@@ -70,6 +70,8 @@ export declare class CandidateService {
             updatedAt: Date;
             deletedAt: Date | null;
             isDeleted: boolean;
+            departmentId: string | null;
+            courseId: string | null;
             positionId: string;
             Candidate_Name: string;
             Candidate_Email: string;
@@ -77,12 +79,19 @@ export declare class CandidateService {
             photo: string | null;
             manifesto: string | null;
             party_list_name: string | null;
-            courseId: string | null;
-            departmentId: string | null;
             partyListId: string | null;
         };
     }>;
     getCandidateById(id: string): Promise<{
+        department: {
+            id: string;
+            Department_Name: string;
+        };
+        course: {
+            id: string;
+            Course_Name: string;
+            Course_Code: string;
+        };
         position: {
             id: string;
             Position_Title: string;
@@ -91,21 +100,14 @@ export declare class CandidateService {
             votes: number;
             electionCandidates: number;
         };
-        course: {
-            id: string;
-            Course_Name: string;
-            Course_Code: string;
-        };
-        department: {
-            id: string;
-            Department_Name: string;
-        };
     } & {
         id: string;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
         isDeleted: boolean;
+        departmentId: string | null;
+        courseId: string | null;
         positionId: string;
         Candidate_Name: string;
         Candidate_Email: string;
@@ -113,25 +115,23 @@ export declare class CandidateService {
         photo: string | null;
         manifesto: string | null;
         party_list_name: string | null;
-        courseId: string | null;
-        departmentId: string | null;
         partyListId: string | null;
     }>;
     updateCandidate(id: string, updateCandidateDto: UpdateCandidateDto, photo?: any): Promise<{
         message: string;
         candidate: {
-            position: {
+            department: {
                 id: string;
-                Position_Title: string;
+                Department_Name: string;
             };
             course: {
                 id: string;
                 Course_Name: string;
                 Course_Code: string;
             };
-            department: {
+            position: {
                 id: string;
-                Department_Name: string;
+                Position_Title: string;
             };
         } & {
             id: string;
@@ -139,6 +139,8 @@ export declare class CandidateService {
             updatedAt: Date;
             deletedAt: Date | null;
             isDeleted: boolean;
+            departmentId: string | null;
+            courseId: string | null;
             positionId: string;
             Candidate_Name: string;
             Candidate_Email: string;
@@ -146,8 +148,6 @@ export declare class CandidateService {
             photo: string | null;
             manifesto: string | null;
             party_list_name: string | null;
-            courseId: string | null;
-            departmentId: string | null;
             partyListId: string | null;
         };
     }>;

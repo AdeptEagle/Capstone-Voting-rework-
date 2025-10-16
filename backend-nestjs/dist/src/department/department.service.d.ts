@@ -6,24 +6,24 @@ export declare class DepartmentService {
     private idGenerator;
     constructor(prisma: PrismaService, idGenerator: IdGeneratorService);
     getAllDepartments(): Promise<({
-        _count: {
-            candidates: number;
-            courses: number;
-            voters: number;
-        };
         admin: {
             id: string;
             Admin_Username: string;
             Admin_Email: string;
         };
+        _count: {
+            courses: number;
+            candidates: number;
+            voters: number;
+        };
     } & {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        deletedAt: Date | null;
-        isDeleted: boolean;
         Department_Name: string;
         Department_Description: string | null;
+        deletedAt: Date | null;
+        isDeleted: boolean;
         createdBy: string;
     })[]>;
     createDepartment(createDepartmentDto: CreateDepartmentDto, adminId: string): Promise<{
@@ -38,32 +38,32 @@ export declare class DepartmentService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            deletedAt: Date | null;
-            isDeleted: boolean;
             Department_Name: string;
             Department_Description: string | null;
+            deletedAt: Date | null;
+            isDeleted: boolean;
             createdBy: string;
         };
     }>;
     getDepartmentById(id: string): Promise<{
-        _count: {
-            candidates: number;
-            courses: number;
-            voters: number;
-        };
         admin: {
             id: string;
             Admin_Username: string;
             Admin_Email: string;
         };
+        _count: {
+            courses: number;
+            candidates: number;
+            voters: number;
+        };
     } & {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        deletedAt: Date | null;
-        isDeleted: boolean;
         Department_Name: string;
         Department_Description: string | null;
+        deletedAt: Date | null;
+        isDeleted: boolean;
         createdBy: string;
     }>;
     updateDepartment(id: string, updateDepartmentDto: UpdateDepartmentDto): Promise<{
@@ -78,10 +78,10 @@ export declare class DepartmentService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            deletedAt: Date | null;
-            isDeleted: boolean;
             Department_Name: string;
             Department_Description: string | null;
+            deletedAt: Date | null;
+            isDeleted: boolean;
             createdBy: string;
         };
     }>;
@@ -89,14 +89,14 @@ export declare class DepartmentService {
         message: string;
     }>;
     getDepartmentCourses(id: string): Promise<({
-        _count: {
-            candidates: number;
-            voters: number;
-        };
         admin: {
             id: string;
             Admin_Username: string;
             Admin_Email: string;
+        };
+        _count: {
+            candidates: number;
+            voters: number;
         };
     } & {
         id: string;
@@ -104,11 +104,11 @@ export declare class DepartmentService {
         updatedAt: Date;
         deletedAt: Date | null;
         isDeleted: boolean;
-        departmentId: string;
         createdBy: string;
         Course_Name: string;
         Course_Code: string;
         Course_Description: string | null;
+        departmentId: string;
     })[]>;
     getDepartmentVoters(id: string): Promise<{
         id: string;
@@ -120,14 +120,14 @@ export declare class DepartmentService {
         hasVoted: boolean;
     }[]>;
     getDepartmentCandidates(id: string): Promise<({
-        position: {
-            id: string;
-            Position_Title: string;
-        };
         course: {
             id: string;
             Course_Name: string;
             Course_Code: string;
+        };
+        position: {
+            id: string;
+            Position_Title: string;
         };
     } & {
         id: string;
@@ -135,6 +135,8 @@ export declare class DepartmentService {
         updatedAt: Date;
         deletedAt: Date | null;
         isDeleted: boolean;
+        departmentId: string | null;
+        courseId: string | null;
         positionId: string;
         Candidate_Name: string;
         Candidate_Email: string;
@@ -142,8 +144,6 @@ export declare class DepartmentService {
         photo: string | null;
         manifesto: string | null;
         party_list_name: string | null;
-        courseId: string | null;
-        departmentId: string | null;
         partyListId: string | null;
     })[]>;
 }
