@@ -1,7 +1,8 @@
 // Environment configuration
 const config = {
-  API_BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001',
-  WS_URL: import.meta.env.VITE_WS_URL || 'http://localhost:3001',
+  // Temporarily hardcode for Railway deployment
+  API_BASE_URL: import.meta.env.VITE_API_BASE_URL || 'https://backend-production-1960.up.railway.app',
+  WS_URL: import.meta.env.VITE_WS_URL || 'https://backend-production-1960.up.railway.app',
   NODE_ENV: import.meta.env.MODE || 'development'
 };
 
