@@ -17,19 +17,17 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
     try {
       console.log('🔄 Initializing database...');
       
-      // Check if we're in development mode and need to set up the database
-      if (process.env.NODE_ENV !== 'production') {
-        await this.initializeDatabase();
-      }
+      // Temporarily disable database initialization to test if this is causing the crash
+      console.log('⚠️ Database initialization temporarily disabled for debugging');
       
-      await this.$connect();
-      console.log('✅ Database connected successfully');
+      // await this.$connect();
+      // console.log('✅ Database connected successfully');
       
-      // Create default superadmin if it doesn't exist
-      await this.createDefaultSuperAdmin();
+      // await this.createDefaultSuperAdmin();
     } catch (error) {
       console.error('❌ Database initialization failed:', error.message);
-      throw error;
+      // Don't throw error, just log it for now
+      console.error('Continuing without database connection...');
     }
   }
 
