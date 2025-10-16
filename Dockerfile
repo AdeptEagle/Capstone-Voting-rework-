@@ -1,6 +1,5 @@
 # Root-level Dockerfile for Backend Service
 # This Dockerfile builds the backend service from the backend-nestjs directory
-# WITHOUT copying backend files to root
 
 FROM node:18-alpine
 
@@ -12,6 +11,11 @@ ENV NODE_OPTIONS="--experimental-global-webcrypto"
 
 # Set working directory
 WORKDIR /app
+
+# Debug: Show what files are available
+RUN echo "=== Dockerfile Debug ==="
+RUN ls -la
+RUN echo "=== End Debug ==="
 
 # Copy package files from backend-nestjs directory
 COPY backend-nestjs/package*.json ./
