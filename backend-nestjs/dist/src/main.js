@@ -13,13 +13,26 @@ async function bootstrap() {
             process.env.FRONTEND_URL || 'http://localhost:5174',
             'http://localhost:5174',
             'http://localhost:3000',
-            'http://localhost:5173'
+            'http://localhost:5173',
+            'https://ballotblitz.up.railway.app'
         ],
         credentials: true,
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
         allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
     });
     app.use(cookieParser());
+    app.get('/', (req, res) => {
+        res.json({
+            message: 'Voting System API v2.0',
+            status: 'running',
+            timestamp: new Date().toISOString(),
+            endpoints: {
+                health: '/health',
+                api: '/api',
+                docs: '/api'
+            }
+        });
+    });
     app.useStaticAssets((0, path_1.join)(process.cwd(), 'uploads'), {
         prefix: '/uploads/',
     });
