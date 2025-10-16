@@ -122,11 +122,19 @@ fetch('/api/votes', {
       .swagger-ui .info .description { background: #f8f9fa; padding: 15px; border-radius: 5px; }
     `,
     });
-    const port = process.env.NODE_ENV === 'production' ? 8080 : (process.env.PORT || 3001);
+    const port = process.env.PORT || 8080;
     await app.listen(port, '0.0.0.0');
     console.log(`🚀 Application is running on: http://0.0.0.0:${port}`);
     console.log(`📚 Swagger documentation: http://0.0.0.0:${port}/api`);
     console.log(`🔒 Security: HTTP-only cookies enabled`);
+    console.log(`🏥 Health check available at: http://0.0.0.0:${port}/health`);
+    if (process.env.NODE_ENV === 'production') {
+        process.env.PRISMA_QUERY_ENGINE_LOG_LEVEL = 'error';
+    }
+    setInterval(() => {
+        const timestamp = new Date().toISOString();
+        console.log(`[${timestamp}] 🏥 Health check ping - Server running on port ${port}`);
+    }, 30000);
 }
 bootstrap();
 //# sourceMappingURL=main.js.map

@@ -47,7 +47,8 @@
     "init:project": "npm install && npm run setup:db && npm run start:dev",
     "deploy:init": "npm run db:push && npm run db:seed && npm run ensure:templates && npm run start:prod",
     "deploy:demo": "npm run db:push && npm run db:seed && npm run start:prod",
-    "railway:deploy": "npx prisma migrate deploy && npx prisma db seed && npm run start:prod"
+    "railway:deploy": "npx prisma migrate deploy && npx prisma generate && npm run start:prod",
+    "railway:deploy:seed": "npx prisma migrate deploy && npx prisma generate && npx prisma db seed && npm run start:prod"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",

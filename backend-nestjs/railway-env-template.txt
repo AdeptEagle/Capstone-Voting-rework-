@@ -1,0 +1,20 @@
+# Railway Environment Variables Template
+# Copy these to your Railway project environment variables
+
+# Database (Railway will provide this automatically)
+# DATABASE_URL="postgresql://username:password@host:port/database"
+
+# JWT Secret (CHANGE THIS IN PRODUCTION!)
+JWT_SECRET="your-super-secure-jwt-secret-key-change-this"
+
+# Application
+NODE_ENV="production"
+PORT=8080
+
+# Frontend URL (update with your frontend Railway URL)
+FRONTEND_URL="https://your-frontend-app.railway.app"
+
+# Cloudinary (if using image uploads)
+# CLOUDINARY_CLOUD_NAME="your-cloud-name"
+# CLOUDINARY_API_KEY="your-api-key"
+# CLOUDINARY_API_SECRET="your-api-secret"

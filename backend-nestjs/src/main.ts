@@ -141,11 +141,23 @@ fetch('/api/votes', {
     `,
   });
 
-  const port = process.env.NODE_ENV === 'production' ? 8080 : (process.env.PORT || 3001);
+  const port = process.env.PORT || 8080;
   await app.listen(port, '0.0.0.0');
   console.log(`🚀 Application is running on: http://0.0.0.0:${port}`);
   console.log(`📚 Swagger documentation: http://0.0.0.0:${port}/api`);
   console.log(`🔒 Security: HTTP-only cookies enabled`);
+  console.log(`🏥 Health check available at: http://0.0.0.0:${port}/health`);
+  
+  // Reduce Prisma query logging in production
+  if (process.env.NODE_ENV === 'production') {
+    process.env.PRISMA_QUERY_ENGINE_LOG_LEVEL = 'error';
+  }
+
+  // Health check debug logging
+  setInterval(() => {
+    const timestamp = new Date().toISOString();
+    console.log(`[${timestamp}] 🏥 Health check ping - Server running on port ${port}`);
+  }, 30000); // Every 30 seconds
 }
 
 bootstrap(); 
