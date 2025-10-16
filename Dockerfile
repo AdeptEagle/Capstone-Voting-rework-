@@ -41,11 +41,17 @@ RUN npx prisma generate
 # Build the application
 RUN npm run build
 
+# Debug: Show what was built
+RUN echo "=== Build Debug ==="
+RUN ls -la dist/
+RUN find dist/ -name "main*" -type f || echo "No main files found"
+RUN echo "=== End Build Debug ==="
+
 # Remove dev dependencies to reduce image size
 RUN npm prune --production
 
 # Expose port
 EXPOSE 3001
 
-# Start the application
-CMD ["npm", "run", "start:prod"]
+# Start the application with fallback
+CMD ["sh", "-c", "if [ -f dist/main.js ]; then node dist/main.js; elif [ -f dist/src/main.js ]; then node dist/src/main.js; else echo 'No main file found' && ls -la dist/ && exit 1; fi"]
