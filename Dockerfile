@@ -1,5 +1,6 @@
 # Root-level Dockerfile for Backend Service
-# This Dockerfile builds the backend service from the backend-nestjs directory
+# This Dockerfile builds the backend service
+# It assumes the build context includes all necessary files
 
 FROM node:18-alpine
 
@@ -17,14 +18,22 @@ RUN echo "=== Dockerfile Debug ==="
 RUN ls -la
 RUN echo "=== End Debug ==="
 
-# Copy package files from backend-nestjs directory
-COPY backend-nestjs/package*.json ./
+# Copy all files to container
+COPY . .
+
+# Move to backend directory if it exists
+RUN if [ -d "backend-nestjs" ]; then \
+        echo "Found backend-nestjs directory, moving to it"; \
+        cd backend-nestjs; \
+        cp -r * ..; \
+        cd ..; \
+        rm -rf backend-nestjs; \
+    else \
+        echo "No backend-nestjs directory found, assuming we're in backend directory"; \
+    fi
 
 # Install dependencies
 RUN npm ci
-
-# Copy source code from backend-nestjs directory
-COPY backend-nestjs/ .
 
 # Generate Prisma client
 RUN npx prisma generate
