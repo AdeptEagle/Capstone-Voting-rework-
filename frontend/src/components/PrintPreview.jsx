@@ -2,7 +2,7 @@ import React from 'react';
 import './PrintPreview.css';
 
 // API base URL for logo paths
-const API_BASE_URL = 'http://localhost:3001';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://backend-production-1960.up.railway.app';
 
 const PrintPreview = ({ ballot, results }) => {
   if (!ballot || !results || !results.results) {

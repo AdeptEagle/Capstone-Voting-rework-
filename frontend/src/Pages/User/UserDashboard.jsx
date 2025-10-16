@@ -30,7 +30,7 @@ const UserDashboard = () => {
         setBallotsLoading(true);
         
         // Fetch user info from server since token is in HTTP-only cookie
-        const userResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'}/auth/status`, {
+        const userResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'https://backend-production-1960.up.railway.app'}/auth/status`, {
           credentials: 'include'
         });
         
@@ -114,7 +114,7 @@ const UserDashboard = () => {
     }
 
     console.log('🔌 [UserDashboard] Setting up WebSocket connection...');
-    const newSocket = io(import.meta.env.VITE_WS_URL || 'http://localhost:3001', {
+    const newSocket = io(import.meta.env.VITE_WS_URL || 'https://backend-production-1960.up.railway.app', {
       withCredentials: true,
       transports: ['websocket', 'polling'],
       timeout: 20000,

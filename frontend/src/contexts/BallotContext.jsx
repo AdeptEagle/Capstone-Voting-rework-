@@ -24,7 +24,7 @@ export const BallotProvider = ({ children }) => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const response = await fetch('http://localhost:3001/auth/status', {
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'https://backend-production-1960.up.railway.app'}/auth/status`, {
           credentials: 'include'
         });
         if (response.ok) {

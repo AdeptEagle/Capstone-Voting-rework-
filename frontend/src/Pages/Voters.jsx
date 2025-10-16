@@ -41,7 +41,7 @@ const Voters = () => {
     console.log('Setting up WebSocket connection...');
     
     // Use default namespace (no custom namespace)
-    const newSocket = io('http://localhost:3001', {
+    const newSocket = io(import.meta.env.VITE_WS_URL || 'https://backend-production-1960.up.railway.app', {
       withCredentials: true,
       transports: ['websocket', 'polling'],
       timeout: 20000,
@@ -59,7 +59,7 @@ const Voters = () => {
     newSocket.on('connect_error', (error) => {
       console.error('❌ WebSocket connection error:', error);
       console.error('Connection details:', {
-        url: 'http://localhost:3001',
+        url: import.meta.env.VITE_API_BASE_URL || 'https://backend-production-1960.up.railway.app',
         namespace: '/voting',
         error: error.message
       });

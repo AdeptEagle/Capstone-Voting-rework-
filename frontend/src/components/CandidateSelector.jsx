@@ -126,10 +126,10 @@ const CandidateSelector = ({
     }
     // If the photoUrl already starts with /uploads/, use it as is
     if (photoUrl.startsWith('/uploads/')) {
-      return `http://localhost:3001${photoUrl}`;
+      return `${import.meta.env.VITE_API_BASE_URL || 'https://backend-production-1960.up.railway.app'}${photoUrl}`;
     }
     // Otherwise, assume it's just a filename and add the full path
-    return `http://localhost:3001/uploads/images/${photoUrl}`;
+    return `${import.meta.env.VITE_API_BASE_URL || 'https://backend-production-1960.up.railway.app'}/uploads/images/${photoUrl}`;
   };
 
   // Get positions to display (either from template or selected positions)

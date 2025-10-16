@@ -41,7 +41,7 @@ const TrashBin = () => {
 
   const fetchTrashSummary = async () => {
     try {
-      const response = await fetch('http://localhost:3001/trash/summary', {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'https://backend-production-1960.up.railway.app'}/trash/summary`, {
         credentials: 'include'
       });
       
@@ -62,7 +62,7 @@ const TrashBin = () => {
     setError(null);
     
     try {
-      const response = await fetch(`http://localhost:3001/trash/${itemType}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'https://backend-production-1960.up.railway.app'}/trash/${itemType}`, {
         credentials: 'include'
       });
       
@@ -85,7 +85,7 @@ const TrashBin = () => {
     setError(null);
     
     try {
-      const response = await fetch(`http://localhost:3001/trash/restore/${activeTab.slice(0, -1)}/${itemId}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'https://backend-production-1960.up.railway.app'}/trash/restore/${activeTab.slice(0, -1)}/${itemId}`, {
         method: 'POST',
         credentials: 'include'
       });
@@ -117,7 +117,7 @@ const TrashBin = () => {
     setError(null);
     
     try {
-      const response = await fetch(`http://localhost:3001/trash/permanent/${activeTab.slice(0, -1)}/${itemId}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'https://backend-production-1960.up.railway.app'}/trash/permanent/${activeTab.slice(0, -1)}/${itemId}`, {
         method: 'DELETE',
         credentials: 'include'
       });

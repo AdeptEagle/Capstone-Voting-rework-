@@ -490,9 +490,9 @@ const Candidates = () => {
       return photoUrl;
     }
     if (photoUrl.startsWith('/uploads/')) {
-      return `http://localhost:3001${photoUrl}`;
+      return `${import.meta.env.VITE_API_BASE_URL || 'https://backend-production-1960.up.railway.app'}${photoUrl}`;
     }
-    return `http://localhost:3001/uploads/${photoUrl}`;
+    return `${import.meta.env.VITE_API_BASE_URL || 'https://backend-production-1960.up.railway.app'}/uploads/${photoUrl}`;
   };
 
   // Filter and sort candidates
