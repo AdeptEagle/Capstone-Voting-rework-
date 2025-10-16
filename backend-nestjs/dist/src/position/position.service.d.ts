@@ -13,12 +13,12 @@ export declare class PositionService {
         };
     } & {
         id: string;
-        Position_Title: string;
-        Position_Description: string | null;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
         isDeleted: boolean;
+        Position_Title: string;
+        Position_Description: string | null;
         displayOrder: number;
         voteLimit: number;
     })[]>;
@@ -32,12 +32,12 @@ export declare class PositionService {
             };
         } & {
             id: string;
-            Position_Title: string;
-            Position_Description: string | null;
             createdAt: Date;
             updatedAt: Date;
             deletedAt: Date | null;
             isDeleted: boolean;
+            Position_Title: string;
+            Position_Description: string | null;
             displayOrder: number;
             voteLimit: number;
         };
@@ -50,12 +50,12 @@ export declare class PositionService {
         };
     } & {
         id: string;
-        Position_Title: string;
-        Position_Description: string | null;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
         isDeleted: boolean;
+        Position_Title: string;
+        Position_Description: string | null;
         displayOrder: number;
         voteLimit: number;
     }>;
@@ -69,12 +69,12 @@ export declare class PositionService {
             };
         } & {
             id: string;
-            Position_Title: string;
-            Position_Description: string | null;
             createdAt: Date;
             updatedAt: Date;
             deletedAt: Date | null;
             isDeleted: boolean;
+            Position_Title: string;
+            Position_Description: string | null;
             displayOrder: number;
             voteLimit: number;
         };

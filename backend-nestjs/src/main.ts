@@ -136,7 +136,7 @@ fetch('/api/votes', {
     `,
   });
 
-  const port = process.env.PORT || 3001;
+  const port = process.env.NODE_ENV === 'production' ? 8080 : (process.env.PORT || 3001);
   await app.listen(port, '0.0.0.0');
   console.log(`🚀 Application is running on: http://0.0.0.0:${port}`);
   console.log(`📚 Swagger documentation: http://0.0.0.0:${port}/api`);

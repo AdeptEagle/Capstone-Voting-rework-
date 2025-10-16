@@ -5,11 +5,11 @@ export declare class AdminController {
     constructor(adminService: AdminService);
     getAllAdmins(req: any): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         Admin_Username: string;
         Admin_Email: string;
         role: import(".prisma/client").$Enums.Role;
+        createdAt: Date;
+        updatedAt: Date;
     }[]>;
     createAdmin(createAdminDto: CreateAdminDto, req: any): Promise<{
         message: string;
@@ -91,21 +91,21 @@ export declare class AdminController {
     }>;
     getMyProfile(req: any): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         Admin_Username: string;
         Admin_Email: string;
         role: import(".prisma/client").$Enums.Role;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     updateMyProfile(updateAdminDto: UpdateAdminDto, req: any): Promise<{
         message: string;
         admin: {
             id: string;
-            createdAt: Date;
-            updatedAt: Date;
             Admin_Username: string;
             Admin_Email: string;
             role: import(".prisma/client").$Enums.Role;
+            createdAt: Date;
+            updatedAt: Date;
         };
     }>;
     getAdminStats(req: any): Promise<{
@@ -120,13 +120,15 @@ export declare class AdminController {
             newAdmins: number;
             recentAdmins: {
                 id: string;
-                createdAt: Date;
                 Admin_Username: string;
                 role: import(".prisma/client").$Enums.Role;
+                createdAt: Date;
             }[];
         };
         adminActivity: {
             id: string;
+            Admin_Username: string;
+            role: import(".prisma/client").$Enums.Role;
             createdAt: Date;
             updatedAt: Date;
             _count: {
@@ -134,8 +136,6 @@ export declare class AdminController {
                 departments: number;
                 elections: number;
             };
-            Admin_Username: string;
-            role: import(".prisma/client").$Enums.Role;
         }[];
     }>;
     getAdminLoginLogs(req: any, page?: string, limit?: string, adminId?: string): Promise<{
@@ -150,14 +150,14 @@ export declare class AdminController {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            ipAddress: string | null;
-            sessionId: string | null;
-            userAgent: string | null;
             isActive: boolean;
-            adminId: string;
             loginTime: Date;
             logoutTime: Date | null;
             duration: number | null;
+            ipAddress: string | null;
+            userAgent: string | null;
+            sessionId: string | null;
+            adminId: string;
         })[];
         pagination: {
             page: number;
@@ -180,14 +180,14 @@ export declare class AdminController {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            ipAddress: string | null;
-            sessionId: string | null;
-            userAgent: string | null;
             isActive: boolean;
-            adminId: string;
             loginTime: Date;
             logoutTime: Date | null;
             duration: number | null;
+            ipAddress: string | null;
+            userAgent: string | null;
+            sessionId: string | null;
+            adminId: string;
         })[];
     }>;
     getAdminLoginLogById(id: string, req: any): Promise<{
@@ -201,24 +201,24 @@ export declare class AdminController {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        ipAddress: string | null;
-        sessionId: string | null;
-        userAgent: string | null;
         isActive: boolean;
-        adminId: string;
         loginTime: Date;
         logoutTime: Date | null;
         duration: number | null;
+        ipAddress: string | null;
+        userAgent: string | null;
+        sessionId: string | null;
+        adminId: string;
     }>;
     getUserLoginLogs(req: any, page?: string, limit?: string, search?: string, department?: string, course?: string): Promise<{
         loginLogs: ({
             user: {
                 id: string;
-                course: {
-                    Course_Name: string;
-                };
                 department: {
                     Department_Name: string;
+                };
+                course: {
+                    Course_Name: string;
                 };
                 Voter_Name: string;
                 Voter_Email: string;
@@ -228,14 +228,14 @@ export declare class AdminController {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            ipAddress: string | null;
-            sessionId: string | null;
-            userAgent: string | null;
             isActive: boolean;
             userId: string;
             loginTime: Date;
             logoutTime: Date | null;
             duration: number | null;
+            ipAddress: string | null;
+            userAgent: string | null;
+            sessionId: string | null;
         })[];
         pagination: {
             page: number;
@@ -261,24 +261,24 @@ export declare class AdminController {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            ipAddress: string | null;
-            sessionId: string | null;
-            userAgent: string | null;
             isActive: boolean;
             userId: string;
             loginTime: Date;
             logoutTime: Date | null;
             duration: number | null;
+            ipAddress: string | null;
+            userAgent: string | null;
+            sessionId: string | null;
         })[];
     }>;
     getUserLoginLogById(id: string, req: any): Promise<{
         user: {
             id: string;
-            course: {
-                Course_Name: string;
-            };
             department: {
                 Department_Name: string;
+            };
+            course: {
+                Course_Name: string;
             };
             Voter_Name: string;
             Voter_Email: string;
@@ -288,32 +288,32 @@ export declare class AdminController {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        ipAddress: string | null;
-        sessionId: string | null;
-        userAgent: string | null;
         isActive: boolean;
         userId: string;
         loginTime: Date;
         logoutTime: Date | null;
         duration: number | null;
+        ipAddress: string | null;
+        userAgent: string | null;
+        sessionId: string | null;
     }>;
     getAdminById(id: string, req: any): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         Admin_Username: string;
         Admin_Email: string;
         role: import(".prisma/client").$Enums.Role;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     updateAdmin(id: string, updateAdminDto: UpdateAdminDto, req: any): Promise<{
         message: string;
         admin: {
             id: string;
-            createdAt: Date;
-            updatedAt: Date;
             Admin_Username: string;
             Admin_Email: string;
             role: import(".prisma/client").$Enums.Role;
+            createdAt: Date;
+            updatedAt: Date;
         };
     }>;
     deleteAdmin(id: string, req: any): Promise<{
