@@ -58,12 +58,12 @@ export declare class BallotResultsService {
                 };
             } & {
                 id: string;
-                BallotResultDetails_Rank: number;
-                BallotResultDetails_PositionId: string;
                 BallotResultDetails_BallotId: string;
+                BallotResultDetails_PositionId: string;
                 BallotResultDetails_CandidateId: string;
                 BallotResultDetails_VoteCount: number;
                 BallotResultDetails_Percentage: number;
+                BallotResultDetails_Rank: number;
                 BallotResultDetails_LastUpdated: Date;
             })[];
         } & {
@@ -211,12 +211,12 @@ export declare class BallotResultsService {
                 };
             } & {
                 id: string;
-                BallotResultDetails_Rank: number;
-                BallotResultDetails_PositionId: string;
                 BallotResultDetails_BallotId: string;
+                BallotResultDetails_PositionId: string;
                 BallotResultDetails_CandidateId: string;
                 BallotResultDetails_VoteCount: number;
                 BallotResultDetails_Percentage: number;
+                BallotResultDetails_Rank: number;
                 BallotResultDetails_LastUpdated: Date;
             })[];
         } & {
@@ -364,12 +364,12 @@ export declare class BallotResultsService {
                 };
             } & {
                 id: string;
-                BallotResultDetails_Rank: number;
-                BallotResultDetails_PositionId: string;
                 BallotResultDetails_BallotId: string;
+                BallotResultDetails_PositionId: string;
                 BallotResultDetails_CandidateId: string;
                 BallotResultDetails_VoteCount: number;
                 BallotResultDetails_Percentage: number;
+                BallotResultDetails_Rank: number;
                 BallotResultDetails_LastUpdated: Date;
             })[];
         } & {
