@@ -636,6 +636,19 @@ export class VoterService {
     const voter = await this.prisma.voter.findUnique({
       where: { id: voterId },
       include: {
+        department: {
+          select: {
+            id: true,
+            Department_Name: true,
+          },
+        },
+        course: {
+          select: {
+            id: true,
+            Course_Name: true,
+            Course_Code: true,
+          },
+        },
         ballotHistory: {
           include: {
             ballot: {
