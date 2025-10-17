@@ -34,8 +34,6 @@ const Candidates = () => {
   const [photoFile, setPhotoFile] = useState(null);
   const [photoPreview, setPhotoPreview] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortField, setSortField] = useState('Candidate_Name');
-  const [sortOrder, setSortOrder] = useState('asc');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [candidateToDelete, setCandidateToDelete] = useState(null);
   const [successMessage, setSuccessMessage] = useState('');
@@ -44,12 +42,9 @@ const Candidates = () => {
   const [editingPartyList, setEditingPartyList] = useState(null);
   const [partyListFormData, setPartyListFormData] = useState({
     name: '',
-    description: '',
     color: '#007bff',
     logo: ''
   });
-  const [partyListLogoFile, setPartyListLogoFile] = useState(null);
-  const [partyListLogoPreview, setPartyListLogoPreview] = useState('');
 
   const role = checkCurrentUser().role;
   const { canViewCandidates, hasActiveBallot, triggerImmediateRefresh } = useBallot();
@@ -153,9 +148,10 @@ const Candidates = () => {
         departmentId: candidate.departmentId || '',
         courseId: candidate.courseId || '',
         photo: candidate.photo || null,
-        manifesto: candidate.manifesto || ''
+        manifesto: candidate.manifesto || '',
+        partyListId: candidate.partyListId || ''
       });
-      setPhotoPreview(candidate.photo || '');
+      setPhotoPreview(candidate.photo ? getCandidatePhotoUrl(candidate.photo) : '');
       setPhotoFile(null);
       
       // Fetch courses if department is selected
@@ -172,6 +168,8 @@ const Candidates = () => {
         departmentId: '',
         courseId: '',
         photo: null,
+        party_list_name: '',
+        partyListId: ''
       });
       setPhotoPreview('');
       setPhotoFile(null);
@@ -191,6 +189,8 @@ const Candidates = () => {
       departmentId: '',
       courseId: '',
       photo: null,
+      party_list_name: '',
+      partyListId: ''
     });
     setPhotoPreview('');
     setPhotoFile(null);
@@ -380,12 +380,9 @@ const Candidates = () => {
     setEditingPartyList(null);
     setPartyListFormData({
       name: '',
-      description: '',
       color: '#007bff',
       logo: ''
     });
-    setPartyListLogoFile(null);
-    setPartyListLogoPreview('');
   };
 
   const handlePartyListChange = (e) => {
@@ -396,28 +393,13 @@ const Candidates = () => {
     }));
   };
 
-  const handlePartyListLogoChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setPartyListLogoFile(file);
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setPartyListLogoPreview(e.target.result);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
   const handleEditPartyListFromHeader = (partyList) => {
     setEditingPartyList(partyList);
     setPartyListFormData({
       name: partyList.name,
-      description: partyList.description || '',
       color: partyList.color || '#007bff',
       logo: partyList.logo || ''
     });
-    setPartyListLogoFile(null);
-    setPartyListLogoPreview('');
     setError('');
     setShowPartyListCreateModal(true);
   };
@@ -439,10 +421,10 @@ const Candidates = () => {
     
     try {
       if (editingPartyList) {
-        await updatePartyList(editingPartyList.id, partyListFormData, partyListLogoFile);
+        await updatePartyList(editingPartyList.id, partyListFormData);
         setSuccessMessage(`Party list "${partyListFormData.name}" updated successfully!`);
       } else {
-        await createPartyList(partyListFormData, partyListLogoFile);
+        await createPartyList(partyListFormData);
         setSuccessMessage(`Party list "${partyListFormData.name}" created successfully!`);
       }
       
@@ -483,60 +465,30 @@ const Candidates = () => {
     }
   };
 
-  // Helper to get correct candidate photo URL
-  const getCandidatePhotoUrl = (photoUrl) => {
-    if (!photoUrl || photoUrl === 'undefined' || photoUrl === 'null') return null;
-    if (photoUrl.startsWith('http://') || photoUrl.startsWith('https://')) {
-      return photoUrl;
-    }
-    if (photoUrl.startsWith('/uploads/')) {
-      return `${import.meta.env.VITE_API_BASE_URL || 'https://backend-production-1960.up.railway.app'}${photoUrl}`;
-    }
-    return `${import.meta.env.VITE_API_BASE_URL || 'https://backend-production-1960.up.railway.app'}/uploads/${photoUrl}`;
-  };
+  // Use the imported getCandidatePhotoUrl function from utils/image.jsx
 
-  // Filter and sort candidates
+  // Filter and sort candidates by position order
   const filteredCandidates = candidates
     .filter(candidate => {
       const term = searchTerm.toLowerCase();
       return (
         candidate.Candidate_Name?.toLowerCase().includes(term) ||
-                  candidate.position?.Position_Title?.toLowerCase().includes(term) ||
-          candidate.department?.Department_Name?.toLowerCase().includes(term) ||
-                  candidate.course?.Course_Name?.toLowerCase().includes(term)
+        candidate.position?.Position_Title?.toLowerCase().includes(term) ||
+        candidate.department?.Department_Name?.toLowerCase().includes(term) ||
+        candidate.course?.Course_Name?.toLowerCase().includes(term)
       );
     })
     .sort((a, b) => {
-      if (sortField === 'positionName') {
-        // Sort by position title
-        const aValue = a.position?.title || '';
-        const bValue = b.position?.title || '';
-        if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1;
-        if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1;
-        return 0;
-      } else if (sortField === 'departmentName') {
-        // Sort by department name
-        const aValue = a.department?.name || '';
-        const bValue = b.department?.name || '';
-        if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1;
-        if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1;
-        return 0;
-      } else if (sortField === 'courseName') {
-        // Sort by course ID
-        const aValue = a.course?.id || '';
-        const bValue = b.course?.id || '';
-        if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1;
-        if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1;
-        return 0;
-      } else {
-        let aValue = a[sortField] || '';
-        let bValue = b[sortField] || '';
-        aValue = typeof aValue === 'string' ? aValue.toLowerCase() : aValue;
-        bValue = typeof bValue === 'string' ? bValue.toLowerCase() : bValue;
-        if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1;
-        if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1;
-        return 0;
+      // Sort by position display order first, then by position title
+      const aOrder = a.position?.displayOrder || 0;
+      const bOrder = b.position?.displayOrder || 0;
+      if (aOrder !== bOrder) {
+        return aOrder - bOrder;
       }
+      // If same order, sort by position title
+      const aValue = a.position?.Position_Title || '';
+      const bValue = b.position?.Position_Title || '';
+      return aValue.localeCompare(bValue);
     });
 
   // Group candidates by party list and sort by position within each group
@@ -554,9 +506,15 @@ const Candidates = () => {
       grouped[partyListName].candidates.push(candidate);
     });
     
-    // Sort candidates within each party list by position
+    // Sort candidates within each party list by position order
     Object.keys(grouped).forEach(partyListName => {
       grouped[partyListName].candidates.sort((a, b) => {
+        const orderA = a.position?.displayOrder || 0;
+        const orderB = b.position?.displayOrder || 0;
+        if (orderA !== orderB) {
+          return orderA - orderB;
+        }
+        // If same order, sort by position title
         const positionA = a.position?.Position_Title || '';
         const positionB = b.position?.Position_Title || '';
         return positionA.localeCompare(positionB);
@@ -567,14 +525,6 @@ const Candidates = () => {
   };
 
   const groupedCandidates = groupCandidatesByPartyList(filteredCandidates);
-
-  // Helper to render sort icon
-  const renderSortIcon = (field) => {
-    if (sortField !== field) return null;
-    return (
-      <i className={`fas fa-sort-${sortOrder === 'asc' ? 'up' : 'down'} ms-1`}></i>
-    );
-  };
 
   // User view: modern candidate cards grouped by position
   if (role === 'USER') {
@@ -990,40 +940,16 @@ const Candidates = () => {
             
             {/* Separate table for this party list */}
             <div className="table-responsive">
-              <table className="table table-hover">
+              <table className="table table-hover candidates-table">
                 <thead className="table-header-custom">
                   <tr>
-                    <th>#</th>
-                    <th>Photo</th>
-                    <th
-                      className={sortField === 'name' ? 'sortable active-sort' : 'sortable'}
-                      style={{ cursor: 'pointer' }}
-                      onClick={() => setSortField('name') || setSortOrder(sortField === 'name' && sortOrder === 'asc' ? 'desc' : 'asc')}
-                    >
-                      Name {renderSortIcon('name')}
-                    </th>
-                    <th
-                      className={sortField === 'positionName' ? 'sortable active-sort' : 'sortable'}
-                      style={{ cursor: 'pointer' }}
-                      onClick={() => setSortField('positionName') || setSortOrder(sortField === 'positionName' && sortOrder === 'asc' ? 'desc' : 'asc')}
-                    >
-                      Position {renderSortIcon('positionName')}
-                    </th>
-                    <th
-                      className={sortField === 'departmentName' ? 'sortable active-sort' : 'sortable'}
-                      style={{ cursor: 'pointer' }}
-                      onClick={() => setSortField('departmentName') || setSortOrder(sortField === 'departmentName' && sortOrder === 'asc' ? 'desc' : 'asc')}
-                    >
-                      Department {renderSortIcon('departmentName')}
-                    </th>
-                    <th
-                      className={sortField === 'courseName' ? 'sortable active-sort' : 'sortable'}
-                      style={{ cursor: 'pointer' }}
-                      onClick={() => setSortField('courseName') || setSortOrder(sortField === 'courseName' && sortOrder === 'asc' ? 'desc' : 'asc')}
-                    >
-                      Course {renderSortIcon('courseName')}
-                    </th>
-                    <th style={{ textAlign: 'center' }}>
+                    <th style={{ width: '60px' }}>#</th>
+                    <th style={{ width: '80px' }}>Photo</th>
+                    <th style={{ width: '200px' }}>Name</th>
+                    <th style={{ width: '180px' }}>Position</th>
+                    <th style={{ width: '200px' }}>Department</th>
+                    <th style={{ width: '200px' }}>Course</th>
+                    <th style={{ width: '120px', textAlign: 'center' }}>
                       <i className="fas fa-cogs me-1"></i>
                       Actions
                     </th>
@@ -1488,17 +1414,6 @@ const Candidates = () => {
                     />
                   </div>
                   <div className="mb-3">
-                    <label className="form-label">Description</label>
-                    <textarea
-                      className="form-control"
-                      rows={3}
-                      name="description"
-                      value={partyListFormData.description}
-                      onChange={handlePartyListChange}
-                      placeholder="Brief description of the party list's platform and goals"
-                    ></textarea>
-                  </div>
-                  <div className="mb-3">
                     <label className="form-label">Color</label>
                     <div className="input-group">
                       <input
@@ -1521,45 +1436,6 @@ const Candidates = () => {
                     <small className="text-muted">
                       Choose a color to represent this party list
                     </small>
-                  </div>
-                  <div className="mb-3">
-                    <label className="form-label">Logo</label>
-                    <div className="row">
-                      <div className="col-md-6">
-                        <input
-                          type="file"
-                          className="form-control"
-                          accept="image/*"
-                          onChange={handlePartyListLogoChange}
-                        />
-                        <small className="text-muted">
-                          Upload a logo image (optional)
-                        </small>
-                      </div>
-                      <div className="col-md-6">
-                        <input
-                          type="url"
-                          className="form-control"
-                          name="logo"
-                          value={partyListFormData.logo}
-                          onChange={handlePartyListChange}
-                          placeholder="Or enter logo URL"
-                        />
-                        <small className="text-muted">
-                          Or provide a logo URL
-                        </small>
-                      </div>
-                    </div>
-                    {partyListLogoPreview && (
-                      <div className="mt-2">
-                        <img 
-                          src={partyListLogoPreview} 
-                          alt="Logo preview" 
-                          style={{ maxWidth: '100px', maxHeight: '100px', objectFit: 'contain' }}
-                          className="border rounded"
-                        />
-                      </div>
-                    )}
                   </div>
                 </div>
                 <div className="modal-footer">

@@ -132,127 +132,100 @@ const VotingHistory = () => {
         </div>
       )}
 
-      {/* Filters */}
-      <div className="filters-section">
-        <div className="filter-group">
-          <label>Status:</label>
-          <select 
-            value={filterStatus} 
-            onChange={(e) => setFilterStatus(e.target.value)}
-            className="filter-select"
-          >
-            <option value="all">All Voted Ballots</option>
-            <option value="completed">Fully Completed</option>
-            <option value="pending">Partially Voted</option>
-          </select>
+      {filteredHistory.length === 0 ? (
+        <div className="no-history">
+          <i className="fas fa-history"></i>
+          <h3>No Voting History Found</h3>
+          <p>
+            {filterStatus !== 'all' 
+              ? 'No ballots match your current filter.' 
+              : 'You haven\'t voted in any ballots yet.'
+            }
+          </p>
+          {filterStatus === 'all' && (
+            <button 
+              className="btn btn-primary"
+              onClick={() => navigate('/user/ballot-selection')}
+            >
+              <i className="fas fa-vote-yea"></i>
+              Start Voting
+            </button>
+          )}
         </div>
-
-        <button 
-          className="btn btn-secondary"
-          onClick={fetchVotingHistory}
-          title="Refresh history"
-        >
-          <i className="fas fa-sync-alt"></i>
-          Refresh
-        </button>
-      </div>
-
-      {/* History List */}
-      <div className="history-section">
-        {filteredHistory.length === 0 ? (
-          <div className="no-history">
-            <i className="fas fa-history"></i>
-            <h3>No Voting History Found</h3>
-            <p>
-              {filterStatus !== 'all' 
-                ? 'No ballots match your current filter.' 
-                : 'You haven\'t voted in any ballots yet.'
-              }
-            </p>
-            {filterStatus === 'all' && (
-              <button 
-                className="btn btn-primary"
-                onClick={() => navigate('/user/ballot-selection')}
+      ) : (
+        <div className="ballots-grid">
+          {filteredHistory.map((item, index) => {
+            const status = getBallotStatus(item);
+            
+            return (
+              <div 
+                key={`ballot-${item.id}-${index}`} 
+                className="ballot-card"
+                onClick={() => handleItemClick(item)}
               >
-                <i className="fas fa-vote-yea"></i>
-                Start Voting
-              </button>
-            )}
-          </div>
-        ) : (
-          <div className="history-list">
-            {filteredHistory.map((item, index) => {
-              const status = getBallotStatus(item);
-              
-              return (
-                <div 
-                  key={`ballot-${item.id}-${index}`} 
-                  className="history-item"
-                  onClick={() => handleItemClick(item)}
-                >
-                  <div className="history-item-header">
-                    <div className="history-item-title">
-                      <h3>{item.title}</h3>
-                    </div>
-                    <div className="history-item-badges">
-                      <span className={`status-badge ${status.color}`}>
-                        {status.text}
-                      </span>
-                      <span className="type-badge ballot">
-                        Ballot
-                      </span>
-                    </div>
-                  </div>
+                <div className="ballot-header">
+                  <h3>{item.title}</h3>
+                  <span className={`status-badge ${status.color}`}>
+                    {status.text}
+                  </span>
+                  <span className="system-badge ballot">Ballot</span>
+                </div>
 
-                  {item.description && (
-                    <p className="history-item-description">{item.description}</p>
-                  )}
+                {item.description && (
+                  <p className="ballot-description">{item.description}</p>
+                )}
 
-                  <div className="history-item-details">
+                <div className="ballot-details two-column">
+                  <div className="details-row">
                     <div className="detail-item">
                       <i className="fas fa-calendar-alt"></i>
-                      <span>
-                        {item.startDate && item.endDate 
-                          ? `${formatDate(item.startDate)} - ${formatDate(item.endDate)}`
-                          : 'Date not available'
-                        }
-                      </span>
+                      <span>Starts: {formatDate(item.startDate)}</span>
                     </div>
-
-                    {item.type === 'ballot' && item.lastAccessed && (
+                    <div className="detail-item">
+                      <i className="fas fa-calendar-check"></i>
+                      <span>Ends: {formatDate(item.endDate)}</span>
+                    </div>
+                  </div>
+                  <div className="details-row">
+                    {item.lastAccessed && (
                       <div className="detail-item">
                         <i className="fas fa-clock"></i>
                         <span>Last accessed: {formatDate(item.lastAccessed)}</span>
                       </div>
                     )}
-
-                    {item.type === 'ballot' && item.voteCount > 0 && (
+                    {item.voteCount > 0 && (
                       <div className="detail-item">
                         <i className="fas fa-vote-yea"></i>
                         <span>{item.voteCount} vote{item.voteCount !== 1 ? 's' : ''} cast</span>
                       </div>
                     )}
                   </div>
-
-                  <div className="history-item-actions">
-                    {status.status === 'completed' ? (
-                      <span className="action-text">
-                        <i className="fas fa-eye"></i>
-                        Click to view results
-                      </span>
-                    ) : (
-                      <span className="action-text">
-                        <i className="fas fa-vote-yea"></i>
-                        Click to continue voting
-                      </span>
-                    )}
-                  </div>
                 </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
+
+                <div className="ballot-actions">
+                  {status.status === 'completed' ? (
+                    <button 
+                      className="btn btn-success"
+                      onClick={() => handleItemClick(item)}
+                    >
+                      <i className="fas fa-chart-bar"></i>
+                      View Results
+                    </button>
+                  ) : (
+                    <button 
+                      className="btn btn-primary"
+                      onClick={() => handleItemClick(item)}
+                    >
+                      <i className="fas fa-vote-yea"></i>
+                      Continue Voting
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };

@@ -2,11 +2,13 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useBallot } from '../contexts/BallotContext';
 import { checkCurrentUser, logout } from '../services/auth';
+import { getApiUrl } from '../config/environment';
 import './Sidebar.css';
 
 const Sidebar = ({ isOpen, onToggle }) => {
   const location = useLocation();
-  const currentUser = checkCurrentUser();
+  const [currentUser, setCurrentUser] = useState(null);
+  const [loading, setLoading] = useState(true);
   
   // Safely get ballot context with fallback
   let ballotContext = null;
@@ -27,13 +29,17 @@ const Sidebar = ({ isOpen, onToggle }) => {
   
   const { canVote, canViewCandidates, canViewResults, hasActiveBallot, hasAnyBallot, hasEndedBallot } = ballotContext;
   const [userData, setUserData] = useState(null);
-  const [loading, setLoading] = useState(true);
 
-  // Fetch user data from server
+  // Fetch current user and user data from server
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'https://backend-production-1960.up.railway.app'}/auth/status`, {
+        // Get current user info
+        const user = await checkCurrentUser();
+        setCurrentUser(user);
+        
+        // Get detailed user data
+        const response = await fetch(`${getApiUrl()}/auth/status`, {
           credentials: 'include'
         });
         
@@ -53,11 +59,7 @@ const Sidebar = ({ isOpen, onToggle }) => {
     fetchUserData();
   }, []);
 
-  const userRole = currentUser.role;
-  
-  // Debug logging to understand the data structure
-  console.log('Sidebar userData:', userData);
-  console.log('Sidebar userRole:', userRole);
+  const userRole = currentUser?.role;
   
   const userName = userData?.Voter_Name || userData?.Admin_Username || userData?.name || userData?.username || userRole || 'User';
   

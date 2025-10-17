@@ -249,6 +249,7 @@
   text-overflow: ellipsis;
   display: -webkit-box;
   -webkit-line-clamp: 3; /* Limit to 3 lines */
+  line-clamp: 3; /* Standard property for compatibility */
   -webkit-box-orient: vertical;
   word-wrap: break-word;
 }
@@ -1659,9 +1660,32 @@
     font-size: 0.8rem;
     padding: 0.2rem 0.4rem;
   }
+}
 
-  .party-list-edit-btn {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.875rem;
-  }
+/* Fixed table layout for consistent column alignment */
+.candidates-table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.candidates-table th,
+.candidates-table td {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.candidates-table td:nth-child(3) {
+  white-space: normal;
+  word-wrap: break-word;
+}
+
+.candidates-table td:nth-child(5) {
+  white-space: normal;
+  word-wrap: break-word;
+}
+
+.candidates-table td:nth-child(6) {
+  white-space: normal;
+  word-wrap: break-word;
 }

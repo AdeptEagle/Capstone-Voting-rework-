@@ -1,17 +1,30 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getAvailableBallots, getUpcomingBallots, getUserBallotHistory } from '../../services/api';
-import io from 'socket.io-client';
+import { getAvailableBallots, getUpcomingBallots, getUserBallotHistory, changePassword } from '../../services/api';
+import { getApiUrl } from '../../config/environment';
 import './UserDashboard.css';
 
 const UserDashboard = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [socket, setSocket] = useState(null);
-  const socketRef = useRef(null);
   const [notification, setNotification] = useState(null);
   const navigate = useNavigate();
   const notificationTimeoutRef = useRef(null);
+  
+  // Settings modal state
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [showPasswords, setShowPasswords] = useState({
+    current: false,
+    new: false,
+    confirm: false
+  });
+  const [passwordError, setPasswordError] = useState(null);
   
   // Ballot-focused state
   const [availableBallots, setAvailableBallots] = useState([]);
@@ -21,227 +34,199 @@ const UserDashboard = () => {
   const [activeBallotsCount, setActiveBallotsCount] = useState(0);
   const [votedBallotsCount, setVotedBallotsCount] = useState(0);
 
-  useEffect(() => {
-    console.log('UserDashboard useEffect triggered');
-    
-    // Fetch user info and ballot data
-    const fetchDashboardData = async () => {
-      try {
-        setBallotsLoading(true);
+  // Define fetchDashboardData outside useEffect to make it reusable
+  const fetchDashboardData = useCallback(async () => {
+    try {
+      setBallotsLoading(true);
+      
+      // Fetch user info from server since token is in HTTP-only cookie
+      const userResponse = await fetch(`${getApiUrl()}/auth/status`, {
+        credentials: 'include'
+      });
+      
+      if (userResponse.ok) {
+        const userData = await userResponse.json();
         
-        // Fetch user info from server since token is in HTTP-only cookie
-        const userResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'https://backend-production-1960.up.railway.app'}/auth/status`, {
-          credentials: 'include'
-        });
-        
-        if (userResponse.ok) {
-          const userData = await userResponse.json();
-          
-          if (userData.isAuthenticated && userData.user) {
-            setUser(userData.user);
-          } else {
-            navigate('/user-login');
-            return;
-          }
+        if (userData.isAuthenticated && userData.user) {
+          setUser(userData.user);
         } else {
           navigate('/user-login');
           return;
         }
-        
-        // Fetch available ballots (active only)
-        let ballots = [];
-        try {
-          ballots = await getAvailableBallots();
-          setAvailableBallots(ballots);
-        } catch (error) {
-          console.error('Error fetching available ballots:', error);
-          setAvailableBallots([]);
-        }
-        
-        // Fetch upcoming ballots separately
-        let upcoming = [];
-        try {
-          upcoming = await getUpcomingBallots();
-          setUpcomingBallots(upcoming);
-        } catch (error) {
-          console.error('Error fetching upcoming ballots:', error);
-          setUpcomingBallots([]);
-        }
-        
-        // Fetch voting history
-        let history = [];
-        try {
-          history = await getUserBallotHistory();
-          setVotingHistory(history);
-        } catch (error) {
-          console.error('Error fetching voting history:', error);
-          setVotingHistory([]);
-        }
-        
-        // Calculate statistics
-        const activeCount = ballots.filter(ballot => ballot.Ballot_IsActive).length;
-        const votedCount = history.filter(h => h.UserBallotHistory_IsCompleted).length;
-        
-        setActiveBallotsCount(activeCount);
-        setVotedBallotsCount(votedCount);
-        
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error);
-        setNotification({
-          type: 'error',
-          message: 'Failed to load dashboard data. Please refresh the page.'
-        });
-        // Set default values to prevent blue page
-        setAvailableBallots([]);
-        setVotingHistory([]);
-        setActiveBallotsCount(0);
-        setVotedBallotsCount(0);
-      } finally {
-        setLoading(false);
-        setBallotsLoading(false);
+      } else {
+        navigate('/user-login');
+        return;
       }
-    };
+      
+      // Fetch available ballots (active only)
+      let ballots = [];
+      try {
+        ballots = await getAvailableBallots();
+        setAvailableBallots(ballots);
+      } catch (error) {
+        console.error('Error fetching available ballots:', error);
+        setAvailableBallots([]);
+      }
+      
+      // Fetch upcoming ballots separately
+      let upcoming = [];
+      try {
+        upcoming = await getUpcomingBallots();
+        setUpcomingBallots(upcoming);
+      } catch (error) {
+        console.error('Error fetching upcoming ballots:', error);
+        setUpcomingBallots([]);
+      }
+      
+      // Fetch voting history
+      let history = [];
+      try {
+        history = await getUserBallotHistory();
+        setVotingHistory(history);
+      } catch (error) {
+        console.error('Error fetching voting history:', error);
+        setVotingHistory([]);
+      }
+      
+      // Calculate statistics
+      const activeCount = ballots.filter(ballot => ballot.Ballot_IsActive).length;
+      const votedCount = history.filter(h => h.UserBallotHistory_IsCompleted).length;
+      
+      setActiveBallotsCount(activeCount);
+      setVotedBallotsCount(votedCount);
+      
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+      setNotification({
+        type: 'error',
+        message: 'Failed to load dashboard data. Please refresh the page.'
+      });
+      // Set default values to prevent blue page
+      setAvailableBallots([]);
+      setVotingHistory([]);
+      setActiveBallotsCount(0);
+      setVotedBallotsCount(0);
+    } finally {
+      setLoading(false);
+      setBallotsLoading(false);
+    }
+  }, []); // navigate is stable from React Router
 
-    fetchDashboardData();
-  }, [navigate]);
+  // Password change handlers
+  const handlePasswordChange = (e) => {
+    const { name, value } = e.target;
+    setPasswordForm(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
 
-  // WebSocket connection setup
-  useEffect(() => {
-    // Prevent multiple WebSocket connections
-    if (socketRef.current && socketRef.current.connected) {
-      console.log('🔌 [UserDashboard] WebSocket already connected, skipping setup');
+  const togglePasswordVisibility = (field) => {
+    setShowPasswords(prev => ({
+      ...prev,
+      [field]: !prev[field]
+    }));
+  };
+
+  const handlePasswordSubmit = async (e) => {
+    e.preventDefault();
+    
+    // Validation
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setNotification({
+        type: 'error',
+        message: 'New password and confirmation do not match'
+      });
       return;
     }
 
-    console.log('🔌 [UserDashboard] Setting up WebSocket connection...');
-    const newSocket = io(import.meta.env.VITE_WS_URL || 'https://backend-production-1960.up.railway.app', {
-      withCredentials: true,
-      transports: ['websocket', 'polling'],
-      timeout: 20000,
-      forceNew: false, // Changed to false to prevent multiple connections
-      reconnection: true,
-      reconnectionAttempts: 5,
-      reconnectionDelay: 1000,
-    });
-
-    // Store socket in ref for cleanup
-    socketRef.current = newSocket;
-
-    newSocket.on('connect', () => {
-      console.log('🔌 [UserDashboard] WebSocket connected:', newSocket.id);
-    });
-
-    newSocket.on('disconnect', () => {
-      console.log('🔌 [UserDashboard] WebSocket disconnected');
-    });
-
-    newSocket.on('connect_error', (error) => {
-      console.error('❌ [UserDashboard] WebSocket connection error:', error);
-      // Don't create multiple connections on error
-      if (newSocket.connected) {
-        newSocket.disconnect();
-      }
-    });
-
-    // Test event listeners
-    newSocket.on('test-event', (data) => {
-      console.log('🧪 [UserDashboard] Test event received:', data);
-    });
-
-    newSocket.on('test-response', (data) => {
-      console.log('🧪 [UserDashboard] Test response received:', data);
-    });
-
-    // Ballot status update listeners
-    newSocket.on('ballot-status-updated', (data) => {
-      console.log('🗳️ [UserDashboard] Ballot status updated:', data);
-      
-      // Show notification to user about status change
-      const statusMessages = {
-        'active': '🗳️ New ballot is now OPEN for voting!',
-        'paused': '⏸️ Ballot voting has been PAUSED temporarily.',
-        'ended': '✅ Ballot voting has ENDED. Results are now available.',
-        'draft': '📝 Ballot is in DRAFT mode.'
-      };
-      
-      const message = statusMessages[data.status] || `Ballot status changed to: ${data.status}`;
+    if (passwordForm.newPassword.length < 6) {
       setNotification({
-        type: 'info',
-        message: message,
-        timestamp: new Date()
+        type: 'error',
+        message: 'New password must be at least 6 characters long'
       });
+      return;
+    }
+
+    setPasswordLoading(true);
+    try {
+      await changePassword(passwordForm.currentPassword, passwordForm.newPassword);
+      setNotification({
+        type: 'success',
+        message: 'Password changed successfully!'
+      });
+      setPasswordForm({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      });
+      setShowSettingsModal(false);
+    } catch (error) {
+      console.error('Error changing password:', error);
+      let errorMessage = 'Failed to change password';
       
-      // Auto-hide notification after 5 seconds
-      if (notificationTimeoutRef.current) {
-        clearTimeout(notificationTimeoutRef.current);
+      // Provide more specific error messages
+      if (error.response?.data?.message) {
+        if (error.response.data.message.includes('Current password is incorrect')) {
+          errorMessage = 'Current password is incorrect. Please try again.';
+          setPasswordError('current');
+        } else if (error.response.data.message.includes('User not found')) {
+          errorMessage = 'User account not found. Please log in again.';
+        } else {
+          errorMessage = error.response.data.message;
+        }
       }
-      notificationTimeoutRef.current = setTimeout(() => setNotification(null), 5000);
+      
+      setNotification({
+        type: 'error',
+        message: errorMessage
+      });
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
+
+  const closeSettingsModal = () => {
+    setShowSettingsModal(false);
+    setPasswordForm({
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: ''
     });
-
-    // Listen for new ballots being created
-    newSocket.on('ballot-created', (data) => {
-      console.log('🆕 [UserDashboard] New ballot created:', data);
-      // Refresh ballot data
-      window.location.reload(); // Simple refresh for now
+    setShowPasswords({
+      current: false,
+      new: false,
+      confirm: false
     });
+    setPasswordError(null);
+  };
 
-    // Listen for ballot updates
-    newSocket.on('ballot-updated', (data) => {
-      console.log('🔄 [UserDashboard] Ballot updated:', data);
-      // Refresh ballot data
-      window.location.reload(); // Simple refresh for now
-    });
-
-    setSocket(newSocket);
-
-    return () => {
-      console.log('🧹 [UserDashboard] Cleaning up WebSocket connection...');
-      if (newSocket && newSocket.connected) {
-        newSocket.disconnect();
-      }
-      // Also clean up any existing socket
-      if (socket && socket.connected) {
-        socket.disconnect();
-      }
-      // Clear the ref
-      socketRef.current = null;
-    };
-  }, []); // Remove triggerImmediateRefresh from dependencies to prevent infinite loops
-
-  // Cleanup notification timeout when notification changes
   useEffect(() => {
-    return () => {
-      if (notificationTimeoutRef.current) {
-        clearTimeout(notificationTimeoutRef.current);
-      }
-    };
-  }, [notification]);
+    fetchDashboardData();
+  }, []); // Empty dependency array - only run once on mount
 
-  // Cleanup WebSocket on component unmount
-  useEffect(() => {
-    return () => {
-      console.log('🧹 [UserDashboard] Component unmounting, cleaning up WebSocket...');
-      if (socketRef.current && socketRef.current.connected) {
-        socketRef.current.disconnect();
-        socketRef.current = null;
-      }
-      if (socket && socket.connected) {
-        socket.disconnect();
-      }
-      // Clean up notification timeout
-      if (notificationTimeoutRef.current) {
-        clearTimeout(notificationTimeoutRef.current);
-      }
-    };
-  }, [socket]);
+  // WebSocket connection setup - COMPLETELY DISABLED to fix infinite loop
+  // useEffect(() => {
+  //   // Prevent multiple WebSocket connections
+  //   if (socketRef.current && socketRef.current.connected) {
+  //     return;
+  //   }
 
-  console.log('UserDashboard render state:', { 
-    loading, 
-    user, 
-    availableBallots,
-    votingHistory,
-    ballotsLoading
-  });
+  //   const newSocket = io(import.meta.env.VITE_WS_URL || 'http://localhost:3001', {
+  //     withCredentials: true,
+  //     transports: ['polling', 'websocket'], // Try polling first, then websocket
+  //     timeout: 10000,
+  //     forceNew: false,
+  //     reconnection: true,
+  //     reconnectionAttempts: 3,
+  //     reconnectionDelay: 2000,
+  //     reconnectionDelayMax: 5000,
+  //     maxReconnectionAttempts: 3,
+  //   });
+
+  // }, []); // WebSocket completely disabled to fix infinite loop
+
+  // Debug logging removed to prevent performance issues
 
   if (loading) {
     return (
@@ -262,7 +247,6 @@ const UserDashboard = () => {
 
   // Safety check - if no user data, show loading or redirect
   if (!user) {
-    console.log('No user data available, showing loading state');
     return (
       <div className="user-dashboard-loading">
         <div className="loading-text">Loading...</div>
@@ -574,8 +558,154 @@ const UserDashboard = () => {
             <span>Results</span>
             <small>View election results</small>
           </button>
+          
+          <button
+            className="quick-action-btn"
+            onClick={() => setShowSettingsModal(true)}
+          >
+            <i className="fas fa-cog"></i>
+            <span>Settings</span>
+            <small>Manage your account</small>
+          </button>
         </div>
       </div>
+
+      {/* Settings Modal */}
+      {showSettingsModal && (
+        <div className="modal fade show" style={{ display: 'block' }} tabIndex="-1">
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">
+                  <i className="fas fa-cog me-2"></i>
+                  Account Settings
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={closeSettingsModal}
+                ></button>
+              </div>
+              <form onSubmit={handlePasswordSubmit}>
+                <div className="modal-body">
+                  <div className="settings-section">
+                    <h6 className="mb-3">
+                      <i className="fas fa-key me-2"></i>
+                      Change Password
+                    </h6>
+                    
+                    <div className="mb-3">
+                      <label className="form-label">Current Password</label>
+                      <div className="input-group">
+                        <input
+                          type={showPasswords.current ? "text" : "password"}
+                          className={`form-control ${passwordError === 'current' ? 'is-invalid' : ''}`}
+                          name="currentPassword"
+                          value={passwordForm.currentPassword}
+                          onChange={(e) => {
+                            handlePasswordChange(e);
+                            if (passwordError === 'current') {
+                              setPasswordError(null);
+                            }
+                          }}
+                          required
+                        />
+                        <span className="input-group-text">
+                          <i 
+                            className={`fas ${showPasswords.current ? 'fa-eye-slash' : 'fa-eye'}`} 
+                            onClick={() => togglePasswordVisibility('current')}
+                            style={{ cursor: 'pointer' }}
+                          ></i>
+                        </span>
+                      </div>
+                      {passwordError === 'current' && (
+                        <div className="invalid-feedback">
+                          Current password is incorrect
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="mb-3">
+                      <label className="form-label">New Password</label>
+                      <div className="input-group">
+                        <input
+                          type={showPasswords.new ? "text" : "password"}
+                          className="form-control"
+                          name="newPassword"
+                          value={passwordForm.newPassword}
+                          onChange={handlePasswordChange}
+                          required
+                          minLength="6"
+                        />
+                        <span className="input-group-text">
+                          <i 
+                            className={`fas ${showPasswords.new ? 'fa-eye-slash' : 'fa-eye'}`} 
+                            onClick={() => togglePasswordVisibility('new')}
+                            style={{ cursor: 'pointer' }}
+                          ></i>
+                        </span>
+                      </div>
+                      <small className="form-text text-muted">
+                        Password must be at least 6 characters long
+                      </small>
+                    </div>
+                    
+                    <div className="mb-3">
+                      <label className="form-label">Confirm New Password</label>
+                      <div className="input-group">
+                        <input
+                          type={showPasswords.confirm ? "text" : "password"}
+                          className="form-control"
+                          name="confirmPassword"
+                          value={passwordForm.confirmPassword}
+                          onChange={handlePasswordChange}
+                          required
+                        />
+                        <span className="input-group-text">
+                          <i 
+                            className={`fas ${showPasswords.confirm ? 'fa-eye-slash' : 'fa-eye'}`} 
+                            onClick={() => togglePasswordVisibility('confirm')}
+                            style={{ cursor: 'pointer' }}
+                          ></i>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="modal-footer">
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={closeSettingsModal}
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    type="submit" 
+                    className="btn btn-primary"
+                    disabled={passwordLoading}
+                  >
+                    {passwordLoading ? (
+                      <>
+                        <i className="fas fa-spinner fa-spin me-1"></i>
+                        Changing...
+                      </>
+                    ) : (
+                      <>
+                        <i className="fas fa-save me-1"></i>
+                        Change Password
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Modal Backdrop */}
+      {showSettingsModal && <div className="modal-backdrop fade show"></div>}
     </div>
   );
 };

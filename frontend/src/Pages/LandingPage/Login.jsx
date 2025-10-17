@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { userLogin } from '../../services/api';
 import { storeUserData, storeRole, clearUserData } from '../../services/auth';
-import io from 'socket.io-client';
 import BCLogo from '../../assets/BCLogo.png';
 import './Login.css';
 
@@ -13,55 +12,13 @@ const Login = () => {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [socket, setSocket] = useState(null);
   const navigate = useNavigate();
 
-  // WebSocket connection setup
-  useEffect(() => {
-    console.log('🔌 [LandingPage Login] Setting up WebSocket connection...');
-    const newSocket = io(import.meta.env.VITE_WS_URL || 'https://backend-production-1960.up.railway.app', {
-      withCredentials: true,
-      transports: ['websocket', 'polling'],
-      timeout: 20000,
-      forceNew: true,
-    });
-
-    newSocket.on('connect', () => {
-      console.log('🔌 [LandingPage Login] WebSocket connected:', newSocket.id);
-    });
-
-    newSocket.on('disconnect', () => {
-      console.log('🔌 [LandingPage Login] WebSocket disconnected');
-    });
-
-    newSocket.on('connect_error', (error) => {
-      console.error('❌ [LandingPage Login] WebSocket connection error:', error);
-    });
-
-    // Election status update listeners
-    newSocket.on('election-status-updated', (data) => {
-      console.log('🗳️ [LandingPage Login] Election status updated:', data);
-      const statusMessages = {
-        'active': '🗳️ Voting is now OPEN! You can cast your vote.',
-        'paused': '⏸️ Voting has been PAUSED temporarily.',
-        'stopped': '⏹️ Voting has been STOPPED.',
-        'ended': '✅ Voting has ENDED. Results are now available.',
-        'draft': '📝 Election is in DRAFT mode.'
-      };
-      
-      const message = statusMessages[data.status] || `Election status changed to: ${data.status}`;
-      console.log('📢 Status Update:', message);
-    });
-
-    setSocket(newSocket);
-
-    return () => {
-      console.log('🧹 [LandingPage Login] Cleaning up WebSocket connection...');
-      if (newSocket.connected) {
-        newSocket.disconnect();
-      }
-    };
-  }, []);
+  // WebSocket connection setup - REMOVED to prevent conflicts
+  // WebSocket connections should only be in dashboard components
+  // useEffect(() => {
+  //   // WebSocket setup removed to prevent connection conflicts
+  // }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;

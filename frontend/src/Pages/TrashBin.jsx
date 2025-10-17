@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Button, Table, Badge, Modal, Alert, Spinner, Tooltip, OverlayTrigger } from 'react-bootstrap';
 import { FaTrash, FaUndo, FaExclamationTriangle, FaInfoCircle } from 'react-icons/fa';
+import api from '../services/api';
 import './TrashBin.css';
 
 const TrashBin = () => {
@@ -41,16 +42,8 @@ const TrashBin = () => {
 
   const fetchTrashSummary = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'https://backend-production-1960.up.railway.app'}/trash/summary`, {
-        credentials: 'include'
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch trash summary');
-      }
-      
-      const data = await response.json();
-      setTrashSummary(data);
+      const response = await api.get('/trash/summary');
+      setTrashSummary(response.data);
     } catch (error) {
       console.error('Error fetching trash summary:', error);
       setError('Failed to load trash summary');
@@ -62,16 +55,8 @@ const TrashBin = () => {
     setError(null);
     
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'https://backend-production-1960.up.railway.app'}/trash/${itemType}`, {
-        credentials: 'include'
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Failed to fetch deleted ${itemType}`);
-      }
-      
-      const data = await response.json();
-      setDeletedItems(data);
+      const response = await api.get(`/trash/${itemType}`);
+      setDeletedItems(response.data);
     } catch (error) {
       console.error(`Error fetching deleted ${itemType}:`, error);
       setError(`Failed to load deleted ${itemType}`);
@@ -85,14 +70,7 @@ const TrashBin = () => {
     setError(null);
     
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'https://backend-production-1960.up.railway.app'}/trash/restore/${activeTab.slice(0, -1)}/${itemId}`, {
-        method: 'POST',
-        credentials: 'include'
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to restore item');
-      }
+      await api.post(`/trash/restore/${activeTab.slice(0, -1)}/${itemId}`);
       
       setSuccessMessage('Item restored successfully!');
       setShowRestoreModal(false);
@@ -117,14 +95,7 @@ const TrashBin = () => {
     setError(null);
     
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'https://backend-production-1960.up.railway.app'}/trash/permanent/${activeTab.slice(0, -1)}/${itemId}`, {
-        method: 'DELETE',
-        credentials: 'include'
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to permanently delete item');
-      }
+      await api.delete(`/trash/permanent/${activeTab.slice(0, -1)}/${itemId}`);
       
       setSuccessMessage('Item permanently deleted!');
       setShowDeleteModal(false);
@@ -170,6 +141,82 @@ const TrashBin = () => {
         <div className="text-center py-4">
           <FaInfoCircle className="text-muted mb-3" size={48} />
           <p className="text-muted">No deleted {activeTab} found</p>
+        </div>
+      );
+    }
+
+    // Show tip for departments section
+    if (activeTab === 'departments') {
+      const columns = {
+        departments: [
+          { key: 'Department_Name', label: 'Name' },
+          { key: 'Department_Description', label: 'Description' },
+          { key: 'admin', label: 'Created By' },
+          { key: 'deletedAt', label: 'Deleted Date' }
+        ]
+      };
+      const currentColumns = columns[activeTab];
+      
+      return (
+        <div>
+          <Alert variant="info" className="mb-3">
+            <FaInfoCircle className="me-2" />
+            <strong>Important:</strong> Before permanently deleting a department, make sure to delete all associated courses first. 
+            Departments cannot be deleted if they still have courses assigned to them.
+          </Alert>
+          {renderTableContent(currentColumns)}
+        </div>
+      );
+    }
+
+    // Show tip for courses section
+    if (activeTab === 'courses') {
+      const columns = {
+        courses: [
+          { key: 'Course_Name', label: 'Name' },
+          { key: 'Course_Code', label: 'Code' },
+          { key: 'Course_Description', label: 'Description' },
+          { key: 'department', label: 'Department' },
+          { key: 'deletedAt', label: 'Deleted Date' }
+        ]
+      };
+      const currentColumns = columns[activeTab];
+      
+      return (
+        <div>
+          <Alert variant="info" className="mb-3">
+            <FaInfoCircle className="me-2" />
+            <strong>Important:</strong> Before permanently deleting a course, make sure to delete all associated candidates and voters first. 
+            Courses cannot be deleted if they still have candidates or voters assigned to them.
+          </Alert>
+          {renderTableContent(currentColumns)}
+        </div>
+      );
+    }
+
+    // Show tip for candidates section
+    if (activeTab === 'candidates') {
+      const columns = {
+        candidates: [
+          { key: 'Candidate_Name', label: 'Name' },
+          { key: 'Candidate_StudentId', label: 'Student ID' },
+          { key: 'Candidate_Email', label: 'Email' },
+          { key: 'position', label: 'Position' },
+          { key: 'department', label: 'Department' },
+          { key: 'course', label: 'Course' },
+          { key: 'deletedAt', label: 'Deleted Date' }
+        ]
+      };
+      const currentColumns = columns[activeTab];
+      
+      return (
+        <div>
+          <Alert variant="info" className="mb-3">
+            <FaInfoCircle className="me-2" />
+            <strong>Important:</strong> Before permanently deleting a candidate, make sure they are not currently running in any active ballots. 
+            Candidates with active ballot participation or votes cannot be deleted.
+          </Alert>
+          {renderTableContent(currentColumns)}
         </div>
       );
     }
@@ -224,6 +271,10 @@ const TrashBin = () => {
 
     const currentColumns = columns[activeTab];
 
+    return renderTableContent(currentColumns);
+  };
+
+  const renderTableContent = (currentColumns) => {
     return (
       <Table responsive striped hover>
         <thead>

@@ -3,7 +3,7 @@ import { getImageUrl as getEnvImageUrl } from '../config/environment';
 
 // Utility to get the correct candidate photo URL
 export function getCandidatePhotoUrl(photoUrl) {
-  if (!photoUrl) return null;
+  if (!photoUrl || photoUrl === 'undefined' || photoUrl === 'null') return null;
   return getEnvImageUrl(photoUrl);
 }
 

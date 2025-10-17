@@ -26,6 +26,10 @@ api.interceptors.response.use(
     if (error.response?.status === 401 || error.response?.status === 403) {
       console.log('Authentication error detected');
       
+      // Check if this is a password change error - don't logout for wrong password
+      const isPasswordChangeError = error.config?.url?.includes('/auth/change-password') ||
+                                   error.config?.url?.includes('change-password');
+      
       // Check if this is a validation error rather than an auth error
       const isValidationError = error.response?.data?.message && 
                                (error.response.data.message.includes('validation') ||
@@ -40,8 +44,15 @@ api.interceptors.response.use(
                                    error.response.data.message.includes('Only') ||
                                    error.response.data.message.includes('permission'));
       
-      if (isValidationError || isBusinessLogicError) {
-        console.log('Validation or business logic error, not redirecting');
+      // Check if this is a password-related error message
+      const isPasswordError = error.response?.data?.message && 
+                             (error.response.data.message.includes('password') ||
+                              error.response.data.message.includes('Password') ||
+                              error.response.data.message.includes('incorrect') ||
+                              error.response.data.message.includes('Current password'));
+      
+      if (isValidationError || isBusinessLogicError || isPasswordChangeError || isPasswordError) {
+        console.log('Validation, business logic, or password error, not redirecting');
         return Promise.reject(error);
       }
       
@@ -409,6 +420,16 @@ export const getVotes = async () => {
   }
 };
 
+export const getVotesByBallot = async (ballotId) => {
+  try {
+    const response = await api.get(`/votes/ballot/${ballotId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching votes by ballot:', error);
+    throw error;
+  }
+};
+
 // DEPRECATED: Use ballot system instead - createBallotVote()
 export const createVote = async (vote) => {
   console.warn('⚠️ DEPRECATED: createVote() is deprecated. Use createBallotVote() instead.');
@@ -520,12 +541,12 @@ export const getElectionPositions = async (id) => {
 export const getElectionBallot = async (ballotId) => {
   console.warn('⚠️ DEPRECATED: getElectionBallot() is deprecated. Use getBallotById() instead.');
   try {
-    console.log('🔍 API: Fetching ballot for ID:', ballotId);
+    // console.log('🔍 API: Fetching ballot for ID:', ballotId);
     // Add cache-busting parameter to prevent stale data
     const response = await api.get(`/ballot-assignments/ballot/${ballotId}/complete`, {
       params: { _t: Date.now() }
     });
-    console.log('🔍 API: Ballot response received:', response.data);
+    // console.log('🔍 API: Ballot response received:', response.data);
     return response.data;
   } catch (error) {
     console.error('Error fetching ballot:', error);
@@ -725,6 +746,31 @@ export const userLogin = async (studentId, password) => {
     return response.data;
   } catch (error) {
     console.error('Error during user login:', error);
+    throw error;
+  }
+};
+
+export const changePassword = async (currentPassword, newPassword) => {
+  try {
+    console.log('🔐 Attempting to change password...');
+    console.log('📡 API Base URL:', getApiUrl());
+    console.log('🍪 Cookies:', document.cookie);
+    
+    const response = await api.put('/auth/change-password', {
+      currentPassword,
+      newPassword
+    });
+    console.log('✅ Password change successful:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('❌ Error changing password:', error);
+    console.error('📊 Error details:', {
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+      url: error.config?.url,
+      method: error.config?.method
+    });
     throw error;
   }
 };
@@ -1331,11 +1377,11 @@ export const getBallotsWithResults = async () => {
 
 export const getBallotResults = async (ballotId) => {
   try {
-    console.log('Fetching ballot results for ballot:', ballotId);
+    // console.log('Fetching ballot results for ballot:', ballotId);
     const response = await api.get(`/ballots/${ballotId}/results`);
-    console.log('Ballot results fetched successfully:', response.data);
-    console.log('Results property:', response.data.results);
-    console.log('Results length:', response.data.results?.length);
+    // console.log('Ballot results fetched successfully:', response.data);
+    // console.log('Results property:', response.data.results);
+    // console.log('Results length:', response.data.results?.length);
     if (response.data.results && response.data.results.length > 0) {
       console.log('First result:', response.data.results[0]);
     }

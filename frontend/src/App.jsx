@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
@@ -44,8 +44,22 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 
 // Admin Route Protection (for admin and superadmin)
 function AdminRoute({ children }) {
-  const currentUser = checkCurrentUser();
+  const [currentUser, setCurrentUser] = useState(null);
+  const [loading, setLoading] = useState(true);
   const currentPath = window.location.pathname;
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const user = await checkCurrentUser();
+      setCurrentUser(user);
+      setLoading(false);
+    };
+    checkAuth();
+  }, []);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   if (!currentUser.isAuthenticated) {
     return <Navigate to="/admin-login" />;
@@ -67,8 +81,22 @@ function AdminRoute({ children }) {
 
 // SuperAdmin Route Protection (superadmin only)
 function SuperAdminRoute({ children }) {
-  const currentUser = checkCurrentUser();
+  const [currentUser, setCurrentUser] = useState(null);
+  const [loading, setLoading] = useState(true);
   const currentPath = window.location.pathname;
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const user = await checkCurrentUser();
+      setCurrentUser(user);
+      setLoading(false);
+    };
+    checkAuth();
+  }, []);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   if (!currentUser.isAuthenticated) {
     return <Navigate to="/admin-login" />;
@@ -90,30 +118,36 @@ function SuperAdminRoute({ children }) {
 
 // User Route Protection (user only)
 function UserRoute({ children }) {
-  const currentUser = checkCurrentUser();
+  const [currentUser, setCurrentUser] = useState(null);
+  const [loading, setLoading] = useState(true);
   const currentPath = window.location.pathname;
-  
-  console.log('UserRoute check:', currentUser);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const user = await checkCurrentUser();
+      setCurrentUser(user);
+      setLoading(false);
+    };
+    checkAuth();
+  }, []);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   if (!currentUser.isAuthenticated) {
-    console.log('UserRoute: Not authenticated, redirecting to login');
     return <Navigate to="/login" />;
   }
   
   if (currentUser.role !== 'USER') {
-    console.log('UserRoute: Role mismatch, expected "USER", got:', currentUser.role);
     return <Navigate to="/login" />;
   }
 
   // Additional route validation
   if (!isValidRoute(currentPath, 'USER') && !isRoutePattern(currentPath)) {
-    console.log('UserRoute: Route validation failed for path:', currentPath);
-    console.log('UserRoute: isValidRoute result:', isValidRoute(currentPath, 'USER'));
-    console.log('UserRoute: isRoutePattern result:', isRoutePattern(currentPath));
     return <NotFound />;
   }
   
-  console.log('UserRoute: Access granted');
   return children;
 }
 
@@ -403,8 +437,22 @@ function NotFound() {
 
 // Component to handle catch-all redirects intelligently
 function CatchAllRedirect() {
-  const currentUser = checkCurrentUser();
+  const [currentUser, setCurrentUser] = useState(null);
+  const [loading, setLoading] = useState(true);
   const currentPath = window.location.pathname;
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const user = await checkCurrentUser();
+      setCurrentUser(user);
+      setLoading(false);
+    };
+    checkAuth();
+  }, []);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
   
   // If user is authenticated, check if the route is valid for their role
   if (currentUser.isAuthenticated) {

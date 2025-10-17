@@ -144,28 +144,22 @@ export const getStoredRole = () => {
 };
 
 // Function to check current user's role and token validity
-export const checkCurrentUser = () => {
+export const checkCurrentUser = async () => {
   try {
-    // Use hashed role from localStorage for UI purposes (navigation, sidebar)
-    // This is set during login for immediate UI feedback
-    const role = getStoredRole();
+    // First check with the server to verify authentication
+    const authStatus = await checkAuthStatus();
     
-    if (!role) {
+    if (!authStatus.isAuthenticated) {
+      // Clear local data if not authenticated on server
+      clearUserData();
       return { isAuthenticated: false, role: null, user: null };
     }
 
-    // For admin routes, we need to be more permissive during the login process
-    // The actual authentication will be verified by the server
+    // If authenticated on server, return the server data
     return {
       isAuthenticated: true,
-      role: role,
-      user: {
-        // Don't store sensitive user data in localStorage
-        // This should come from server API calls when needed
-        id: null,
-        username: null,
-        email: null
-      }
+      role: authStatus.role,
+      user: authStatus.user
     };
   } catch (error) {
     console.error('Error checking current user:', error);

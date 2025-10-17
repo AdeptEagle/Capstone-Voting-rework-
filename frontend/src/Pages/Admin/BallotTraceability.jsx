@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   getBallots, 
   getBallotResults,
-  getVotes 
+  getVotesByBallot 
 } from '../../services/api';
 import './BallotTraceability.css';
 
@@ -52,14 +52,21 @@ const BallotTraceability = () => {
       setLoading(true);
       const [resultsData, votesData] = await Promise.all([
         getBallotResults(selectedBallot.id).catch(() => null),
-        getVotes().catch(() => [])
+        getVotesByBallot(selectedBallot.id).catch(() => [])
       ]);
       
       setBallotResults(resultsData);
       
-      // Filter votes for the selected ballot
-      const ballotVotes = votesData.filter(vote => vote.ballotId === selectedBallot.id);
-      setVotes(ballotVotes);
+      // Ensure votesData is an array (getVotesByBallot should return an array)
+      const votesArray = Array.isArray(votesData) ? votesData : [];
+      
+      // Debug: Log the votesData structure if it's not an array
+      if (!Array.isArray(votesData)) {
+        console.warn('⚠️ votesData is not an array:', typeof votesData, votesData);
+      }
+      
+      // No need to filter since getVotesByBallot already returns votes for this ballot
+      setVotes(votesArray);
     } catch (error) {
       console.error('Error fetching ballot data:', error);
       setError('Failed to load ballot data. Please try again.');
@@ -143,85 +150,6 @@ const BallotTraceability = () => {
     return filtered;
   };
 
-  const getVoteStatistics = () => {
-    const totalVotes = votes.length;
-    const uniqueVoters = new Set(votes.map(vote => vote.voterId)).size;
-    const votesByPosition = {};
-    const votesByCandidate = {};
-
-    votes.forEach(vote => {
-      // Count by position
-      if (!votesByPosition[vote.positionId]) {
-        votesByPosition[vote.positionId] = 0;
-      }
-      votesByPosition[vote.positionId]++;
-
-      // Count by candidate
-      if (!votesByCandidate[vote.candidateId]) {
-        votesByCandidate[vote.candidateId] = 0;
-      }
-      votesByCandidate[vote.candidateId]++;
-    });
-
-    return {
-      totalVotes,
-      uniqueVoters,
-      votesByPosition,
-      votesByCandidate
-    };
-  };
-
-  const getLeadingCandidates = () => {
-    if (!selectedBallot || !selectedBallot.ballotPositions) return [];
-
-    return selectedBallot.ballotPositions.map(bp => {
-      const positionId = bp.position.id;
-      const positionTitle = bp.position.Position_Title;
-      
-      // Get all votes for this position
-      const positionVotes = votes.filter(vote => vote.positionId === positionId);
-      const totalVotesForPosition = positionVotes.length;
-
-      // Count votes by candidate for this position
-      const candidateVotes = {};
-      positionVotes.forEach(vote => {
-        const candidateId = vote.candidateId;
-        const candidateName = getCandidateName(candidateId);
-        
-        if (!candidateVotes[candidateId]) {
-          candidateVotes[candidateId] = {
-            name: candidateName,
-            votes: 0
-          };
-        }
-        candidateVotes[candidateId].votes++;
-      });
-
-      // Find the leading candidate
-      const candidates = Object.entries(candidateVotes);
-      const sortedCandidates = candidates.sort(([,a], [,b]) => b.votes - a.votes);
-      const leadingCandidate = sortedCandidates[0];
-
-      return {
-        positionId,
-        positionTitle,
-        leadingCandidate: leadingCandidate && leadingCandidate[1].votes > 0 ? {
-          name: leadingCandidate[1].name,
-          votes: leadingCandidate[1].votes,
-          percentage: totalVotesForPosition > 0 ? 
-            Math.round((leadingCandidate[1].votes / totalVotesForPosition) * 100) : 0
-        } : null,
-        totalVotes: totalVotesForPosition,
-        allCandidates: sortedCandidates.map(([id, data]) => ({
-          id,
-          name: data.name,
-          votes: data.votes,
-          percentage: totalVotesForPosition > 0 ? 
-            Math.round((data.votes / totalVotesForPosition) * 100) : 0
-        }))
-      };
-    });
-  };
 
   if (loading && ballots.length === 0) {
     return (
@@ -261,8 +189,6 @@ const BallotTraceability = () => {
   }
 
   const filteredVotes = getFilteredVotes();
-  const statistics = getVoteStatistics();
-  const leadingCandidates = getLeadingCandidates();
 
   return (
     <div className="ballot-traceability-container">
@@ -312,7 +238,7 @@ const BallotTraceability = () => {
                   <i className="fas fa-vote-yea"></i>
                 </div>
                 <div className="stat-content">
-                  <h3>{statistics.totalVotes}</h3>
+                  <h3>{votes.length}</h3>
                   <p>Total Votes</p>
                 </div>
               </div>
@@ -322,7 +248,7 @@ const BallotTraceability = () => {
                   <i className="fas fa-users"></i>
                 </div>
                 <div className="stat-content">
-                  <h3>{statistics.uniqueVoters}</h3>
+                  <h3>{new Set(votes.map(vote => vote.voterId)).size}</h3>
                   <p>Unique Voters</p>
                 </div>
               </div>
@@ -435,74 +361,6 @@ const BallotTraceability = () => {
                 </table>
               </div>
             )}
-          </div>
-
-          {/* Vote Analysis */}
-          <div className="analysis-section">
-            <h2>Vote Analysis</h2>
-            
-            {/* Leading Candidates Table */}
-            <div className="leading-candidates-section">
-              <h3>Leading Candidates by Position</h3>
-              <div className="leading-table-container">
-                <table className="leading-table">
-                  <thead>
-                    <tr>
-                      <th>Position</th>
-                      <th>Leading Candidate</th>
-                      <th>Votes</th>
-                      <th>Percentage</th>
-                      <th>Total Votes</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {leadingCandidates.map(position => (
-                      <tr key={position.positionId}>
-                        <td className="position-name">{position.positionTitle}</td>
-                        <td className="candidate-name">
-                          {position.leadingCandidate ? position.leadingCandidate.name : 'No votes yet'}
-                        </td>
-                        <td className="vote-count">
-                          {position.leadingCandidate ? position.leadingCandidate.votes : 0}
-                        </td>
-                        <td className="percentage">
-                          {position.leadingCandidate ? `${position.leadingCandidate.percentage}%` : '0%'}
-                        </td>
-                        <td className="total-votes">{position.totalVotes}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <div className="analysis-grid">
-              <div className="analysis-card">
-                <h3>Votes by Position</h3>
-                <div className="analysis-list">
-                  {Object.entries(statistics.votesByPosition).map(([positionId, count]) => (
-                    <div key={positionId} className="analysis-item">
-                      <span className="label">{getPositionName(positionId)}</span>
-                      <span className="value">{count} votes</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              
-              <div className="analysis-card">
-                <h3>Votes by Candidate</h3>
-                <div className="analysis-list">
-                  {Object.entries(statistics.votesByCandidate)
-                    .sort(([,a], [,b]) => b - a)
-                    .map(([candidateId, count]) => (
-                      <div key={candidateId} className="analysis-item">
-                        <span className="label">{getCandidateName(candidateId)}</span>
-                        <span className="value">{count} votes</span>
-                      </div>
-                    ))}
-                </div>
-              </div>
-            </div>
           </div>
         </>
       )}

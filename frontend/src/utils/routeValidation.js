@@ -62,21 +62,16 @@ const PUBLIC_ROUTES = [
  * @returns {boolean} - Whether the route is valid for the role
  */
 export function isValidRoute(pathname, role) {
-  console.log('isValidRoute called with:', { pathname, role });
-  
   // Allow public routes
   if (PUBLIC_ROUTES.includes(pathname)) {
-    console.log('isValidRoute: Public route, returning true');
     return true;
   }
 
   // Check if route matches any valid route for the role
   const validRoutes = VALID_ROUTES[role] || [];
-  console.log('isValidRoute: Valid routes for role:', validRoutes);
   
   // Check exact match
   if (validRoutes.includes(pathname)) {
-    console.log('isValidRoute: Exact match found, returning true');
     return true;
   }
 
@@ -85,15 +80,12 @@ export function isValidRoute(pathname, role) {
     if (route.includes('/:')) {
       const routePattern = route.replace(/\/:[^/]+/g, '/[^/]+');
       const regex = new RegExp(`^${routePattern}$`);
-      console.log('isValidRoute: Testing pattern:', routePattern, 'against:', pathname, 'result:', regex.test(pathname));
       if (regex.test(pathname)) {
-        console.log('isValidRoute: Dynamic route match found, returning true');
         return true;
       }
     }
   }
 
-  console.log('isValidRoute: No match found, returning false');
   return false;
 }
 
@@ -121,8 +113,6 @@ export function getDefaultRoute(role) {
  * @returns {boolean} - Whether it's a valid route pattern
  */
 export function isRoutePattern(pathname) {
-  console.log('isRoutePattern called with:', pathname);
-  
   // Check if it matches any known route patterns
   const routePatterns = [
     /^\/admin\/ballot-details\/[^/]+$/,
@@ -131,12 +121,5 @@ export function isRoutePattern(pathname) {
     /^\/user\/ballot-results\/[^/]+$/
   ];
 
-  const result = routePatterns.some(pattern => {
-    const testResult = pattern.test(pathname);
-    console.log('isRoutePattern: Testing pattern:', pattern, 'against:', pathname, 'result:', testResult);
-    return testResult;
-  });
-  
-  console.log('isRoutePattern: Final result:', result);
-  return result;
+  return routePatterns.some(pattern => pattern.test(pathname));
 }

@@ -43,7 +43,7 @@ const VoterHistory = () => {
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
-      month: 'long',
+      month: 'short',
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
@@ -140,60 +140,49 @@ const VoterHistory = () => {
         {ballotHistory.length === 0 ? (
           <div className="no-data">No ballot participation history found.</div>
         ) : (
-          <div className="ballot-list">
+          <div className="ballots-grid">
             {ballotHistory.map((history, index) => (
               <div key={index} className="ballot-card">
                 <div className="ballot-header">
                   <h4>{history.ballot.title}</h4>
-                  <div className="ballot-meta">
+                  <div className="ballot-badges">
                     {getStatusBadge(history.ballot.status)}
-                    <span className="ballot-dates">
-                      {formatDate(history.ballot.startDate)} - {formatDate(history.ballot.endDate)}
-                    </span>
+                    <span className="system-badge ballot">Ballot</span>
                   </div>
                 </div>
                 
-                <div className="ballot-details">
+                <div className="ballot-description">
+                  {history.ballot.description || 'No description available'}
+                </div>
+
+                <div className="ballot-details two-column">
+                  <div className="details-row">
+                    <div className="detail-item">
+                      <i className="fas fa-calendar-alt"></i>
+                      <span>Starts: {formatDate(history.ballot.startDate)}</span>
+                    </div>
+                    <div className="detail-item">
+                      <i className="fas fa-calendar-check"></i>
+                      <span>Ends: {formatDate(history.ballot.endDate)}</span>
+                    </div>
+                  </div>
+                  <div className="details-row">
+                    <div className="detail-item">
+                      <i className="fas fa-vote-yea"></i>
+                      <span>Votes: {history.participation.voteCount}</span>
+                    </div>
+                    <div className="detail-item">
+                      <i className="fas fa-check-circle"></i>
+                      <span>Status: {history.participation.isCompleted ? 'Completed' : 'Incomplete'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="ballot-actions">
                   <div className="participation-info">
                     <div className="participation-item">
                       <label>Voted At:</label>
                       <span>{formatDate(history.participation.votedAt)}</span>
-                    </div>
-                    <div className="participation-item">
-                      <label>Vote Count:</label>
-                      <span>{history.participation.voteCount}</span>
-                    </div>
-                    <div className="participation-item">
-                      <label>Completed:</label>
-                      <span className={history.participation.isCompleted ? 'completed' : 'incomplete'}>
-                        {history.participation.isCompleted ? 'Yes' : 'No'}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="ballot-positions">
-                    <h5>Positions:</h5>
-                    <div className="positions-list">
-                      {history.ballot.positions.map((position, posIndex) => (
-                        <div key={posIndex} className="position-item">
-                          <span className="position-title">{position.title}</span>
-                          <span className={`position-required ${position.isRequired ? 'required' : 'optional'}`}>
-                            {position.isRequired ? 'Required' : 'Optional'}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="ballot-candidates">
-                    <h5>Candidates:</h5>
-                    <div className="candidates-list">
-                      {history.ballot.candidates.map((candidate, candIndex) => (
-                        <div key={candIndex} className="candidate-item">
-                          <span className="candidate-name">{candidate.name}</span>
-                          <span className="candidate-id">({candidate.studentId})</span>
-                        </div>
-                      ))}
                     </div>
                   </div>
                 </div>
@@ -212,27 +201,43 @@ const VoterHistory = () => {
         {votingDetails.length === 0 ? (
           <div className="no-data">No detailed voting information found.</div>
         ) : (
-          <div className="voting-details-list">
+          <div className="ballots-grid">
             {votingDetails.map((detail, index) => (
-              <div key={index} className="voting-detail-card">
-                <div className="detail-header">
+              <div key={index} className="ballot-card">
+                <div className="ballot-header">
                   <h4>{detail.ballot.title}</h4>
-                  <div className="detail-meta">
+                  <div className="ballot-badges">
                     {getStatusBadge(detail.ballot.status)}
-                    <span className="participation-status">
+                    <span className={`participation-status ${detail.participation.isCompleted ? 'completed' : 'incomplete'}`}>
                       {detail.participation.isCompleted ? 'Completed' : 'Incomplete'}
                     </span>
                   </div>
                 </div>
 
-                <div className="participation-summary">
-                  <div className="summary-item">
-                    <label>Voted At:</label>
-                    <span>{formatDate(detail.participation.votedAt)}</span>
+                <div className="ballot-description">
+                  {detail.ballot.description || 'No description available'}
+                </div>
+
+                <div className="ballot-details two-column">
+                  <div className="details-row">
+                    <div className="detail-item">
+                      <i className="fas fa-calendar-alt"></i>
+                      <span>Starts: {formatDate(detail.ballot.startDate)}</span>
+                    </div>
+                    <div className="detail-item">
+                      <i className="fas fa-calendar-check"></i>
+                      <span>Ends: {formatDate(detail.ballot.endDate)}</span>
+                    </div>
                   </div>
-                  <div className="summary-item">
-                    <label>Vote Count:</label>
-                    <span>{detail.participation.voteCount}</span>
+                  <div className="details-row">
+                    <div className="detail-item">
+                      <i className="fas fa-vote-yea"></i>
+                      <span>Votes: {detail.participation.voteCount}</span>
+                    </div>
+                    <div className="detail-item">
+                      <i className="fas fa-clock"></i>
+                      <span>Voted: {formatDate(detail.participation.votedAt)}</span>
+                    </div>
                   </div>
                 </div>
 
@@ -268,7 +273,9 @@ const VoterHistory = () => {
   if (loading) {
     return (
       <div className="voter-history-container">
-        <div className="loading">Loading voter history...</div>
+        <div className="loading-message">
+          <p>Loading voter history...</p>
+        </div>
       </div>
     );
   }
@@ -276,10 +283,13 @@ const VoterHistory = () => {
   if (error) {
     return (
       <div className="voter-history-container">
-        <div className="error">{error}</div>
-        <button onClick={() => navigate('/admin/voters')} className="btn-secondary">
-          Back to Voters
-        </button>
+        <div className="error-message">
+          <i className="fas fa-exclamation-triangle"></i>
+          <span>{error}</span>
+          <button onClick={() => navigate('/admin/voters')} className="btn btn-secondary">
+            Back to Voters
+          </button>
+        </div>
       </div>
     );
   }
@@ -287,8 +297,9 @@ const VoterHistory = () => {
   return (
     <div className="voter-history-container">
       <div className="voter-history-header">
-        <button onClick={() => navigate('/admin/voters')} className="btn-back">
-          ← Back to Voters
+        <button onClick={() => navigate('/admin/voters')} className="btn btn-secondary">
+          <i className="fas fa-arrow-left"></i>
+          Back to Voters
         </button>
         <h1>Voter History</h1>
         {voterData && (

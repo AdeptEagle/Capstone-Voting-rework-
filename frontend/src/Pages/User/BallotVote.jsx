@@ -31,8 +31,6 @@ const BallotVote = () => {
   const [success, setSuccess] = useState('');
   const [showVoteSummary, setShowVoteSummary] = useState(false);
   const [imgError, setImgError] = useState({});
-  const [showDebug, setShowDebug] = useState(false);
-  const [debugInfo, setDebugInfo] = useState({});
 
   useEffect(() => {
     fetchBallotData();
@@ -59,6 +57,9 @@ const BallotVote = () => {
       }
       
       const ballotData = await getBallotById(ballotId);
+      console.log('🔍 BallotVote: Full ballot data received:', ballotData);
+      console.log('🔍 BallotVote: Ballot_AllowAbstain value:', ballotData.Ballot_AllowAbstain);
+      console.log('🔍 BallotVote: Ballot_AllowAbstain type:', typeof ballotData.Ballot_AllowAbstain);
       setBallot(ballotData);
       
       // Initialize selected votes for each position
@@ -222,9 +223,18 @@ const BallotVote = () => {
         });
       });
 
+      // Add abstained positions to vote data
+      abstainedPositions.forEach(positionId => {
+        votes.push({
+          positionId: positionId,
+          candidateId: null, // null indicates abstention
+          isAbstention: true
+        });
+      });
+
       // Client-side validation to prevent empty submissions
       if (!votes.length) {
-        setError('No votes selected. Please select at least one candidate.');
+        setError('No votes selected. Please select at least one candidate or abstain from a position.');
         return;
       }
 
@@ -237,20 +247,20 @@ const BallotVote = () => {
         sessionId: null // Could be added if needed
       };
 
-      // Capture debug details before submitting
-      setDebugInfo({
-        stage: 'submitting',
-        ballotId,
-        selectedVotes,
-        votes,
-        voteData
-      });
+      console.log('🔍 Submitting vote data:', voteData);
+      console.log('🔍 Votes array:', votes);
+      console.log('🔍 Abstained positions:', Array.from(abstainedPositions));
+      console.log('🔍 Individual vote objects:', votes.map(vote => ({
+        positionId: vote.positionId,
+        candidateId: vote.candidateId,
+        isAbstention: vote.isAbstention
+      })));
+
 
       await createBallotVote(voteData);
       
       setSuccess('Your vote has been submitted successfully!');
       setShowFinalScreen(true);
-      setDebugInfo(prev => ({ ...prev, stage: 'success' }));
       
     } catch (error) {
       console.error('Error submitting vote:', error);
@@ -264,16 +274,6 @@ const BallotVote = () => {
         setError(error.response?.data?.message || 'Failed to submit vote. Please try again.');
       }
 
-      // Capture error details for debugging
-      setDebugInfo(prev => ({
-        ...prev,
-        stage: 'error',
-        error: {
-          status: error.response?.status,
-          data: error.response?.data,
-          headers: error.response?.headers,
-        }
-      }));
     } finally {
       setSubmitting(false);
     }
@@ -296,15 +296,6 @@ const BallotVote = () => {
           <p>Loading ballot...</p>
         </div>
       <div style={{ marginTop: 12 }}>
-        <button
-          type="button"
-          onClick={() => setShowDebug(prev => !prev)}
-          className="btn btn-secondary"
-          disabled={submitting}
-        >
-          {showDebug ? 'Hide Debug' : 'Show Debug'}
-        </button>
-        {renderDebugPanel()}
       </div>
       </div>
     );
@@ -318,59 +309,11 @@ const BallotVote = () => {
           <span>Ballot not found</span>
         </div>
         <div style={{ marginTop: 12 }}>
-          <button
-            type="button"
-            onClick={() => setShowDebug(prev => !prev)}
-            className="btn btn-secondary"
-            disabled={submitting}
-          >
-            {showDebug ? 'Hide Debug' : 'Show Debug'}
-          </button>
-          {renderDebugPanel()}
         </div>
       </div>
     );
   }
 
-  function renderDebugPanel() {
-    if (!showDebug) return null;
-    const safeStringify = (obj) => {
-      try { return JSON.stringify(obj, null, 2); } catch { return String(obj); }
-    };
-    return (
-      <div className="debug-panel" style={{ marginTop: '16px', padding: '12px', border: '1px dashed #888', borderRadius: '6px', background: '#0f172a', color: '#e2e8f0' }}>
-        <div style={{ marginBottom: '8px', fontWeight: 'bold' }}>Debug Info</div>
-        <div style={{ display: 'grid', gap: '8px' }}>
-          <div>
-            <div style={{ fontWeight: 600 }}>Stage</div>
-            <pre style={{ whiteSpace: 'pre-wrap', overflowX: 'auto' }}>{safeStringify(debugInfo.stage)}</pre>
-          </div>
-          <div>
-            <div style={{ fontWeight: 600 }}>ballotId</div>
-            <pre style={{ whiteSpace: 'pre-wrap', overflowX: 'auto' }}>{safeStringify(debugInfo.ballotId || ballotId)}</pre>
-          </div>
-          <div>
-            <div style={{ fontWeight: 600 }}>selectedVotes</div>
-            <pre style={{ whiteSpace: 'pre-wrap', overflowX: 'auto' }}>{safeStringify(debugInfo.selectedVotes || selectedVotes)}</pre>
-          </div>
-          <div>
-            <div style={{ fontWeight: 600 }}>votes</div>
-            <pre style={{ whiteSpace: 'pre-wrap', overflowX: 'auto' }}>{safeStringify(debugInfo.votes)}</pre>
-          </div>
-          <div>
-            <div style={{ fontWeight: 600 }}>request voteData</div>
-            <pre style={{ whiteSpace: 'pre-wrap', overflowX: 'auto' }}>{safeStringify(debugInfo.voteData)}</pre>
-          </div>
-          {debugInfo.error && (
-            <div>
-              <div style={{ fontWeight: 600, color: '#fca5a5' }}>error.response</div>
-              <pre style={{ whiteSpace: 'pre-wrap', overflowX: 'auto' }}>{safeStringify(debugInfo.error)}</pre>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  }
 
   if (showFinalScreen) {
     const hasAlreadyVoted = error.includes('already voted');
@@ -407,15 +350,6 @@ const BallotVote = () => {
           </div>
         </div>
         <div style={{ marginTop: 12 }}>
-          <button
-            type="button"
-            onClick={() => setShowDebug(prev => !prev)}
-            className="btn btn-secondary"
-            disabled={submitting}
-          >
-            {showDebug ? 'Hide Debug' : 'Show Debug'}
-          </button>
-          {renderDebugPanel()}
         </div>
       </div>
     );
@@ -509,16 +443,7 @@ const BallotVote = () => {
     <div className="ballot-vote-container">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
         <h2 style={{ margin: 0 }}>Ballot Voting</h2>
-        <button
-          type="button"
-          onClick={() => setShowDebug(prev => !prev)}
-          className="btn btn-secondary"
-          disabled={submitting}
-        >
-          {showDebug ? 'Hide Debug' : 'Show Debug'}
-        </button>
       </div>
-      {renderDebugPanel()}
       <div className="ballot-header">
         <h1>{ballot.Ballot_Title}</h1>
         {ballot.Ballot_Description && (
@@ -554,6 +479,10 @@ const BallotVote = () => {
             }
           </span>
         </div>
+
+        {/* Debug abstain logic */}
+        {console.log('🔍 BallotVote Render: ballot.Ballot_AllowAbstain:', ballot.Ballot_AllowAbstain)}
+        {console.log('🔍 BallotVote Render: ballot object:', ballot)}
 
         {/* Show abstain option only if ballot allows it */}
         {ballot.Ballot_AllowAbstain && (

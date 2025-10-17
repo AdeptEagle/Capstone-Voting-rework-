@@ -879,6 +879,8 @@
 .candidate-selector-modal .modal-content {
   padding: 0;
   overflow: hidden;
+  width: 100%;
+  max-width: 100%;
 }
 
 /* Settings Grid Styles */

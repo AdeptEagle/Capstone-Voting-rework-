@@ -110,17 +110,22 @@ export const BallotProvider = ({ children }) => {
       // console.log('🔓 [BallotContext] User authenticated, triggering ballot data fetch');
       fetchBallotData();
       
-      // Refresh ballot status every 10 seconds for more responsive updates
-      const interval = setInterval(fetchBallotData, 10000);
+      // Refresh ballot status every 30 seconds (reduced frequency to prevent memory leaks)
+      const interval = setInterval(() => {
+        if (isAuthenticated) { // Double-check authentication before fetching
+          fetchBallotData();
+        }
+      }, 30000);
       
       return () => {
         clearInterval(interval);
         if (refreshTimeoutRef.current) {
           clearTimeout(refreshTimeoutRef.current);
+          refreshTimeoutRef.current = null;
         }
       };
     }
-  }, [isAuthenticated]); // Only run when authentication status changes
+  }, [isAuthenticated, fetchBallotData]); // Include fetchBallotData in dependencies
 
   // Get user role for permission checks - memoize to prevent unnecessary re-renders
   const userRole = useMemo(() => {

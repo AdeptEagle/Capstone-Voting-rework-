@@ -1077,23 +1077,6 @@ const Elections = () => {
               <i className="fas fa-history me-2"></i>
               View History
             </button>
-            <button
-              className="btn btn-outline-info ms-2"
-              onClick={() => {
-                console.log('🧪 [Elections] Test WebSocket button clicked');
-                if (elections.length > 0) {
-                  const election = elections[0];
-                  console.log('🧪 [Elections] Testing with election:', election.id);
-                  // You can add a test WebSocket emit here if needed
-                } else {
-                  console.log('🧪 [Elections] No elections available for testing');
-                }
-              }}
-              title="Test WebSocket Election Updates"
-            >
-              <i className="fas fa-wifi me-2"></i>
-              Test WebSocket
-            </button>
           </div>
         </div>
       </div>

@@ -10,8 +10,6 @@ const Voters = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingVoter, setEditingVoter] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
-  const [showActualPassword, setShowActualPassword] = useState(false);
-  const [actualPassword, setActualPassword] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -115,17 +113,6 @@ const Voters = () => {
       console.log('🎯 Server connection confirmation received:', data);
     });
 
-    // Test event listener
-    newSocket.on('test-event', (data) => {
-      console.log('🧪 Test event received:', data);
-      setSuccess('Test WebSocket event received! Connection is working.');
-      setTimeout(() => setSuccess(''), 3000);
-    });
-
-    // Test response listener
-    newSocket.on('test-response', (data) => {
-      console.log('🧪 Test response received:', data);
-    });
 
     setSocket(newSocket);
 
@@ -300,8 +287,6 @@ const Voters = () => {
       courseId: ''
     });
     setShowPassword(false);
-    setShowActualPassword(false);
-    setActualPassword('');
     setError('');
     setSuccess('');
   };
@@ -415,8 +400,6 @@ const Voters = () => {
       courseId: voter.courseId || ''
     });
     setShowPassword(false);
-    setShowActualPassword(false);
-    setActualPassword(''); // Reset actual password
     setShowModal(true);
   };
 
@@ -424,18 +407,6 @@ const Voters = () => {
     navigate(`/admin/voter-history/${voterId}`);
   };
 
-  // Function to fetch voter's actual password
-  const fetchVoterPassword = async (voterId) => {
-    try {
-      const data = await getVoterPassword(voterId);
-      // Set the actual password based on backend response
-      setActualPassword(data.currentPassword);
-    } catch (error) {
-      console.error('Error fetching password:', error);
-      // Fallback: use student ID as password
-      setActualPassword(editingVoter.Voter_StudentId);
-    }
-  };
 
   // Function to reset password to student ID
   const resetPasswordToStudentId = async () => {
@@ -445,9 +416,7 @@ const Voters = () => {
         ...prev,
         password: data.newPassword
       }));
-      setActualPassword(data.newPassword);
       setShowPassword(true);
-      setShowActualPassword(true);
       setSuccess('Password reset to Student ID successfully!');
     } catch (error) {
       console.error('Error resetting password:', error);
@@ -475,37 +444,6 @@ const Voters = () => {
           <div className="dashboard-header-actions">
             <button className="btn btn-custom-blue" onClick={() => handleShowModal()}>
               Add Voter
-            </button>
-            <button 
-              className="btn btn-outline-info ms-2" 
-              onClick={() => {
-                console.log('🧪 Test button clicked');
-                console.log('🔌 Socket state:', {
-                  exists: !!socket,
-                  connected: socket?.connected,
-                  id: socket?.id,
-                  readyState: socket?.readyState
-                });
-                
-                if (socket && socket.connected) {
-                  console.log('🧪 Sending test WebSocket request...');
-                  socket.emit('test-websocket');
-                  
-                  // Also test direct event emission
-                  setTimeout(() => {
-                    console.log('🧪 Testing direct event emission...');
-                    socket.emit('test-websocket');
-                  }, 1000);
-                } else {
-                  console.error('❌ WebSocket not connected');
-                  console.error('Socket details:', socket);
-                  setError('WebSocket not connected');
-                }
-              }}
-              title="Test WebSocket Connection"
-            >
-              <i className="fas fa-wifi me-1"></i>
-              Test WebSocket
             </button>
           </div>
         </div>
@@ -784,19 +722,6 @@ const Voters = () => {
                       <div className="d-flex gap-2 mb-2">
                         <button
                           type="button"
-                          className="btn btn-sm btn-outline-info"
-                          onClick={() => {
-                            if (!actualPassword) {
-                              fetchVoterPassword(editingVoter.id);
-                            }
-                            setShowActualPassword(!showActualPassword);
-                          }}
-                        >
-                          <i className={`fas ${showActualPassword ? 'fa-eye-slash' : 'fa-eye'} me-1`}></i>
-                          {showActualPassword ? 'Hide' : 'Reveal'} Actual Password
-                        </button>
-                        <button
-                          type="button"
                           className="btn btn-sm btn-outline-warning"
                           onClick={resetPasswordToStudentId}
                         >
@@ -805,14 +730,8 @@ const Voters = () => {
                         </button>
                       </div>
                       
-                      {showActualPassword && actualPassword && (
-                        <div className="alert alert-info">
-                          <strong>Current Password:</strong> {actualPassword}
-                        </div>
-                      )}
-                      
                       <small className="form-text text-muted">
-                        Use these tools to manage the voter's password. The actual password is hidden by default for security.
+                        Reset the voter's password to their Student ID. This will allow them to log in using their Student ID as the password.
                       </small>
                     </div>
                   )}

@@ -6,15 +6,15 @@ const config = {
   NODE_ENV: import.meta.env.MODE || 'development'
 };
 
-// Debug: Log the environment variables
-console.log('🔍 Environment Debug:');
-console.log('VITE_API_BASE_URL:', import.meta.env.VITE_API_BASE_URL);
-console.log('VITE_WS_URL:', import.meta.env.VITE_WS_URL);
-console.log('Final API_BASE_URL:', config.API_BASE_URL);
-console.log('Final WS_URL:', config.WS_URL);
+// Debug: Log the environment variables (commented out to reduce console noise)
+// console.log('🔍 Environment Debug:');
+// console.log('VITE_API_BASE_URL:', import.meta.env.VITE_API_BASE_URL);
+// console.log('VITE_WS_URL:', import.meta.env.VITE_WS_URL);
+// console.log('Final API_BASE_URL:', config.API_BASE_URL);
+// console.log('Final WS_URL:', config.WS_URL);
 
 // Force rebuild trigger - remove this after fixing
-console.log('🔄 Frontend rebuild triggered at:', new Date().toISOString());
+// console.log('🔄 Frontend rebuild triggered at:', new Date().toISOString());
 
 // Helper function to get full API URL
 export const getApiUrl = (endpoint = '') => {

@@ -4,7 +4,6 @@ import {
   getBallots, 
   createBallot, 
   createBallotFromTemplate, 
-  updateBallot, 
   deleteBallot, 
   activateBallot, 
   pauseBallot, 
@@ -27,7 +26,6 @@ const BallotManagement = () => {
   const [showTemplateSelector, setShowTemplateSelector] = useState(false);
   const [showCandidateSelector, setShowCandidateSelector] = useState(false);
   const [showCreateOptions, setShowCreateOptions] = useState(false);
-  const [editingBallot, setEditingBallot] = useState(null);
   const [filterStatus, setFilterStatus] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [positions, setPositions] = useState([]);
@@ -153,8 +151,6 @@ const BallotManagement = () => {
   };
 
   const handleCreateBallot = () => {
-    setEditingBallot(null);
-    
     // Get default dates in Philippine timezone
     const { startDate, endDate } = getDefaultBallotDates();
     
@@ -174,30 +170,29 @@ const BallotManagement = () => {
     setShowCreateOptions(true);
   };
 
-  const handleEditBallot = (ballot) => {
-    setEditingBallot(ballot);
-    setFormData({
-      Ballot_Title: ballot.Ballot_Title,
-      Ballot_Description: ballot.Ballot_Description || '',
-      Ballot_StartDate: ballot.Ballot_StartDate.split('T')[0],
-      Ballot_EndDate: ballot.Ballot_EndDate.split('T')[0],
-      Ballot_RequireAllPositions: ballot.Ballot_RequireAllPositions,
-      Ballot_ShowResults: ballot.Ballot_ShowResults,
-      Ballot_ShowResultsAfter: ballot.Ballot_ShowResultsAfter || '',
-      Ballot_ShowLiveResults: ballot.Ballot_ShowLiveResults,
-      Ballot_AllowAbstain: ballot.Ballot_AllowAbstain || false,
-      positionIds: ballot.ballotPositions?.map(bp => bp.BallotPosition_PositionId) || [],
-      candidateIds: ballot.ballotCandidates?.map(bc => bc.BallotCandidate_CandidateId) || []
-    });
-    setShowCreateForm(true);
-  };
 
   const handleFormChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }));
+    
+    // Debug abstain toggle specifically
+    if (name === 'Ballot_AllowAbstain') {
+      console.log('🔍 Toggle changed:', { name, checked, type });
+      console.log('🔍 Previous formData.Ballot_AllowAbstain:', formData.Ballot_AllowAbstain);
+    }
+    
+    setFormData(prev => {
+      const newData = {
+        ...prev,
+        [name]: type === 'checkbox' ? checked : value
+      };
+      
+      // Debug after state update
+      if (name === 'Ballot_AllowAbstain') {
+        console.log('🔍 New formData.Ballot_AllowAbstain:', newData.Ballot_AllowAbstain);
+      }
+      
+      return newData;
+    });
   };
 
   const handleCreateBallotClick = () => {
@@ -258,6 +253,7 @@ const BallotManagement = () => {
           startDate: new Date(formData.Ballot_StartDate).toISOString(),
           endDate: new Date(formData.Ballot_EndDate).toISOString(),
           showResultsAfter: formData.Ballot_ShowResultsAfter || undefined,
+          allowAbstain: formData.Ballot_AllowAbstain,
           candidateIds: selectedCandidates
         };
         
@@ -265,6 +261,7 @@ const BallotManagement = () => {
           templateId: formData.templateId,
           ballotData: ballotData
         });
+        console.log('🔍 Template Ballot_AllowAbstain value:', formData.Ballot_AllowAbstain);
         
         await createBallotFromTemplate(formData.templateId, ballotData);
         setSuccess('Ballot created from template successfully!');
@@ -285,10 +282,9 @@ const BallotManagement = () => {
         };
         
         console.log('🚀 Creating ballot from scratch with data:', ballotData);
-        console.log('🔍 Form data positionIds:', formData.positionIds);
-        console.log('🔍 Selected candidates:', selectedCandidates);
-        console.log('🔍 Available positions:', positions);
-        console.log('🔍 Filtered positions for candidate selector:', positions.filter(pos => formData.positionIds.includes(pos.id)));
+        console.log('🔍 Ballot_AllowAbstain value being sent:', formData.Ballot_AllowAbstain);
+        console.log('🔍 Ballot_AllowAbstain type:', typeof formData.Ballot_AllowAbstain);
+        console.log('🔍 Full formData before submission:', formData);
         
         await createBallot(ballotData);
         setSuccess('Ballot created successfully!');
@@ -376,12 +372,7 @@ const BallotManagement = () => {
     }
 
     try {
-      if (editingBallot) {
-        await updateBallot(editingBallot.id, formData);
-        setSuccess('Ballot updated successfully!');
-        setShowCreateForm(false);
-        fetchBallots();
-      } else if (formData.isFromTemplate) {
+      if (formData.isFromTemplate) {
         // For templates, show candidate selector instead of creating ballot directly
         setShowCreateForm(false);
         setShowCandidateSelector(true);
@@ -667,16 +658,6 @@ const BallotManagement = () => {
                             <i className="fas fa-chart-bar"></i>
                             <span>Results</span>
                           </button>
-                          {status.status !== 'ended' && (
-                            <button 
-                              className="action-btn edit-btn"
-                              onClick={() => handleEditBallot(ballot)}
-                              title="Edit Ballot"
-                            >
-                              <i className="fas fa-edit"></i>
-                              <span>Edit</span>
-                            </button>
-                          )}
                         </div>
                       </td>
                     </tr>
@@ -812,9 +793,9 @@ const BallotManagement = () => {
                   <i className="fas fa-arrow-left"></i>
                 </button>
                 <div className="modal-title-section">
-                  <h2>{editingBallot ? 'Edit Ballot' : 'Create New Ballot'}</h2>
+                  <h2>Create New Ballot</h2>
                   <p className="modal-subtitle">
-                    {editingBallot ? 'Update ballot settings and configuration' : 'Configure your ballot settings and select positions'}
+                    Configure your ballot settings and select positions
                   </p>
                 </div>
               </div>
@@ -1026,7 +1007,7 @@ const BallotManagement = () => {
                   className="btn btn-primary"
                   disabled={loadingForm}
                 >
-                  {loadingForm ? 'Saving...' : (editingBallot ? 'Update Ballot' : (formData.isFromTemplate ? 'Continue' : 'Create Ballot'))}
+                  {loadingForm ? 'Saving...' : (formData.isFromTemplate ? 'Continue' : 'Create Ballot')}
                 </button>
               </div>
             </form>

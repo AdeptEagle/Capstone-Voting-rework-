@@ -4,7 +4,7 @@
   border-radius: 12px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
   max-width: 900px;
-  width: 90%;
+  width: 100%;
   max-height: 90vh;
   overflow: hidden;
   display: flex;
@@ -102,6 +102,8 @@
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   overflow: hidden;
+  width: 100%;
+  max-width: 100%;
 }
 
 .position-header {
@@ -192,9 +194,11 @@
 
 .candidates-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 1rem;
   padding: 1.5rem;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .candidate-card {
@@ -258,6 +262,10 @@
   color: #9ca3af;
   font-size: 1.5rem;
   border-radius: 8px;
+}
+
+.candidate-photo-placeholder.hidden {
+  display: none !important;
 }
 
 .candidate-info {

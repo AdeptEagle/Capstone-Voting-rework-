@@ -348,11 +348,11 @@ const BallotDetails = () => {
       setLastUpdated(new Date());
       
       // Debug the results data
-      console.log('Results data received:', resultsData);
-      console.log('Partylist results received:', partylistData);
-      console.log('Results type:', typeof resultsData);
-      console.log('Results results property:', resultsData?.results);
-      console.log('Results results length:', resultsData?.results?.length);
+      // console.log('Results data received:', resultsData);
+      // console.log('Partylist results received:', partylistData);
+      // console.log('Results type:', typeof resultsData);
+      // console.log('Results results property:', resultsData?.results);
+      // console.log('Results results length:', resultsData?.results?.length);
     } catch (error) {
       console.error('Error fetching ballot data:', error);
       setError('Failed to load ballot details. Please try again.');
@@ -464,13 +464,13 @@ const BallotDetails = () => {
     const startDate = new Date(ballot.Ballot_StartDate);
     const endDate = new Date(ballot.Ballot_EndDate);
 
-    console.log('🔍 Ballot status debug:', {
-      ballotStatus: ballot.Ballot_Status,
-      isActive: ballot.Ballot_IsActive,
-      startDate: startDate.toISOString(),
-      endDate: endDate.toISOString(),
-      now: now.toISOString()
-    });
+    // console.log('🔍 Ballot status debug:', {
+    //   ballotStatus: ballot.Ballot_Status,
+    //   isActive: ballot.Ballot_IsActive,
+    //   startDate: startDate.toISOString(),
+    //   endDate: endDate.toISOString(),
+    //   now: now.toISOString()
+    // });
 
     // Check ballot status first - this takes precedence
     if (ballot.Ballot_Status === 'CANCELLED') {
@@ -829,16 +829,6 @@ const BallotDetails = () => {
                       End Ballot
                     </button>
                   </>
-                )}
-                
-                {ballotStatus.status !== 'ended' && (
-                  <button 
-                    className="btn btn-primary action-btn"
-                    onClick={() => navigate(`/admin/ballot-edit/${ballotId}`)}
-                  >
-                    <i className="fas fa-edit"></i>
-                    Edit Ballot
-                  </button>
                 )}
                 
                 <button 
@@ -1268,7 +1258,7 @@ const BallotDetails = () => {
                                 <tr key={index}>
                                   <td className="dept-name">{dept.departmentName}</td>
                                   <td>{(dept.registeredVoters || 0).toLocaleString()}</td>
-                                  <td>{(dept.registeredVoters || 0).toLocaleString()}</td>
+                                  <td>{Math.round((dept.registeredVoters || 0) * (dept.participationRate || 0) / 100).toLocaleString()}</td>
                                   <td>{(dept.votesCast || 0).toLocaleString()}</td>
                                   <td>
                                     <span className={`participation-rate ${(dept.participationRate || 0) > 80 ? 'high' : (dept.participationRate || 0) > 60 ? 'medium' : 'low'}`}>
@@ -1322,8 +1312,8 @@ const BallotDetails = () => {
                             const activeDepts = analytics.departmentAnalytics.filter(dept => dept.votesCast > 0);
                             if (activeDepts.length === 0) return '0.0';
                             const totalRegistered = activeDepts.reduce((sum, dept) => sum + (dept.registeredVoters || 0), 0);
-                            const totalVotes = activeDepts.reduce((sum, dept) => sum + (dept.votesCast || 0), 0);
-                            return totalRegistered > 0 ? ((totalVotes / totalRegistered) * 100).toFixed(1) : '0.0';
+                            const totalVoted = activeDepts.reduce((sum, dept) => sum + Math.round((dept.registeredVoters || 0) * (dept.participationRate || 0) / 100), 0);
+                            return totalRegistered > 0 ? ((totalVoted / totalRegistered) * 100).toFixed(1) : '0.0';
                           })()}%</h4>
                           <p>Overall Participation</p>
                           <span className="summary-subtitle">% of registered who voted</span>

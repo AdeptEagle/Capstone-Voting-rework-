@@ -1060,7 +1060,7 @@ const BallotResults = () => {
                             <tr key={index}>
                               <td className="dept-name">{dept.departmentName}</td>
                               <td>{dept.registeredVoters.toLocaleString()}</td>
-                              <td>{dept.registeredVoters.toLocaleString()}</td>
+                              <td>{Math.round(dept.registeredVoters * dept.participationRate / 100).toLocaleString()}</td>
                               <td>{dept.votesCast.toLocaleString()}</td>
                               <td>
                                 <span className={`participation-rate ${dept.participationRate > 80 ? 'high' : dept.participationRate > 60 ? 'medium' : 'low'}`}>
@@ -1104,8 +1104,8 @@ const BallotResults = () => {
                       </div>
                       <div className="summary-content">
                         <h4>{analytics.departmentAnalytics?.length > 0 ? 
-                          (analytics.departmentAnalytics.reduce((sum, dept) => sum + dept.registeredVoters, 0) / 
-                           analytics.departmentAnalytics.reduce((sum, dept) => sum + dept.registeredVoters, 0) * 100).toFixed(1) : '0.0'}%</h4>
+                          ((analytics.departmentAnalytics.reduce((sum, dept) => sum + Math.round(dept.registeredVoters * dept.participationRate / 100), 0) / 
+                           analytics.departmentAnalytics.reduce((sum, dept) => sum + dept.registeredVoters, 0)) * 100).toFixed(1) : '0.0'}%</h4>
                         <p>Overall Participation</p>
                         <span className="summary-subtitle">% of registered who voted</span>
                       </div>

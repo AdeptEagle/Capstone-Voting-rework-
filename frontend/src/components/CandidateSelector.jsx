@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getCandidates } from '../services/api';
+import { getCandidatePhotoUrl } from '../utils/image';
 import './CandidateSelector.css';
 
 const CandidateSelector = ({ 
@@ -13,6 +14,7 @@ const CandidateSelector = ({
   const [loading, setLoading] = useState(true);
   const [selectedCandidates, setSelectedCandidates] = useState({});
   const [error, setError] = useState('');
+  const [loadedImages, setLoadedImages] = useState(new Set());
 
   useEffect(() => {
     fetchCandidates();
@@ -40,8 +42,8 @@ const CandidateSelector = ({
     try {
       setLoading(true);
       const candidatesData = await getCandidates();
-      console.log('🔍 Fetched candidates data:', candidatesData);
-      console.log('🔍 First candidate sample:', candidatesData[0]);
+      // console.log('🔍 Fetched candidates data:', candidatesData);
+      // console.log('🔍 First candidate sample:', candidatesData[0]);
       setCandidates(candidatesData);
     } catch (error) {
       console.error('Error fetching candidates:', error);
@@ -116,20 +118,6 @@ const CandidateSelector = ({
     });
     
     return filteredCandidates;
-  };
-
-  // Helper to get correct candidate photo URL
-  const getCandidatePhotoUrl = (photoUrl) => {
-    if (!photoUrl || photoUrl === 'undefined' || photoUrl === 'null') return null;
-    if (photoUrl.startsWith('http://') || photoUrl.startsWith('https://')) {
-      return photoUrl;
-    }
-    // If the photoUrl already starts with /uploads/, use it as is
-    if (photoUrl.startsWith('/uploads/')) {
-      return `${import.meta.env.VITE_API_BASE_URL || 'https://backend-production-1960.up.railway.app'}${photoUrl}`;
-    }
-    // Otherwise, assume it's just a filename and add the full path
-    return `${import.meta.env.VITE_API_BASE_URL || 'https://backend-production-1960.up.railway.app'}/uploads/images/${photoUrl}`;
   };
 
   // Get positions to display (either from template or selected positions)
@@ -280,12 +268,21 @@ const CandidateSelector = ({
                       </div>
                       <div className="candidate-photo">
                         {(() => {
-                          console.log('🔍 Candidate photo debug:', {
-                            candidateName: candidate.Candidate_Name,
-                            photo: candidate.photo,
-                            photoType: typeof candidate.photo,
-                            photoUrl: getCandidatePhotoUrl(candidate.photo)
-                          });
+                          // const debugInfo = {
+                          //   candidateName: candidate.Candidate_Name,
+                          //   candidateId: candidate.id,
+                          //   photo: candidate.photo,
+                          //   photoType: typeof candidate.photo,
+                          //   photoUrl: getCandidatePhotoUrl(candidate.photo),
+                          //   loadedImages: Array.from(loadedImages),
+                          //   isLoaded: loadedImages.has(candidate.id),
+                          //   shouldShowImage: candidate.photo && candidate.photo !== 'undefined' && loadedImages.has(candidate.id),
+                          //   shouldShowPlaceholder: !(candidate.photo && candidate.photo !== 'undefined' && loadedImages.has(candidate.id))
+                          // };
+                          // console.log('🔍 Candidate photo debug:', debugInfo);
+                          // console.log('🔍 isLoaded:', debugInfo.isLoaded);
+                          // console.log('🔍 shouldShowImage:', debugInfo.shouldShowImage);
+                          // console.log('🔍 shouldShowPlaceholder:', debugInfo.shouldShowPlaceholder);
                           return null;
                         })()}
                         {candidate.photo && candidate.photo !== 'undefined' ? (
@@ -293,18 +290,30 @@ const CandidateSelector = ({
                             src={getCandidatePhotoUrl(candidate.photo)} 
                             alt={candidate.Candidate_Name}
                             onError={(e) => {
-                              console.log('❌ Image failed to load:', getCandidatePhotoUrl(candidate.photo));
-                              e.target.style.display = 'none';
-                              if (e.target.nextSibling) {
-                                e.target.nextSibling.style.display = 'flex';
-                              }
+                              // console.log('❌ Image failed to load:', getCandidatePhotoUrl(candidate.photo));
+                              // Remove from loaded images set
+                              setLoadedImages(prev => {
+                                const newSet = new Set(prev);
+                                newSet.delete(candidate.id);
+                                return newSet;
+                              });
                             }}
                             onLoad={() => {
-                              console.log('✅ Image loaded successfully:', getCandidatePhotoUrl(candidate.photo));
+                              // console.log('✅ Image loaded successfully:', getCandidatePhotoUrl(candidate.photo));
+                              // console.log('🔍 Adding candidate ID to loadedImages:', candidate.id);
+                              // Add to loaded images set
+                              setLoadedImages(prev => {
+                                const newSet = new Set(prev).add(candidate.id);
+                                // console.log('🔍 Updated loadedImages set:', Array.from(newSet));
+                                return newSet;
+                              });
                             }}
+                            style={{ display: loadedImages.has(candidate.id) ? 'block' : 'none' }}
                           />
                         ) : null}
-                        <div className="candidate-photo-placeholder" style={{ display: candidate.photo && candidate.photo !== 'undefined' ? 'none' : 'flex' }}>
+                        <div 
+                          className={`candidate-photo-placeholder ${(candidate.photo && candidate.photo !== 'undefined' && loadedImages.has(candidate.id)) ? 'hidden' : ''}`}
+                        >
                           <i className="fas fa-user"></i>
                         </div>
                       </div>
