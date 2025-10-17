@@ -1,6 +1,7 @@
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateBallotDto } from './dto/create-ballot.dto';
 import { UpdateBallotDto } from './dto/update-ballot.dto';
+import { CastVoteDto } from './dto/cast-vote.dto';
 import { BallotStatus } from '@prisma/client';
 export declare class BallotService {
     private prisma;
@@ -112,14 +113,14 @@ export declare class BallotService {
                 deletedAt: Date | null;
                 isDeleted: boolean;
                 departmentId: string | null;
-                courseId: string | null;
-                positionId: string;
                 Candidate_Name: string;
                 Candidate_Email: string;
                 Candidate_StudentId: string;
                 photo: string | null;
                 manifesto: string | null;
                 party_list_name: string | null;
+                courseId: string | null;
+                positionId: string;
                 partyListId: string | null;
             };
         } & {
@@ -241,14 +242,14 @@ export declare class BallotService {
                 deletedAt: Date | null;
                 isDeleted: boolean;
                 departmentId: string | null;
-                courseId: string | null;
-                positionId: string;
                 Candidate_Name: string;
                 Candidate_Email: string;
                 Candidate_StudentId: string;
                 photo: string | null;
                 manifesto: string | null;
                 party_list_name: string | null;
+                courseId: string | null;
+                positionId: string;
                 partyListId: string | null;
             };
         } & {
@@ -278,24 +279,24 @@ export declare class BallotService {
                     deletedAt: Date | null;
                     isDeleted: boolean;
                     departmentId: string | null;
-                    courseId: string | null;
-                    positionId: string;
                     Candidate_Name: string;
                     Candidate_Email: string;
                     Candidate_StudentId: string;
                     photo: string | null;
                     manifesto: string | null;
                     party_list_name: string | null;
+                    courseId: string | null;
+                    positionId: string;
                     partyListId: string | null;
                 };
             } & {
                 id: string;
-                BallotResultDetails_BallotId: string;
+                BallotResultDetails_Rank: number;
                 BallotResultDetails_PositionId: string;
+                BallotResultDetails_BallotId: string;
                 BallotResultDetails_CandidateId: string;
                 BallotResultDetails_VoteCount: number;
                 BallotResultDetails_Percentage: number;
-                BallotResultDetails_Rank: number;
                 BallotResultDetails_LastUpdated: Date;
             })[];
         } & {
@@ -410,14 +411,14 @@ export declare class BallotService {
                 deletedAt: Date | null;
                 isDeleted: boolean;
                 departmentId: string | null;
-                courseId: string | null;
-                positionId: string;
                 Candidate_Name: string;
                 Candidate_Email: string;
                 Candidate_StudentId: string;
                 photo: string | null;
                 manifesto: string | null;
                 party_list_name: string | null;
+                courseId: string | null;
+                positionId: string;
                 partyListId: string | null;
             };
         } & {
@@ -639,14 +640,14 @@ export declare class BallotService {
                 deletedAt: Date | null;
                 isDeleted: boolean;
                 departmentId: string | null;
-                courseId: string | null;
-                positionId: string;
                 Candidate_Name: string;
                 Candidate_Email: string;
                 Candidate_StudentId: string;
                 photo: string | null;
                 manifesto: string | null;
                 party_list_name: string | null;
+                courseId: string | null;
+                positionId: string;
                 partyListId: string | null;
             };
         } & {
@@ -763,14 +764,14 @@ export declare class BallotService {
                 deletedAt: Date | null;
                 isDeleted: boolean;
                 departmentId: string | null;
-                courseId: string | null;
-                positionId: string;
                 Candidate_Name: string;
                 Candidate_Email: string;
                 Candidate_StudentId: string;
                 photo: string | null;
                 manifesto: string | null;
                 party_list_name: string | null;
+                courseId: string | null;
+                positionId: string;
                 partyListId: string | null;
             };
         } & {
@@ -870,7 +871,7 @@ export declare class BallotService {
         UserBallotHistory_IsCompleted: boolean;
         UserBallotHistory_LastAccessed: Date;
     })[]>;
-    castBallotVote(castVoteDto: any, userId: string): Promise<{
+    castBallotVote(castVoteDto: CastVoteDto, userId: string): Promise<{
         message: string;
         votes: any[];
         totalVotes: number;

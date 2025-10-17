@@ -10,9 +10,9 @@ export class CreateVoteDto {
   @IsString()
   candidateId: string;
 
-  @ApiProperty({ description: 'Election ID' })
+  @ApiProperty({ description: 'Ballot ID' })
   @IsString()
-  electionId: string;
+  ballotId: string;
 
   @ApiProperty({ description: 'Position ID' })
   @IsString()

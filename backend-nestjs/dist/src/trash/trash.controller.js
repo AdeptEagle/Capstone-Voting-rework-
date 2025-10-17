@@ -43,7 +43,7 @@ let TrashController = class TrashController {
         return await this.trashService.getDeletedVoters();
     }
     async getDeletedElections() {
-        return await this.trashService.getDeletedElections();
+        return [];
     }
     async restoreCandidate(id) {
         return await this.trashService.restoreCandidate(id);
@@ -61,10 +61,10 @@ let TrashController = class TrashController {
         return await this.trashService.restoreVoter(id);
     }
     async restoreElection(id) {
-        return await this.trashService.restoreElection(id);
+        return { message: 'Elections no longer exist' };
     }
     async bulkRestore(body) {
-        return await this.trashService.bulkRestore(body.itemIds, body.itemType);
+        return { message: 'Bulk restore not implemented yet' };
     }
     async permanentlyDeleteCandidate(id) {
         return await this.trashService.permanentlyDeleteCandidate(id);
@@ -82,7 +82,7 @@ let TrashController = class TrashController {
         return await this.trashService.permanentlyDeleteVoter(id);
     }
     async permanentlyDeleteElection(id) {
-        return await this.trashService.permanentlyDeleteElection(id);
+        return { message: 'Elections no longer exist' };
     }
     async emptyTrash() {
         return await this.trashService.emptyTrash();
@@ -139,7 +139,7 @@ __decorate([
 ], TrashController.prototype, "getDeletedVoters", null);
 __decorate([
     (0, common_1.Get)('elections'),
-    (0, swagger_1.ApiOperation)({ summary: 'Get all deleted elections' }),
+    (0, swagger_1.ApiOperation)({ summary: 'Get all deleted elections (deprecated)' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'List of deleted elections' }),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
@@ -197,7 +197,7 @@ __decorate([
 ], TrashController.prototype, "restoreVoter", null);
 __decorate([
     (0, common_1.Post)('restore/election/:id'),
-    (0, swagger_1.ApiOperation)({ summary: 'Restore deleted election' }),
+    (0, swagger_1.ApiOperation)({ summary: 'Restore deleted election (deprecated)' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Election restored successfully' }),
     (0, swagger_1.ApiResponse)({ status: 404, description: 'Election not found' }),
     __param(0, (0, common_1.Param)('id')),

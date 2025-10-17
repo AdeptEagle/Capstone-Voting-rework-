@@ -56,10 +56,10 @@ export class TrashController {
   }
 
   @Get('elections')
-  @ApiOperation({ summary: 'Get all deleted elections' })
+  @ApiOperation({ summary: 'Get all deleted elections (deprecated)' })
   @ApiResponse({ status: 200, description: 'List of deleted elections' })
   async getDeletedElections() {
-    return await this.trashService.getDeletedElections();
+    return []; // Elections no longer exist
   }
 
   @Post('restore/candidate/:id')
@@ -103,18 +103,19 @@ export class TrashController {
   }
 
   @Post('restore/election/:id')
-  @ApiOperation({ summary: 'Restore deleted election' })
+  @ApiOperation({ summary: 'Restore deleted election (deprecated)' })
   @ApiResponse({ status: 200, description: 'Election restored successfully' })
   @ApiResponse({ status: 404, description: 'Election not found' })
   async restoreElection(@Param('id') id: string) {
-    return await this.trashService.restoreElection(id);
+    return { message: 'Elections no longer exist' };
   }
 
   @Post('restore/bulk')
   @ApiOperation({ summary: 'Bulk restore deleted items' })
   @ApiResponse({ status: 200, description: 'Items restored successfully' })
   async bulkRestore(@Body() body: { itemIds: string[], itemType: 'candidate' | 'position' | 'department' | 'course' | 'voter' }) {
-    return await this.trashService.bulkRestore(body.itemIds, body.itemType);
+    // TODO: Implement bulk restore functionality
+    return { message: 'Bulk restore not implemented yet' };
   }
 
   @Delete('permanent/candidate/:id')
@@ -179,7 +180,7 @@ export class TrashController {
   @ApiResponse({ status: 404, description: 'Election not found' })
   @ApiResponse({ status: 409, description: 'Cannot delete election with voting history' })
   async permanentlyDeleteElection(@Param('id') id: string) {
-    return await this.trashService.permanentlyDeleteElection(id);
+    return { message: 'Elections no longer exist' };
   }
 
   @Delete('empty')

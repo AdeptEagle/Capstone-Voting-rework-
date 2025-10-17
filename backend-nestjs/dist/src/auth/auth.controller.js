@@ -21,6 +21,8 @@ const user_login_dto_1 = require("./dto/user-login.dto");
 const user_register_dto_1 = require("./dto/user-register.dto");
 const request_password_reset_dto_1 = require("./dto/request-password-reset.dto");
 const reset_password_dto_1 = require("./dto/reset-password.dto");
+const change_password_dto_1 = require("./dto/change-password.dto");
+const jwt_auth_guard_1 = require("./guards/jwt-auth.guard");
 let AuthController = class AuthController {
     constructor(authService) {
         this.authService = authService;
@@ -48,6 +50,15 @@ let AuthController = class AuthController {
     }
     async resetPassword(resetPasswordDto) {
         return this.authService.resetPassword(resetPasswordDto);
+    }
+    async changePassword(req, changePasswordDto) {
+        console.log('🔐 Change password request received');
+        console.log('👤 User from JWT:', req.user);
+        console.log('📝 Request body:', changePasswordDto);
+        const { userId, type } = req.user;
+        console.log('🆔 User ID:', userId);
+        console.log('👥 User Type:', type);
+        return this.authService.changePassword(userId, type, changePasswordDto.currentPassword, changePasswordDto.newPassword);
     }
     async cleanupExpiredTokens() {
         return this.authService.cleanupExpiredTokens();
@@ -302,6 +313,38 @@ __decorate([
     __metadata("design:paramtypes", [reset_password_dto_1.ResetPasswordDto]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "resetPassword", null);
+__decorate([
+    (0, common_1.Put)('change-password'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Change password',
+        description: 'Change password for authenticated user'
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Password changed successfully',
+        schema: {
+            type: 'object',
+            properties: {
+                message: { type: 'string' },
+            },
+        },
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 401,
+        description: 'Current password is incorrect',
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 404,
+        description: 'User not found',
+    }),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, change_password_dto_1.ChangePasswordDto]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "changePassword", null);
 __decorate([
     (0, common_1.Post)('cleanup-tokens'),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),

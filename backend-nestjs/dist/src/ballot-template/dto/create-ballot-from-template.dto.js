@@ -39,6 +39,11 @@ __decorate([
 ], CreateBallotFromTemplateDto.prototype, "showResultsAfter", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
+], CreateBallotFromTemplateDto.prototype, "allowAbstain", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsArray)(),
     (0, class_validator_1.IsString)({ each: true }),
     __metadata("design:type", Array)

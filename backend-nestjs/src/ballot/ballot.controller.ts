@@ -67,7 +67,7 @@ export class BallotController {
   }
 
   @Post('cast-vote')
-  castBallotVote(@Body() castVoteDto: any, @Request() req) {
+  castBallotVote(@Body() castVoteDto: CastVoteDto, @Request() req) {
     return this.ballotService.castBallotVote(castVoteDto, req.user.id);
   }
 

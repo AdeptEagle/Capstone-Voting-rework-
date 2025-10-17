@@ -37,7 +37,6 @@ let PositionService = class PositionService {
                     select: {
                         candidates: true,
                         votes: true,
-                        electionPositions: true,
                     },
                 },
             },
@@ -76,7 +75,6 @@ let PositionService = class PositionService {
                     select: {
                         candidates: true,
                         votes: true,
-                        electionPositions: true,
                     },
                 },
             },
@@ -94,7 +92,6 @@ let PositionService = class PositionService {
                     select: {
                         candidates: true,
                         votes: true,
-                        electionPositions: true,
                     },
                 },
             },
@@ -139,7 +136,6 @@ let PositionService = class PositionService {
                     select: {
                         candidates: true,
                         votes: true,
-                        electionPositions: true,
                     },
                 },
             },
@@ -163,7 +159,6 @@ let PositionService = class PositionService {
                     select: {
                         candidates: true,
                         votes: true,
-                        electionPositions: true,
                     },
                 },
             },

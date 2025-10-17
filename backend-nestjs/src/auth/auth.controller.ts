@@ -1,4 +1,4 @@
-import { Controller, Post, Body, HttpCode, HttpStatus, Res, UseGuards, Get, Param, Request } from '@nestjs/common';
+import { Controller, Post, Body, HttpCode, HttpStatus, Res, UseGuards, Get, Param, Request, Put } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiHeader, ApiParam } from '@nestjs/swagger';
 import { Response } from 'express';
 import { AuthService } from './auth.service';
@@ -7,6 +7,8 @@ import { UserLoginDto } from './dto/user-login.dto';
 import { UserRegisterDto } from './dto/user-register.dto';
 import { RequestPasswordResetDto } from './dto/request-password-reset.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -209,6 +211,48 @@ export class AuthController {
   })
   async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
     return this.authService.resetPassword(resetPasswordDto);
+  }
+
+  @Put('change-password')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Change password',
+    description: 'Change password for authenticated user'
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Password changed successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        message: { type: 'string' },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Current password is incorrect',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'User not found',
+  })
+  async changePassword(@Request() req: any, @Body() changePasswordDto: ChangePasswordDto) {
+    console.log('🔐 Change password request received');
+    console.log('👤 User from JWT:', req.user);
+    console.log('📝 Request body:', changePasswordDto);
+    
+    const { userId, type } = req.user;
+    console.log('🆔 User ID:', userId);
+    console.log('👥 User Type:', type);
+    
+    return this.authService.changePassword(
+      userId,
+      type,
+      changePasswordDto.currentPassword,
+      changePasswordDto.newPassword
+    );
   }
 
   @Post('cleanup-tokens')

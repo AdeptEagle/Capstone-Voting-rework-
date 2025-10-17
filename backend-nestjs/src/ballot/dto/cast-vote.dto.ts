@@ -8,10 +8,14 @@ export class VoteSelectionDto {
   @IsNotEmpty()
   positionId: string;
 
-  @ApiProperty({ description: 'Candidate ID', example: 'CAND-123456' })
+  @ApiProperty({ description: 'Candidate ID (null for abstain votes)', example: 'CAND-123456', required: false })
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  candidateId: string;
+  candidateId?: string | null;
+
+  @ApiProperty({ description: 'Indicates if this is an abstention vote', example: false, required: false })
+  @IsOptional()
+  isAbstention?: boolean;
 }
 
 export class CastVoteDto {
@@ -21,7 +25,7 @@ export class CastVoteDto {
   ballotId: string;
 
   @ApiProperty({ 
-    description: 'Array of vote selections', 
+    description: 'Array of vote selections (can be empty for abstaining ballots)', 
     type: [VoteSelectionDto],
     example: [
       { positionId: 'POS-123456', candidateId: 'CAND-123456' },
@@ -29,7 +33,6 @@ export class CastVoteDto {
     ]
   })
   @IsArray()
-  @ArrayMinSize(1)
   @ValidateNested({ each: true })
   @Type(() => VoteSelectionDto)
   votes: VoteSelectionDto[];
@@ -38,4 +41,19 @@ export class CastVoteDto {
   @IsString()
   @IsOptional()
   verificationCode?: string;
+
+  @ApiProperty({ description: 'IP Address of voter', required: false })
+  @IsOptional()
+  @IsString()
+  ipAddress?: string;
+
+  @ApiProperty({ description: 'User agent string', required: false })
+  @IsOptional()
+  @IsString()
+  userAgent?: string;
+
+  @ApiProperty({ description: 'Session identifier', required: false })
+  @IsOptional()
+  @IsString()
+  sessionId?: string;
 }

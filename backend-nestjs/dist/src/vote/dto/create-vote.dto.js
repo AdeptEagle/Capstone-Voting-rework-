@@ -26,10 +26,10 @@ __decorate([
     __metadata("design:type", String)
 ], CreateVoteDto.prototype, "candidateId", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Election ID' }),
+    (0, swagger_1.ApiProperty)({ description: 'Ballot ID' }),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
-], CreateVoteDto.prototype, "electionId", void 0);
+], CreateVoteDto.prototype, "ballotId", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({ description: 'Position ID' }),
     (0, class_validator_1.IsString)(),

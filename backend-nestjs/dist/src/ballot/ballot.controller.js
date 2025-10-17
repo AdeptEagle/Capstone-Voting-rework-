@@ -17,6 +17,7 @@ const common_1 = require("@nestjs/common");
 const ballot_service_1 = require("./ballot.service");
 const create_ballot_dto_1 = require("./dto/create-ballot.dto");
 const update_ballot_dto_1 = require("./dto/update-ballot.dto");
+const cast_vote_dto_1 = require("./dto/cast-vote.dto");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
 const roles_guard_1 = require("../auth/guards/roles.guard");
 const roles_decorator_1 = require("../auth/decorators/roles.decorator");
@@ -139,7 +140,7 @@ __decorate([
     __param(0, (0, common_1.Body)()),
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:paramtypes", [cast_vote_dto_1.CastVoteDto, Object]),
     __metadata("design:returntype", void 0)
 ], BallotController.prototype, "castBallotVote", null);
 __decorate([

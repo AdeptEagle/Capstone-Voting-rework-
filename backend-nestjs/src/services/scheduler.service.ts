@@ -1,6 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { ElectionService } from '../election/election.service';
 import { BallotService } from '../ballot/ballot.service';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -9,7 +8,6 @@ export class SchedulerService {
   private readonly logger = new Logger(SchedulerService.name);
 
   constructor(
-    private readonly electionService: ElectionService,
     private readonly ballotService: BallotService,
     private readonly prisma: PrismaService
   ) {}
@@ -19,16 +17,11 @@ export class SchedulerService {
   async handleAutoEndElections() {
     try {
       this.logger.log('🕐 Checking for expired elections...');
-      const result = await this.electionService.checkAndAutoEndElections();
+      // TODO: Implement ballot auto-end functionality
+      const result = { message: 'Ballot auto-end not implemented yet' };
       
-      if (result.autoEndedElections.length > 0) {
-        this.logger.log(`✅ Auto-ended ${result.autoEndedElections.length} election(s)`);
-        result.autoEndedElections.forEach(election => {
-          this.logger.log(`   📊 ${election.election.title}: ${election.finalResults.totalVotes} votes, ${election.finalResults.uniqueVoters} voters`);
-        });
-      } else {
-        this.logger.log('✅ No expired elections found');
-      }
+      // TODO: Implement ballot auto-end functionality
+      this.logger.log('Ballot auto-end functionality not implemented yet');
     } catch (error) {
       this.logger.error('❌ Error in auto-end elections check:', error);
     }
@@ -78,7 +71,8 @@ export class SchedulerService {
   @Cron(CronExpression.EVERY_5_MINUTES)
   async logElectionStatus() {
     try {
-      const activeElections = await this.electionService.getActiveElections();
+      // TODO: Implement ballot status logging
+      const activeElections = [];
       const now = new Date();
       
       if (activeElections.length > 0) {

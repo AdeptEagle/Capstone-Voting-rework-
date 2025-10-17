@@ -23,11 +23,16 @@ __decorate([
     __metadata("design:type", String)
 ], VoteSelectionDto.prototype, "positionId", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Candidate ID', example: 'CAND-123456' }),
+    (0, swagger_1.ApiProperty)({ description: 'Candidate ID (null for abstain votes)', example: 'CAND-123456', required: false }),
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)
 ], VoteSelectionDto.prototype, "candidateId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Indicates if this is an abstention vote', example: false, required: false }),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Boolean)
+], VoteSelectionDto.prototype, "isAbstention", void 0);
 class CastVoteDto {
 }
 exports.CastVoteDto = CastVoteDto;
@@ -39,7 +44,7 @@ __decorate([
 ], CastVoteDto.prototype, "ballotId", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
-        description: 'Array of vote selections',
+        description: 'Array of vote selections (can be empty for abstaining ballots)',
         type: [VoteSelectionDto],
         example: [
             { positionId: 'POS-123456', candidateId: 'CAND-123456' },
@@ -47,7 +52,6 @@ __decorate([
         ]
     }),
     (0, class_validator_1.IsArray)(),
-    (0, class_validator_1.ArrayMinSize)(1),
     (0, class_validator_1.ValidateNested)({ each: true }),
     (0, class_transformer_1.Type)(() => VoteSelectionDto),
     __metadata("design:type", Array)
@@ -58,4 +62,22 @@ __decorate([
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], CastVoteDto.prototype, "verificationCode", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'IP Address of voter', required: false }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CastVoteDto.prototype, "ipAddress", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'User agent string', required: false }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CastVoteDto.prototype, "userAgent", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Session identifier', required: false }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CastVoteDto.prototype, "sessionId", void 0);
 //# sourceMappingURL=cast-vote.dto.js.map

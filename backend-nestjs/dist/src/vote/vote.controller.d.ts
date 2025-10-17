@@ -3,174 +3,190 @@ import { CreateVoteDto } from './dto';
 export declare class VoteController {
     private readonly voteService;
     constructor(voteService: VoteService);
-    getAllVotes(): Promise<({
+    getAllVotes(): Promise<{
+        message: string;
+    }>;
+    createVote(createVoteDto: CreateVoteDto): Promise<{
         position: {
             id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            deletedAt: Date | null;
+            isDeleted: boolean;
             Position_Title: string;
+            Position_Description: string | null;
+            displayOrder: number;
+            voteLimit: number;
         };
-        voter: {
+        ballot: {
             id: string;
-            Voter_Name: string;
-            Voter_StudentId: string;
-        };
-        election: {
-            id: string;
-            Election_Title: string;
+            Ballot_Title: string;
+            Ballot_Description: string | null;
+            Ballot_StartDate: Date;
+            Ballot_EndDate: Date;
+            Ballot_Status: import(".prisma/client").$Enums.BallotStatus;
+            Ballot_IsActive: boolean;
+            Ballot_MaxVotesPerUser: number;
+            Ballot_AllowMultipleVotes: boolean;
+            Ballot_RequireAllPositions: boolean;
+            Ballot_ShowResults: boolean;
+            Ballot_ShowResultsAfter: Date | null;
+            Ballot_ShowLiveResults: boolean;
+            Ballot_AllowAbstain: boolean;
+            Ballot_CreatedBy: string;
+            Ballot_CreatedAt: Date;
+            Ballot_UpdatedAt: Date;
+            Ballot_DeletedAt: Date | null;
+            Ballot_IsDeleted: boolean;
         };
         candidate: {
             id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            deletedAt: Date | null;
+            isDeleted: boolean;
+            departmentId: string | null;
             Candidate_Name: string;
+            Candidate_Email: string;
             Candidate_StudentId: string;
+            photo: string | null;
+            manifesto: string | null;
+            party_list_name: string | null;
+            courseId: string | null;
+            positionId: string;
+            partyListId: string | null;
+        };
+        voter: {
+            id: string;
+            password: string | null;
+            createdAt: Date;
+            updatedAt: Date;
+            deletedAt: Date | null;
+            isDeleted: boolean;
+            departmentId: string;
+            courseId: string;
+            Voter_Name: string;
+            Voter_Email: string;
+            Voter_StudentId: string;
+            hasVoted: boolean;
         };
     } & {
         id: string;
         createdAt: Date;
-        electionId: string | null;
         positionId: string;
-        candidateId: string;
         ipAddress: string | null;
         userAgent: string | null;
         sessionId: string | null;
         auditHash: string | null;
+        candidateId: string;
+        electionId: string | null;
         verificationCode: string | null;
         voterId: string;
         ballotId: string | null;
-    })[]>;
-    createVote(createVoteDto: CreateVoteDto): Promise<{
-        message: string;
-        vote: {
-            id: string;
-            voter: {
-                id: string;
-                Voter_Name: string;
-                Voter_StudentId: string;
-            };
-            candidate: {
-                id: string;
-                Candidate_Name: string;
-                Candidate_StudentId: string;
-            };
-            election: {
-                id: string;
-                Election_Title: string;
-            };
-            position: {
-                id: string;
-                Position_Title: string;
-                voteLimit: number;
-            };
-            createdAt: Date;
-        };
-        voteCount: number;
-        voteLimit: number;
-        isFinalVoteForPosition: boolean;
-        isLockedOut: boolean;
-        confirmation: {
-            voterName: string;
-            candidateName: string;
-            positionTitle: string;
-            electionTitle: string;
-            votedAt: Date;
-            voteId: string;
-            remainingVotes: number;
-            lockoutMessage: string;
-        };
     }>;
     confirmVote(createVoteDto: CreateVoteDto): Promise<{
-        canVote: boolean;
-        confirmation: {
-            voterName: string;
-            candidateName: string;
-            positionTitle: string;
-            electionTitle: string;
-            currentVoteCount: number;
-            voteLimit: number;
-            remainingVotes: number;
-            willBeFinalVoteForPosition: boolean;
-            willCompleteAllVoting: boolean;
-            votingProgress: {
-                totalPositions: number;
-                completedPositions: number;
-                totalVotesCast: number;
-                remainingPositions: number;
-            };
-        };
-        validation: {
-            electionActive: true;
-            voterExists: boolean;
-            candidateExists: boolean;
-            positionExists: boolean;
-            withinVoteLimit: boolean;
-            noDuplicateVote: boolean;
-            notLockedOut: boolean;
-        };
-        lockoutWarning: string;
+        message: string;
     }>;
     getActiveElectionResults(): Promise<any[]>;
     getRealTimeStats(): Promise<{
         totalVotes: number;
-        uniqueVoters: number;
+        totalVoters: number;
+        votersWhoVoted: number;
+        voterTurnout: number;
         candidatesWithVotes: number;
         totalPositions: number;
-        votersWhoVoted: number;
-        totalVoters: number;
-        voterTurnout: number;
+        timestamp: Date;
     }>;
     getVoteTimeline(): Promise<any[]>;
     getVoterVotingStatus(voterId: string, ballotId: string): Promise<{
         voter: {
             id: string;
             name: string;
+            email: string;
             studentId: string;
             hasVoted: boolean;
         };
-        election: {
+        ballot: {
             id: string;
             title: string;
-            isActive: boolean;
+            status: import(".prisma/client").$Enums.BallotStatus;
         };
-        votingStatus: {
-            totalPositions: number;
-            completedPositions: number;
-            remainingPositions: number;
-            totalVotesCast: number;
-            allPositionsCompleted: boolean;
-            isLockedOut: boolean;
-            lockoutReason: string;
-        };
-        positions: any[];
+        votes: ({
+            position: {
+                id: string;
+                Position_Title: string;
+                displayOrder: number;
+            };
+            candidate: {
+                id: string;
+                Candidate_Name: string;
+                photo: string;
+                partyList: {
+                    name: string;
+                };
+            };
+        } & {
+            id: string;
+            createdAt: Date;
+            positionId: string;
+            ipAddress: string | null;
+            userAgent: string | null;
+            sessionId: string | null;
+            auditHash: string | null;
+            candidateId: string;
+            electionId: string | null;
+            verificationCode: string | null;
+            voterId: string;
+            ballotId: string | null;
+        })[];
+        availablePositions: {
+            id: string;
+            Position_Title: string;
+            displayOrder: number;
+        }[];
         canVote: boolean;
-        lockoutMessage: string;
     }>;
     getVotesByBallot(ballotId: string): Promise<({
         position: {
             id: string;
             Position_Title: string;
-        };
-        voter: {
-            id: string;
-            Voter_Name: string;
-            Voter_StudentId: string;
-        };
-        election: {
-            id: string;
-            Election_Title: string;
+            displayOrder: number;
         };
         candidate: {
             id: string;
+            position: {
+                Position_Title: string;
+                displayOrder: number;
+            };
             Candidate_Name: string;
             Candidate_StudentId: string;
+            photo: string;
+            partyList: {
+                name: string;
+            };
+        };
+        voter: {
+            id: string;
+            department: {
+                Department_Name: string;
+            };
+            course: {
+                Course_Name: string;
+            };
+            Voter_Name: string;
+            Voter_Email: string;
+            Voter_StudentId: string;
         };
     } & {
         id: string;
         createdAt: Date;
-        electionId: string | null;
         positionId: string;
-        candidateId: string;
         ipAddress: string | null;
         userAgent: string | null;
         sessionId: string | null;
         auditHash: string | null;
+        candidateId: string;
+        electionId: string | null;
         verificationCode: string | null;
         voterId: string;
         ballotId: string | null;
@@ -179,267 +195,143 @@ export declare class VoteController {
         position: {
             id: string;
             Position_Title: string;
+            displayOrder: number;
         };
-        voter: {
+        ballot: {
             id: string;
-            Voter_Name: string;
-            Voter_StudentId: string;
-        };
-        election: {
-            id: string;
-            Election_Title: string;
+            Ballot_Title: string;
+            Ballot_Status: import(".prisma/client").$Enums.BallotStatus;
         };
         candidate: {
             id: string;
+            position: {
+                Position_Title: string;
+                displayOrder: number;
+            };
             Candidate_Name: string;
-            Candidate_StudentId: string;
+            photo: string;
+            partyList: {
+                name: string;
+            };
         };
     } & {
         id: string;
         createdAt: Date;
-        electionId: string | null;
         positionId: string;
-        candidateId: string;
         ipAddress: string | null;
         userAgent: string | null;
         sessionId: string | null;
         auditHash: string | null;
+        candidateId: string;
+        electionId: string | null;
         verificationCode: string | null;
         voterId: string;
         ballotId: string | null;
     })[]>;
     getVoteResults(ballotId: string): Promise<{
-        electionId: string;
-        results: any[];
-        summary: {
-            totalPositions: number;
-            totalVotes: any;
-        };
-    }>;
-    getComprehensiveVoteAnalytics(ballotId: string): Promise<{
-        election: {
-            id: string;
-            title: string;
-            description: string;
-            startDate: Date;
-            endDate: Date;
-            isActive: boolean;
-            createdBy: {
-                id: string;
-                Admin_Username: string;
-                Admin_Email: string;
-            };
-            positions: {
-                id: string;
-                Position_Title: string;
-                voteLimit: number;
-            }[];
-            candidates: {
-                id: string;
-                positionId: string;
-                Candidate_Name: string;
-                Candidate_StudentId: string;
-            }[];
-        };
-        statistics: {
-            totalVotes: number;
-            uniqueVoters: number;
-            uniqueCandidates: number;
-            uniquePositions: number;
-            totalEligibleVoters: number;
-            participationRate: number;
-            averageVotesPerVoter: number;
-        };
-        detailedResults: {
-            byPosition: {
-                position: any;
-                totalVotes: any;
-                candidates: {
-                    candidate: any;
-                    voteCount: any;
-                    percentage: number;
-                    voters: any;
-                }[];
-            }[];
-            byVoter: {
-                voter: any;
-                totalVotes: any;
-                positionsVoted: unknown[];
-                votes: any;
-            }[];
-            byDepartment: {
-                department: any;
-                statistics: {
-                    totalVoters: any;
-                    uniqueVoters: any;
-                    totalVotes: any;
-                    participationRate: number;
-                    averageVotesPerVoter: number;
-                };
-                positions: {
-                    position: any;
-                    totalVotes: any;
-                    candidates: {
-                        candidate: any;
-                        votes: any;
-                        percentage: number;
-                    }[];
-                }[];
-                candidates: {
-                    candidate: any;
-                    totalVotes: any;
-                    voters: any;
-                }[];
-                voterDetails: any;
-            }[];
-        };
-        timeline: {
-            firstVote: {
-                voteId: string;
-                voterName: string;
-                candidateName: string;
-                positionTitle: string;
-                votedAt: Date;
-            };
-            lastVote: {
-                voteId: string;
-                voterName: string;
-                candidateName: string;
-                positionTitle: string;
-                votedAt: Date;
-            };
-            totalVoteSessions: number;
-            voteTimeline: {
-                voteId: string;
-                voterName: string;
-                candidateName: string;
-                positionTitle: string;
-                votedAt: Date;
-            }[];
-        };
-        audit: {
-            voteRecords: {
-                voteId: string;
-                voter: {
-                    id: string;
-                    name: string;
-                    studentId: string;
-                    email: string;
-                    department: {
-                        id: string;
-                        Department_Name: string;
-                    };
-                    course: {
-                        id: string;
-                        Course_Name: string;
-                        Course_Code: string;
-                    };
-                };
-                candidate: {
-                    id: string;
-                    name: string;
-                    studentId: string;
-                    email: string;
-                    position: {
-                        id: string;
-                        Position_Title: string;
-                    };
-                    department: {
-                        id: string;
-                        Department_Name: string;
-                    };
-                    course: {
-                        id: string;
-                        Course_Name: string;
-                        Course_Code: string;
-                    };
-                };
-                position: {
-                    id: string;
-                    Position_Title: string;
-                    Position_Description: string;
-                    voteLimit: number;
-                };
-                election: {
-                    id: string;
-                    Election_Title: string;
-                    Election_Description: string;
-                    endDate: Date;
-                    isActive: boolean;
-                    startDate: Date;
-                };
-                votedAt: Date;
-            }[];
-        };
-    }>;
-    getDepartmentVotingResults(ballotId: string): Promise<{
-        department: any;
-        statistics: {
-            totalVoters: any;
-            uniqueVoters: any;
-            totalVotes: any;
-            participationRate: number;
-            averageVotesPerVoter: number;
-        };
-        positions: {
-            position: any;
-            totalVotes: any;
-            candidates: {
-                candidate: any;
-                votes: any;
-                percentage: number;
-            }[];
-        }[];
-        candidates: {
-            candidate: any;
-            totalVotes: any;
-            voters: any;
-        }[];
-        voterDetails: any;
+        position: string;
+        candidates: any[];
     }[]>;
+    getComprehensiveVoteAnalytics(ballotId: string): Promise<{
+        totalVotes: number;
+        uniqueVoters: number;
+        departmentBreakdown: {};
+        positionBreakdown: {};
+        partyBreakdown: {};
+        timestamp: Date;
+    }>;
+    getDepartmentVotingResults(ballotId: string): Promise<unknown[]>;
     getVoteById(id: string): Promise<{
         position: {
             id: string;
             Position_Title: string;
+            displayOrder: number;
+            voteLimit: number;
         };
-        voter: {
+        ballot: {
             id: string;
-            Voter_Name: string;
-            Voter_StudentId: string;
-        };
-        election: {
-            id: string;
-            Election_Title: string;
+            Ballot_Title: string;
+            Ballot_Description: string;
+            Ballot_Status: import(".prisma/client").$Enums.BallotStatus;
         };
         candidate: {
             id: string;
+            department: {
+                id: string;
+                Department_Name: string;
+            };
+            course: {
+                id: string;
+                Course_Name: string;
+            };
+            position: {
+                id: string;
+                Position_Title: string;
+                displayOrder: number;
+            };
             Candidate_Name: string;
+            Candidate_Email: string;
             Candidate_StudentId: string;
+            photo: string;
+            partyList: {
+                id: string;
+                name: string;
+            };
+        };
+        voter: {
+            id: string;
+            department: {
+                id: string;
+                Department_Name: string;
+            };
+            course: {
+                id: string;
+                Course_Name: string;
+            };
+            Voter_Name: string;
+            Voter_Email: string;
+            Voter_StudentId: string;
         };
     } & {
         id: string;
         createdAt: Date;
-        electionId: string | null;
         positionId: string;
-        candidateId: string;
         ipAddress: string | null;
         userAgent: string | null;
         sessionId: string | null;
         auditHash: string | null;
+        candidateId: string;
+        electionId: string | null;
         verificationCode: string | null;
         voterId: string;
         ballotId: string | null;
     }>;
     deleteVote(id: string): Promise<{
-        message: string;
+        id: string;
+        createdAt: Date;
+        positionId: string;
+        ipAddress: string | null;
+        userAgent: string | null;
+        sessionId: string | null;
+        auditHash: string | null;
+        candidateId: string;
+        electionId: string | null;
+        verificationCode: string | null;
+        voterId: string;
+        ballotId: string | null;
     }>;
     resetVoterStatus(voterId: string): Promise<{
-        message: string;
-        voter: {
-            id: string;
-            name: string;
-            studentId: string;
-            hasVoted: boolean;
-        };
+        id: string;
+        password: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        deletedAt: Date | null;
+        isDeleted: boolean;
+        departmentId: string;
+        courseId: string;
+        Voter_Name: string;
+        Voter_Email: string;
+        Voter_StudentId: string;
+        hasVoted: boolean;
     }>;
 }

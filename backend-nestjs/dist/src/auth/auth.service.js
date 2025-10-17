@@ -586,6 +586,59 @@ let AuthService = class AuthService {
             message: 'Password has been successfully reset. Please check your email for confirmation.',
         };
     }
+    async changePassword(userId, userType, currentPassword, newPassword) {
+        let user;
+        if (userType === 'voter') {
+            user = await this.prisma.voter.findUnique({
+                where: { id: userId },
+                select: {
+                    id: true,
+                    Voter_Email: true,
+                    password: true,
+                },
+            });
+        }
+        else {
+            user = await this.prisma.admin.findUnique({
+                where: { id: userId },
+                select: {
+                    id: true,
+                    Admin_Email: true,
+                    password: true,
+                },
+            });
+        }
+        if (!user) {
+            throw new common_1.NotFoundException('User not found');
+        }
+        const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password);
+        if (!isCurrentPasswordValid) {
+            throw new common_1.UnauthorizedException('Current password is incorrect');
+        }
+        const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+        if (userType === 'voter') {
+            await this.prisma.voter.update({
+                where: { id: userId },
+                data: { password: hashedNewPassword },
+            });
+        }
+        else {
+            await this.prisma.admin.update({
+                where: { id: userId },
+                data: { password: hashedNewPassword },
+            });
+        }
+        try {
+            const email = userType === 'voter' ? user.Voter_Email : user.Admin_Email;
+            await this.emailService.sendPasswordChangedEmail(email, userType);
+        }
+        catch (error) {
+            console.error('Failed to send password changed email:', error);
+        }
+        return {
+            message: 'Password changed successfully',
+        };
+    }
     async cleanupExpiredTokens() {
         const deletedCount = await this.prisma.passwordResetToken.deleteMany({
             where: {

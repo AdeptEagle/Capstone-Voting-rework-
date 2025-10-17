@@ -14,6 +14,8 @@ export class BallotService {
     try {
       console.log('🆕 Creating ballot with data:', createBallotDto);
       console.log('👤 Created by user ID:', createdBy);
+      console.log('🔍 Ballot_AllowAbstain value:', createBallotDto.Ballot_AllowAbstain);
+      console.log('🔍 Ballot_AllowAbstain type:', typeof createBallotDto.Ballot_AllowAbstain);
       
       const {
         Ballot_Title,
@@ -112,6 +114,11 @@ export class BallotService {
     const id = this.generateId();
 
     return this.prisma.$transaction(async (tx) => {
+      // Debug before creating ballot
+      console.log('🔍 About to create ballot with Ballot_AllowAbstain:', Ballot_AllowAbstain);
+      console.log('🔍 Ballot_AllowAbstain !== undefined:', Ballot_AllowAbstain !== undefined);
+      console.log('🔍 Final value:', Ballot_AllowAbstain !== undefined ? Ballot_AllowAbstain : false);
+      
       // Create ballot
       const ballot = await tx.ballot.create({
         data: {
@@ -652,21 +659,30 @@ export class BallotService {
     });
   }
 
-    async castBallotVote(castVoteDto: any, userId: string) {
+    async castBallotVote(castVoteDto: CastVoteDto, userId: string) {
       try {
         console.log('🗳️ ===== VOTE SUBMISSION START =====');
         console.log('🗳️ Casting ballot vote:', JSON.stringify(castVoteDto, null, 2));
         console.log('👤 User ID:', userId);
         console.log('⏰ Timestamp:', new Date().toISOString());
+        console.log('🔍 Votes array:', castVoteDto.votes);
+        console.log('🔍 Vote count:', castVoteDto.votes.length);
+        
+        // Debug abstention votes specifically
+        const abstentionVotes = castVoteDto.votes.filter(vote => vote.isAbstention || vote.candidateId === null);
+        console.log('🔍 Abstention votes found:', abstentionVotes.length);
+        if (abstentionVotes.length > 0) {
+          console.log('🔍 Abstention vote details:', abstentionVotes);
+        }
 
         // Validate required fields
         if (!castVoteDto.ballotId) {
           console.error('❌ Missing ballotId in request');
           throw new BadRequestException('Ballot ID is required');
         }
-        if (!castVoteDto.votes || !Array.isArray(castVoteDto.votes) || castVoteDto.votes.length === 0) {
+        if (!castVoteDto.votes || !Array.isArray(castVoteDto.votes)) {
           console.error('❌ Invalid votes array:', castVoteDto.votes);
-          throw new BadRequestException('Votes array is required and must not be empty');
+          throw new BadRequestException('Votes must be an array');
         }
 
       const { ballotId, votes } = castVoteDto;
@@ -810,8 +826,14 @@ export class BallotService {
       // Validate each vote
       console.log('🗳️ Validating votes:', votes);
       for (const vote of votes) {
-        const { positionId, candidateId } = vote;
-        console.log('🔍 Validating vote:', { positionId, candidateId });
+        const { positionId, candidateId, isAbstention } = vote;
+        console.log('🔍 Validating vote:', { positionId, candidateId, isAbstention });
+
+        // Skip validation for abstention votes
+        if (isAbstention || candidateId === null) {
+          console.log('🔍 Skipping validation for abstention vote:', { positionId, candidateId });
+          continue;
+        }
 
         // Check if position is in this ballot
         const ballotPosition = ballot.ballotPositions.find(
@@ -858,56 +880,70 @@ export class BallotService {
         } else {
           // Process actual votes
           for (const vote of votes) {
-          const { positionId, candidateId } = vote;
-          console.log('🗳️ Creating vote for:', { positionId, candidateId });
+          const { positionId, candidateId, isAbstention } = vote;
+          console.log('🗳️ Creating vote for:', { positionId, candidateId, isAbstention });
           
-          // Create vote record
-          const voteData_create: any = {
-            id: this.generateId(),
-            // Relation connections (preferred over raw FK fields for required relations)
-            voter: { connect: { id: userId } },
-            candidate: { connect: { id: candidateId } },
-            position: { connect: { id: positionId } },
-            ballot: { connect: { id: ballotId } },
-            // Metadata
-            ipAddress: castVoteDto.ipAddress || null,
-            userAgent: castVoteDto.userAgent || null,
-            sessionId: castVoteDto.sessionId || null,
-          };
+          // Handle abstention votes differently
+          if (isAbstention || candidateId === null) {
+            console.log('🗳️ Processing abstention vote for position:', positionId);
+            console.log('🗳️ Abstention votes are NOT counted as actual votes - they are recorded for participation tracking only');
+            
+            // For abstention, we don't create a vote record because abstain votes should not be counted
+            // We only record the abstention in the user ballot history for participation tracking
+            // The abstention will be tracked through the UserBallotHistory record
+            console.log('✅ Abstention recorded for position:', positionId, '- no vote record created');
+            continue; // Skip creating vote record for abstention
+            
+          } else {
+            // Handle regular votes
+            const voteData_create: any = {
+              id: this.generateId(),
+              // Relation connections (preferred over raw FK fields for required relations)
+              voter: { connect: { id: userId } },
+              candidate: { connect: { id: candidateId } },
+              position: { connect: { id: positionId } },
+              ballot: { connect: { id: ballotId } },
+              // Metadata
+              ipAddress: castVoteDto.ipAddress || null,
+              userAgent: castVoteDto.userAgent || null,
+              sessionId: castVoteDto.sessionId || null,
+            };
 
-          // Only add election connection if ballot has an election
-          if (electionIdValue) {
-            voteData_create.election = { connect: { id: electionIdValue } };
-          }
-          // If no election, we can omit the election field entirely since it's now optional
+            // Only add election connection if ballot has an election
+            if (electionIdValue) {
+              voteData_create.election = { connect: { id: electionIdValue } };
+            }
+            // If no election, we can omit the election field entirely since it's now optional
 
-          const voteRecord = await tx.vote.create({
-            data: voteData_create,
-            include: {
-              voter: {
-                select: {
-                  id: true,
-                  Voter_Name: true,
-                  Voter_StudentId: true,
-                }
-              },
-              candidate: {
-                select: {
-                  id: true,
-                  Candidate_Name: true,
-                  Candidate_StudentId: true,
-                }
-              },
-              position: {
-                select: {
-                  id: true,
-                  Position_Title: true,
+            const voteRecord = await tx.vote.create({
+              data: voteData_create,
+              include: {
+                voter: {
+                  select: {
+                    id: true,
+                    Voter_Name: true,
+                    Voter_StudentId: true,
+                  }
+                },
+                candidate: {
+                  select: {
+                    id: true,
+                    Candidate_Name: true,
+                    Candidate_StudentId: true,
+                  }
+                },
+                position: {
+                  select: {
+                    id: true,
+                    Position_Title: true,
+                  }
                 }
               }
-            }
-          });
-          
-          createdVotes.push(voteRecord);
+            });
+            
+            createdVotes.push(voteRecord);
+            console.log('✅ Vote created:', voteRecord.id);
+          }
           }
         }
 
@@ -1015,6 +1051,14 @@ export class BallotService {
         let totalVotes = 0;
 
         for (const candidate of candidates) {
+          // Skip abstain candidates from results calculation
+          if (candidate.candidate.Candidate_Name === 'Abstain' || 
+              candidate.candidate.Candidate_StudentId === 'ABSTAIN' ||
+              candidate.BallotCandidate_CandidateId.startsWith('ABSTAIN_')) {
+            console.log('🚫 Skipping abstain candidate from results:', candidate.BallotCandidate_CandidateId);
+            continue;
+          }
+
           const voteCount = await this.prisma.vote.count({
             where: {
               ballotId: ballotId,
@@ -1231,7 +1275,8 @@ export class BallotService {
       templateId: ballotData.templateId,
       requireAllPositions: ballotData.Ballot_RequireAllPositions,
       showResults: ballotData.Ballot_ShowResults,
-      showLiveResults: ballotData.Ballot_ShowLiveResults
+      showLiveResults: ballotData.Ballot_ShowLiveResults,
+      allowAbstain: ballotData.Ballot_AllowAbstain
     });
     
     const {
@@ -1243,6 +1288,7 @@ export class BallotService {
       Ballot_ShowResults,
       Ballot_ShowResultsAfter,
       Ballot_ShowLiveResults,
+      Ballot_AllowAbstain,
       templateId
     } = ballotData;
 

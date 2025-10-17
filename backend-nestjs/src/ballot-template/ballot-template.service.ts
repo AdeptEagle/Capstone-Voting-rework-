@@ -202,6 +202,7 @@ export class BallotTemplateService {
       Ballot_ShowResults: templateData.showResults !== false,
       Ballot_ShowResultsAfter: createBallotDto.showResultsAfter,
       Ballot_ShowLiveResults: templateData.showLiveResults !== false,
+      Ballot_AllowAbstain: createBallotDto.allowAbstain !== undefined ? createBallotDto.allowAbstain : false,
       templateId: templateId, // Pass template ID to create positions from template
       candidateIds: createBallotDto.candidateIds || [], // Use provided candidates or empty array
     };

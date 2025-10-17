@@ -31,5 +31,19 @@ RUN npm prune --production
 # Expose port (Railway uses PORT environment variable)
 EXPOSE 8080
 
-# Start the application
+# Create entrypoint script to handle database initialization
+RUN echo '#!/bin/sh' > /app/entrypoint.sh && \
+    echo 'echo "🔍 Checking database state..."' >> /app/entrypoint.sh && \
+    echo 'if npx prisma migrate deploy 2>/dev/null; then' >> /app/entrypoint.sh && \
+    echo '  echo "✅ Migrations applied successfully"' >> /app/entrypoint.sh && \
+    echo 'else' >> /app/entrypoint.sh && \
+    echo '  echo "⚠️  Migration failed, using db push instead..."' >> /app/entrypoint.sh && \
+    echo '  npx prisma db push' >> /app/entrypoint.sh && \
+    echo 'fi' >> /app/entrypoint.sh && \
+    echo 'npx prisma generate' >> /app/entrypoint.sh && \
+    echo 'exec "$@"' >> /app/entrypoint.sh && \
+    chmod +x /app/entrypoint.sh
+
+# Use entrypoint script
+ENTRYPOINT ["/app/entrypoint.sh"]
 CMD ["npm", "run", "start:prod"] 

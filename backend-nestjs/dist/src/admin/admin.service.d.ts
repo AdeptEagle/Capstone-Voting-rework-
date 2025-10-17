@@ -155,9 +155,9 @@ export declare class AdminService {
             createdAt: Date;
             updatedAt: Date;
             _count: {
+                ballots: number;
                 courses: number;
                 departments: number;
-                elections: number;
             };
         }[];
     }>;
@@ -173,13 +173,13 @@ export declare class AdminService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            isActive: boolean;
             loginTime: Date;
             logoutTime: Date | null;
             duration: number | null;
             ipAddress: string | null;
             userAgent: string | null;
             sessionId: string | null;
+            isActive: boolean;
             adminId: string;
         })[];
         pagination: {
@@ -203,13 +203,13 @@ export declare class AdminService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            isActive: boolean;
             loginTime: Date;
             logoutTime: Date | null;
             duration: number | null;
             ipAddress: string | null;
             userAgent: string | null;
             sessionId: string | null;
+            isActive: boolean;
             adminId: string;
         })[];
     }>;
@@ -224,13 +224,13 @@ export declare class AdminService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        isActive: boolean;
         loginTime: Date;
         logoutTime: Date | null;
         duration: number | null;
         ipAddress: string | null;
         userAgent: string | null;
         sessionId: string | null;
+        isActive: boolean;
         adminId: string;
     }>;
     getUserLoginLogs(page?: number, limit?: number, searchTerm?: string, department?: string, course?: string): Promise<{
@@ -251,7 +251,6 @@ export declare class AdminService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            isActive: boolean;
             userId: string;
             loginTime: Date;
             logoutTime: Date | null;
@@ -259,6 +258,7 @@ export declare class AdminService {
             ipAddress: string | null;
             userAgent: string | null;
             sessionId: string | null;
+            isActive: boolean;
         })[];
         pagination: {
             page: number;
@@ -284,7 +284,6 @@ export declare class AdminService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            isActive: boolean;
             userId: string;
             loginTime: Date;
             logoutTime: Date | null;
@@ -292,6 +291,7 @@ export declare class AdminService {
             ipAddress: string | null;
             userAgent: string | null;
             sessionId: string | null;
+            isActive: boolean;
         })[];
     }>;
     getUserLoginLogById(id: string): Promise<{
@@ -311,7 +311,6 @@ export declare class AdminService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        isActive: boolean;
         userId: string;
         loginTime: Date;
         logoutTime: Date | null;
@@ -319,5 +318,6 @@ export declare class AdminService {
         ipAddress: string | null;
         userAgent: string | null;
         sessionId: string | null;
+        isActive: boolean;
     }>;
 }

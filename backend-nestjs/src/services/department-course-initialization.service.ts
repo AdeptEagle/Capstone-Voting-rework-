@@ -101,7 +101,14 @@ export class DepartmentCourseInitializationService implements OnModuleInit {
         // Ensure courses under each department
         for (const dep of catalog) {
           for (const course of dep.courses) {
-            const existingCourse = await this.prisma.course.findUnique({ where: { id: course.id } });
+            const existingCourse = await this.prisma.course.findFirst({ 
+              where: { 
+                OR: [
+                  { id: course.id },
+                  { Course_Code: course.code }
+                ]
+              } 
+            });
             if (!existingCourse) {
               try {
                 console.log(`📚 Creating course: ${course.name} (${course.id}) under ${dep.id}`);
@@ -116,7 +123,11 @@ export class DepartmentCourseInitializationService implements OnModuleInit {
                   },
                 });
               } catch (err) {
-                console.error(`❌ Failed creating course ${course.id}:`, err);
+                if (err.code === 'P2002') {
+                  console.log(`⚠️ Course ${course.name} already exists, skipping...`);
+                } else {
+                  console.error(`❌ Failed creating course ${course.id}:`, err);
+                }
               }
             }
           }

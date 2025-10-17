@@ -7,12 +7,10 @@ import { AdminModule } from './admin/admin.module';
 import { VoterModule } from './voter/voter.module';
 import { CandidateModule } from './candidate/candidate.module';
 import { PositionModule } from './position/position.module';
-import { ElectionModule } from './election/election.module';
 import { VoteModule } from './vote/vote.module';
 import { DepartmentModule } from './department/department.module';
 import { CourseModule } from './course/course.module';
 import { FileUploadModule } from './modules/file-upload.module';
-import { ElectionAssignmentModule } from './election-assignment/election-assignment.module';
 import { AuditModule } from './audit/audit.module';
 import { TrashModule } from './trash/trash.module';
 import { BallotModule } from './ballot/ballot.module';
@@ -40,12 +38,10 @@ import { HealthModule } from './health/health.module';
     VoterModule,
     CandidateModule,
     PositionModule,
-    ElectionModule,
     VoteModule,
     DepartmentModule,
     CourseModule,
     FileUploadModule,
-    ElectionAssignmentModule,
     AuditModule,
     TrashModule,
     BallotModule,

@@ -157,14 +157,14 @@ export declare class CourseService {
         deletedAt: Date | null;
         isDeleted: boolean;
         departmentId: string | null;
-        courseId: string | null;
-        positionId: string;
         Candidate_Name: string;
         Candidate_Email: string;
         Candidate_StudentId: string;
         photo: string | null;
         manifesto: string | null;
         party_list_name: string | null;
+        courseId: string | null;
+        positionId: string;
         partyListId: string | null;
     })[]>;
 }

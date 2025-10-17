@@ -4,5 +4,6 @@ export declare class CreateBallotFromTemplateDto {
     startDate: string;
     endDate: string;
     showResultsAfter?: string;
+    allowAbstain?: boolean;
     candidateIds?: string[];
 }

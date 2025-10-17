@@ -6,7 +6,6 @@ export declare class PositionController {
     getAllPositions(req: any): Promise<({
         _count: {
             candidates: number;
-            electionPositions: number;
             votes: number;
         };
     } & {
@@ -25,7 +24,6 @@ export declare class PositionController {
         position: {
             _count: {
                 candidates: number;
-                electionPositions: number;
                 votes: number;
             };
         } & {
@@ -43,7 +41,6 @@ export declare class PositionController {
     getPositionById(id: string): Promise<{
         _count: {
             candidates: number;
-            electionPositions: number;
             votes: number;
         };
     } & {
@@ -62,7 +59,6 @@ export declare class PositionController {
         position: {
             _count: {
                 candidates: number;
-                electionPositions: number;
                 votes: number;
             };
         } & {

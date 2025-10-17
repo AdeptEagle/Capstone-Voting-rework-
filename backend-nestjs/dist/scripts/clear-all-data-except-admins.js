@@ -19,9 +19,6 @@ async function clearAllDataExceptAdmins() {
         await prisma.ballot.deleteMany();
         console.log('✅ Ballot data cleared');
         console.log('🗑️ Clearing election data...');
-        await prisma.electionCandidate.deleteMany();
-        await prisma.electionPosition.deleteMany();
-        await prisma.election.deleteMany();
         console.log('✅ Election data cleared');
         console.log('🗑️ Clearing candidates and positions...');
         await prisma.candidate.deleteMany();
@@ -57,9 +54,6 @@ async function clearAllDataExceptAdmins() {
             ballotCandidates: await prisma.ballotCandidate.count(),
             ballotPositions: await prisma.ballotPosition.count(),
             ballots: await prisma.ballot.count(),
-            electionCandidates: await prisma.electionCandidate.count(),
-            electionPositions: await prisma.electionPosition.count(),
-            elections: await prisma.election.count(),
             candidates: await prisma.candidate.count(),
             positions: await prisma.position.count(),
             partyLists: await prisma.partyList.count(),

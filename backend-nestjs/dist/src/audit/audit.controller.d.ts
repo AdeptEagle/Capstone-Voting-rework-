@@ -8,8 +8,8 @@ export declare class AuditController {
         data: {
             id: string;
             createdAt: Date;
-            electionId: string | null;
             userId: string | null;
+            electionId: string | null;
             timestamp: Date;
             action: string;
             details: import("@prisma/client/runtime/library").JsonValue | null;
@@ -40,7 +40,7 @@ export declare class AuditController {
         success: boolean;
         message: string;
         data: {
-            electionId: string;
+            ballotId: string;
             totalVotes: number;
             verifiedVotes: number;
             disputedVotes: number;
@@ -57,7 +57,7 @@ export declare class AuditController {
             voterId: string;
             totalVotes: number;
             elections: Array<{
-                electionId: string;
+                ballotId: string;
                 electionTitle: string;
                 voteCount: number;
                 lastVoteDate: Date;
@@ -81,7 +81,7 @@ export declare class AuditController {
         success: boolean;
         message: string;
         data: {
-            electionId: string;
+            ballotId: string;
             exportDate: Date;
             auditReport: any;
             voteDetails: any[];
@@ -97,7 +97,7 @@ export declare class AuditController {
             verificationCode: string;
             voterName: string;
             candidateName: string;
-            electionTitle: string;
+            ballotTitle: string;
             positionTitle: string;
             timestamp: Date;
             integrityVerified: boolean;

@@ -31,7 +31,6 @@ export class PositionService {
           select: {
             candidates: true,
             votes: true,
-            electionPositions: true,
           },
         },
       },
@@ -82,7 +81,6 @@ export class PositionService {
           select: {
             candidates: true,
             votes: true,
-            electionPositions: true,
           },
         },
       },
@@ -102,7 +100,6 @@ export class PositionService {
           select: {
             candidates: true,
             votes: true,
-            electionPositions: true,
           },
         },
       },
@@ -159,7 +156,6 @@ export class PositionService {
           select: {
             candidates: true,
             votes: true,
-            electionPositions: true,
           },
         },
       },
@@ -188,7 +184,6 @@ export class PositionService {
           select: {
             candidates: true,
             votes: true,
-            electionPositions: true,
           },
         },
       },

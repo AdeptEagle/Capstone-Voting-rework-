@@ -38,8 +38,8 @@ export declare class AuditService {
     getAllAuditLogs(): Promise<{
         id: string;
         createdAt: Date;
-        electionId: string | null;
         userId: string | null;
+        electionId: string | null;
         timestamp: Date;
         action: string;
         details: import("@prisma/client/runtime/library").JsonValue | null;
@@ -50,7 +50,7 @@ export declare class AuditService {
     generateVerificationCode(): string;
     generateAuditHash(voteData: {
         voterId: string;
-        electionId: string;
+        ballotId: string;
         candidateId: string;
         timestamp: Date;
     }): string;
@@ -58,7 +58,7 @@ export declare class AuditService {
     createVoteAudit(voteData: {
         voteId: string;
         voterId: string;
-        electionId: string;
+        ballotId: string;
         candidateId: string;
         timestamp: Date;
         ipAddress?: string;
@@ -73,7 +73,7 @@ export declare class AuditService {
     }>;
     detectSuspiciousPatterns(electionId: string): Promise<SecurityAlert[]>;
     getElectionAuditReport(electionId: string): Promise<{
-        electionId: string;
+        ballotId: string;
         totalVotes: number;
         verifiedVotes: number;
         disputedVotes: number;
@@ -86,7 +86,7 @@ export declare class AuditService {
         voterId: string;
         totalVotes: number;
         elections: Array<{
-            electionId: string;
+            ballotId: string;
             electionTitle: string;
             voteCount: number;
             lastVoteDate: Date;
@@ -95,7 +95,7 @@ export declare class AuditService {
         auditTrail: AuditEvent[];
     }>;
     exportAuditData(electionId: string): Promise<{
-        electionId: string;
+        ballotId: string;
         exportDate: Date;
         auditReport: any;
         voteDetails: any[];

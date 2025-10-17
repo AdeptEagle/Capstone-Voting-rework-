@@ -28,6 +28,7 @@ let CandidateService = class CandidateService {
                     select: {
                         id: true,
                         Position_Title: true,
+                        displayOrder: true,
                     },
                 },
                 department: {
@@ -54,7 +55,7 @@ let CandidateService = class CandidateService {
                 _count: {
                     select: {
                         votes: true,
-                        electionCandidates: true,
+                        ballotCandidates: true,
                     },
                 },
             },
@@ -204,7 +205,7 @@ let CandidateService = class CandidateService {
                 _count: {
                     select: {
                         votes: true,
-                        electionCandidates: true,
+                        ballotCandidates: true,
                     },
                 },
             },
@@ -371,7 +372,7 @@ let CandidateService = class CandidateService {
                 _count: {
                     select: {
                         votes: true,
-                        electionCandidates: true,
+                        ballotCandidates: true,
                     },
                 },
             },

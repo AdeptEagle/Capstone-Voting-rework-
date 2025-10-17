@@ -25,10 +25,10 @@ export declare class VoterService {
         deletedAt: Date | null;
         isDeleted: boolean;
         departmentId: string;
+        courseId: string;
         Voter_Name: string;
         Voter_Email: string;
         Voter_StudentId: string;
-        courseId: string;
         hasVoted: boolean;
     })[]>;
     getVoterById(id: string): Promise<{
@@ -49,10 +49,10 @@ export declare class VoterService {
         deletedAt: Date | null;
         isDeleted: boolean;
         departmentId: string;
+        courseId: string;
         Voter_Name: string;
         Voter_Email: string;
         Voter_StudentId: string;
-        courseId: string;
         hasVoted: boolean;
     }>;
     getVoterByStudentId(studentId: string): Promise<{
@@ -73,10 +73,10 @@ export declare class VoterService {
         deletedAt: Date | null;
         isDeleted: boolean;
         departmentId: string;
+        courseId: string;
         Voter_Name: string;
         Voter_Email: string;
         Voter_StudentId: string;
-        courseId: string;
         hasVoted: boolean;
     }>;
     createVoter(createVoterDto: CreateVoterDto): Promise<{
@@ -120,10 +120,10 @@ export declare class VoterService {
             deletedAt: Date | null;
             isDeleted: boolean;
             departmentId: string;
+            courseId: string;
             Voter_Name: string;
             Voter_Email: string;
             Voter_StudentId: string;
-            courseId: string;
             hasVoted: boolean;
         };
     }>;
@@ -140,10 +140,10 @@ export declare class VoterService {
             deletedAt: Date | null;
             isDeleted: boolean;
             departmentId: string;
+            courseId: string;
             Voter_Name: string;
             Voter_Email: string;
             Voter_StudentId: string;
-            courseId: string;
             hasVoted: boolean;
         };
     }>;
@@ -157,10 +157,10 @@ export declare class VoterService {
             deletedAt: Date | null;
             isDeleted: boolean;
             departmentId: string;
+            courseId: string;
             Voter_Name: string;
             Voter_Email: string;
             Voter_StudentId: string;
-            courseId: string;
             hasVoted: boolean;
         };
     }>;
@@ -230,10 +230,6 @@ export declare class VoterService {
                 id: string;
                 Position_Title: string;
             };
-            election: {
-                id: string;
-                Election_Title: string;
-            };
             candidate: {
                 id: string;
                 Candidate_Name: string;
@@ -242,13 +238,13 @@ export declare class VoterService {
         } & {
             id: string;
             createdAt: Date;
-            electionId: string | null;
             positionId: string;
-            candidateId: string;
             ipAddress: string | null;
             userAgent: string | null;
             sessionId: string | null;
             auditHash: string | null;
+            candidateId: string;
+            electionId: string | null;
             verificationCode: string | null;
             voterId: string;
             ballotId: string | null;

@@ -20,6 +20,7 @@ export class CandidateService {
           select: {
             id: true,
             Position_Title: true,
+            displayOrder: true,
           },
         },
         department: {
@@ -46,7 +47,7 @@ export class CandidateService {
         _count: {
           select: {
             votes: true,
-            electionCandidates: true,
+            ballotCandidates: true,
           },
         },
       },
@@ -219,7 +220,7 @@ export class CandidateService {
         _count: {
           select: {
             votes: true,
-            electionCandidates: true,
+            ballotCandidates: true,
           },
         },
       },
@@ -418,7 +419,7 @@ export class CandidateService {
         _count: {
           select: {
             votes: true,
-            electionCandidates: true,
+            ballotCandidates: true,
           },
         },
       },

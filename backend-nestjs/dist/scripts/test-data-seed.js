@@ -290,16 +290,18 @@ async function seedTestData() {
             }),
         ]);
         console.log('🏛️ Creating dummy election for vote compatibility...');
-        const dummyElection = await prisma.election.create({
+        const dummyBallot = await prisma.ballot.create({
             data: {
                 id: generateId(),
-                Election_Title: 'Dummy Election for Ballot System',
-                Election_Description: 'Dummy election to maintain vote table compatibility',
-                startDate: new Date(),
-                endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
-                isActive: false,
-                status: 'draft',
-                createdBy: admin.id,
+                Ballot_Title: 'Dummy Ballot for Ballot System',
+                Ballot_Description: 'Dummy ballot to maintain vote table compatibility',
+                Ballot_StartDate: new Date(),
+                Ballot_EndDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+                Ballot_IsActive: false,
+                Ballot_Status: 'DRAFT',
+                createdByAdmin: {
+                    connect: { id: admin.id }
+                },
             },
         });
         console.log('📋 Creating ballots...');

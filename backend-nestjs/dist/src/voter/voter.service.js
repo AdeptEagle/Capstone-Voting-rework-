@@ -444,12 +444,6 @@ let VoterService = class VoterService {
                                 Position_Title: true,
                             },
                         },
-                        election: {
-                            select: {
-                                id: true,
-                                Election_Title: true,
-                            },
-                        },
                     },
                     orderBy: {
                         createdAt: 'desc',
@@ -609,12 +603,6 @@ let VoterService = class VoterService {
                                 Position_Title: true,
                             },
                         },
-                        election: {
-                            select: {
-                                id: true,
-                                Election_Title: true,
-                            },
-                        },
                     },
                 },
             },
@@ -623,7 +611,7 @@ let VoterService = class VoterService {
             throw new common_1.NotFoundException('Voter not found');
         }
         const votingDetails = voter.ballotHistory.map(history => {
-            const ballotVotes = voter.votes.filter(vote => vote.electionId === 'ELEC-12');
+            const ballotVotes = voter.votes.filter(vote => vote.ballotId === history.ballot.id);
             return {
                 ballot: {
                     id: history.ballot.id,

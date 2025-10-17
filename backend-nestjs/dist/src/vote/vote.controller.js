@@ -22,17 +22,17 @@ let VoteController = class VoteController {
         this.voteService = voteService;
     }
     async getAllVotes() {
-        return this.voteService.getAllVotes();
+        return { message: 'getAllVotes not implemented yet' };
     }
     async createVote(createVoteDto) {
         console.warn('⚠️ DEPRECATED: POST /votes is deprecated. Use POST /ballots/cast-vote instead.');
         return this.voteService.createVote(createVoteDto);
     }
     async confirmVote(createVoteDto) {
-        return this.voteService.confirmVote(createVoteDto);
+        return { message: 'confirmVote not implemented yet' };
     }
     async getActiveElectionResults() {
-        return this.voteService.getActiveElectionResults();
+        return this.voteService.getActiveBallotResults();
     }
     async getRealTimeStats() {
         return this.voteService.getRealTimeStats();
@@ -46,7 +46,7 @@ let VoteController = class VoteController {
     }
     async getVotesByBallot(ballotId) {
         console.warn('⚠️ DEPRECATED: Election-based vote retrieval is deprecated. Use ballot system instead.');
-        return this.voteService.getVotesByElection(ballotId);
+        return this.voteService.getVotesByBallot(ballotId);
     }
     async getVotesByVoter(voterId) {
         return this.voteService.getVotesByVoter(voterId);

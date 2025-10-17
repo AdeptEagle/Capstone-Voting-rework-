@@ -259,13 +259,19 @@ export class AnalyticsService {
 
       const totalCandidates = ballotCandidates.length;
       const totalVotes = ballotCandidates.reduce((total, candidate) => 
-        total + candidate.votes.length, 0
+        total + candidate.votes.filter(vote => 
+          vote.candidateId !== 'ABSTAIN' &&
+          !vote.candidateId.startsWith('ABSTAIN_')
+        ).length, 0
       );
       
       // Update global position winners across all parties
       ballotCandidates.forEach(candidate => {
         const positionId = candidate.positionId as unknown as string;
-        const candVotes = candidate.votes.length;
+        const candVotes = candidate.votes.filter(vote => 
+          vote.candidateId !== 'ABSTAIN' &&
+          !vote.candidateId.startsWith('ABSTAIN_')
+        ).length;
         if (!globalPositionWinners[positionId] || candVotes > globalPositionWinners[positionId].votes) {
           globalPositionWinners[positionId] = {
             partylistId: partylist.id,
@@ -276,7 +282,19 @@ export class AnalyticsService {
       });
 
       // Calculate vote share (total votes by this partylist / total votes in system)
-      const allVotes = await this.prisma.vote.count({ where: whereClause });
+      const abstainExclusionClause = {
+        ...whereClause,
+        candidate: {
+          NOT: {
+            OR: [
+              { Candidate_Name: 'Abstain' },
+              { Candidate_StudentId: 'ABSTAIN' },
+              { id: { startsWith: 'ABSTAIN_' } }
+            ]
+          }
+        }
+      };
+      const allVotes = await this.prisma.vote.count({ where: abstainExclusionClause });
       const voteShare = allVotes > 0 ? (totalVotes / allVotes) * 100 : 0;
       
       // Return interim data to compute success after global winners are known
@@ -459,15 +477,29 @@ export class AnalyticsService {
   }
 
   private async getSummaryAnalytics(whereClause: any) {
+    // Exclude abstain votes from analytics
+    const abstainExclusionClause = {
+      ...whereClause,
+      candidate: {
+        NOT: {
+          OR: [
+            { Candidate_Name: 'Abstain' },
+            { Candidate_StudentId: 'ABSTAIN' },
+            { id: { startsWith: 'ABSTAIN_' } }
+          ]
+        }
+      }
+    };
+
     const [totalVotes, totalVoters, positions] = await Promise.all([
-      this.prisma.vote.count({ where: whereClause }),
+      this.prisma.vote.count({ where: abstainExclusionClause }),
       this.prisma.voter.count(),
       this.prisma.position.findMany({
         include: {
           candidates: {
             include: {
               votes: {
-                where: whereClause
+                where: abstainExclusionClause
               }
             }
           }

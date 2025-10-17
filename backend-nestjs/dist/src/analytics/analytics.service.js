@@ -216,10 +216,12 @@ let AnalyticsService = class AnalyticsService {
                 ? partylist.candidates.filter(candidate => candidate.ballotCandidates?.some(bc => bc.BallotCandidate_BallotId === whereClause.ballotId))
                 : partylist.candidates;
             const totalCandidates = ballotCandidates.length;
-            const totalVotes = ballotCandidates.reduce((total, candidate) => total + candidate.votes.length, 0);
+            const totalVotes = ballotCandidates.reduce((total, candidate) => total + candidate.votes.filter(vote => vote.candidateId !== 'ABSTAIN' &&
+                !vote.candidateId.startsWith('ABSTAIN_')).length, 0);
             ballotCandidates.forEach(candidate => {
                 const positionId = candidate.positionId;
-                const candVotes = candidate.votes.length;
+                const candVotes = candidate.votes.filter(vote => vote.candidateId !== 'ABSTAIN' &&
+                    !vote.candidateId.startsWith('ABSTAIN_')).length;
                 if (!globalPositionWinners[positionId] || candVotes > globalPositionWinners[positionId].votes) {
                     globalPositionWinners[positionId] = {
                         partylistId: partylist.id,
@@ -228,7 +230,19 @@ let AnalyticsService = class AnalyticsService {
                     };
                 }
             });
-            const allVotes = await this.prisma.vote.count({ where: whereClause });
+            const abstainExclusionClause = {
+                ...whereClause,
+                candidate: {
+                    NOT: {
+                        OR: [
+                            { Candidate_Name: 'Abstain' },
+                            { Candidate_StudentId: 'ABSTAIN' },
+                            { id: { startsWith: 'ABSTAIN_' } }
+                        ]
+                    }
+                }
+            };
+            const allVotes = await this.prisma.vote.count({ where: abstainExclusionClause });
             const voteShare = allVotes > 0 ? (totalVotes / allVotes) * 100 : 0;
             return {
                 partylist,
@@ -369,15 +383,27 @@ let AnalyticsService = class AnalyticsService {
         };
     }
     async getSummaryAnalytics(whereClause) {
+        const abstainExclusionClause = {
+            ...whereClause,
+            candidate: {
+                NOT: {
+                    OR: [
+                        { Candidate_Name: 'Abstain' },
+                        { Candidate_StudentId: 'ABSTAIN' },
+                        { id: { startsWith: 'ABSTAIN_' } }
+                    ]
+                }
+            }
+        };
         const [totalVotes, totalVoters, positions] = await Promise.all([
-            this.prisma.vote.count({ where: whereClause }),
+            this.prisma.vote.count({ where: abstainExclusionClause }),
             this.prisma.voter.count(),
             this.prisma.position.findMany({
                 include: {
                     candidates: {
                         include: {
                             votes: {
-                                where: whereClause
+                                where: abstainExclusionClause
                             }
                         }
                     }

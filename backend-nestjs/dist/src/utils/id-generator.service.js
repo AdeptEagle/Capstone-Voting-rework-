@@ -47,17 +47,17 @@ let IdGeneratorService = class IdGeneratorService {
     async generateVoterId(format = 'simple') {
         return this.generateCustomId(this.prisma.voter, 'VTR', format);
     }
-    async generateElectionId(format = 'simple') {
-        return this.generateCustomId(this.prisma.election, 'ELEC', format);
+    async generateBallotId(format = 'simple') {
+        return this.generateCustomId(this.prisma.ballot, 'BALLOT', format);
     }
     async generateVoteId(format = 'simple') {
         return this.generateCustomId(this.prisma.vote, 'VOTE', format);
     }
-    async generateElectionPositionId(format = 'simple') {
-        return this.generateCustomId(this.prisma.electionPosition, 'ELECPOS', format);
+    async generateBallotPositionId(format = 'simple') {
+        return this.generateCustomId(this.prisma.ballotPosition, 'BALLOTPOS', format);
     }
-    async generateElectionCandidateId(format = 'simple') {
-        return this.generateCustomId(this.prisma.electionCandidate, 'ELECCAND', format);
+    async generateBallotCandidateId(format = 'simple') {
+        return this.generateCustomId(this.prisma.ballotCandidate, 'BALLOTCAND', format);
     }
     async generatePasswordResetTokenId(format = 'simple') {
         return this.generateCustomId(this.prisma.passwordResetToken, 'PWD', format);
@@ -76,7 +76,7 @@ let IdGeneratorService = class IdGeneratorService {
             position: this.prisma.position,
             candidate: this.prisma.candidate,
             voter: this.prisma.voter,
-            election: this.prisma.election,
+            ballot: this.prisma.ballot,
             vote: this.prisma.vote,
             admin_login_log: this.prisma.adminLoginLog,
             user_login_log: this.prisma.userLoginLog,
@@ -109,7 +109,7 @@ let IdGeneratorService = class IdGeneratorService {
             position: this.prisma.position,
             candidate: this.prisma.candidate,
             voter: this.prisma.voter,
-            election: this.prisma.election,
+            ballot: this.prisma.ballot,
             vote: this.prisma.vote,
             partylist: this.prisma.partyList,
         };

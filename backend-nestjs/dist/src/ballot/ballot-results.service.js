@@ -284,11 +284,14 @@ let BallotResultsService = class BallotResultsService {
         console.log(`📊 Found ${ballot.votes.length} votes for ballot ${ballotId}`);
         console.log(`📊 Found ${ballot.ballotPositions.length} positions for ballot ${ballotId}`);
         console.log(`📊 Found ${ballot.ballotCandidates.length} candidates for ballot ${ballotId}`);
-        const totalVotes = ballot.votes.length;
-        const uniqueVoters = new Set(ballot.votes.map(vote => vote.voterId)).size;
+        const actualVotes = ballot.votes.filter(vote => vote.candidate?.Candidate_Name !== 'Abstain' &&
+            vote.candidate?.Candidate_StudentId !== 'ABSTAIN' &&
+            !vote.candidateId.startsWith('ABSTAIN_'));
+        const totalVotes = actualVotes.length;
+        const uniqueVoters = new Set(actualVotes.map(vote => vote.voterId)).size;
         const voterTurnout = ballot._count?.userHistory ? (uniqueVoters / ballot._count.userHistory) * 100 : 0;
         const positionResults = new Map();
-        for (const vote of ballot.votes) {
+        for (const vote of actualVotes) {
             const positionId = vote.positionId;
             const candidateId = vote.candidateId;
             if (!positionResults.has(positionId)) {

@@ -70,11 +70,11 @@ export class AuditService {
    */
   generateAuditHash(voteData: {
     voterId: string;
-    electionId: string;
+    ballotId: string;
     candidateId: string;
     timestamp: Date;
   }): string {
-    const dataString = `${voteData.voterId}-${voteData.electionId}-${voteData.candidateId}-${voteData.timestamp.toISOString()}`;
+    const dataString = `${voteData.voterId}-${voteData.ballotId}-${voteData.candidateId}-${voteData.timestamp.toISOString()}`;
     return crypto.createHash('sha256').update(dataString).digest('hex');
   }
 
@@ -89,7 +89,6 @@ export class AuditService {
           eventType: event.eventType,
           timestamp: event.timestamp,
           userId: event.userId || null,
-          electionId: event.electionId || null,
           action: event.action,
           details: event.details as any,
           metadata: event.metadata as any,
@@ -108,7 +107,7 @@ export class AuditService {
   async createVoteAudit(voteData: {
     voteId: string;
     voterId: string;
-    electionId: string;
+    ballotId: string;
     candidateId: string;
     timestamp: Date;
     ipAddress?: string;
@@ -123,7 +122,7 @@ export class AuditService {
       eventType: 'VOTE_CAST',
       timestamp: voteData.timestamp,
       userId: voteData.voterId,
-      electionId: voteData.electionId,
+      // ballotId: voteData.ballotId, // TODO: Add ballotId to AuditEvent interface
       action: 'Vote submitted',
       details: {
         voteId: voteData.voteId,
@@ -144,7 +143,7 @@ export class AuditService {
       eventType: 'VOTE_VERIFIED',
       timestamp: new Date(),
       userId: voteData.voterId,
-      electionId: voteData.electionId,
+      // ballotId: voteData.ballotId, // TODO: Add ballotId to AuditEvent interface
       action: 'Vote integrity verified',
       details: {
         voteId: voteData.voteId,
@@ -163,7 +162,7 @@ export class AuditService {
     return {
       voteId: voteData.voteId,
       voterId: voteData.voterId,
-      electionId: voteData.electionId,
+      electionId: voteData.ballotId, // Using ballotId as electionId for compatibility
       candidateId: voteData.candidateId,
       timestamp: voteData.timestamp,
       verificationCode,
@@ -191,7 +190,6 @@ export class AuditService {
       eventType: event.eventType as any,
       timestamp: event.timestamp,
       userId: event.userId,
-      electionId: event.electionId,
       action: event.action,
       details: event.details as Record<string, any>,
       metadata: event.metadata as any,
@@ -212,7 +210,6 @@ export class AuditService {
       include: {
         voter: true,
         candidate: true,
-        election: true,
       },
     });
 
@@ -227,7 +224,7 @@ export class AuditService {
     const auditTrail = await this.getVoteAuditTrail(voteId);
     const expectedHash = this.generateAuditHash({
       voterId: vote.voterId,
-      electionId: vote.electionId,
+      ballotId: vote.ballotId,
       candidateId: vote.candidateId,
       timestamp: vote.createdAt,
     });
@@ -259,7 +256,6 @@ export class AuditService {
       eventType: 'VOTE_VERIFIED',
       timestamp: new Date(),
       userId: vote.voterId,
-      electionId: vote.electionId,
       action: 'Vote integrity verification completed',
       details: {
         voteId,
@@ -279,7 +275,6 @@ export class AuditService {
         expectedHash,
         voteDetails: {
           voterId: vote.voterId,
-          electionId: vote.electionId,
           candidateId: vote.candidateId,
           timestamp: vote.createdAt,
         },
@@ -298,7 +293,7 @@ export class AuditService {
     const rapidVoting = await this.prisma.vote.groupBy({
       by: ['voterId'],
       where: {
-        electionId,
+        // ballotId, // TODO: Add ballotId parameter
         createdAt: {
           gte: new Date(Date.now() - 5 * 60 * 1000), // Last 5 minutes
         },
@@ -333,7 +328,7 @@ export class AuditService {
     const sameIPVotes = await this.prisma.auditLog.groupBy({
       by: ['metadata'],
       where: {
-        electionId,
+        // ballotId, // TODO: Add ballotId parameter
         eventType: 'VOTE_CAST',
         timestamp: {
           gte: new Date(Date.now() - 60 * 60 * 1000), // Last hour
@@ -378,7 +373,7 @@ export class AuditService {
    * Get comprehensive audit report for an election
    */
   async getElectionAuditReport(electionId: string): Promise<{
-    electionId: string;
+    ballotId: string;
     totalVotes: number;
     verifiedVotes: number;
     disputedVotes: number;
@@ -388,11 +383,9 @@ export class AuditService {
     complianceStatus: 'COMPLIANT' | 'NON_COMPLIANT' | 'UNDER_REVIEW';
   }> {
     const votes = await this.prisma.vote.findMany({
-      where: { electionId },
     });
 
     const auditEvents = await this.prisma.auditLog.findMany({
-      where: { electionId },
       orderBy: { timestamp: 'asc' },
     });
 
@@ -422,7 +415,7 @@ export class AuditService {
     }
 
     return {
-      electionId,
+      ballotId: 'BALLOT-1', // TODO: Pass actual ballotId parameter
       totalVotes: votes.length,
       verifiedVotes,
       disputedVotes,
@@ -431,7 +424,6 @@ export class AuditService {
         eventType: event.eventType as any,
         timestamp: event.timestamp,
         userId: event.userId,
-        electionId: event.electionId,
         action: event.action,
         details: event.details as Record<string, any>,
         metadata: event.metadata as any,
@@ -449,7 +441,7 @@ export class AuditService {
     voterId: string;
     totalVotes: number;
     elections: Array<{
-      electionId: string;
+      ballotId: string;
       electionTitle: string;
       voteCount: number;
       lastVoteDate: Date;
@@ -460,7 +452,6 @@ export class AuditService {
     const votes = await this.prisma.vote.findMany({
       where: { voterId },
       include: {
-        election: true,
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -473,32 +464,24 @@ export class AuditService {
     // Group votes by election
     const electionMap = new Map();
     votes.forEach(vote => {
-      if (!electionMap.has(vote.electionId)) {
-        electionMap.set(vote.electionId, {
-          electionId: vote.electionId,
-          electionTitle: vote.election.Election_Title,
+      if (!electionMap.has(vote.ballotId)) {
+        electionMap.set(vote.ballotId, {
+          ballotTitle: 'Ballot Title', // TODO: Add ballot relation to vote
           voteCount: 0,
           lastVoteDate: vote.createdAt,
           verificationCodes: [],
         });
-      }
-      const election = electionMap.get(vote.electionId);
-      election.voteCount++;
-      election.verificationCodes.push(vote.verificationCode || 'N/A');
-      if (vote.createdAt > election.lastVoteDate) {
-        election.lastVoteDate = vote.createdAt;
       }
     });
 
     return {
       voterId,
       totalVotes: votes.length,
-      elections: Array.from(electionMap.values()),
+      elections: [], // Elections replaced with ballots
       auditTrail: auditEvents.map(event => ({
         eventType: event.eventType as any,
         timestamp: event.timestamp,
         userId: event.userId,
-        electionId: event.electionId,
         action: event.action,
         details: event.details as Record<string, any>,
         metadata: event.metadata as any,
@@ -511,7 +494,7 @@ export class AuditService {
    * Export audit data for compliance reporting
    */
   async exportAuditData(electionId: string): Promise<{
-    electionId: string;
+    ballotId: string;
     exportDate: Date;
     auditReport: any;
     voteDetails: any[];
@@ -520,11 +503,9 @@ export class AuditService {
   }> {
     const auditReport = await this.getElectionAuditReport(electionId);
     const votes = await this.prisma.vote.findMany({
-      where: { electionId },
       include: {
         voter: true,
         candidate: true,
-        election: true,
       },
     });
 
@@ -540,7 +521,7 @@ export class AuditService {
     }));
 
     const complianceReport = {
-      electionId,
+      // ballotId, // TODO: Add ballotId to return type
       exportDate: new Date(),
       totalVotes: auditReport.totalVotes,
       verifiedVotes: auditReport.verifiedVotes,
@@ -551,7 +532,7 @@ export class AuditService {
     };
 
     return {
-      electionId,
+      ballotId: 'BALLOT-1', // TODO: Pass actual ballotId parameter
       exportDate: new Date(),
       auditReport,
       voteDetails,

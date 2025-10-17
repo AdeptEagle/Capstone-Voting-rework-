@@ -181,7 +181,7 @@ export class AuditController {
         include: {
           voter: true,
           candidate: true,
-          election: true,
+          ballot: true,
           position: true,
         },
       });
@@ -205,7 +205,7 @@ export class AuditController {
           verificationCode: vote.verificationCode,
           voterName: vote.voter.Voter_Name,
           candidateName: vote.candidate.Candidate_Name,
-          electionTitle: vote.election.Election_Title,
+          ballotTitle: vote.ballot.Ballot_Title,
           positionTitle: vote.position.Position_Title,
           timestamp: vote.createdAt,
           integrityVerified: integrityResult.verified,

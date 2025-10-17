@@ -175,6 +175,7 @@ let BallotTemplateService = class BallotTemplateService {
             Ballot_ShowResults: templateData.showResults !== false,
             Ballot_ShowResultsAfter: createBallotDto.showResultsAfter,
             Ballot_ShowLiveResults: templateData.showLiveResults !== false,
+            Ballot_AllowAbstain: createBallotDto.allowAbstain !== undefined ? createBallotDto.allowAbstain : false,
             templateId: templateId,
             candidateIds: createBallotDto.candidateIds || [],
         };

@@ -90,7 +90,6 @@ export declare class AuthService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        isActive: boolean;
         userId: string;
         loginTime: Date;
         logoutTime: Date | null;
@@ -98,6 +97,7 @@ export declare class AuthService {
         ipAddress: string | null;
         userAgent: string | null;
         sessionId: string | null;
+        isActive: boolean;
     }>;
     userRegister(userRegisterDto: {
         Voter_Name: string;
@@ -138,6 +138,9 @@ export declare class AuthService {
         token: string;
         newPassword: string;
     }): Promise<{
+        message: string;
+    }>;
+    changePassword(userId: string, userType: 'voter' | 'admin', currentPassword: string, newPassword: string): Promise<{
         message: string;
     }>;
     cleanupExpiredTokens(): Promise<{

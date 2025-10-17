@@ -61,14 +61,13 @@ async function main() {
   console.log('🧹 Clearing existing data...');
   await prisma.auditLog.deleteMany();
   await prisma.vote.deleteMany();
-  await prisma.electionCandidate.deleteMany();
-  await prisma.electionPosition.deleteMany();
+  // Election tables no longer exist
   await prisma.candidate.deleteMany();
   await prisma.voter.deleteMany();
   await prisma.course.deleteMany();
   await prisma.department.deleteMany();
   await prisma.position.deleteMany();
-  await prisma.election.deleteMany();
+  // Election tables no longer exist
   await prisma.admin.deleteMany();
 
   console.log('👑 Creating super admin...');
@@ -97,41 +96,33 @@ async function main() {
   const departments = await Promise.all([
     prisma.department.create({
       data: {
-        id: generateId(),
-        Department_Name: 'Computer Science',
-        Department_Description: 'Department of Computer Science and Information Technology',
+        id: 'CBM',
+        Department_Name: 'College of Business and Management',
+        Department_Description: 'Business and Management programs',
         createdBy: superAdmin.id,
       },
     }),
     prisma.department.create({
       data: {
-        id: generateId(),
-        Department_Name: 'Engineering',
-        Department_Description: 'Department of Engineering and Technology',
+        id: 'CCS',
+        Department_Name: 'College of Computer Studies',
+        Department_Description: 'Computing and Information Technology programs',
         createdBy: superAdmin.id,
       },
     }),
     prisma.department.create({
       data: {
-        id: generateId(),
-        Department_Name: 'Business Administration',
-        Department_Description: 'Department of Business and Management',
+        id: 'CEA',
+        Department_Name: 'College of Education and Arts',
+        Department_Description: 'Education and Arts programs',
         createdBy: superAdmin.id,
       },
     }),
     prisma.department.create({
       data: {
-        id: generateId(),
-        Department_Name: 'Arts and Humanities',
-        Department_Description: 'Department of Arts, Literature, and Humanities',
-        createdBy: superAdmin.id,
-      },
-    }),
-    prisma.department.create({
-      data: {
-        id: generateId(),
-        Department_Name: 'Natural Sciences',
-        Department_Description: 'Department of Natural Sciences and Mathematics',
+        id: 'CoE',
+        Department_Name: 'College of Engineering',
+        Department_Description: 'Engineering programs',
         createdBy: superAdmin.id,
       },
     }),
@@ -139,108 +130,127 @@ async function main() {
 
   console.log('📚 Creating courses...');
   const courses = await Promise.all([
-    // Computer Science courses
+    // CBM courses
     prisma.course.create({
       data: {
-        id: generateId(),
-        Course_Name: 'Bachelor of Science in Computer Science',
-        Course_Code: 'BSCS',
-        Course_Description: '4-year degree program in Computer Science',
-        departmentId: departments[0].id,
+        id: 'BSHM',
+        Course_Name: 'BS in Hospitality Management',
+        Course_Code: 'BSHM',
+        Course_Description: 'Bachelor of Science in Hospitality Management',
+        departmentId: 'CBM',
         createdBy: superAdmin.id,
       },
     }),
     prisma.course.create({
       data: {
-        id: generateId(),
-        Course_Name: 'Bachelor of Science in Information Technology',
-        Course_Code: 'BSIT',
-        Course_Description: '4-year degree program in Information Technology',
-        departmentId: departments[0].id,
-        createdBy: superAdmin.id,
-      },
-    }),
-    // Engineering courses
-    prisma.course.create({
-      data: {
-        id: generateId(),
-        Course_Name: 'Bachelor of Science in Civil Engineering',
-        Course_Code: 'BSCE',
-        Course_Description: '5-year degree program in Civil Engineering',
-        departmentId: departments[1].id,
-        createdBy: superAdmin.id,
-      },
-    }),
-    prisma.course.create({
-      data: {
-        id: generateId(),
-        Course_Name: 'Bachelor of Science in Mechanical Engineering',
-        Course_Code: 'BSME',
-        Course_Description: '5-year degree program in Mechanical Engineering',
-        departmentId: departments[1].id,
-        createdBy: superAdmin.id,
-      },
-    }),
-    // Business courses
-    prisma.course.create({
-      data: {
-        id: generateId(),
-        Course_Name: 'Bachelor of Science in Business Administration',
-        Course_Code: 'BSBA',
-        Course_Description: '4-year degree program in Business Administration',
-        departmentId: departments[2].id,
-        createdBy: superAdmin.id,
-      },
-    }),
-    prisma.course.create({
-      data: {
-        id: generateId(),
-        Course_Name: 'Bachelor of Science in Accountancy',
+        id: 'BSA',
+        Course_Name: 'BS in Accountancy',
         Course_Code: 'BSA',
-        Course_Description: '4-year degree program in Accountancy',
-        departmentId: departments[2].id,
-        createdBy: superAdmin.id,
-      },
-    }),
-    // Arts courses
-    prisma.course.create({
-      data: {
-        id: generateId(),
-        Course_Name: 'Bachelor of Arts in English',
-        Course_Code: 'BAENG',
-        Course_Description: '4-year degree program in English Literature',
-        departmentId: departments[3].id,
+        Course_Description: 'Bachelor of Science in Accountancy',
+        departmentId: 'CBM',
         createdBy: superAdmin.id,
       },
     }),
     prisma.course.create({
       data: {
-        id: generateId(),
-        Course_Name: 'Bachelor of Arts in History',
-        Course_Code: 'BAHIS',
-        Course_Description: '4-year degree program in History',
-        departmentId: departments[3].id,
-        createdBy: superAdmin.id,
-      },
-    }),
-    // Science courses
-    prisma.course.create({
-      data: {
-        id: generateId(),
-        Course_Name: 'Bachelor of Science in Biology',
-        Course_Code: 'BSBIO',
-        Course_Description: '4-year degree program in Biology',
-        departmentId: departments[4].id,
+        id: 'BSBA-MM',
+        Course_Name: 'BS in Business Administration Major in Marketing Management',
+        Course_Code: 'BSBA-MM',
+        Course_Description: 'Bachelor of Science in Business Administration Major in Marketing Management',
+        departmentId: 'CBM',
         createdBy: superAdmin.id,
       },
     }),
     prisma.course.create({
       data: {
-        id: generateId(),
-        Course_Name: 'Bachelor of Science in Mathematics',
-        Course_Code: 'BSMATH',
-        Course_Description: '4-year degree program in Mathematics',
-        departmentId: departments[4].id,
+        id: 'BSBA-HRDM',
+        Course_Name: 'BS in Business Administration Major in Human Resource Development Management',
+        Course_Code: 'BSBA-HRDM',
+        Course_Description: 'Bachelor of Science in Business Administration Major in Human Resource Development Management',
+        departmentId: 'CBM',
+        createdBy: superAdmin.id,
+      },
+    }),
+    // CCS courses
+    prisma.course.create({
+      data: {
+        id: 'BSIT',
+        Course_Name: 'BS in Information Technology',
+        Course_Code: 'BSIT',
+        Course_Description: 'Bachelor of Science in Information Technology',
+        departmentId: 'CCS',
+        createdBy: superAdmin.id,
+      },
+    }),
+    // CEA courses
+    prisma.course.create({
+      data: {
+        id: 'BEEd-GE',
+        Course_Name: 'Bachelor in Elementary Education - General Education',
+        Course_Code: 'BEED-GE',
+        Course_Description: 'Bachelor in Elementary Education - General Education',
+        departmentId: 'CEA',
+        createdBy: superAdmin.id,
+      },
+    }),
+    prisma.course.create({
+      data: {
+        id: 'BSEd-English',
+        Course_Name: 'Bachelor in Secondary Education Major in English',
+        Course_Code: 'BSED-ENGLISH',
+        Course_Description: 'Bachelor in Secondary Education Major in English',
+        departmentId: 'CEA',
+        createdBy: superAdmin.id,
+      },
+    }),
+    prisma.course.create({
+      data: {
+        id: 'BMC',
+        Course_Name: 'Bachelor in Mass Communications',
+        Course_Code: 'BMC',
+        Course_Description: 'Bachelor in Mass Communications',
+        departmentId: 'CEA',
+        createdBy: superAdmin.id,
+      },
+    }),
+    // CoE courses
+    prisma.course.create({
+      data: {
+        id: 'BSEE',
+        Course_Name: 'BS in Electrical Engineering',
+        Course_Code: 'BSEE',
+        Course_Description: 'Bachelor of Science in Electrical Engineering',
+        departmentId: 'CoE',
+        createdBy: superAdmin.id,
+      },
+    }),
+    prisma.course.create({
+      data: {
+        id: 'BSCE',
+        Course_Name: 'BS in Civil Engineering',
+        Course_Code: 'BSCE',
+        Course_Description: 'Bachelor of Science in Civil Engineering',
+        departmentId: 'CoE',
+        createdBy: superAdmin.id,
+      },
+    }),
+    prisma.course.create({
+      data: {
+        id: 'BSME',
+        Course_Name: 'BS in Mechanical Engineering',
+        Course_Code: 'BSME',
+        Course_Description: 'Bachelor of Science in Mechanical Engineering',
+        departmentId: 'CoE',
+        createdBy: superAdmin.id,
+      },
+    }),
+    prisma.course.create({
+      data: {
+        id: 'BSIE',
+        Course_Name: 'BS in Industrial Engineering',
+        Course_Code: 'BSIE',
+        Course_Description: 'Bachelor of Science in Industrial Engineering',
+        departmentId: 'CoE',
         createdBy: superAdmin.id,
       },
     }),
@@ -425,7 +435,10 @@ async function main() {
   ]);
   */
 
-  console.log('🗳️ Creating voters...');
+  // DISABLED: Automatic voter creation removed
+  console.log('🗳️ Skipping voter creation (disabled)');
+  const voters = []; // Empty array instead of creating voters
+  /*
   const voters = await Promise.all([
     // Computer Science voters
     ...Array.from({ length: 25 }, (_, i) => ({
@@ -478,47 +491,65 @@ async function main() {
       courseId: courses[Math.floor(Math.random() * 2) + 8].id, // Random Science course
     })),
   ].map(voterData => prisma.voter.create({ data: voterData })));
+  */
 
-  console.log('🏛️ Creating election...');
-  const election = await prisma.election.create({
+  // DISABLED: Automatic ballot creation removed
+  console.log('🏛️ Skipping ballot creation (disabled)');
+  const ballot = null; // No ballot creation
+  /*
+  console.log('🏛️ Creating ballot...');
+  const ballot = await prisma.ballot.create({
     data: {
       id: generateId(),
-      Election_Title: 'Student Council Election 2024',
-      Election_Description: 'Annual election for Student Council positions',
-      startDate: new Date('2024-12-01T08:00:00Z'),
-      endDate: new Date('2024-12-01T18:00:00Z'),
-      isActive: true,
-      status: 'active',
-      createdBy: superAdmin.id,
+      Ballot_Title: 'Student Council Election 2024',
+      Ballot_Description: 'Annual election for Student Council positions',
+      Ballot_StartDate: new Date('2024-12-01T08:00:00Z'),
+      Ballot_EndDate: new Date('2024-12-01T18:00:00Z'),
+      Ballot_IsActive: true,
+      Ballot_Status: 'ACTIVE',
+      createdByAdmin: {
+        connect: { id: superAdmin.id }
+      },
     },
   });
 
-  console.log('🔗 Linking positions to election...');
-  const electionPositions = await Promise.all(
+  console.log('🔗 Linking positions to ballot...');
+  const ballotPositions = await Promise.all(
     positions.map(position =>
-      prisma.electionPosition.create({
+      prisma.ballotPosition.create({
         data: {
           id: generateId(),
-          electionId: election.id,
-          positionId: position.id,
+          BallotPosition_BallotId: ballot.id,
+          BallotPosition_PositionId: position.id,
+          BallotPosition_DisplayOrder: position.displayOrder,
+          BallotPosition_IsRequired: true,
         },
       })
     )
   );
 
-  console.log('🔗 Linking candidates to election...');
-  const electionCandidates = await Promise.all(
+  console.log('🔗 Linking candidates to ballot...');
+  const ballotCandidates = await Promise.all(
     candidates.map(candidate =>
-      prisma.electionCandidate.create({
+      prisma.ballotCandidate.create({
         data: {
           id: generateId(),
-          electionId: election.id,
-          candidateId: candidate.id,
+          ballot: {
+            connect: { id: ballot.id }
+          },
+          candidate: {
+            connect: { id: candidate.id }
+          },
+          ballotPosition: {
+            connect: { id: ballotPositions[0].id }
+          },
         },
       })
     )
   );
 
+  */
+  
   console.log('📋 Seeding ballot templates...');
   const templates = await Promise.all(
     DEFAULT_BALLOT_TEMPLATES.map(template =>
@@ -550,15 +581,14 @@ async function main() {
   console.log(`   - Departments: ${departments.length}`);
   console.log(`   - Courses: ${courses.length}`);
   console.log(`   - Positions: ${positions.length}`);
-  console.log(`   - Candidates: ${candidates.length}`);
-  console.log(`   - Voters: ${voters.length}`);
-  console.log(`   - Elections: 1`);
+  console.log(`   - Candidates: 0 (disabled)`);
+  console.log(`   - Voters: 0 (disabled)`);
+  console.log(`   - Ballots: 0 (disabled)`);
   console.log(`   - Ballot Templates: ${templates.length}`);
   console.log('');
   console.log('🔑 Default login credentials:');
   console.log('   Superadmin: superadmin / superadmin123');
   console.log('   Admin: admin / admin123');
-  console.log('   Voters: password123 (use any voter email)');
   console.log('');
   console.log('🎯 Election is active and ready for voting!');
   console.log('📋 Ballot templates are available for creating new ballots!');

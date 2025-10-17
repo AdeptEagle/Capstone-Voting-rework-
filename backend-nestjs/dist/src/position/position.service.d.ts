@@ -8,7 +8,6 @@ export declare class PositionService {
     getAllPositions(showAll?: boolean): Promise<({
         _count: {
             candidates: number;
-            electionPositions: number;
             votes: number;
         };
     } & {
@@ -27,7 +26,6 @@ export declare class PositionService {
         position: {
             _count: {
                 candidates: number;
-                electionPositions: number;
                 votes: number;
             };
         } & {
@@ -45,7 +43,6 @@ export declare class PositionService {
     getPositionById(id: string): Promise<{
         _count: {
             candidates: number;
-            electionPositions: number;
             votes: number;
         };
     } & {
@@ -64,7 +61,6 @@ export declare class PositionService {
         position: {
             _count: {
                 candidates: number;
-                electionPositions: number;
                 votes: number;
             };
         } & {

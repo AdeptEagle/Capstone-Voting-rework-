@@ -710,6 +710,69 @@ export class AuthService {
     };
   }
 
+  async changePassword(userId: string, userType: 'voter' | 'admin', currentPassword: string, newPassword: string) {
+    // Find the user
+    let user;
+    if (userType === 'voter') {
+      user = await this.prisma.voter.findUnique({
+        where: { id: userId },
+        select: {
+          id: true,
+          Voter_Email: true,
+          password: true,
+        },
+      });
+    } else {
+      user = await this.prisma.admin.findUnique({
+        where: { id: userId },
+        select: {
+          id: true,
+          Admin_Email: true,
+          password: true,
+        },
+      });
+    }
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Verify current password
+    const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password);
+    if (!isCurrentPasswordValid) {
+      throw new UnauthorizedException('Current password is incorrect');
+    }
+
+    // Hash new password
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update password
+    if (userType === 'voter') {
+      await this.prisma.voter.update({
+        where: { id: userId },
+        data: { password: hashedNewPassword },
+      });
+    } else {
+      await this.prisma.admin.update({
+        where: { id: userId },
+        data: { password: hashedNewPassword },
+      });
+    }
+
+    // Send password changed confirmation email
+    try {
+      const email = userType === 'voter' ? user.Voter_Email : user.Admin_Email;
+      await this.emailService.sendPasswordChangedEmail(email, userType);
+    } catch (error) {
+      console.error('Failed to send password changed email:', error);
+      // Don't fail the password change if email fails
+    }
+
+    return {
+      message: 'Password changed successfully',
+    };
+  }
+
   async cleanupExpiredTokens() {
     const deletedCount = await this.prisma.passwordResetToken.deleteMany({
       where: {

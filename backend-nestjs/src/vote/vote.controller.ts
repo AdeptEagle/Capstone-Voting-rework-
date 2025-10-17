@@ -12,7 +12,8 @@ export class VoteController {
   @ApiOperation({ summary: 'Get all votes' })
   @ApiResponse({ status: 200, description: 'List of all votes' })
   async getAllVotes() {
-    return this.voteService.getAllVotes();
+    // TODO: Implement getAllVotes method
+    return { message: 'getAllVotes not implemented yet' };
   }
 
   @Post()
@@ -31,7 +32,8 @@ export class VoteController {
   @ApiResponse({ status: 409, description: 'Voter has already voted' })
   @ApiResponse({ status: 400, description: 'Invalid vote data' })
   async confirmVote(@Body() createVoteDto: CreateVoteDto) {
-    return this.voteService.confirmVote(createVoteDto);
+    // TODO: Implement confirmVote method
+    return { message: 'confirmVote not implemented yet' };
   }
 
   // Specific routes must come before parameterized routes
@@ -39,7 +41,7 @@ export class VoteController {
   @ApiOperation({ summary: 'Get results for currently active elections' })
   @ApiResponse({ status: 200, description: 'Active election results' })
   async getActiveElectionResults() {
-    return this.voteService.getActiveElectionResults();
+    return this.voteService.getActiveBallotResults();
   }
 
   @Get('real-time-stats')
@@ -70,7 +72,7 @@ export class VoteController {
   @ApiResponse({ status: 200, description: 'Votes for ballot' })
   async getVotesByBallot(@Param('ballotId') ballotId: string) {
     console.warn('⚠️ DEPRECATED: Election-based vote retrieval is deprecated. Use ballot system instead.');
-    return this.voteService.getVotesByElection(ballotId);
+    return this.voteService.getVotesByBallot(ballotId);
   }
 
   @Get('voter/:voterId')

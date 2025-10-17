@@ -56,7 +56,7 @@ let PositionInitializationService = class PositionInitializationService {
                             const [candCnt, voteCnt, epCnt, bpCnt, rdCnt] = await Promise.all([
                                 this.prisma.candidate.count({ where: { positionId: found.id } }),
                                 this.prisma.vote.count({ where: { positionId: found.id } }),
-                                this.prisma.electionPosition.count({ where: { positionId: found.id } }),
+                                this.prisma.ballotPosition.count({ where: { BallotPosition_PositionId: found.id } }),
                                 this.prisma.ballotPosition.count({ where: { BallotPosition_PositionId: found.id } }),
                                 this.prisma.ballotResultDetails.count({ where: { BallotResultDetails_PositionId: found.id } }),
                             ]);
@@ -77,9 +77,13 @@ let PositionInitializationService = class PositionInitializationService {
                         }
                     }
                 }
-                const existingTitles = (await this.prisma.position.findMany({ select: { Position_Title: true } }))
-                    .map(p => p.Position_Title);
-                const missingPositions = standardPositions.filter(p => !existingTitles.includes(p.title));
+                const currentPositions = await this.prisma.position.findMany({
+                    select: { Position_Title: true, id: true }
+                });
+                const existingTitles = currentPositions.map(p => p.Position_Title);
+                const existingIds = currentPositions.map(p => p.id);
+                const missingPositions = standardPositions.filter(p => !existingTitles.includes(p.title) &&
+                    !existingIds.includes(this.generatePositionId(p.title)));
                 console.log(`📋 Creating ${missingPositions.length} missing positions...`);
                 const createdPositions = [];
                 for (const position of missingPositions) {
@@ -98,7 +102,12 @@ let PositionInitializationService = class PositionInitializationService {
                         console.log(`✅ Created: ${createdPosition.Position_Title}`);
                     }
                     catch (error) {
-                        console.error(`❌ Failed to create position ${position.title}:`, error);
+                        if (error.code === 'P2002') {
+                            console.log(`⚠️ Position ${position.title} already exists, skipping...`);
+                        }
+                        else {
+                            console.error(`❌ Failed to create position ${position.title}:`, error);
+                        }
                     }
                 }
                 if (createdPositions.length > 0) {

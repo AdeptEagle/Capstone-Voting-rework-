@@ -1,55 +1,18 @@
-import { Injectable, ConflictException, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateVoteDto } from './dto';
-import { IdGeneratorService } from '../utils/id-generator.service';
-import { TimezoneService } from '../services/timezone.service';
-import { VotingGateway } from '../websocket/voting.gateway';
+import { CreateVoteDto } from './dto/create-vote.dto';
 import { AuditService } from '../services/audit.service';
-
-// Vote service for handling all voting operations and analytics
+import { IdGeneratorService } from '../utils/id-generator.service';
+import { VotingGateway } from '../websocket/voting.gateway';
 
 @Injectable()
 export class VoteService {
   constructor(
     private prisma: PrismaService,
+    private auditService: AuditService,
     private idGenerator: IdGeneratorService,
-    private readonly timezoneService: TimezoneService,
-    private readonly votingGateway: VotingGateway,
-    private readonly auditService: AuditService,
+    private votingGateway: VotingGateway,
   ) {}
-
-  async getAllVotes() {
-    return this.prisma.vote.findMany({
-      include: {
-        voter: {
-          select: {
-            id: true,
-            Voter_Name: true,
-            Voter_StudentId: true,
-          },
-        },
-        candidate: {
-          select: {
-            id: true,
-            Candidate_Name: true,
-            Candidate_StudentId: true,
-          },
-        },
-        election: {
-          select: {
-            id: true,
-            Election_Title: true,
-          },
-        },
-        position: {
-          select: {
-            id: true,
-            Position_Title: true,
-          },
-        },
-      },
-    });
-  }
 
   async getVoteById(id: string) {
     const vote = await this.prisma.vote.findUnique({
@@ -59,7 +22,20 @@ export class VoteService {
           select: {
             id: true,
             Voter_Name: true,
+            Voter_Email: true,
             Voter_StudentId: true,
+            department: {
+              select: {
+                id: true,
+                Department_Name: true,
+              },
+            },
+            course: {
+              select: {
+                id: true,
+                Course_Name: true,
+              },
+            },
           },
         },
         candidate: {
@@ -67,18 +43,49 @@ export class VoteService {
             id: true,
             Candidate_Name: true,
             Candidate_StudentId: true,
-          },
-        },
-        election: {
-          select: {
-            id: true,
-            Election_Title: true,
+            Candidate_Email: true,
+            photo: true,
+            position: {
+              select: {
+                id: true,
+                Position_Title: true,
+                displayOrder: true,
+              },
+            },
+            department: {
+              select: {
+                id: true,
+                Department_Name: true,
+              },
+            },
+            course: {
+              select: {
+                id: true,
+                Course_Name: true,
+              },
+            },
+            partyList: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
           },
         },
         position: {
           select: {
             id: true,
             Position_Title: true,
+            displayOrder: true,
+            voteLimit: true,
+          },
+        },
+        ballot: {
+          select: {
+            id: true,
+            Ballot_Title: true,
+            Ballot_Description: true,
+            Ballot_Status: true,
           },
         },
       },
@@ -91,28 +98,23 @@ export class VoteService {
     return vote;
   }
 
-  // DEPRECATED: Use ballot system instead - castBallotVote()
   async createVote(createVoteDto: CreateVoteDto) {
-    console.warn('⚠️ DEPRECATED: createVote() is deprecated. Use ballot system instead.');
-    const { voterId, candidateId, electionId, positionId } = createVoteDto;
+    const { voterId, candidateId, ballotId, positionId } = createVoteDto;
 
-    // Check if election exists and is active
-    const election = await this.prisma.election.findUnique({
-      where: { 
-        id: electionId,
-        isDeleted: false
-      },
+    // Validate ballot exists and is active
+    const ballot = await this.prisma.ballot.findUnique({
+      where: { id: ballotId },
     });
 
-    if (!election) {
-      throw new NotFoundException('Election not found');
+    if (!ballot) {
+      throw new NotFoundException('Ballot not found');
     }
 
-    if (!election.isActive) {
-      throw new BadRequestException('Election is not active');
+    if (ballot.Ballot_Status !== 'ACTIVE') {
+      throw new BadRequestException('Ballot is not active');
     }
 
-    // Check if voter exists
+    // Validate voter exists
     const voter = await this.prisma.voter.findUnique({
       where: { id: voterId },
     });
@@ -121,109 +123,136 @@ export class VoteService {
       throw new NotFoundException('Voter not found');
     }
 
-    // Check if voter is locked out (has completed voting)
     if (voter.hasVoted) {
-      throw new ConflictException('Voter has already completed voting and cannot vote again');
+      throw new BadRequestException('Voter has already voted');
     }
 
-    // Check if candidate exists
+    // Validate candidate exists and is in the ballot
     const candidate = await this.prisma.candidate.findUnique({
       where: { id: candidateId },
+      include: {
+        ballotCandidates: {
+          where: { BallotCandidate_BallotId: ballotId },
+        },
+      },
     });
 
     if (!candidate) {
       throw new NotFoundException('Candidate not found');
     }
 
-    // Check if position exists and get vote limit
+    if (candidate.ballotCandidates.length === 0) {
+      throw new BadRequestException('Candidate is not in this ballot');
+    }
+
+    // Validate position exists and is in the ballot
     const position = await this.prisma.position.findUnique({
       where: { id: positionId },
+      include: {
+        ballotPositions: {
+          where: { BallotPosition_BallotId: ballotId },
+        },
+      },
     });
 
     if (!position) {
       throw new NotFoundException('Position not found');
     }
 
-    const voteLimit = position.voteLimit || 1;
+    if (position.ballotPositions.length === 0) {
+      throw new BadRequestException('Position is not in this ballot');
+    }
 
-    // Get current vote count for this voter in this election and position
-    const currentVoteCount = await this.prisma.vote.count({
+    // Check if voter has already voted for this position in this ballot
+    const existingVote = await this.prisma.vote.findFirst({
       where: {
         voterId,
-        electionId,
+        ballotId,
         positionId,
       },
     });
 
-    // Check if voter has reached the vote limit for this position
-    if (currentVoteCount >= voteLimit) {
-      throw new ConflictException(`Voter has already cast ${voteLimit} vote(s) for this position`);
+    if (existingVote) {
+      throw new BadRequestException('Voter has already voted for this position');
     }
 
-    // Check for candidate duplication if vote limit is 1
-    if (voteLimit === 1) {
-      const existingVoteForCandidate = await this.prisma.vote.findFirst({
-        where: {
-          voterId,
-          electionId,
-          positionId,
-          candidateId,
-        },
-      });
-
-      if (existingVoteForCandidate) {
-        throw new ConflictException('Voter has already voted for this candidate in this position');
-      }
-    } else {
-      // For vote limits > 1, check if voter has already voted for this specific candidate
-      const existingVoteForCandidate = await this.prisma.vote.findFirst({
-        where: {
-          voterId,
-          electionId,
-          positionId,
-          candidateId,
-        },
-      });
-
-      if (existingVoteForCandidate) {
-        throw new ConflictException('Voter has already voted for this candidate in this position');
-      }
-    }
-
-    // Generate custom ID
-    const customId = await this.idGenerator.generateVoteId();
-
-    // BEGIN TRANSACTION - ACID Atomicity
-    return await this.prisma.$transaction(async (prisma) => {
-      // Generate audit data
-      const verificationCode = this.auditService.generateVerificationCode();
-      const auditHash = this.auditService.generateAuditHash({
-        voterId,
-        electionId,
-        candidateId,
-        timestamp: new Date(),
-      });
-
-      // Create the vote with audit fields
-      const vote = await prisma.vote.create({
-      data: {
-        id: customId,
-        voterId,
-        candidateId,
-        electionId,
+    // Check vote limit for position
+    const currentVoteCount = await this.prisma.vote.count({
+      where: {
+        ballotId,
         positionId,
-        verificationCode,
-        auditHash,
-        ipAddress: createVoteDto.ipAddress,
-        userAgent: createVoteDto.userAgent,
-        sessionId: createVoteDto.sessionId,
       },
+    });
+
+    if (position.voteLimit && currentVoteCount >= position.voteLimit) {
+      throw new BadRequestException('Vote limit reached for this position');
+    }
+
+    // Generate vote ID and verification code
+    const customId = await this.idGenerator.generateVoteId();
+    const verificationCode = this.auditService.generateVerificationCode();
+    const auditHash = this.auditService.generateAuditHash({
+      voterId,
+      ballotId,
+      candidateId,
+      timestamp: new Date(),
+    });
+
+    // Create vote in transaction
+    return await this.prisma.$transaction(async (prisma) => {
+      const vote = await prisma.vote.create({
+        data: {
+          id: customId,
+          voterId,
+          candidateId,
+          ballotId,
+          positionId,
+          ipAddress: createVoteDto.ipAddress,
+          userAgent: createVoteDto.userAgent,
+          sessionId: createVoteDto.sessionId,
+          verificationCode,
+          auditHash,
+        },
+        include: {
+          voter: true,
+          candidate: true,
+          position: true,
+          ballot: true,
+        },
+      });
+
+      // Update voter status
+      await prisma.voter.update({
+        where: { id: voterId },
+        data: { hasVoted: true },
+      });
+
+      // TODO: Add audit logging
+
+      return vote;
+    });
+  }
+
+  async getVotesByBallot(ballotId: string) {
+    return await this.prisma.vote.findMany({
+      where: { ballotId },
       include: {
         voter: {
           select: {
             id: true,
             Voter_Name: true,
+            Voter_Email: true,
             Voter_StudentId: true,
+            department: {
+              select: {
+                Department_Name: true,
+              },
+            },
+            course: {
+              select: {
+                Course_Name: true,
+              },
+            },
           },
         },
         candidate: {
@@ -231,321 +260,272 @@ export class VoteService {
             id: true,
             Candidate_Name: true,
             Candidate_StudentId: true,
-          },
-        },
-        election: {
-          select: {
-            id: true,
-            Election_Title: true,
+            photo: true,
+            position: {
+              select: {
+                Position_Title: true,
+                displayOrder: true,
+              },
+            },
+            partyList: {
+              select: {
+                name: true,
+              },
+            },
           },
         },
         position: {
           select: {
             id: true,
             Position_Title: true,
-              voteLimit: true,
-            },
+            displayOrder: true,
           },
         },
-      });
-
-      // Check if this was the last vote for this position (vote limit reached)
-      const updatedVoteCount = await prisma.vote.count({
-        where: {
-          voterId,
-          electionId,
-          positionId,
-        },
-      });
-
-      // Check if this was the final vote for this position
-      const isFinalVoteForPosition = updatedVoteCount >= voteLimit;
-
-      // Get all positions in this election
-      const electionPositions = await prisma.electionPosition.findMany({
-        where: { electionId },
-      });
-
-      // Check if voter has completed voting for all positions
-      let allPositionsCompleted = true;
-      for (const electionPosition of electionPositions) {
-        const positionVoteCount = await prisma.vote.count({
-          where: {
-            voterId,
-            electionId,
-            positionId: electionPosition.positionId,
       },
-    });
-
-        const position = await prisma.position.findUnique({
-          where: { id: electionPosition.positionId },
-        });
-
-        const positionVoteLimit = position?.voteLimit || 1;
-
-        if (positionVoteCount < positionVoteLimit) {
-          allPositionsCompleted = false;
-          break;
-        }
-      }
-
-      // Mark voter as locked out if they've completed voting for all positions
-      if (allPositionsCompleted) {
-        await prisma.voter.update({
-      where: { id: voterId },
-      data: { hasVoted: true },
-    });
-      }
-
-    return {
-        message: `Vote cast successfully! (${updatedVoteCount}/${voteLimit} votes for this position)`,
-      vote: {
-        id: vote.id,
-        voter: vote.voter,
-        candidate: vote.candidate,
-        election: vote.election,
-        position: vote.position,
-        createdAt: vote.createdAt,
-      },
-        voteCount: updatedVoteCount,
-        voteLimit: voteLimit,
-        isFinalVoteForPosition,
-        isLockedOut: allPositionsCompleted,
-        confirmation: {
-          voterName: vote.voter.Voter_Name,
-          candidateName: vote.candidate.Candidate_Name,
-          positionTitle: vote.position.Position_Title,
-          electionTitle: vote.election.Election_Title,
-          votedAt: vote.createdAt,
-          voteId: vote.id,
-          remainingVotes: voteLimit - updatedVoteCount,
-          lockoutMessage: allPositionsCompleted ? 'Voter has completed all voting and is now locked out' : null,
-        },
-      };
-
-      // Create audit trail for the vote
-      await this.auditService.createVoteAudit({
-        voteId: vote.id,
-        voterId,
-        electionId,
-        candidateId,
-        timestamp: vote.createdAt,
-        ipAddress: createVoteDto.ipAddress,
-        userAgent: createVoteDto.userAgent,
-        sessionId: createVoteDto.sessionId,
-      });
-
-      // Create confirmation object
-      const confirmation = {
-        voterName: vote.voter.Voter_Name,
-        candidateName: vote.candidate.Candidate_Name,
-        positionTitle: vote.position.Position_Title,
-        electionTitle: vote.election.Election_Title,
-        votedAt: vote.createdAt,
-        voteId: vote.id,
-        verificationCode: vote.verificationCode,
-        remainingVotes: voteLimit - updatedVoteCount,
-        lockoutMessage: allPositionsCompleted ? 'Voter has completed all voting and is now locked out' : null,
-      };
-
-      // Emit real-time vote update
-      this.votingGateway.emitVoteUpdate(electionId, {
-        voteId: vote.id,
-        voterId,
-        candidateId,
-        positionId,
-        electionId,
-        voteCount: updatedVoteCount,
-        voteLimit,
-        isFinalVoteForPosition,
-        isLockedOut: allPositionsCompleted,
-        confirmation
-      });
-
-      // Emit results update
-      const updatedResults = await this.getVoteResults(electionId);
-      this.votingGateway.emitResultsUpdate(electionId, updatedResults);
-
-      return {
-        message: `Vote cast successfully! (${updatedVoteCount}/${voteLimit} votes for this position)`,
-        vote: {
-          id: vote.id,
-          voter: vote.voter,
-          candidate: vote.candidate,
-          election: vote.election,
-          position: vote.position,
-          createdAt: vote.createdAt,
-        },
-        voteCount: updatedVoteCount,
-        voteLimit: voteLimit,
-        isFinalVoteForPosition,
-        isLockedOut: allPositionsCompleted,
-        confirmation: {
-          voterName: vote.voter.Voter_Name,
-          candidateName: vote.candidate.Candidate_Name,
-          positionTitle: vote.position.Position_Title,
-          electionTitle: vote.election.Election_Title,
-          votedAt: vote.createdAt,
-          voteId: vote.id,
-          remainingVotes: voteLimit - updatedVoteCount,
-          lockoutMessage: allPositionsCompleted ? 'Voter has completed all voting and is now locked out' : null,
-        },
-      };
-    }, {
-      // ACID Transaction Options
-      maxWait: 5000, // Maximum time to wait for transaction
-      timeout: 10000, // Transaction timeout
-      isolationLevel: 'Serializable', // Highest isolation level for vote integrity
+      orderBy: [
+        { position: { displayOrder: 'asc' } },
+        { createdAt: 'desc' },
+      ],
     });
   }
 
-  async confirmVote(createVoteDto: CreateVoteDto) {
-    const { voterId, candidateId, electionId, positionId } = createVoteDto;
-
-    // Check if election exists and is active
-    const election = await this.prisma.election.findUnique({
-      where: { 
-        id: electionId,
-        isDeleted: false
-      },
-    });
-
-    if (!election) {
-      throw new NotFoundException('Election not found');
-    }
-
-    if (!election.isActive) {
-      throw new BadRequestException('Election is not active');
-    }
-
-    // Check if voter exists
-    const voter = await this.prisma.voter.findUnique({
-      where: { id: voterId },
-    });
-
-    if (!voter) {
-      throw new NotFoundException('Voter not found');
-    }
-
-    // Check if voter is locked out (has completed voting)
-    if (voter.hasVoted) {
-      throw new ConflictException('Voter has already completed voting and cannot vote again');
-    }
-
-    // Check if candidate exists
-    const candidate = await this.prisma.candidate.findUnique({
-      where: { id: candidateId },
-    });
-
-    if (!candidate) {
-      throw new NotFoundException('Candidate not found');
-    }
-
-    // Check if position exists and get vote limit
-    const position = await this.prisma.position.findUnique({
-      where: { id: positionId },
-    });
-
-    if (!position) {
-      throw new NotFoundException('Position not found');
-    }
-
-    const voteLimit = position.voteLimit || 1;
-
-    // Get current vote count for this voter in this election and position
-    const currentVoteCount = await this.prisma.vote.count({
-      where: {
-        voterId,
-        electionId,
-        positionId,
-      },
-    });
-
-    // Check if voter has reached the vote limit for this position
-    if (currentVoteCount >= voteLimit) {
-      throw new ConflictException(`Voter has already cast ${voteLimit} vote(s) for this position`);
-    }
-
-    // Check for candidate duplication
-    const existingVoteForCandidate = await this.prisma.vote.findFirst({
-      where: {
-        voterId,
-        electionId,
-        positionId,
-        candidateId,
-      },
-    });
-
-    if (existingVoteForCandidate) {
-      throw new ConflictException('Voter has already voted for this candidate in this position');
-    }
-
-    // Get all positions in this election to check overall voting status
-    const electionPositions = await this.prisma.electionPosition.findMany({
-      where: { electionId },
-    });
-
-    // Check voting progress across all positions
-    let totalPositions = 0;
-    let completedPositions = 0;
-    let totalVotesCast = 0;
-
-    for (const electionPosition of electionPositions) {
-      const positionVoteCount = await this.prisma.vote.count({
-        where: {
-          voterId,
-          electionId,
-          positionId: electionPosition.positionId,
+  async getVotesByVoter(voterId: string) {
+    return await this.prisma.vote.findMany({
+      where: { voterId },
+      include: {
+        candidate: {
+          select: {
+            id: true,
+            Candidate_Name: true,
+            photo: true,
+            position: {
+              select: {
+                Position_Title: true,
+                displayOrder: true,
+              },
+            },
+            partyList: {
+              select: {
+                name: true,
+              },
+            },
+          },
         },
-      });
+        position: {
+          select: {
+            id: true,
+            Position_Title: true,
+            displayOrder: true,
+          },
+        },
+        ballot: {
+          select: {
+            id: true,
+            Ballot_Title: true,
+            Ballot_Status: true,
+          },
+        },
+      },
+      orderBy: [
+        { position: { displayOrder: 'asc' } },
+        { createdAt: 'desc' },
+      ],
+    });
+  }
 
-      const position = await this.prisma.position.findUnique({
-        where: { id: electionPosition.positionId },
-      });
+  async getVoteResults(ballotId: string) {
+    const votes = await this.prisma.vote.findMany({
+      where: { ballotId },
+      include: {
+        candidate: {
+          select: {
+            id: true,
+            Candidate_Name: true,
+            photo: true,
+            position: {
+              select: {
+                id: true,
+                Position_Title: true,
+                displayOrder: true,
+              },
+            },
+            partyList: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        },
+        position: {
+          select: {
+            id: true,
+            Position_Title: true,
+            displayOrder: true,
+          },
+        },
+      },
+    });
 
-      const positionVoteLimit = position?.voteLimit || 1;
-      totalPositions++;
-      totalVotesCast += positionVoteCount;
-
-      if (positionVoteCount >= positionVoteLimit) {
-        completedPositions++;
+    // Group votes by position and candidate
+    const results = {};
+    votes.forEach(vote => {
+      const positionId = vote.position.id;
+      const candidateId = vote.candidate.id;
+      
+      if (!results[positionId]) {
+        results[positionId] = {
+          position: vote.position,
+          candidates: {},
+        };
       }
-    }
+      
+      if (!results[positionId].candidates[candidateId]) {
+        results[positionId].candidates[candidateId] = {
+          candidate: vote.candidate,
+          voteCount: 0,
+        };
+      }
+      
+      results[positionId].candidates[candidateId].voteCount++;
+    });
 
-    const willBeFinalVoteForPosition = currentVoteCount + 1 >= voteLimit;
-    const willCompleteAllVoting = completedPositions === totalPositions - 1 && willBeFinalVoteForPosition;
+    // Convert to array format and sort
+    const formattedResults = Object.values(results).map(positionResult => ({
+      position: 'Position Title', // TODO: Add position relation
+      candidates: [], // TODO: Add candidates relation
+    }));
 
-    // Return confirmation details without casting the vote
-    return {
-      canVote: true,
-      confirmation: {
-        voterName: voter.Voter_Name,
-        candidateName: candidate.Candidate_Name,
-        positionTitle: position.Position_Title,
-        electionTitle: election.Election_Title,
-        currentVoteCount,
-        voteLimit,
-        remainingVotes: voteLimit - currentVoteCount,
-        willBeFinalVoteForPosition,
-        willCompleteAllVoting,
-        votingProgress: {
-          totalPositions,
-          completedPositions,
-          totalVotesCast,
-          remainingPositions: totalPositions - completedPositions,
+    return formattedResults; // TODO: Add proper sorting
+  }
+
+  async getComprehensiveVoteAnalytics(ballotId: string) {
+    const votes = await this.prisma.vote.findMany({
+      where: { ballotId },
+      include: {
+        voter: {
+          select: {
+            department: {
+              select: {
+                Department_Name: true,
+              },
+            },
+            course: {
+              select: {
+                Course_Name: true,
+              },
+            },
+          },
+        },
+        candidate: {
+          select: {
+            position: {
+              select: {
+                Position_Title: true,
+                displayOrder: true,
+              },
+            },
+            partyList: {
+              select: {
+                name: true,
+              },
+            },
+          },
         },
       },
-      validation: {
-        electionActive: election.isActive,
-        voterExists: true,
-        candidateExists: true,
-        positionExists: true,
-        withinVoteLimit: currentVoteCount < voteLimit,
-        noDuplicateVote: !existingVoteForCandidate,
-        notLockedOut: !voter.hasVoted,
-      },
-      lockoutWarning: willCompleteAllVoting ? 'This vote will complete your voting for all positions. You will be locked out after this vote.' : null,
+    });
+
+    // Calculate analytics
+    const totalVotes = votes.length;
+    const uniqueVoters = new Set(votes.map(v => v.voterId)).size;
+    
+    // Department breakdown
+    const departmentVotes = {};
+    votes.forEach(vote => {
+      const deptName = vote.voter.department?.Department_Name || 'Unknown';
+      if (!departmentVotes[deptName]) {
+        departmentVotes[deptName] = 0;
+      }
+      departmentVotes[deptName]++;
+    });
+
+    // Position breakdown
+    const positionVotes = {};
+    votes.forEach(vote => {
+      const positionTitle = vote.candidate.position.Position_Title;
+      if (!positionVotes[positionTitle]) {
+        positionVotes[positionTitle] = 0;
+      }
+      positionVotes[positionTitle]++;
+    });
+
+    // Party list breakdown
+    const partyVotes = {};
+    votes.forEach(vote => {
+      const partyName = vote.candidate.partyList?.name || 'Independent';
+      if (!partyVotes[partyName]) {
+        partyVotes[partyName] = 0;
+      }
+      partyVotes[partyName]++;
+    });
+
+    return {
+      totalVotes,
+      uniqueVoters,
+      departmentBreakdown: departmentVotes,
+      positionBreakdown: positionVotes,
+      partyBreakdown: partyVotes,
+      timestamp: new Date(),
     };
+  }
+
+  async getDepartmentVotingResults(ballotId: string) {
+    const votes = await this.prisma.vote.findMany({
+      where: { ballotId },
+      include: {
+        voter: {
+          select: {
+            department: {
+              select: {
+                Department_Name: true,
+              },
+            },
+          },
+        },
+        candidate: {
+          select: {
+            Candidate_Name: true,
+            position: {
+              select: {
+                Position_Title: true,
+                displayOrder: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // Group by department
+    const departmentResults = {};
+    votes.forEach(vote => {
+      const deptName = vote.voter.department?.Department_Name || 'Unknown';
+      if (!departmentResults[deptName]) {
+        departmentResults[deptName] = {
+          department: deptName,
+          votes: [],
+          totalVotes: 0,
+        };
+      }
+      
+      departmentResults[deptName].votes.push({
+        candidate: vote.candidate.Candidate_Name,
+        position: vote.candidate.position.Position_Title,
+        positionOrder: vote.candidate.position.displayOrder,
+      });
+      departmentResults[deptName].totalVotes++;
+    });
+
+    return Object.values(departmentResults);
   }
 
   async deleteVote(id: string) {
@@ -557,652 +537,29 @@ export class VoteService {
       throw new NotFoundException('Vote not found');
     }
 
-    // BEGIN TRANSACTION - ACID Atomicity
-    return await this.prisma.$transaction(async (prisma) => {
-      // Delete the vote
-      await prisma.vote.delete({
+    return await this.prisma.vote.delete({
       where: { id },
     });
-
-    // Reset voter's hasVoted status
-      await prisma.voter.update({
-      where: { id: vote.voterId },
-      data: { hasVoted: false },
-    });
-
-    return {
-      message: 'Vote deleted successfully!',
-    };
-    }, {
-      // ACID Transaction Options
-      maxWait: 5000,
-      timeout: 10000,
-      isolationLevel: 'Serializable',
-    });
   }
 
-  async getVotesByElection(electionId: string) {
-    return this.prisma.vote.findMany({
-      where: { electionId },
-      include: {
-        voter: {
-          select: {
-            id: true,
-            Voter_Name: true,
-            Voter_StudentId: true,
-          },
-        },
-        candidate: {
-          select: {
-            id: true,
-            Candidate_Name: true,
-            Candidate_StudentId: true,
-          },
-        },
-        election: {
-          select: {
-            id: true,
-            Election_Title: true,
-          },
-        },
-        position: {
-          select: {
-            id: true,
-            Position_Title: true,
-          },
-        },
-      },
-    });
-  }
-
-  async getVotesByVoter(voterId: string) {
-    return this.prisma.vote.findMany({
-      where: { voterId },
-      include: {
-        voter: {
-          select: {
-            id: true,
-            Voter_Name: true,
-            Voter_StudentId: true,
-          },
-        },
-        candidate: {
-          select: {
-            id: true,
-            Candidate_Name: true,
-            Candidate_StudentId: true,
-          },
-        },
-        election: {
-          select: {
-            id: true,
-            Election_Title: true,
-          },
-        },
-        position: {
-          select: {
-            id: true,
-            Position_Title: true,
-          },
-        },
-      },
-    });
-  }
-
-  async getVoteResults(electionId: string) {
-    const votes = await this.prisma.vote.findMany({
-      where: { electionId },
-      include: {
-        candidate: {
-          select: {
-            id: true,
-            Candidate_Name: true,
-            Candidate_StudentId: true,
-          },
-        },
-        position: {
-          select: {
-            id: true,
-            Position_Title: true,
-            voteLimit: true,
-          },
-        },
-      },
+  async resetVoterStatus(voterId: string) {
+    const voter = await this.prisma.voter.findUnique({
+      where: { id: voterId }
     });
 
-    // Get election positions to include vote limits
-    const electionPositions = await this.prisma.electionPosition.findMany({
-      where: { electionId },
-      include: {
-        position: {
-          select: {
-            id: true,
-            Position_Title: true,
-            voteLimit: true,
-          },
-        },
-      },
-    });
-
-    // Group votes by position and candidate
-    const results: any = {};
-    
-    votes.forEach(vote => {
-      const positionId = vote.positionId;
-      const candidateId = vote.candidateId;
-      
-      if (!results[positionId]) {
-        results[positionId] = {
-          position: {
-            ...vote.position,
-            voteLimit: vote.position.voteLimit || 1,
-          },
-          candidates: {},
-          totalVotes: 0,
-        };
-      }
-      
-      if (!results[positionId].candidates[candidateId]) {
-        results[positionId].candidates[candidateId] = {
-          candidate: vote.candidate,
-          votes: 0,
-        };
-      }
-      
-      results[positionId].candidates[candidateId].votes++;
-      results[positionId].totalVotes++;
-    });
-
-    // Add positions that have no votes yet
-    electionPositions.forEach(electionPosition => {
-      const positionId = electionPosition.positionId;
-      if (!results[positionId]) {
-        results[positionId] = {
-          position: {
-            ...electionPosition.position,
-            voteLimit: electionPosition.position.voteLimit || 1,
-          },
-          candidates: {},
-          totalVotes: 0,
-        };
-      }
-    });
-
-    // Convert to array and sort candidates by vote count
-    const resultsArray = Object.values(results).map((positionResult: any) => {
-      const candidatesArray = Object.values(positionResult.candidates).sort((a: any, b: any) => b.votes - a.votes);
-      return {
-        ...positionResult,
-        candidates: candidatesArray,
-      };
-    });
-
-    return {
-      electionId,
-      results: resultsArray,
-      summary: {
-        totalPositions: resultsArray.length,
-        totalVotes: resultsArray.reduce((sum: number, pos: any) => sum + pos.totalVotes, 0),
-      },
-    };
-  }
-
-  async getComprehensiveVoteAnalytics(electionId: string) {
-    // Get all votes with full details
-    const votes = await this.prisma.vote.findMany({
-      where: { electionId },
-      include: {
-        voter: {
-          select: {
-            id: true,
-            Voter_Name: true,
-            Voter_StudentId: true,
-            Voter_Email: true,
-            department: {
-              select: {
-                id: true,
-                Department_Name: true,
-              },
-            },
-            course: {
-              select: {
-                id: true,
-                Course_Name: true,
-                Course_Code: true,
-              },
-            },
-          },
-        },
-        candidate: {
-          select: {
-            id: true,
-            Candidate_Name: true,
-            Candidate_StudentId: true,
-            Candidate_Email: true,
-            position: {
-              select: {
-                id: true,
-                Position_Title: true,
-              },
-            },
-            department: {
-              select: {
-                id: true,
-                Department_Name: true,
-              },
-            },
-            course: {
-              select: {
-                id: true,
-                Course_Name: true,
-                Course_Code: true,
-              },
-            },
-          },
-        },
-        election: {
-          select: {
-            id: true,
-            Election_Title: true,
-            Election_Description: true,
-            startDate: true,
-            endDate: true,
-            isActive: true,
-          },
-        },
-        position: {
-          select: {
-            id: true,
-            Position_Title: true,
-            Position_Description: true,
-            voteLimit: true,
-          },
-        },
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
-
-    // Get election details
-    const election = await this.prisma.election.findUnique({
-      where: { 
-        id: electionId,
-        isDeleted: false
-      },
-      include: {
-                 admin: {
-           select: {
-             id: true,
-             Admin_Username: true,
-             Admin_Email: true,
-           },
-         },
-        electionPositions: {
-          include: {
-            position: {
-              select: {
-                id: true,
-                Position_Title: true,
-                voteLimit: true,
-              },
-            },
-          },
-        },
-        electionCandidates: {
-          include: {
-            candidate: {
-              select: {
-                id: true,
-                Candidate_Name: true,
-                Candidate_StudentId: true,
-                positionId: true,
-              },
-            },
-          },
-        },
-      },
-    });
-
-    if (!election) {
-      throw new NotFoundException('Election not found');
+    if (!voter) {
+      throw new NotFoundException('Voter not found');
     }
 
-    // Calculate comprehensive statistics
-    const totalVotes = votes.length;
-    const uniqueVoters = new Set(votes.map(vote => vote.voterId)).size;
-    const uniqueCandidates = new Set(votes.map(vote => vote.candidateId)).size;
-    const uniquePositions = new Set(votes.map(vote => vote.positionId)).size;
-
-    // Group votes by position
-    const votesByPosition = {};
-    votes.forEach(vote => {
-      const positionId = vote.positionId;
-      if (!votesByPosition[positionId]) {
-        votesByPosition[positionId] = {
-          position: vote.position,
-          votes: [],
-          candidateVotes: {},
-          totalVotes: 0,
-        };
-      }
-      votesByPosition[positionId].votes.push(vote);
-      votesByPosition[positionId].totalVotes++;
-      
-      // Count votes per candidate
-      const candidateId = vote.candidateId;
-      if (!votesByPosition[positionId].candidateVotes[candidateId]) {
-        votesByPosition[positionId].candidateVotes[candidateId] = {
-          candidate: vote.candidate,
-          voteCount: 0,
-          voters: [],
-        };
-      }
-      votesByPosition[positionId].candidateVotes[candidateId].voteCount++;
-      votesByPosition[positionId].candidateVotes[candidateId].voters.push({
-        id: vote.voter.id,
-        name: vote.voter.Voter_Name,
-        studentId: vote.voter.Voter_StudentId,
-        votedAt: vote.createdAt,
-      });
+    return await this.prisma.voter.update({
+      where: { id: voterId },
+      data: {
+        hasVoted: false,
+      },
     });
-
-    // Group votes by voter
-    const votesByVoter = {};
-    votes.forEach(vote => {
-      const voterId = vote.voterId;
-      if (!votesByVoter[voterId]) {
-        votesByVoter[voterId] = {
-          voter: vote.voter,
-          votes: [],
-          positionsVoted: new Set(),
-        };
-      }
-      votesByVoter[voterId].votes.push({
-        id: vote.id,
-        candidate: vote.candidate,
-        position: vote.position,
-        election: vote.election,
-        votedAt: vote.createdAt,
-      });
-      votesByVoter[voterId].positionsVoted.add(vote.positionId);
-    });
-
-    // Calculate voter participation
-    const totalEligibleVoters = await this.prisma.voter.count();
-    const participationRate = totalEligibleVoters > 0 ? (uniqueVoters / totalEligibleVoters) * 100 : 0;
-
-    // Get vote timeline
-    const voteTimeline = votes.map(vote => ({
-      voteId: vote.id,
-      voterName: vote.voter.Voter_Name,
-      candidateName: vote.candidate.Candidate_Name,
-      positionTitle: vote.position.Position_Title,
-      votedAt: vote.createdAt,
-    })).sort((a, b) => new Date(a.votedAt).getTime() - new Date(b.votedAt).getTime());
-
-    return {
-             election: {
-         id: election.id,
-         title: election.Election_Title,
-         description: election.Election_Description,
-         startDate: election.startDate,
-         endDate: election.endDate,
-         isActive: election.isActive,
-         createdBy: election.admin,
-         positions: election.electionPositions.map(ep => ep.position),
-         candidates: election.electionCandidates.map(ec => ec.candidate),
-       },
-      statistics: {
-        totalVotes,
-        uniqueVoters,
-        uniqueCandidates,
-        uniquePositions,
-        totalEligibleVoters,
-        participationRate: Math.round(participationRate * 100) / 100,
-        averageVotesPerVoter: uniqueVoters > 0 ? Math.round((totalVotes / uniqueVoters) * 100) / 100 : 0,
-      },
-      detailedResults: {
-        byPosition: Object.values(votesByPosition).map((positionData: any) => ({
-          position: positionData.position,
-          totalVotes: positionData.totalVotes,
-          candidates: Object.values(positionData.candidateVotes).map((candidateData: any) => ({
-            candidate: candidateData.candidate,
-            voteCount: candidateData.voteCount,
-            percentage: positionData.totalVotes > 0 ? Math.round((candidateData.voteCount / positionData.totalVotes) * 100 * 100) / 100 : 0,
-            voters: candidateData.voters,
-          })).sort((a: any, b: any) => b.voteCount - a.voteCount),
-        })),
-        byVoter: Object.values(votesByVoter).map((voterData: any) => ({
-          voter: voterData.voter,
-          totalVotes: voterData.votes.length,
-          positionsVoted: Array.from(voterData.positionsVoted),
-          votes: voterData.votes,
-        })),
-        byDepartment: await this.getDepartmentVotingResults(electionId),
-      },
-      timeline: {
-        firstVote: voteTimeline.length > 0 ? voteTimeline[0] : null,
-        lastVote: voteTimeline.length > 0 ? voteTimeline[voteTimeline.length - 1] : null,
-        totalVoteSessions: uniqueVoters,
-        voteTimeline,
-      },
-               audit: {
-           voteRecords: votes.map(vote => ({
-             voteId: vote.id,
-             voter: {
-               id: vote.voter.id,
-               name: vote.voter.Voter_Name,
-               studentId: vote.voter.Voter_StudentId,
-               email: vote.voter.Voter_Email,
-               department: vote.voter.department,
-               course: vote.voter.course,
-             },
-             candidate: {
-               id: vote.candidate.id,
-               name: vote.candidate.Candidate_Name,
-               studentId: vote.candidate.Candidate_StudentId,
-               email: vote.candidate.Candidate_Email,
-               position: vote.candidate.position,
-               department: vote.candidate.department,
-               course: vote.candidate.course,
-             },
-             position: vote.position,
-             election: vote.election,
-             votedAt: vote.createdAt,
-           })),
-         },
-    };
   }
 
-  async getDepartmentVotingResults(electionId: string) {
-    // Get all votes with department information
-    const votes = await this.prisma.vote.findMany({
-      where: { electionId },
-      include: {
-                 voter: {
-           select: {
-             id: true,
-             Voter_Name: true,
-             Voter_StudentId: true,
-             department: {
-               select: {
-                 id: true,
-                 Department_Name: true,
-               },
-             },
-           },
-         },
-                 candidate: {
-           select: {
-             id: true,
-             Candidate_Name: true,
-             Candidate_StudentId: true,
-             department: {
-               select: {
-                 id: true,
-                 Department_Name: true,
-               },
-             },
-           },
-         },
-         position: {
-           select: {
-             id: true,
-             Position_Title: true,
-             voteLimit: true,
-           },
-         },
-      },
-    });
-
-    // Get all departments that have voters
-    const departments = await this.prisma.department.findMany({
-      where: {
-        isDeleted: false,
-      },
-      include: {
-        voters: {
-          select: {
-            id: true,
-            Voter_Name: true,
-            Voter_StudentId: true,
-          },
-        },
-      },
-    });
-
-    // Group votes by department
-    const departmentResults = {};
-
-    // Initialize department results
-    departments.forEach(dept => {
-      departmentResults[dept.id] = {
-        department: {
-          id: dept.id,
-          name: dept.Department_Name,
-        },
-        totalVoters: dept.voters.length,
-        totalVotes: 0,
-        participationRate: 0,
-        positions: {},
-        candidates: {},
-        voterDetails: [],
-      };
-    });
-
-    // Process votes and group by department
-    votes.forEach(vote => {
-      const departmentId = vote.voter.department?.id || 'unknown';
-             const departmentName = vote.voter.department?.Department_Name || 'Unknown Department';
-      
-      if (!departmentResults[departmentId]) {
-        departmentResults[departmentId] = {
-          department: {
-            id: departmentId,
-            name: departmentName,
-          },
-          totalVoters: 0,
-          totalVotes: 0,
-          participationRate: 0,
-          positions: {},
-          candidates: {},
-          voterDetails: [],
-        };
-      }
-
-      const deptResult = departmentResults[departmentId];
-      deptResult.totalVotes++;
-
-      // Track unique voters
-      if (!deptResult.voterDetails.find(v => v.id === vote.voter.id)) {
-        deptResult.voterDetails.push({
-          id: vote.voter.id,
-          name: vote.voter.Voter_Name,
-          studentId: vote.voter.Voter_StudentId,
-        });
-      }
-
-      // Group by position
-      const positionId = vote.positionId;
-      if (!deptResult.positions[positionId]) {
-        deptResult.positions[positionId] = {
-          position: vote.position,
-          totalVotes: 0,
-          candidates: {},
-        };
-      }
-      deptResult.positions[positionId].totalVotes++;
-
-      // Group by candidate
-      const candidateId = vote.candidateId;
-      if (!deptResult.candidates[candidateId]) {
-        deptResult.candidates[candidateId] = {
-          candidate: vote.candidate,
-          totalVotes: 0,
-          voters: [],
-        };
-      }
-      deptResult.candidates[candidateId].totalVotes++;
-      deptResult.candidates[candidateId].voters.push({
-        id: vote.voter.id,
-        name: vote.voter.Voter_Name,
-        studentId: vote.voter.Voter_StudentId,
-      });
-
-      // Group candidates by position
-      if (!deptResult.positions[positionId].candidates[candidateId]) {
-        deptResult.positions[positionId].candidates[candidateId] = {
-          candidate: vote.candidate,
-          votes: 0,
-        };
-      }
-      deptResult.positions[positionId].candidates[candidateId].votes++;
-    });
-
-    // Calculate participation rates and format results
-    const formattedResults = Object.values(departmentResults).map((deptResult: any) => {
-      const uniqueVoters = deptResult.voterDetails.length;
-      const participationRate = deptResult.totalVoters > 0 ? (uniqueVoters / deptResult.totalVoters) * 100 : 0;
-
-      // Format positions
-      const formattedPositions = Object.values(deptResult.positions).map((positionData: any) => ({
-        position: positionData.position,
-        totalVotes: positionData.totalVotes,
-        candidates: Object.values(positionData.candidates).map((candidateData: any) => ({
-          candidate: candidateData.candidate,
-          votes: candidateData.votes,
-          percentage: positionData.totalVotes > 0 ? Math.round((candidateData.votes / positionData.totalVotes) * 100 * 100) / 100 : 0,
-        })).sort((a: any, b: any) => b.votes - a.votes),
-      }));
-
-      // Format candidates
-      const formattedCandidates = Object.values(deptResult.candidates).map((candidateData: any) => ({
-        candidate: candidateData.candidate,
-        totalVotes: candidateData.totalVotes,
-        voters: candidateData.voters,
-      })).sort((a: any, b: any) => b.totalVotes - a.totalVotes);
-
-      return {
-        department: deptResult.department,
-        statistics: {
-          totalVoters: deptResult.totalVoters,
-          uniqueVoters,
-          totalVotes: deptResult.totalVotes,
-          participationRate: Math.round(participationRate * 100) / 100,
-          averageVotesPerVoter: uniqueVoters > 0 ? Math.round((deptResult.totalVotes / uniqueVoters) * 100) / 100 : 0,
-        },
-        positions: formattedPositions,
-        candidates: formattedCandidates,
-        voterDetails: deptResult.voterDetails,
-      };
-    });
-
-    return formattedResults.sort((a: any, b: any) => b.statistics.totalVotes - a.statistics.totalVotes);
-  }
-
-  async getVoterVotingStatus(voterId: string, electionId: string) {
-    // Check if voter exists
+  async getVoterVotingStatus(voterId: string, ballotId: string) {
     const voter = await this.prisma.voter.findUnique({
       where: { id: voterId },
     });
@@ -1211,172 +568,122 @@ export class VoteService {
       throw new NotFoundException('Voter not found');
     }
 
-    // Check if election exists
-    const election = await this.prisma.election.findUnique({
-      where: { 
-        id: electionId,
-        isDeleted: false
-      },
+    const ballot = await this.prisma.ballot.findUnique({
+      where: { id: ballotId },
     });
 
-    if (!election) {
-      throw new NotFoundException('Election not found');
+    if (!ballot) {
+      throw new NotFoundException('Ballot not found');
     }
 
-    // Get all positions in this election, ordered by displayOrder
-    const electionPositions = await this.prisma.electionPosition.findMany({
-      where: { electionId },
+    // Get voter's votes for this ballot
+    const votes = await this.prisma.vote.findMany({
+      where: {
+        voterId,
+        ballotId,
+      },
       include: {
         position: {
           select: {
             id: true,
             Position_Title: true,
-            voteLimit: true,
             displayOrder: true,
           },
         },
-      },
-      orderBy: {
-        position: {
-          displayOrder: 'asc',
+        candidate: {
+          select: {
+            id: true,
+            Candidate_Name: true,
+            photo: true,
+            partyList: {
+              select: {
+                name: true,
+              },
+            },
+          },
         },
       },
     });
 
-    // Check voting progress for each position
-    const votingStatus = [];
-    let totalVotesCast = 0;
-    let completedPositions = 0;
-
-    for (const electionPosition of electionPositions) {
-      const positionVoteCount = await this.prisma.vote.count({
-        where: {
-          voterId,
-          electionId,
-          positionId: electionPosition.positionId,
+    // Get all positions in this ballot
+    const ballotPositions = await this.prisma.ballotPosition.findMany({
+      where: { BallotPosition_BallotId: ballotId },
+      include: {
+        position: {
+          select: {
+            id: true,
+            Position_Title: true,
+            displayOrder: true,
+          },
         },
-      });
+      },
+    });
 
-      // Get position details from the include
-      const position = electionPosition.position;
-      const voteLimit = position.voteLimit || 1;
-      const isCompleted = positionVoteCount >= voteLimit;
-      const remainingVotes = Math.max(0, voteLimit - positionVoteCount);
-
-      if (isCompleted) {
-        completedPositions++;
-      }
-
-      totalVotesCast += positionVoteCount;
-
-      votingStatus.push({
-        positionId: position.id,
-        positionTitle: position.Position_Title,
-        voteLimit,
-        votesCast: positionVoteCount,
-        remainingVotes,
-        isCompleted,
-        progress: `${positionVoteCount}/${voteLimit}`,
-      });
-    }
-
-    const totalPositions = electionPositions.length;
-    const allPositionsCompleted = completedPositions === totalPositions;
-    const isLockedOut = voter.hasVoted || allPositionsCompleted;
+    const votedPositions = votes.map(v => v.position.id);
+    const availablePositions = ballotPositions
+      .filter(bp => !votedPositions.includes(bp.position.id))
+      .map(bp => bp.position);
 
     return {
       voter: {
         id: voter.id,
         name: voter.Voter_Name,
+        email: voter.Voter_Email,
         studentId: voter.Voter_StudentId,
         hasVoted: voter.hasVoted,
       },
-      election: {
-        id: election.id,
-        title: election.Election_Title,
-        isActive: election.isActive,
+      ballot: {
+        id: ballot.id,
+        title: ballot.Ballot_Title,
+        status: ballot.Ballot_Status,
       },
-      votingStatus: {
-        totalPositions,
-        completedPositions,
-        remainingPositions: totalPositions - completedPositions,
-        totalVotesCast,
-        allPositionsCompleted,
-        isLockedOut,
-        lockoutReason: voter.hasVoted ? 'Voter manually marked as voted' : allPositionsCompleted ? 'All positions completed' : null,
-      },
-      positions: votingStatus,
-      canVote: !isLockedOut && election.isActive,
-      lockoutMessage: isLockedOut ? 'Voter has completed all voting and is locked out' : null,
+      votes,
+      availablePositions,
+      canVote: ballot.Ballot_Status === 'ACTIVE' && !voter.hasVoted,
     };
   }
 
   async getRealTimeStats() {
     try {
-      // Get all votes for active and paused elections
       const activeVotes = await this.prisma.vote.findMany({
-        where: {
-          election: {
-            status: { in: ['active', 'paused'] }
-          }
-        },
         select: {
           id: true,
           voterId: true,
           candidateId: true,
-          electionId: true
         }
       });
 
-      // Get total voters count
       const totalVoters = await this.prisma.voter.count();
-
-      // Calculate real-time statistics
       const totalVotes = activeVotes.length;
       const uniqueVoters = new Set(activeVotes.map(vote => vote.voterId)).size;
       const candidatesWithVotes = new Set(activeVotes.map(vote => vote.candidateId)).size;
+      const totalPositions = await this.prisma.position.count();
 
-      // Get positions count for active and paused elections
-      const totalPositions = await this.prisma.electionPosition.count({
-        where: {
-          election: {
-            status: { in: ['active', 'paused'] }
-          }
-        }
-      });
-
-      // Calculate voter turnout
       const votersWhoVoted = uniqueVoters;
       const voterTurnout = totalVoters > 0 ? Math.round((votersWhoVoted / totalVoters) * 100) : 0;
 
       return {
         totalVotes,
-        uniqueVoters: votersWhoVoted,
+        totalVoters,
+        votersWhoVoted,
+        voterTurnout,
         candidatesWithVotes,
         totalPositions,
-        votersWhoVoted,
-        totalVoters,
-        voterTurnout
+        timestamp: new Date()
       };
     } catch (error) {
-      console.error('Error getting real-time stats:', error);
-      throw new Error('Failed to get real-time statistics');
+      throw new Error(`Failed to get real-time stats: ${error.message}`);
     }
   }
 
   async getVoteTimeline() {
     try {
-      // Get votes from the last 24 hours for active and paused elections
       const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
-      // Get all votes from the last 24 hours for active and paused elections
       const votes = await this.prisma.vote.findMany({
         where: {
           createdAt: {
             gte: twentyFourHoursAgo
-          },
-          election: {
-            status: { in: ['active', 'paused'] }
           }
         },
         select: {
@@ -1384,7 +691,6 @@ export class VoteService {
         }
       });
 
-      // Group votes by hour
       const timelineData = [];
       const hourMap = new Map();
 
@@ -1399,42 +705,31 @@ export class VoteService {
         }
       });
 
-      // Convert to array format
       for (const [hour, voteCount] of hourMap) {
         timelineData.push({
           hour,
-          voteCount
+          voteCount,
         });
       }
 
-      // Sort by hour
-      timelineData.sort((a, b) => a.hour.localeCompare(b.hour));
-
-      return timelineData;
+      return timelineData.sort((a, b) => a.hour.localeCompare(b.hour));
     } catch (error) {
-      console.error('Error getting vote timeline:', error);
       throw new Error('Failed to get vote timeline');
     }
   }
 
-  async getActiveElectionResults() {
+  async getActiveBallotResults() {
     try {
-      // Get results for currently active elections only
-      const activeElectionResults = await this.prisma.vote.groupBy({
-        by: ['electionId', 'positionId', 'candidateId'],
-        where: {
-          election: {
-            status: { in: ['active', 'paused'] } // Include both active and paused elections
-          }
-        },
+      const activeBallotResults = await this.prisma.vote.groupBy({
+        by: ['positionId', 'candidateId'],
         _count: {
           id: true
         }
       });
 
-      // Get position and candidate details
       const results = [];
-      for (const result of activeElectionResults) {
+
+      for (const result of activeBallotResults) {
         const position = await this.prisma.position.findUnique({
           where: { id: result.positionId },
           select: { Position_Title: true, voteLimit: true }
@@ -1458,50 +753,14 @@ export class VoteService {
         }
       }
 
-      // Emit real-time results update via WebSocket
       if (results.length > 0) {
-        const electionId = activeElectionResults[0]?.electionId;
-        if (electionId) {
-          this.votingGateway.emitResultsUpdate(electionId, results);
-        }
+        this.votingGateway.emitResultsUpdate('ballot', results);
       }
 
       return results;
     } catch (error) {
-      console.error('Error getting active election results:', error);
-      throw new Error('Failed to get active election results');
+      console.error('Error getting active ballot results:', error);
+      throw new Error('Failed to get active ballot results');
     }
   }
-
-  async resetVoterStatus(voterId: string) {
-    try {
-      // Check if voter exists
-      const voter = await this.prisma.voter.findUnique({
-        where: { id: voterId }
-      });
-
-      if (!voter) {
-        throw new NotFoundException('Voter not found');
-      }
-
-      // Reset voter's hasVoted status
-      await this.prisma.voter.update({
-        where: { id: voterId },
-        data: { hasVoted: false }
-      });
-
-      return {
-        message: 'Voter status reset successfully',
-        voter: {
-          id: voter.id,
-          name: voter.Voter_Name,
-          studentId: voter.Voter_StudentId,
-          hasVoted: false
-        }
-      };
-    } catch (error) {
-      console.error('Error resetting voter status:', error);
-      throw new Error('Failed to reset voter status');
-    }
-  }
-} 
+}

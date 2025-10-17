@@ -74,7 +74,11 @@ export class TemplateInitializationService implements OnModuleInit {
             createdTemplates.push(createdTemplate);
             console.log(`✅ Created: ${createdTemplate.BallotTemplate_Name} (${(template.data.positions || []).length} positions)`);
           } catch (error) {
-            console.error(`❌ Failed to create template ${template.name}:`, error);
+            if (error.code === 'P2002') {
+              console.log(`⚠️ Template ${template.name} already exists, skipping...`);
+            } else {
+              console.error(`❌ Failed to create template ${template.name}:`, error);
+            }
             // Continue with other templates
           }
         }

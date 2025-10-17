@@ -16,12 +16,10 @@ const admin_module_1 = require("./admin/admin.module");
 const voter_module_1 = require("./voter/voter.module");
 const candidate_module_1 = require("./candidate/candidate.module");
 const position_module_1 = require("./position/position.module");
-const election_module_1 = require("./election/election.module");
 const vote_module_1 = require("./vote/vote.module");
 const department_module_1 = require("./department/department.module");
 const course_module_1 = require("./course/course.module");
 const file_upload_module_1 = require("./modules/file-upload.module");
-const election_assignment_module_1 = require("./election-assignment/election-assignment.module");
 const audit_module_1 = require("./audit/audit.module");
 const trash_module_1 = require("./trash/trash.module");
 const ballot_module_1 = require("./ballot/ballot.module");
@@ -52,12 +50,10 @@ exports.AppModule = AppModule = __decorate([
             voter_module_1.VoterModule,
             candidate_module_1.CandidateModule,
             position_module_1.PositionModule,
-            election_module_1.ElectionModule,
             vote_module_1.VoteModule,
             department_module_1.DepartmentModule,
             course_module_1.CourseModule,
             file_upload_module_1.FileUploadModule,
-            election_assignment_module_1.ElectionAssignmentModule,
             audit_module_1.AuditModule,
             trash_module_1.TrashModule,
             ballot_module_1.BallotModule,

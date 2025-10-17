@@ -1,7 +1,7 @@
 export declare class CreateVoteDto {
     voterId: string;
     candidateId: string;
-    electionId: string;
+    ballotId: string;
     positionId: string;
     ipAddress?: string;
     userAgent?: string;

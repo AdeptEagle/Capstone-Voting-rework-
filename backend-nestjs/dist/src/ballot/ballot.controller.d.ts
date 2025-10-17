@@ -1,6 +1,7 @@
 import { BallotService } from './ballot.service';
 import { CreateBallotDto } from './dto/create-ballot.dto';
 import { UpdateBallotDto } from './dto/update-ballot.dto';
+import { CastVoteDto } from './dto/cast-vote.dto';
 export declare class BallotController {
     private readonly ballotService;
     constructor(ballotService: BallotService);
@@ -107,14 +108,14 @@ export declare class BallotController {
                 deletedAt: Date | null;
                 isDeleted: boolean;
                 departmentId: string | null;
-                courseId: string | null;
-                positionId: string;
                 Candidate_Name: string;
                 Candidate_Email: string;
                 Candidate_StudentId: string;
                 photo: string | null;
                 manifesto: string | null;
                 party_list_name: string | null;
+                courseId: string | null;
+                positionId: string;
                 partyListId: string | null;
             };
         } & {
@@ -231,14 +232,14 @@ export declare class BallotController {
                 deletedAt: Date | null;
                 isDeleted: boolean;
                 departmentId: string | null;
-                courseId: string | null;
-                positionId: string;
                 Candidate_Name: string;
                 Candidate_Email: string;
                 Candidate_StudentId: string;
                 photo: string | null;
                 manifesto: string | null;
                 party_list_name: string | null;
+                courseId: string | null;
+                positionId: string;
                 partyListId: string | null;
             };
         } & {
@@ -355,14 +356,14 @@ export declare class BallotController {
                 deletedAt: Date | null;
                 isDeleted: boolean;
                 departmentId: string | null;
-                courseId: string | null;
-                positionId: string;
                 Candidate_Name: string;
                 Candidate_Email: string;
                 Candidate_StudentId: string;
                 photo: string | null;
                 manifesto: string | null;
                 party_list_name: string | null;
+                courseId: string | null;
+                positionId: string;
                 partyListId: string | null;
             };
         } & {
@@ -462,7 +463,7 @@ export declare class BallotController {
         UserBallotHistory_IsCompleted: boolean;
         UserBallotHistory_LastAccessed: Date;
     })[]>;
-    castBallotVote(castVoteDto: any, req: any): Promise<{
+    castBallotVote(castVoteDto: CastVoteDto, req: any): Promise<{
         message: string;
         votes: any[];
         totalVotes: number;
@@ -554,14 +555,14 @@ export declare class BallotController {
                 deletedAt: Date | null;
                 isDeleted: boolean;
                 departmentId: string | null;
-                courseId: string | null;
-                positionId: string;
                 Candidate_Name: string;
                 Candidate_Email: string;
                 Candidate_StudentId: string;
                 photo: string | null;
                 manifesto: string | null;
                 party_list_name: string | null;
+                courseId: string | null;
+                positionId: string;
                 partyListId: string | null;
             };
         } & {
@@ -591,24 +592,24 @@ export declare class BallotController {
                     deletedAt: Date | null;
                     isDeleted: boolean;
                     departmentId: string | null;
-                    courseId: string | null;
-                    positionId: string;
                     Candidate_Name: string;
                     Candidate_Email: string;
                     Candidate_StudentId: string;
                     photo: string | null;
                     manifesto: string | null;
                     party_list_name: string | null;
+                    courseId: string | null;
+                    positionId: string;
                     partyListId: string | null;
                 };
             } & {
                 id: string;
-                BallotResultDetails_BallotId: string;
+                BallotResultDetails_Rank: number;
                 BallotResultDetails_PositionId: string;
+                BallotResultDetails_BallotId: string;
                 BallotResultDetails_CandidateId: string;
                 BallotResultDetails_VoteCount: number;
                 BallotResultDetails_Percentage: number;
-                BallotResultDetails_Rank: number;
                 BallotResultDetails_LastUpdated: Date;
             })[];
         } & {
@@ -723,14 +724,14 @@ export declare class BallotController {
                 deletedAt: Date | null;
                 isDeleted: boolean;
                 departmentId: string | null;
-                courseId: string | null;
-                positionId: string;
                 Candidate_Name: string;
                 Candidate_Email: string;
                 Candidate_StudentId: string;
                 photo: string | null;
                 manifesto: string | null;
                 party_list_name: string | null;
+                courseId: string | null;
+                positionId: string;
                 partyListId: string | null;
             };
         } & {
@@ -931,14 +932,14 @@ export declare class BallotController {
                 deletedAt: Date | null;
                 isDeleted: boolean;
                 departmentId: string | null;
-                courseId: string | null;
-                positionId: string;
                 Candidate_Name: string;
                 Candidate_Email: string;
                 Candidate_StudentId: string;
                 photo: string | null;
                 manifesto: string | null;
                 party_list_name: string | null;
+                courseId: string | null;
+                positionId: string;
                 partyListId: string | null;
             };
         } & {

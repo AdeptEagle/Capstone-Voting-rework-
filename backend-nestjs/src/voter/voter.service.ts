@@ -507,12 +507,6 @@ export class VoterService {
                 Position_Title: true,
               },
             },
-            election: {
-              select: {
-                id: true,
-                Election_Title: true,
-              },
-            },
           },
           orderBy: {
             createdAt: 'desc',
@@ -678,12 +672,6 @@ export class VoterService {
                 Position_Title: true,
               },
             },
-            election: {
-              select: {
-                id: true,
-                Election_Title: true,
-              },
-            },
           },
         },
       },
@@ -693,10 +681,10 @@ export class VoterService {
       throw new NotFoundException('Voter not found');
     }
 
-    // Group votes by ballot/election
+    // Group votes by ballot
     const votingDetails = voter.ballotHistory.map(history => {
       const ballotVotes = voter.votes.filter(vote => 
-        vote.electionId === 'ELEC-12' // Assuming ballot votes use this election ID
+        vote.ballotId === history.ballot.id
       );
 
       return {

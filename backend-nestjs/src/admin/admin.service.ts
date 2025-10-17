@@ -357,7 +357,7 @@ export class AdminService {
         updatedAt: true,
         _count: {
           select: {
-            elections: true,
+            ballots: true,
             departments: true,
             courses: true,
           }

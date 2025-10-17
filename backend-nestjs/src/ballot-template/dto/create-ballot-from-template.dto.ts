@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsDateString, IsArray } from 'class-validator';
+import { IsString, IsOptional, IsDateString, IsArray, IsBoolean } from 'class-validator';
 
 export class CreateBallotFromTemplateDto {
   @IsOptional()
@@ -18,6 +18,10 @@ export class CreateBallotFromTemplateDto {
   @IsOptional()
   @IsDateString()
   showResultsAfter?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  allowAbstain?: boolean;
 
   @IsOptional()
   @IsArray()

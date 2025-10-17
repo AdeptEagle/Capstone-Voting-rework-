@@ -13,12 +13,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.SchedulerService = void 0;
 const common_1 = require("@nestjs/common");
 const schedule_1 = require("@nestjs/schedule");
-const election_service_1 = require("../election/election.service");
 const ballot_service_1 = require("../ballot/ballot.service");
 const prisma_service_1 = require("../prisma/prisma.service");
 let SchedulerService = SchedulerService_1 = class SchedulerService {
-    constructor(electionService, ballotService, prisma) {
-        this.electionService = electionService;
+    constructor(ballotService, prisma) {
         this.ballotService = ballotService;
         this.prisma = prisma;
         this.logger = new common_1.Logger(SchedulerService_1.name);
@@ -26,16 +24,8 @@ let SchedulerService = SchedulerService_1 = class SchedulerService {
     async handleAutoEndElections() {
         try {
             this.logger.log('🕐 Checking for expired elections...');
-            const result = await this.electionService.checkAndAutoEndElections();
-            if (result.autoEndedElections.length > 0) {
-                this.logger.log(`✅ Auto-ended ${result.autoEndedElections.length} election(s)`);
-                result.autoEndedElections.forEach(election => {
-                    this.logger.log(`   📊 ${election.election.title}: ${election.finalResults.totalVotes} votes, ${election.finalResults.uniqueVoters} voters`);
-                });
-            }
-            else {
-                this.logger.log('✅ No expired elections found');
-            }
+            const result = { message: 'Ballot auto-end not implemented yet' };
+            this.logger.log('Ballot auto-end functionality not implemented yet');
         }
         catch (error) {
             this.logger.error('❌ Error in auto-end elections check:', error);
@@ -79,7 +69,7 @@ let SchedulerService = SchedulerService_1 = class SchedulerService {
     }
     async logElectionStatus() {
         try {
-            const activeElections = await this.electionService.getActiveElections();
+            const activeElections = [];
             const now = new Date();
             if (activeElections.length > 0) {
                 this.logger.log(`📊 Active elections: ${activeElections.length}`);
@@ -173,8 +163,7 @@ __decorate([
 ], SchedulerService.prototype, "cleanupInactiveSessions", null);
 exports.SchedulerService = SchedulerService = SchedulerService_1 = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [election_service_1.ElectionService,
-        ballot_service_1.BallotService,
+    __metadata("design:paramtypes", [ballot_service_1.BallotService,
         prisma_service_1.PrismaService])
 ], SchedulerService);
 //# sourceMappingURL=scheduler.service.js.map
