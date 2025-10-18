@@ -96,7 +96,7 @@ let AuthController = class AuthController {
             success: isConnected,
             message: isConnected
                 ? 'Email service is working correctly'
-                : 'Email service connection failed. Check your Gmail credentials.',
+                : 'Email service connection failed. Check your email service credentials.',
         };
     }
 };

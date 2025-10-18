@@ -15,21 +15,22 @@ const nodemailer = require("nodemailer");
 let EmailService = class EmailService {
     constructor() {
         console.log('📧 Initializing email service...');
-        console.log('📧 EMAIL_SERVICE:', process.env.EMAIL_SERVICE || 'gmail');
-        console.log('📧 GMAIL_USER:', process.env.GMAIL_USER ? 'Set' : 'Not set');
-        console.log('📧 GMAIL_PASSWORD:', process.env.GMAIL_PASSWORD ? 'Set' : 'Not set');
+        console.log('📧 EMAIL_SERVICE:', process.env.EMAIL_SERVICE || 'brevo');
         console.log('📧 FRONTEND_URL:', process.env.FRONTEND_URL ? 'Set' : 'Not set');
-        console.log('🔍 Debug - All GMAIL environment variables:');
-        Object.keys(process.env).forEach(key => {
-            if (key.startsWith('GMAIL')) {
-                console.log(`🔍 ${key}:`, process.env[key] ? 'Set' : 'Not set');
-            }
-        });
-        if (process.env.GMAIL_PASSWORD) {
-            console.log('🔍 GMAIL_PASSWORD length:', process.env.GMAIL_PASSWORD.length);
-            console.log('🔍 GMAIL_PASSWORD first 4 chars:', process.env.GMAIL_PASSWORD.substring(0, 4));
-        }
         const emailService = process.env.EMAIL_SERVICE || 'brevo';
+        console.log(`🔍 Debug - ${emailService.toUpperCase()} environment variables:`);
+        if (emailService === 'brevo') {
+            console.log('🔍 BREVO_SMTP_LOGIN:', process.env.BREVO_SMTP_LOGIN ? 'Set' : 'Not set');
+            console.log('🔍 BREVO_SMTP_KEY:', process.env.BREVO_SMTP_KEY ? 'Set' : 'Not set');
+            console.log('🔍 BREVO_SENDER_EMAIL:', process.env.BREVO_SENDER_EMAIL ? 'Set' : 'Not set');
+        }
+        else if (emailService === 'gmail') {
+            console.log('🔍 GMAIL_USER:', process.env.GMAIL_USER ? 'Set' : 'Not set');
+            console.log('🔍 GMAIL_PASSWORD:', process.env.GMAIL_PASSWORD ? 'Set' : 'Not set');
+        }
+        else if (emailService === 'sendgrid') {
+            console.log('🔍 SENDGRID_API_KEY:', process.env.SENDGRID_API_KEY ? 'Set' : 'Not set');
+        }
         if (emailService === 'gmail') {
             if (!process.env.GMAIL_USER || !process.env.GMAIL_PASSWORD) {
                 console.error('❌ Gmail configuration missing! GMAIL_USER and GMAIL_PASSWORD must be set.');
@@ -62,21 +63,41 @@ let EmailService = class EmailService {
                 this.transporter = null;
                 return;
             }
-            this.transporter = nodemailer.createTransport({
-                host: 'smtp-relay.brevo.com',
-                port: 587,
-                secure: false,
-                auth: {
-                    user: process.env.BREVO_SMTP_LOGIN,
-                    pass: process.env.BREVO_SMTP_KEY,
+            const smtpConfigs = [
+                {
+                    host: 'smtp-relay.brevo.com',
+                    port: 587,
+                    secure: false,
+                    auth: {
+                        user: process.env.BREVO_SMTP_LOGIN,
+                        pass: process.env.BREVO_SMTP_KEY,
+                    },
+                    tls: {
+                        rejectUnauthorized: false
+                    },
+                    connectionTimeout: 30000,
+                    greetingTimeout: 15000,
+                    socketTimeout: 30000,
                 },
-                tls: {
-                    rejectUnauthorized: false
-                },
-                connectionTimeout: 60000,
-                greetingTimeout: 30000,
-                socketTimeout: 60000,
-            });
+                {
+                    host: 'smtp-relay.brevo.com',
+                    port: 465,
+                    secure: true,
+                    auth: {
+                        user: process.env.BREVO_SMTP_LOGIN,
+                        pass: process.env.BREVO_SMTP_KEY,
+                    },
+                    tls: {
+                        rejectUnauthorized: false
+                    },
+                    connectionTimeout: 30000,
+                    greetingTimeout: 15000,
+                    socketTimeout: 30000,
+                }
+            ];
+            console.log(`🔧 Creating Brevo SMTP transporter (port 587)...`);
+            this.transporter = nodemailer.createTransport(smtpConfigs[0]);
+            console.log(`✅ Brevo SMTP transporter created successfully!`);
         }
         else if (emailService === 'sendgrid') {
             if (!process.env.SENDGRID_API_KEY) {
@@ -234,7 +255,7 @@ let EmailService = class EmailService {
         try {
             const info = await this.transporter.sendMail(mailOptions);
             console.log(`✅ Password changed confirmation email sent to ${to}`);
-            console.log(`📧 Real confirmation email sent via Gmail to ${to}`);
+            console.log(`📧 Real confirmation email sent via ${process.env.EMAIL_SERVICE || 'brevo'} to ${to}`);
             return info;
         }
         catch (error) {
@@ -243,16 +264,56 @@ let EmailService = class EmailService {
     }
     async testConnection() {
         try {
-            console.log('✅ Testing Gmail SMTP connection...');
-            console.log(`📧 Gmail User: ${process.env.GMAIL_USER}`);
-            console.log(`🔑 Gmail Password: ${process.env.GMAIL_PASSWORD ? '***configured***' : 'NOT CONFIGURED'}`);
-            this.transporter = nodemailer.createTransport({
-                service: 'gmail',
-                auth: {
-                    user: process.env.GMAIL_USER,
-                    pass: process.env.GMAIL_PASSWORD,
-                },
-            });
+            const emailService = process.env.EMAIL_SERVICE || 'brevo';
+            console.log(`✅ Testing ${emailService.toUpperCase()} SMTP connection...`);
+            if (emailService === 'brevo') {
+                console.log(`📧 Brevo Login: ${process.env.BREVO_SMTP_LOGIN}`);
+                console.log(`🔑 Brevo Key: ${process.env.BREVO_SMTP_KEY ? '***configured***' : 'NOT CONFIGURED'}`);
+                const configs = [
+                    { port: 587, secure: false },
+                    { port: 465, secure: true }
+                ];
+                for (const config of configs) {
+                    try {
+                        console.log(`🔧 Testing Brevo SMTP on port ${config.port}...`);
+                        this.transporter = nodemailer.createTransport({
+                            host: 'smtp-relay.brevo.com',
+                            port: config.port,
+                            secure: config.secure,
+                            auth: {
+                                user: process.env.BREVO_SMTP_LOGIN,
+                                pass: process.env.BREVO_SMTP_KEY,
+                            },
+                            tls: {
+                                rejectUnauthorized: false
+                            },
+                            connectionTimeout: 30000,
+                            greetingTimeout: 15000,
+                            socketTimeout: 30000,
+                        });
+                        await this.transporter.verify();
+                        console.log(`✅ Brevo SMTP port ${config.port} working!`);
+                        break;
+                    }
+                    catch (error) {
+                        console.log(`❌ Port ${config.port} failed:`, error.message);
+                        if (config === configs[configs.length - 1]) {
+                            throw error;
+                        }
+                    }
+                }
+            }
+            else if (emailService === 'gmail') {
+                console.log(`📧 Gmail User: ${process.env.GMAIL_USER}`);
+                console.log(`🔑 Gmail Password: ${process.env.GMAIL_PASSWORD ? '***configured***' : 'NOT CONFIGURED'}`);
+                this.transporter = nodemailer.createTransport({
+                    service: 'gmail',
+                    auth: {
+                        user: process.env.GMAIL_USER,
+                        pass: process.env.GMAIL_PASSWORD,
+                    },
+                });
+            }
             await this.transporter.verify();
             console.log('✅ Email service connection verified');
             return true;
