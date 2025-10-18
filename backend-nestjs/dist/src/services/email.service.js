@@ -12,14 +12,23 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.EmailService = void 0;
 const common_1 = require("@nestjs/common");
 const nodemailer = require("nodemailer");
+const axios_1 = require("axios");
 let EmailService = class EmailService {
     constructor() {
+        this.useApiService = false;
+        this.apiService = '';
         console.log('📧 Initializing email service...');
         console.log('📧 EMAIL_SERVICE:', process.env.EMAIL_SERVICE || 'brevo');
         console.log('📧 FRONTEND_URL:', process.env.FRONTEND_URL ? 'Set' : 'Not set');
         const emailService = process.env.EMAIL_SERVICE || 'brevo';
         console.log(`🔍 Debug - ${emailService.toUpperCase()} environment variables:`);
-        if (emailService === 'brevo') {
+        if (emailService === 'resend') {
+            this.useApiService = true;
+            this.apiService = 'resend';
+            console.log('🔍 RESEND_API_KEY:', process.env.RESEND_API_KEY ? 'Set' : 'Not set');
+            console.log('🔍 RESEND_FROM_EMAIL:', process.env.RESEND_FROM_EMAIL ? 'Set' : 'Not set');
+        }
+        else if (emailService === 'brevo') {
             console.log('🔍 BREVO_SMTP_LOGIN:', process.env.BREVO_SMTP_LOGIN ? 'Set' : 'Not set');
             console.log('🔍 BREVO_SMTP_KEY:', process.env.BREVO_SMTP_KEY ? 'Set' : 'Not set');
             console.log('🔍 BREVO_SENDER_EMAIL:', process.env.BREVO_SENDER_EMAIL ? 'Set' : 'Not set');
@@ -31,7 +40,18 @@ let EmailService = class EmailService {
         else if (emailService === 'sendgrid') {
             console.log('🔍 SENDGRID_API_KEY:', process.env.SENDGRID_API_KEY ? 'Set' : 'Not set');
         }
-        if (emailService === 'gmail') {
+        if (emailService === 'resend') {
+            if (!process.env.RESEND_API_KEY || !process.env.RESEND_FROM_EMAIL) {
+                console.error('❌ Resend configuration missing! RESEND_API_KEY and RESEND_FROM_EMAIL must be set.');
+                console.error('⚠️ Email functionality will be disabled. App will continue to run without email features.');
+                console.error('🔧 To fix: Set RESEND_API_KEY and RESEND_FROM_EMAIL environment variables in your deployment platform.');
+                this.transporter = null;
+                return;
+            }
+            console.log('✅ Resend API configuration found - using API service');
+            this.transporter = null;
+        }
+        else if (emailService === 'gmail') {
             if (!process.env.GMAIL_USER || !process.env.GMAIL_PASSWORD) {
                 console.error('❌ Gmail configuration missing! GMAIL_USER and GMAIL_PASSWORD must be set.');
                 console.error('⚠️ Email functionality will be disabled. App will continue to run without email features.');
@@ -118,17 +138,43 @@ let EmailService = class EmailService {
             this.transporter = null;
             return;
         }
-        this.transporter.verify((error, success) => {
-            if (error) {
-                console.error('❌ Email service verification failed:', error);
-            }
-            else {
-                console.log('✅ Email service verified successfully');
-            }
-        });
+        if (this.transporter && !this.useApiService) {
+            this.transporter.verify((error, success) => {
+                if (error) {
+                    console.error('❌ Email service verification failed:', error);
+                }
+                else {
+                    console.log('✅ Email service verified successfully');
+                }
+            });
+        }
+        else if (this.useApiService) {
+            console.log('✅ API email service configured - no SMTP verification needed');
+        }
+    }
+    async sendEmailViaResend(to, subject, html, text) {
+        try {
+            const response = await axios_1.default.post('https://api.resend.com/emails', {
+                from: process.env.RESEND_FROM_EMAIL,
+                to: [to],
+                subject: subject,
+                html: html,
+                text: text || html.replace(/<[^>]*>/g, ''),
+            }, {
+                headers: {
+                    'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+            console.log('✅ Email sent via Resend API:', response.data);
+        }
+        catch (error) {
+            console.error('❌ Resend API error:', error.response?.data || error.message);
+            throw new Error(`Failed to send email via Resend: ${error.response?.data?.message || error.message}`);
+        }
     }
     async sendPasswordResetEmail(to, resetToken, userType, userName, userId) {
-        if (!this.transporter) {
+        if (!this.transporter && !this.useApiService) {
             console.error('❌ Email service not configured - cannot send password reset email');
             throw new Error('Email service not configured. Please contact administrator.');
         }
@@ -137,8 +183,17 @@ let EmailService = class EmailService {
             throw new Error('Frontend URL not configured. Please contact administrator.');
         }
         const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
+        const senderEmail = process.env.BREVO_SMTP_LOGIN || process.env.BREVO_SENDER_EMAIL;
+        console.log(`📧 Sender email configuration:`);
+        console.log(`📧 BREVO_SMTP_LOGIN: ${process.env.BREVO_SMTP_LOGIN || 'Not set'}`);
+        console.log(`📧 BREVO_SENDER_EMAIL: ${process.env.BREVO_SENDER_EMAIL || 'Not set'}`);
+        console.log(`📧 Final sender: ${senderEmail || 'NOT CONFIGURED'}`);
+        if (!senderEmail) {
+            console.error('❌ No sender email configured! Set BREVO_SMTP_LOGIN or BREVO_SENDER_EMAIL');
+            throw new Error('Sender email not configured. Please set BREVO_SMTP_LOGIN or BREVO_SENDER_EMAIL environment variable.');
+        }
         const mailOptions = {
-            from: process.env.BREVO_SENDER_EMAIL || process.env.BREVO_SMTP_LOGIN || 'noreply@ballotblitz.com',
+            from: senderEmail,
             to: to,
             subject: 'Password Reset Request for Ballotblitz',
             html: `
@@ -196,30 +251,46 @@ let EmailService = class EmailService {
         try {
             console.log(`📧 Attempting to send password reset email to ${to}`);
             console.log(`🔗 Reset link: ${resetLink}`);
-            const info = await this.transporter.sendMail(mailOptions);
-            console.log(`✅ Password reset email sent successfully to ${to}`);
-            console.log(`📧 Message ID: ${info.messageId}`);
-            console.log(`📧 Response: ${info.response}`);
-            return info;
+            if (this.useApiService && this.apiService === 'resend') {
+                await this.sendEmailViaResend(to, mailOptions.subject, mailOptions.html);
+                console.log(`✅ Password reset email sent successfully via Resend API to ${to}`);
+            }
+            else {
+                const info = await this.transporter.sendMail(mailOptions);
+                console.log(`✅ Password reset email sent successfully to ${to}`);
+                console.log(`📧 Message ID: ${info.messageId}`);
+                console.log(`📧 Response: ${info.response}`);
+                return info;
+            }
         }
         catch (error) {
             console.error('❌ Error sending password reset email:', error);
-            console.error('❌ Error details:', {
-                code: error.code,
-                command: error.command,
-                response: error.response,
-                responseCode: error.responseCode
-            });
+            if (this.useApiService) {
+                console.error('❌ API Error details:', error.message);
+            }
+            else {
+                console.error('❌ SMTP Error details:', {
+                    code: error.code,
+                    command: error.command,
+                    response: error.response,
+                    responseCode: error.responseCode
+                });
+            }
             throw new Error('Failed to send password reset email');
         }
     }
     async sendPasswordChangedEmail(to, userType) {
-        if (!this.transporter) {
+        if (!this.transporter && !this.useApiService) {
             console.error('❌ Email service not configured - cannot send password changed email');
             throw new Error('Email service not configured. Please contact administrator.');
         }
+        const senderEmail = process.env.BREVO_SMTP_LOGIN || process.env.BREVO_SENDER_EMAIL;
+        if (!senderEmail) {
+            console.error('❌ No sender email configured for password changed email!');
+            throw new Error('Sender email not configured. Please set BREVO_SMTP_LOGIN or BREVO_SENDER_EMAIL environment variable.');
+        }
         const mailOptions = {
-            from: process.env.BREVO_SENDER_EMAIL || process.env.BREVO_SMTP_LOGIN || 'noreply@ballotblitz.com',
+            from: senderEmail,
             to: to,
             subject: 'Password Successfully Changed - Voting System',
             html: `
@@ -253,10 +324,16 @@ let EmailService = class EmailService {
       `,
         };
         try {
-            const info = await this.transporter.sendMail(mailOptions);
-            console.log(`✅ Password changed confirmation email sent to ${to}`);
-            console.log(`📧 Real confirmation email sent via ${process.env.EMAIL_SERVICE || 'brevo'} to ${to}`);
-            return info;
+            if (this.useApiService && this.apiService === 'resend') {
+                await this.sendEmailViaResend(to, mailOptions.subject, mailOptions.html);
+                console.log(`✅ Password changed confirmation email sent via Resend API to ${to}`);
+            }
+            else {
+                const info = await this.transporter.sendMail(mailOptions);
+                console.log(`✅ Password changed confirmation email sent to ${to}`);
+                console.log(`📧 Real confirmation email sent via ${process.env.EMAIL_SERVICE || 'brevo'} to ${to}`);
+                return info;
+            }
         }
         catch (error) {
             console.error('❌ Error sending password changed email:', error);

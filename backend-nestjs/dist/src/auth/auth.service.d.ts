@@ -90,7 +90,6 @@ export declare class AuthService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        userId: string;
         loginTime: Date;
         logoutTime: Date | null;
         duration: number | null;
@@ -98,6 +97,7 @@ export declare class AuthService {
         userAgent: string | null;
         sessionId: string | null;
         isActive: boolean;
+        userId: string;
     }>;
     userRegister(userRegisterDto: {
         Voter_Name: string;
