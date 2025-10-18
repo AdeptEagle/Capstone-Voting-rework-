@@ -33,7 +33,7 @@ const ResetPassword = () => {
 
   const verifyToken = async (tokenToVerify) => {
     try {
-      const response = await api.get(`/password-reset/verify-token/${tokenToVerify}`);
+      const response = await api.get(`/auth/verify-token/${tokenToVerify}`);
       setTokenValid(true);
       setMessage('Token verified successfully. Please enter your new password.');
     } catch (error) {
@@ -62,7 +62,7 @@ const ResetPassword = () => {
     setError('');
 
     try {
-      const response = await api.post('/password-reset/reset-password', {
+      const response = await api.post('/auth/reset-password', {
         token,
         newPassword
       });
@@ -135,13 +135,12 @@ const ResetPassword = () => {
         {tokenValid ? (
           <form onSubmit={handleSubmit} className="reset-password-form">
             <div className="form-group">
-              <label className="form-label">New Password</label>
               <input
                 type="password"
                 className="form-control"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Enter your new password"
+                placeholder="New Password"
                 required
                 minLength="6"
               />
@@ -151,13 +150,12 @@ const ResetPassword = () => {
             </div>
 
             <div className="form-group">
-              <label className="form-label">Confirm New Password</label>
               <input
                 type="password"
                 className="form-control"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Confirm your new password"
+                placeholder="Confirm New Password"
                 required
                 minLength="6"
               />

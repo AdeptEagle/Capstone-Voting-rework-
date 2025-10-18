@@ -20,26 +20,39 @@ const AdminLoginLogs = () => {
   const itemsPerPage = 20;
 
   useEffect(() => {
-    // Check if user is superadmin
-    const currentUser = checkCurrentUser();
-    if (!currentUser.isAuthenticated) {
-      setAuthError('Please log in to access this page');
-      setLoading(false);
-      return;
-    }
+    const checkAuth = async () => {
+      try {
+        // Check if user is superadmin
+        const currentUser = await checkCurrentUser();
+        
+        if (!currentUser.isAuthenticated) {
+          setAuthError('Please log in to access this page');
+          setLoading(false);
+          return;
+        }
+        
+        const superAdminCheck = await isSuperAdmin();
+        
+        if (!superAdminCheck) {
+          setAuthError('Access denied. Superadmin privileges required.');
+          setLoading(false);
+          return;
+        }
+        
+        fetchData();
+      } catch (error) {
+        setAuthError('Authentication check failed');
+        setLoading(false);
+      }
+    };
     
-    if (!isSuperAdmin()) {
-      setAuthError('Access denied. Superadmin privileges required.');
-      setLoading(false);
-      return;
-    }
-    
-    fetchData();
+    checkAuth();
   }, [currentPage, selectedAdmin]);
 
   const fetchData = async () => {
     try {
       setLoading(true);
+      
       const [logsResponse, statsResponse, adminsResponse] = await Promise.all([
         getAdminLoginLogs(currentPage, itemsPerPage, selectedAdmin || null),
         getAdminLoginStats(),

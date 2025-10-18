@@ -10,6 +10,8 @@ const Voters = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingVoter, setEditingVoter] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [showActualPassword, setShowActualPassword] = useState(false);
+  const [actualPassword, setActualPassword] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -287,6 +289,8 @@ const Voters = () => {
       courseId: ''
     });
     setShowPassword(false);
+    setShowActualPassword(false);
+    setActualPassword('');
     setError('');
     setSuccess('');
   };

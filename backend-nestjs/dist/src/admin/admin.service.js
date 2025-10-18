@@ -112,7 +112,6 @@ let AdminService = class AdminService {
                 position: 'POS-1',
                 candidate: 'CAND-1',
                 voter: 'VOTER-1',
-                election: 'ELEC-1',
                 vote: 'VOTE-1',
             },
             padded: {
@@ -122,7 +121,6 @@ let AdminService = class AdminService {
                 position: 'POS-001',
                 candidate: 'CAND-001',
                 voter: 'VOTER-001',
-                election: 'ELEC-001',
                 vote: 'VOTE-001',
             },
             year: {
@@ -146,7 +144,6 @@ let AdminService = class AdminService {
                 position: await this.idGenerator.getModelCount('position'),
                 candidate: await this.idGenerator.getModelCount('candidate'),
                 voter: await this.idGenerator.getModelCount('voter'),
-                election: await this.idGenerator.getModelCount('election'),
                 vote: await this.idGenerator.getModelCount('vote'),
             },
         };

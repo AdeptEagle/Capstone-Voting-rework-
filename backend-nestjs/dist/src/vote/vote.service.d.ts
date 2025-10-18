@@ -71,7 +71,6 @@ export declare class VoteService {
         candidateId: string;
         auditHash: string | null;
         verificationCode: string | null;
-        electionId: string | null;
         ballotId: string | null;
     }>;
     createVote(createVoteDto: CreateVoteDto): Promise<{
@@ -149,7 +148,6 @@ export declare class VoteService {
         candidateId: string;
         auditHash: string | null;
         verificationCode: string | null;
-        electionId: string | null;
         ballotId: string | null;
     }>;
     getVotesByBallot(ballotId: string): Promise<({
@@ -194,7 +192,6 @@ export declare class VoteService {
         candidateId: string;
         auditHash: string | null;
         verificationCode: string | null;
-        electionId: string | null;
         ballotId: string | null;
     })[]>;
     getVotesByVoter(voterId: string): Promise<({
@@ -231,7 +228,6 @@ export declare class VoteService {
         candidateId: string;
         auditHash: string | null;
         verificationCode: string | null;
-        electionId: string | null;
         ballotId: string | null;
     })[]>;
     getVoteResults(ballotId: string): Promise<{
@@ -258,7 +254,6 @@ export declare class VoteService {
         candidateId: string;
         auditHash: string | null;
         verificationCode: string | null;
-        electionId: string | null;
         ballotId: string | null;
     }>;
     resetVoterStatus(voterId: string): Promise<{
@@ -313,7 +308,6 @@ export declare class VoteService {
             candidateId: string;
             auditHash: string | null;
             verificationCode: string | null;
-            electionId: string | null;
             ballotId: string | null;
         })[];
         availablePositions: {

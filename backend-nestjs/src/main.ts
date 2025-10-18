@@ -185,7 +185,7 @@ fetch('/api/votes', {
     )
     .addTag('Authentication', 'Secure authentication with HTTP-only cookies')
     .addTag('Votes', 'Vote management endpoints')
-    .addTag('Elections', 'Election management endpoints')
+    .addTag('Ballots', 'Ballot management endpoints')
     .addTag('Voters', 'Voter management endpoints')
     .addTag('Candidates', 'Candidate management endpoints')
     .addTag('Positions', 'Position management endpoints')

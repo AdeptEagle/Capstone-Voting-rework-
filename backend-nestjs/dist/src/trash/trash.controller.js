@@ -42,8 +42,8 @@ let TrashController = class TrashController {
     async getDeletedVoters() {
         return await this.trashService.getDeletedVoters();
     }
-    async getDeletedElections() {
-        return [];
+    async getDeletedBallots() {
+        return await this.trashService.getDeletedBallots();
     }
     async restoreCandidate(id) {
         return await this.trashService.restoreCandidate(id);
@@ -60,8 +60,8 @@ let TrashController = class TrashController {
     async restoreVoter(id) {
         return await this.trashService.restoreVoter(id);
     }
-    async restoreElection(id) {
-        return { message: 'Elections no longer exist' };
+    async restoreBallot(id) {
+        return await this.trashService.restoreBallot(id);
     }
     async bulkRestore(body) {
         return { message: 'Bulk restore not implemented yet' };
@@ -81,8 +81,8 @@ let TrashController = class TrashController {
     async permanentlyDeleteVoter(id) {
         return await this.trashService.permanentlyDeleteVoter(id);
     }
-    async permanentlyDeleteElection(id) {
-        return { message: 'Elections no longer exist' };
+    async permanentlyDeleteBallot(id) {
+        return await this.trashService.permanentlyDeleteBallot(id);
     }
     async emptyTrash() {
         return await this.trashService.emptyTrash();
@@ -138,13 +138,13 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], TrashController.prototype, "getDeletedVoters", null);
 __decorate([
-    (0, common_1.Get)('elections'),
-    (0, swagger_1.ApiOperation)({ summary: 'Get all deleted elections (deprecated)' }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'List of deleted elections' }),
+    (0, common_1.Get)('ballots'),
+    (0, swagger_1.ApiOperation)({ summary: 'Get all deleted ballots' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'List of deleted ballots' }),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
-], TrashController.prototype, "getDeletedElections", null);
+], TrashController.prototype, "getDeletedBallots", null);
 __decorate([
     (0, common_1.Post)('restore/candidate/:id'),
     (0, swagger_1.ApiOperation)({ summary: 'Restore a deleted candidate' }),
@@ -196,15 +196,15 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], TrashController.prototype, "restoreVoter", null);
 __decorate([
-    (0, common_1.Post)('restore/election/:id'),
-    (0, swagger_1.ApiOperation)({ summary: 'Restore deleted election (deprecated)' }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Election restored successfully' }),
-    (0, swagger_1.ApiResponse)({ status: 404, description: 'Election not found' }),
+    (0, common_1.Post)('restore/ballot/:id'),
+    (0, swagger_1.ApiOperation)({ summary: 'Restore deleted ballot' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Ballot restored successfully' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Ballot not found' }),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
-], TrashController.prototype, "restoreElection", null);
+], TrashController.prototype, "restoreBallot", null);
 __decorate([
     (0, common_1.Post)('restore/bulk'),
     (0, swagger_1.ApiOperation)({ summary: 'Bulk restore deleted items' }),
@@ -280,17 +280,17 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], TrashController.prototype, "permanentlyDeleteVoter", null);
 __decorate([
-    (0, common_1.Delete)('permanent/election/:id'),
+    (0, common_1.Delete)('permanent/ballot/:id'),
     (0, roles_decorator_1.Roles)(client_1.Role.SUPERADMIN, client_1.Role.ADMIN),
-    (0, swagger_1.ApiOperation)({ summary: 'Permanently delete election (cannot be undone)' }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Election permanently deleted' }),
-    (0, swagger_1.ApiResponse)({ status: 404, description: 'Election not found' }),
-    (0, swagger_1.ApiResponse)({ status: 409, description: 'Cannot delete election with voting history' }),
+    (0, swagger_1.ApiOperation)({ summary: 'Permanently delete ballot (cannot be undone)' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Ballot permanently deleted' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Ballot not found' }),
+    (0, swagger_1.ApiResponse)({ status: 409, description: 'Cannot delete ballot with voting history' }),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
-], TrashController.prototype, "permanentlyDeleteElection", null);
+], TrashController.prototype, "permanentlyDeleteBallot", null);
 __decorate([
     (0, common_1.Delete)('empty'),
     (0, roles_decorator_1.Roles)(client_1.Role.SUPERADMIN),

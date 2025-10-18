@@ -136,7 +136,7 @@ const ElectionHistory = () => {
           Election "{election.Election_Title}" moved to trash successfully! 
           <button 
             className="btn btn-link p-0 ms-2" 
-            onClick={() => window.location.href = '/trash-bin?tab=elections'}
+            onClick={() => window.location.href = '/trash-bin?tab=ballots'}
           >
             Go to Trash Bin
           </button>

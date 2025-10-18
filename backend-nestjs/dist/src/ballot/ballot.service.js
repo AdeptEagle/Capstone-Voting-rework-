@@ -714,39 +714,91 @@ let BallotService = class BallotService {
                     throw new common_1.BadRequestException(`Candidate ${candidateId} is not valid for position ${positionId} in this ballot`);
                 }
             }
-            const electionIdValue = ballot.electionId;
             console.log('💾 Starting database transaction...');
             console.log('🔄 Starting database transaction...');
             return await this.prisma.$transaction(async (tx) => {
                 console.log('✅ Database transaction started');
                 const createdVotes = [];
-                if (votes.length === 0) {
-                    console.log('🗳️ Processing abstaining vote (no votes to create)');
+                const actualVotes = votes.filter(vote => {
+                    const { candidateId, isAbstention } = vote;
+                    const isValidVote = !isAbstention && candidateId !== null && candidateId !== undefined;
+                    console.log(`🔍 Vote filter: positionId=${vote.positionId}, candidateId=${candidateId}, isAbstention=${isAbstention}, isValidVote=${isValidVote}`);
+                    return isValidVote;
+                });
+                const abstentionVotes = votes.filter(vote => {
+                    const { candidateId, isAbstention } = vote;
+                    const isAbstentionVote = isAbstention || candidateId === null || candidateId === undefined;
+                    console.log(`🔍 Abstention filter: positionId=${vote.positionId}, candidateId=${candidateId}, isAbstention=${isAbstention}, isAbstentionVote=${isAbstentionVote}`);
+                    return isAbstentionVote;
+                });
+                console.log('🗳️ Total votes received:', votes.length);
+                console.log('🗳️ Raw votes data:', JSON.stringify(votes, null, 2));
+                console.log('🗳️ Actual votes to process:', actualVotes.length);
+                console.log('🗳️ Actual votes data:', JSON.stringify(actualVotes, null, 2));
+                console.log('🗳️ Abstention votes:', abstentionVotes.length);
+                console.log('🗳️ Abstention votes data:', JSON.stringify(abstentionVotes, null, 2));
+                console.log('🧹 Clearing existing votes for user and ballot...');
+                const deletedBallotVotes = await tx.vote.deleteMany({
+                    where: {
+                        voterId: userId,
+                        ballotId: ballotId
+                    }
+                });
+                console.log(`🗑️ Deleted ${deletedBallotVotes.count} votes for this ballot`);
+                const positionIds = actualVotes.map(vote => vote.positionId);
+                const candidateIds = actualVotes.map(vote => vote.candidateId);
+                if (positionIds.length > 0 && candidateIds.length > 0) {
+                    const deletedConstraintVotes = await tx.vote.deleteMany({
+                        where: {
+                            voterId: userId,
+                            positionId: { in: positionIds },
+                            candidateId: { in: candidateIds }
+                        }
+                    });
+                    console.log(`🗑️ Deleted ${deletedConstraintVotes.count} votes that could cause constraint violations`);
                 }
-                else {
-                    for (const vote of votes) {
+                if (abstentionVotes.length > 0) {
+                    console.log('🗳️ Processing abstention votes - no vote records will be created');
+                    abstentionVotes.forEach(vote => {
+                        console.log('✅ Abstention recorded for position:', vote.positionId, '- no vote record created');
+                    });
+                }
+                if (actualVotes.length > 0) {
+                    console.log('🗳️ Processing actual votes');
+                    for (const vote of actualVotes) {
                         const { positionId, candidateId, isAbstention } = vote;
-                        console.log('🗳️ Creating vote for:', { positionId, candidateId, isAbstention });
-                        if (isAbstention || candidateId === null) {
-                            console.log('🗳️ Processing abstention vote for position:', positionId);
-                            console.log('🗳️ Abstention votes are NOT counted as actual votes - they are recorded for participation tracking only');
-                            console.log('✅ Abstention recorded for position:', positionId, '- no vote record created');
+                        console.log('🗳️ Processing vote:', { positionId, candidateId, isAbstention });
+                        if (isAbstention || candidateId === null || candidateId === undefined || candidateId === 'null') {
+                            console.log('⚠️ Skipping abstention vote:', { positionId, candidateId, isAbstention });
                             continue;
                         }
-                        else {
-                            const voteData_create = {
-                                id: this.generateId(),
-                                voter: { connect: { id: userId } },
-                                candidate: { connect: { id: candidateId } },
-                                position: { connect: { id: positionId } },
-                                ballot: { connect: { id: ballotId } },
-                                ipAddress: castVoteDto.ipAddress || null,
-                                userAgent: castVoteDto.userAgent || null,
-                                sessionId: castVoteDto.sessionId || null,
-                            };
-                            if (electionIdValue) {
-                                voteData_create.election = { connect: { id: electionIdValue } };
+                        const existingVote = await tx.vote.findFirst({
+                            where: {
+                                voterId: userId,
+                                positionId: positionId,
+                                candidateId: candidateId,
+                                ballotId: ballotId
                             }
+                        });
+                        if (existingVote) {
+                            console.log('⚠️ Vote already exists, skipping:', { positionId, candidateId });
+                            continue;
+                        }
+                        if (!candidateId || candidateId === null || candidateId === undefined || candidateId === 'null') {
+                            console.log('⚠️ Skipping vote creation - invalid candidateId:', candidateId);
+                            continue;
+                        }
+                        const voteData_create = {
+                            id: this.generateId(),
+                            voter: { connect: { id: userId } },
+                            candidate: { connect: { id: candidateId } },
+                            position: { connect: { id: positionId } },
+                            ballot: { connect: { id: ballotId } },
+                            ipAddress: castVoteDto.ipAddress || null,
+                            userAgent: castVoteDto.userAgent || null,
+                            sessionId: castVoteDto.sessionId || null,
+                        };
+                        try {
                             const voteRecord = await tx.vote.create({
                                 data: voteData_create,
                                 include: {
@@ -774,6 +826,11 @@ let BallotService = class BallotService {
                             });
                             createdVotes.push(voteRecord);
                             console.log('✅ Vote created:', voteRecord.id);
+                        }
+                        catch (error) {
+                            console.error('❌ Failed to create vote:', error);
+                            console.error('❌ Vote data:', { positionId, candidateId, userId, ballotId });
+                            throw error;
                         }
                     }
                 }

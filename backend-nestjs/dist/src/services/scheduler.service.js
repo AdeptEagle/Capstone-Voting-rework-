@@ -21,16 +21,6 @@ let SchedulerService = SchedulerService_1 = class SchedulerService {
         this.prisma = prisma;
         this.logger = new common_1.Logger(SchedulerService_1.name);
     }
-    async handleAutoEndElections() {
-        try {
-            this.logger.log('🕐 Checking for expired elections...');
-            const result = { message: 'Ballot auto-end not implemented yet' };
-            this.logger.log('Ballot auto-end functionality not implemented yet');
-        }
-        catch (error) {
-            this.logger.error('❌ Error in auto-end elections check:', error);
-        }
-    }
     async handleAutoStartBallots() {
         try {
             this.logger.log('🕐 Checking for ballots that should start...');
@@ -67,23 +57,23 @@ let SchedulerService = SchedulerService_1 = class SchedulerService {
             this.logger.error('❌ Error in auto-end ballots check:', error);
         }
     }
-    async logElectionStatus() {
+    async logBallotStatus() {
         try {
-            const activeElections = [];
+            const activeBallots = [];
             const now = new Date();
-            if (activeElections.length > 0) {
-                this.logger.log(`📊 Active elections: ${activeElections.length}`);
-                activeElections.forEach(election => {
-                    const endDate = new Date(election.endDate);
+            if (activeBallots.length > 0) {
+                this.logger.log(`📊 Active ballots: ${activeBallots.length}`);
+                activeBallots.forEach(ballot => {
+                    const endDate = new Date(ballot.Ballot_EndDate);
                     const timeRemaining = Math.max(0, endDate.getTime() - now.getTime());
                     const hoursRemaining = Math.floor(timeRemaining / (1000 * 60 * 60));
                     const minutesRemaining = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
-                    this.logger.log(`   🗳️ ${election.Election_Title}: ${hoursRemaining}h ${minutesRemaining}m remaining`);
+                    this.logger.log(`   🗳️ ${ballot.Ballot_Title}: ${hoursRemaining}h ${minutesRemaining}m remaining`);
                 });
             }
         }
         catch (error) {
-            this.logger.error('❌ Error logging election status:', error);
+            this.logger.error('❌ Error logging ballot status:', error);
         }
     }
     async cleanupInactiveSessions() {
@@ -136,12 +126,6 @@ __decorate([
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
-], SchedulerService.prototype, "handleAutoEndElections", null);
-__decorate([
-    (0, schedule_1.Cron)(schedule_1.CronExpression.EVERY_MINUTE),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
-    __metadata("design:returntype", Promise)
 ], SchedulerService.prototype, "handleAutoStartBallots", null);
 __decorate([
     (0, schedule_1.Cron)(schedule_1.CronExpression.EVERY_MINUTE),
@@ -154,7 +138,7 @@ __decorate([
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
-], SchedulerService.prototype, "logElectionStatus", null);
+], SchedulerService.prototype, "logBallotStatus", null);
 __decorate([
     (0, schedule_1.Cron)('0 */5 * * * *'),
     __metadata("design:type", Function),

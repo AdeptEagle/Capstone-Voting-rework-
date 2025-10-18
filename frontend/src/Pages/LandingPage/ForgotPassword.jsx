@@ -6,6 +6,7 @@ import './ForgotPassword.css';
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
+  const [studentId, setStudentId] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
@@ -13,16 +14,17 @@ const ForgotPassword = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Password reset requested for:', email);
+    console.log('Password reset requested for:', email, 'Student ID:', studentId);
     setLoading(true);
     setMessage('');
     setError('');
 
     try {
-      console.log('Making API request to /password-reset/forgot-password');
-      const response = await api.post('/password-reset/forgot-password', {
-        email,
-        userType: 'voter'
+      console.log('Making API request to /auth/forgot-password');
+      const response = await api.post('/auth/forgot-password', {
+        ResetToken_Email: email,
+        userType: 'voter',
+        verificationField: studentId
       });
 
       console.log('API response:', response.data);
@@ -30,7 +32,25 @@ const ForgotPassword = () => {
       setIsSubmitted(true);
     } catch (error) {
       console.error('API error:', error);
-      setError(error.response?.data?.error || 'Failed to request password reset');
+      console.error('Error response:', error.response?.data);
+      
+      // Handle different error response structures
+      let errorMessage = 'Failed to request password reset';
+      
+      if (error.response?.data) {
+        // NestJS BadRequestException returns message in error.response.data.message
+        if (error.response.data.message) {
+          errorMessage = error.response.data.message;
+        } else if (error.response.data.error) {
+          errorMessage = error.response.data.error;
+        } else if (typeof error.response.data === 'string') {
+          errorMessage = error.response.data;
+        }
+      }
+      
+      // The backend now provides specific error messages, so we can use them directly
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -89,7 +109,27 @@ const ForgotPassword = () => {
 
               <form onSubmit={handleSubmit} className="password-form">
                 <div className="form-group">
-                  <label htmlFor="email" className="form-label">Email address</label>
+                  <div className="input-group">
+                    <span className="input-group-text">
+                      <i className="fas fa-id-card"></i>
+                    </span>
+                    <input 
+                      id="studentId" 
+                      name="studentId" 
+                      type="text" 
+                      className="form-control" 
+                      placeholder="Student ID"
+                      value={studentId}
+                      onChange={(e) => setStudentId(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <small className="form-text text-muted">
+                    Your student ID is required to verify your identity for security purposes.
+                  </small>
+                </div>
+
+                <div className="form-group">
                   <div className="input-group">
                     <span className="input-group-text">
                       <i className="fas fa-envelope"></i>
@@ -99,7 +139,7 @@ const ForgotPassword = () => {
                       name="email" 
                       type="email" 
                       className="form-control" 
-                      placeholder="Enter your email"
+                      placeholder="Email Address"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required 

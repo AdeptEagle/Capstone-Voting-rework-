@@ -64,17 +64,17 @@ let AuditController = class AuditController {
             throw new common_1.HttpException('Failed to retrieve vote audit trail', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-    async getElectionAuditReport(electionId) {
+    async getBallotAuditReport(ballotId) {
         try {
-            const report = await this.auditService.getElectionAuditReport(electionId);
+            const report = await this.auditService.getBallotAuditReport(ballotId);
             return {
                 success: true,
-                message: 'Election audit report generated',
+                message: 'Ballot audit report generated',
                 data: report,
             };
         }
         catch (error) {
-            throw new common_1.HttpException('Failed to generate election audit report', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
+            throw new common_1.HttpException('Failed to generate ballot audit report', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
     async getVoterHistory(voterId) {
@@ -90,14 +90,14 @@ let AuditController = class AuditController {
             throw new common_1.HttpException('Failed to retrieve voter history', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-    async getSecurityAlerts(electionId) {
+    async getSecurityAlerts(ballotId) {
         try {
-            const alerts = await this.auditService.detectSuspiciousPatterns(electionId);
+            const alerts = await this.auditService.detectSuspiciousPatterns(ballotId);
             return {
                 success: true,
                 message: 'Security alerts retrieved',
                 data: {
-                    electionId,
+                    ballotId,
                     alerts,
                     alertCount: alerts.length,
                     criticalAlerts: alerts.filter(alert => alert.severity === 'CRITICAL').length,
@@ -109,9 +109,9 @@ let AuditController = class AuditController {
             throw new common_1.HttpException('Failed to retrieve security alerts', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-    async exportAuditData(electionId) {
+    async exportAuditData(ballotId) {
         try {
-            const exportData = await this.auditService.exportAuditData(electionId);
+            const exportData = await this.auditService.exportAuditData(ballotId);
             return {
                 success: true,
                 message: 'Audit data exported successfully',
@@ -161,11 +161,11 @@ let AuditController = class AuditController {
             throw new common_1.HttpException('Failed to verify vote by code', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-    async getComplianceStatus(electionId) {
+    async getComplianceStatus(ballotId) {
         try {
-            const report = await this.auditService.getElectionAuditReport(electionId);
+            const report = await this.auditService.getBallotAuditReport(ballotId);
             const complianceStatus = {
-                electionId,
+                ballotId,
                 integrityScore: report.integrityScore,
                 complianceStatus: report.complianceStatus,
                 totalVotes: report.totalVotes,
@@ -188,7 +188,7 @@ let AuditController = class AuditController {
     generateComplianceRecommendations(report) {
         const recommendations = [];
         if (report.integrityScore < 95) {
-            recommendations.push('Review disputed votes to ensure election integrity');
+            recommendations.push('Review disputed votes to ensure ballot integrity');
         }
         if (report.securityAlerts.some(alert => alert.severity === 'CRITICAL')) {
             recommendations.push('Investigate critical security alerts immediately');
@@ -200,7 +200,7 @@ let AuditController = class AuditController {
             recommendations.push('Audit disputed votes to verify their legitimacy');
         }
         if (report.integrityScore >= 95 && report.securityAlerts.length === 0) {
-            recommendations.push('Election appears to be compliant with security standards');
+            recommendations.push('Ballot appears to be compliant with security standards');
         }
         return recommendations;
     }
@@ -234,16 +234,16 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], AuditController.prototype, "getVoteAuditTrail", null);
 __decorate([
-    (0, common_1.Get)('election-report/:electionId'),
+    (0, common_1.Get)('ballot-report/:ballotId'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, swagger_1.ApiBearerAuth)(),
-    (0, swagger_1.ApiOperation)({ summary: 'Get comprehensive audit report for an election' }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Election audit report' }),
-    __param(0, (0, common_1.Param)('electionId')),
+    (0, swagger_1.ApiOperation)({ summary: 'Get comprehensive audit report for a ballot' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Ballot audit report' }),
+    __param(0, (0, common_1.Param)('ballotId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
-], AuditController.prototype, "getElectionAuditReport", null);
+], AuditController.prototype, "getBallotAuditReport", null);
 __decorate([
     (0, common_1.Get)('voter-history/:voterId'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
@@ -256,23 +256,23 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], AuditController.prototype, "getVoterHistory", null);
 __decorate([
-    (0, common_1.Get)('security-alerts/:electionId'),
+    (0, common_1.Get)('security-alerts/:ballotId'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, swagger_1.ApiBearerAuth)(),
-    (0, swagger_1.ApiOperation)({ summary: 'Get security alerts for an election' }),
+    (0, swagger_1.ApiOperation)({ summary: 'Get security alerts for a ballot' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Security alerts' }),
-    __param(0, (0, common_1.Param)('electionId')),
+    __param(0, (0, common_1.Param)('ballotId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], AuditController.prototype, "getSecurityAlerts", null);
 __decorate([
-    (0, common_1.Get)('export/:electionId'),
+    (0, common_1.Get)('export/:ballotId'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, swagger_1.ApiBearerAuth)(),
     (0, swagger_1.ApiOperation)({ summary: 'Export audit data for compliance reporting' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Audit data export' }),
-    __param(0, (0, common_1.Param)('electionId')),
+    __param(0, (0, common_1.Param)('ballotId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
@@ -287,12 +287,12 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], AuditController.prototype, "verifyVoteByCode", null);
 __decorate([
-    (0, common_1.Get)('compliance-status/:electionId'),
+    (0, common_1.Get)('compliance-status/:ballotId'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, swagger_1.ApiBearerAuth)(),
-    (0, swagger_1.ApiOperation)({ summary: 'Get compliance status for an election' }),
+    (0, swagger_1.ApiOperation)({ summary: 'Get compliance status for a ballot' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Compliance status' }),
-    __param(0, (0, common_1.Param)('electionId')),
+    __param(0, (0, common_1.Param)('ballotId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)

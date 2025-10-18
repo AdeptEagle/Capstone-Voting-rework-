@@ -4,6 +4,7 @@ import api from '../../services/api.js';
 
 const AdminForgotPassword = () => {
   const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -28,24 +29,44 @@ const AdminForgotPassword = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('AdminForgotPassword form submitted', { email });
+    console.log('AdminForgotPassword form submitted', { email, username });
     setLoading(true);
     setMessage('');
     setError('');
 
     try {
-      console.log('Making API request to /password-reset/forgot-password');
-      const response = await api.post('/password-reset/forgot-password', {
-        email,
-        userType: 'admin'
+      console.log('Making API request to /auth/forgot-password');
+      const response = await api.post('/auth/forgot-password', {
+        ResetToken_Email: email,
+        userType: 'admin',
+        verificationField: username
       });
 
       console.log('API response:', response.data);
       setMessage(response.data.message);
       setEmail('');
+      setUsername('');
     } catch (error) {
       console.error('API error:', error);
-      setError(error.response?.data?.error || 'Failed to request password reset');
+      console.error('Error response:', error.response?.data);
+      
+      // Handle different error response structures
+      let errorMessage = 'Failed to request password reset';
+      
+      if (error.response?.data) {
+        // NestJS BadRequestException returns message in error.response.data.message
+        if (error.response.data.message) {
+          errorMessage = error.response.data.message;
+        } else if (error.response.data.error) {
+          errorMessage = error.response.data.error;
+        } else if (typeof error.response.data === 'string') {
+          errorMessage = error.response.data;
+        }
+      }
+      
+      // The backend now provides specific error messages, so we can use them directly
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -85,7 +106,27 @@ const AdminForgotPassword = () => {
 
         <form className="space-y-6" onSubmit={handleSubmit}>
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
+                <i data-feather="user" className="text-gray-400"></i>
+              </div>
+              <input 
+                type="text" 
+                id="username" 
+                name="username" 
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" 
+                placeholder="Admin Username" 
+                required
+              />
+            </div>
+            <p className="text-xs text-gray-500 mt-1">
+              Your username is required to verify your identity for security purposes.
+            </p>
+          </div>
+
+          <div>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
                 <i data-feather="mail" className="text-gray-400"></i>
@@ -97,7 +138,7 @@ const AdminForgotPassword = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" 
-                placeholder="admin@votingsystem.com" 
+                placeholder="Email Address" 
                 required
               />
             </div>

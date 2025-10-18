@@ -153,7 +153,37 @@ export declare class TrashController {
         Voter_StudentId: string;
         hasVoted: boolean;
     })[]>;
-    getDeletedElections(): Promise<any[]>;
+    getDeletedBallots(): Promise<({
+        createdByAdmin: {
+            id: string;
+            Admin_Username: string;
+            Admin_Email: string | null;
+            password: string;
+            role: import(".prisma/client").$Enums.Role;
+            createdAt: Date;
+            updatedAt: Date;
+        };
+    } & {
+        id: string;
+        Ballot_Title: string;
+        Ballot_Description: string | null;
+        Ballot_StartDate: Date;
+        Ballot_EndDate: Date;
+        Ballot_Status: import(".prisma/client").$Enums.BallotStatus;
+        Ballot_IsActive: boolean;
+        Ballot_MaxVotesPerUser: number;
+        Ballot_AllowMultipleVotes: boolean;
+        Ballot_RequireAllPositions: boolean;
+        Ballot_ShowResults: boolean;
+        Ballot_ShowResultsAfter: Date | null;
+        Ballot_ShowLiveResults: boolean;
+        Ballot_AllowAbstain: boolean;
+        Ballot_CreatedBy: string;
+        Ballot_CreatedAt: Date;
+        Ballot_UpdatedAt: Date;
+        Ballot_DeletedAt: Date | null;
+        Ballot_IsDeleted: boolean;
+    })[]>;
     restoreCandidate(id: string): Promise<{
         id: string;
         createdAt: Date;
@@ -218,8 +248,26 @@ export declare class TrashController {
         Voter_StudentId: string;
         hasVoted: boolean;
     }>;
-    restoreElection(id: string): Promise<{
-        message: string;
+    restoreBallot(id: string): Promise<{
+        id: string;
+        Ballot_Title: string;
+        Ballot_Description: string | null;
+        Ballot_StartDate: Date;
+        Ballot_EndDate: Date;
+        Ballot_Status: import(".prisma/client").$Enums.BallotStatus;
+        Ballot_IsActive: boolean;
+        Ballot_MaxVotesPerUser: number;
+        Ballot_AllowMultipleVotes: boolean;
+        Ballot_RequireAllPositions: boolean;
+        Ballot_ShowResults: boolean;
+        Ballot_ShowResultsAfter: Date | null;
+        Ballot_ShowLiveResults: boolean;
+        Ballot_AllowAbstain: boolean;
+        Ballot_CreatedBy: string;
+        Ballot_CreatedAt: Date;
+        Ballot_UpdatedAt: Date;
+        Ballot_DeletedAt: Date | null;
+        Ballot_IsDeleted: boolean;
     }>;
     bulkRestore(body: {
         itemIds: string[];
@@ -291,8 +339,26 @@ export declare class TrashController {
         Voter_StudentId: string;
         hasVoted: boolean;
     }>;
-    permanentlyDeleteElection(id: string): Promise<{
-        message: string;
+    permanentlyDeleteBallot(id: string): Promise<{
+        id: string;
+        Ballot_Title: string;
+        Ballot_Description: string | null;
+        Ballot_StartDate: Date;
+        Ballot_EndDate: Date;
+        Ballot_Status: import(".prisma/client").$Enums.BallotStatus;
+        Ballot_IsActive: boolean;
+        Ballot_MaxVotesPerUser: number;
+        Ballot_AllowMultipleVotes: boolean;
+        Ballot_RequireAllPositions: boolean;
+        Ballot_ShowResults: boolean;
+        Ballot_ShowResultsAfter: Date | null;
+        Ballot_ShowLiveResults: boolean;
+        Ballot_AllowAbstain: boolean;
+        Ballot_CreatedBy: string;
+        Ballot_CreatedAt: Date;
+        Ballot_UpdatedAt: Date;
+        Ballot_DeletedAt: Date | null;
+        Ballot_IsDeleted: boolean;
     }>;
     emptyTrash(): Promise<{
         message: string;

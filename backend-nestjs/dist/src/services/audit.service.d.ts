@@ -17,7 +17,7 @@ export interface AuditEvent {
 export interface VoteAudit {
     voteId: string;
     voterId: string;
-    electionId: string;
+    ballotId: string;
     candidateId: string;
     timestamp: Date;
     verificationCode: string;
@@ -39,7 +39,6 @@ export declare class AuditService {
         id: string;
         createdAt: Date;
         userId: string | null;
-        electionId: string | null;
         timestamp: Date;
         eventType: string;
         action: string;
@@ -71,8 +70,8 @@ export declare class AuditService {
         details: Record<string, any>;
         auditTrail: AuditEvent[];
     }>;
-    detectSuspiciousPatterns(electionId: string): Promise<SecurityAlert[]>;
-    getElectionAuditReport(electionId: string): Promise<{
+    detectSuspiciousPatterns(ballotId: string): Promise<SecurityAlert[]>;
+    getBallotAuditReport(ballotId: string): Promise<{
         ballotId: string;
         totalVotes: number;
         verifiedVotes: number;
@@ -85,16 +84,16 @@ export declare class AuditService {
     getVoterHistory(voterId: string): Promise<{
         voterId: string;
         totalVotes: number;
-        elections: Array<{
+        ballots: Array<{
             ballotId: string;
-            electionTitle: string;
+            ballotTitle: string;
             voteCount: number;
             lastVoteDate: Date;
             verificationCodes: string[];
         }>;
         auditTrail: AuditEvent[];
     }>;
-    exportAuditData(electionId: string): Promise<{
+    exportAuditData(ballotId: string): Promise<{
         ballotId: string;
         exportDate: Date;
         auditReport: any;

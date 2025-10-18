@@ -9,7 +9,6 @@ export declare class AuditController {
             id: string;
             createdAt: Date;
             userId: string | null;
-            electionId: string | null;
             timestamp: Date;
             eventType: string;
             action: string;
@@ -36,7 +35,7 @@ export declare class AuditController {
             eventCount: number;
         };
     }>;
-    getElectionAuditReport(electionId: string): Promise<{
+    getBallotAuditReport(ballotId: string): Promise<{
         success: boolean;
         message: string;
         data: {
@@ -56,9 +55,9 @@ export declare class AuditController {
         data: {
             voterId: string;
             totalVotes: number;
-            elections: Array<{
+            ballots: Array<{
                 ballotId: string;
-                electionTitle: string;
+                ballotTitle: string;
                 voteCount: number;
                 lastVoteDate: Date;
                 verificationCodes: string[];
@@ -66,18 +65,18 @@ export declare class AuditController {
             auditTrail: import("../services/audit.service").AuditEvent[];
         };
     }>;
-    getSecurityAlerts(electionId: string): Promise<{
+    getSecurityAlerts(ballotId: string): Promise<{
         success: boolean;
         message: string;
         data: {
-            electionId: string;
+            ballotId: string;
             alerts: import("../services/audit.service").SecurityAlert[];
             alertCount: number;
             criticalAlerts: number;
             highAlerts: number;
         };
     }>;
-    exportAuditData(electionId: string): Promise<{
+    exportAuditData(ballotId: string): Promise<{
         success: boolean;
         message: string;
         data: {
@@ -104,11 +103,11 @@ export declare class AuditController {
             auditTrail: import("../services/audit.service").AuditEvent[];
         };
     }>;
-    getComplianceStatus(electionId: string): Promise<{
+    getComplianceStatus(ballotId: string): Promise<{
         success: boolean;
         message: string;
         data: {
-            electionId: string;
+            ballotId: string;
             integrityScore: number;
             complianceStatus: "COMPLIANT" | "NON_COMPLIANT" | "UNDER_REVIEW";
             totalVotes: number;

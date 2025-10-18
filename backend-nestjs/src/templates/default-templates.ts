@@ -2,10 +2,10 @@ export const DEFAULT_BALLOT_TEMPLATES = [
   {
     id: 'template_supreme_student_council',
     name: 'Supreme Student Council Template',
-    description: 'Template for Supreme Student Council elections with President, Vice-President, Secretary, Auditor, Treasurer, PIOs, and Senators',
+    description: 'Template for Supreme Student Council ballots with President, Vice-President, Secretary, Auditor, Treasurer, PIOs, and Senators',
     data: {
-      title: 'Supreme Student Council Election',
-      description: 'Election for Supreme Student Council positions',
+      title: 'Supreme Student Council Ballot',
+      description: 'Ballot for Supreme Student Council positions',
       positions: [
         { positionTitle: 'President', displayOrder: 1, isRequired: true, voteLimit: 1 },
         { positionTitle: 'Vice-President', displayOrder: 2, isRequired: true, voteLimit: 1 },
@@ -27,10 +27,10 @@ export const DEFAULT_BALLOT_TEMPLATES = [
   {
     id: 'template_department_officers',
     name: 'Department Officers Template',
-    description: 'Template for Department Officer elections with President, Vice-Presidents, Secretary, Auditor, Treasurer, PIOs, and Year Representatives',
+    description: 'Template for Department Officer ballots with President, Vice-Presidents, Secretary, Auditor, Treasurer, PIOs, and Year Representatives',
     data: {
-      title: 'Department Officers Election',
-      description: 'Election for Department Officer positions',
+      title: 'Department Officers Ballot',
+      description: 'Ballot for Department Officer positions',
       positions: [
         { positionTitle: 'President', displayOrder: 1, isRequired: true, voteLimit: 1 },
         { positionTitle: 'Internal Vice-President', displayOrder: 2, isRequired: true, voteLimit: 1 },
@@ -56,10 +56,10 @@ export const DEFAULT_BALLOT_TEMPLATES = [
   {
     id: 'template_club_elections',
     name: 'Club Elections Template',
-    description: 'Template for club and organization elections with basic officer positions',
+    description: 'Template for club and organization ballots with basic officer positions',
     data: {
-      title: 'Club Elections',
-      description: 'Election for club officer positions',
+      title: 'Club Ballots',
+      description: 'Ballot for club officer positions',
       positions: [
         { positionTitle: 'President', displayOrder: 1, isRequired: true, voteLimit: 1 },
         { positionTitle: 'Vice-President', displayOrder: 2, isRequired: true, voteLimit: 1 },
@@ -78,10 +78,10 @@ export const DEFAULT_BALLOT_TEMPLATES = [
   {
     id: 'template_simple_election',
     name: 'Simple Election Template',
-    description: 'Basic template for simple elections with minimal positions',
+    description: 'Basic template for simple ballots with minimal positions',
     data: {
-      title: 'Simple Election',
-      description: 'Basic election template',
+      title: 'Simple Ballot',
+      description: 'Basic ballot template',
       positions: [
         { positionTitle: 'President', displayOrder: 1, isRequired: true, voteLimit: 1 },
         { positionTitle: 'Vice-President', displayOrder: 2, isRequired: true, voteLimit: 1 },

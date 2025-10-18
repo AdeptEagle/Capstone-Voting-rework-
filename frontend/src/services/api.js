@@ -658,33 +658,33 @@ export const deleteElection = async (id) => {
   }
 };
 
-// Election Trash Management
-export const getDeletedElections = async () => {
+// Ballot Trash Management
+export const getDeletedBallots = async () => {
   try {
-    const response = await api.get('/elections/trash/deleted');
+    const response = await api.get('/trash/ballots');
     return response.data;
   } catch (error) {
-    console.error('Error fetching deleted elections:', error);
+    console.error('Error fetching deleted ballots:', error);
     throw error;
   }
 };
 
-export const restoreElection = async (id) => {
+export const restoreBallot = async (id) => {
   try {
-    const response = await api.post(`/elections/trash/restore/${id}`);
+    const response = await api.post(`/trash/restore/ballot/${id}`);
     return response.data;
   } catch (error) {
-    console.error('Error restoring election:', error);
+    console.error('Error restoring ballot:', error);
     throw error;
   }
 };
 
-export const permanentlyDeleteElection = async (id) => {
+export const permanentlyDeleteBallot = async (id) => {
   try {
-    const response = await api.delete(`/elections/trash/permanent/${id}`);
+    const response = await api.delete(`/trash/permanent/ballot/${id}`);
     return response.data;
   } catch (error) {
-    console.error('Error permanently deleting election:', error);
+    console.error('Error permanently deleting ballot:', error);
     throw error;
   }
 };

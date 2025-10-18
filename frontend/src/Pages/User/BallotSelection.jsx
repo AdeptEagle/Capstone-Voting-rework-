@@ -5,7 +5,6 @@ import './BallotSelection.css';
 
 const BallotSelection = () => {
   const [availableBallots, setAvailableBallots] = useState([]);
-  const [availableElections, setAvailableElections] = useState([]);
   const [userHistory, setUserHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -27,9 +26,6 @@ const BallotSelection = () => {
       
       setAvailableBallots(ballotsData || []);
       setUserHistory(historyData || []);
-      
-      // Elections are now handled through the ballot system
-      setAvailableElections([]);
       
       console.log('✅ Ballot data loaded successfully');
     } catch (error) {
@@ -149,61 +145,7 @@ const BallotSelection = () => {
         </div>
       ) : (
         <div className="ballots-grid">
-          {/* Display Elections (legacy system) */}
-          {availableElections.map((election) => {
-            const electionStatus = getBallotStatus(election);
-
-            return (
-              <div key={`election-${election.id}`} className="ballot-card">
-                <div className="ballot-header">
-                  <h3>{election.Election_Title}</h3>
-                  <span className={`status-badge ${electionStatus.color}`}>
-                    {electionStatus.text}
-                  </span>
-                  <span className="system-badge">Election</span>
-                </div>
-
-                {election.Election_Description && (
-                  <p className="ballot-description">{election.Election_Description}</p>
-                )}
-
-                <div className="ballot-details two-column">
-                  <div className="details-row">
-                    <div className="detail-item">
-                      <i className="fas fa-calendar-alt"></i>
-                      <span>Starts: {formatDate(election.startDate)}</span>
-                    </div>
-                    <div className="detail-item">
-                      <i className="fas fa-calendar-check"></i>
-                      <span>Ends: {formatDate(election.endDate)}</span>
-                    </div>
-                  </div>
-                  <div className="details-row">
-                    <div className="detail-item">
-                      <i className="fas fa-users"></i>
-                      <span>Positions: {election.electionPositions?.length || 0}</span>
-                    </div>
-                    <div className="detail-item">
-                      <i className="fas fa-user-tie"></i>
-                      <span>Candidates: {election.electionCandidates?.length || 0}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="ballot-actions">
-                  <button 
-                    className="vote-btn"
-                    onClick={() => handleBallotClick(election)}
-                  >
-                    <i className="fas fa-vote-yea"></i>
-                    {electionStatus.status === 'ended' ? 'View Results' : 'Vote Now'}
-                  </button>
-                </div>
-              </div>
-            );
-          })}
-
-          {/* Display Ballots (new system) */}
+          {/* Display Ballots */}
           {availableBallots.map((ballot) => {
             const ballotStatus = getBallotStatus(ballot);
             const userVoted = hasUserVoted(ballot.id);

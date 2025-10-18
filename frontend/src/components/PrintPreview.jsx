@@ -39,7 +39,7 @@ const PrintPreview = ({ ballot, results }) => {
             e.target.style.display = 'none';
           }}
           onLoad={() => {
-            console.log('BC Logo loaded successfully');
+            // Logo loaded successfully - no need to log every time
           }}
         />
         <h1>Official Election Results</h1>
@@ -52,7 +52,7 @@ const PrintPreview = ({ ballot, results }) => {
             e.target.style.display = 'none';
           }}
           onLoad={() => {
-            console.log('SSC Logo loaded successfully');
+            // Logo loaded successfully - no need to log every time
           }}
         />
       </header>

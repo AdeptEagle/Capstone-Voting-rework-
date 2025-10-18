@@ -33,6 +33,7 @@ const BallotDetails = () => {
   const [autoRefresh, setAutoRefresh] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(null);
   const [refreshInterval, setRefreshInterval] = useState(null);
+  const [backgroundRefreshing, setBackgroundRefreshing] = useState(false);
 
   const handlePrint = () => {
     window.print();
@@ -47,17 +48,21 @@ const BallotDetails = () => {
     if (tab && ['overview', 'positions', 'results'].includes(tab)) {
       setActiveTab(tab);
     }
+  }, [ballotId, location.search]);
 
-    // Auto-refresh for ballots that might be auto-started
+  // Separate useEffect for auto-refresh to avoid dependency issues
+  useEffect(() => {
+    if (!ballot) return;
+
+    // Auto-refresh for ballots that might be auto-started - silent background refresh
     const interval = setInterval(() => {
-      if (ballot && (ballot.Ballot_Status === 'DRAFT' || ballot.Ballot_Status === 'SCHEDULED')) {
-        console.log('🔄 Auto-refreshing ballot data for potential auto-start...');
-        fetchBallotData();
+      if (ballot.Ballot_Status === 'DRAFT' || ballot.Ballot_Status === 'SCHEDULED') {
+        silentBackgroundRefresh();
       }
-    }, 5000); // Check every 5 seconds
+    }, 15000); // Increased to 15 seconds to reduce frequency
 
     return () => clearInterval(interval);
-  }, [ballotId, location.search, ballot?.Ballot_Status]);
+  }, [ballot?.Ballot_Status]);
 
   // Real-time refresh functionality
   useEffect(() => {
@@ -378,6 +383,43 @@ const BallotDetails = () => {
     }
   };
 
+  // Silent background refresh - updates data without affecting UI
+  const silentBackgroundRefresh = async () => {
+    if (backgroundRefreshing) return; // Prevent multiple simultaneous refreshes
+    
+    try {
+      setBackgroundRefreshing(true);
+      
+      // Only fetch ballot data to check for status changes
+      const ballotData = await getBallotById(ballotId);
+      
+      // Only update if there's a meaningful change
+      if (ballotData && ballotData.Ballot_Status !== ballot?.Ballot_Status) {
+        console.log(`🔄 Ballot status changed from ${ballot?.Ballot_Status} to ${ballotData.Ballot_Status}`);
+        // Update ballot data silently
+        setBallot(ballotData);
+        setLastUpdated(new Date());
+        
+        // If status changed to ACTIVE, fetch all data
+        if (ballotData.Ballot_Status === 'ACTIVE') {
+          const [resultsData, partylistData, analyticsData] = await Promise.all([
+            getBallotResults(ballotId).catch(() => null),
+            getPartylistResults(ballotId).catch(() => null),
+            getAnalyticsData(ballotId, 'all').catch(() => null)
+          ]);
+          
+          setResults(resultsData);
+          setPartylistResults(partylistData);
+          setAnalytics(analyticsData);
+        }
+      }
+    } catch (error) {
+      console.log('Silent refresh failed:', error);
+    } finally {
+      setBackgroundRefreshing(false);
+    }
+  };
+
   const handleBallotAction = async (action) => {
     try {
       let response;
@@ -622,11 +664,13 @@ const BallotDetails = () => {
               {ballotStatus.text}
             </span>
             <button 
-              className="btn btn-outline btn-sm refresh-btn"
+              className={`btn btn-outline btn-sm refresh-btn ${backgroundRefreshing ? 'refreshing' : ''}`}
               onClick={fetchBallotData}
               title="Refresh ballot data"
+              disabled={backgroundRefreshing}
             >
-              <i className="fas fa-sync-alt"></i>
+              <i className={`fas fa-sync-alt ${backgroundRefreshing ? 'fa-spin' : ''}`}></i>
+              {backgroundRefreshing && <span className="refresh-indicator">Updating...</span>}
             </button>
           </div>
           
@@ -692,91 +736,75 @@ const BallotDetails = () => {
       {/* Tab Content */}
       <div className="tab-content">
         {activeTab === 'overview' && (
-          <div className="overview-tab">
-            <div className="overview-content">
-              {/* Ballot Information Card */}
-              <div className="info-card">
-                <div className="info-card-header">
-                  <h3>Ballot Information</h3>
-                </div>
-                <div className="info-card-content">
-                  <div className="info-grid">
-                    <div className="info-column">
-                      <div className="info-field">
-                        <p className="info-label">Start Date</p>
-                        <p className="info-value">{formatDate(ballot.Ballot_StartDate)}</p>
-                      </div>
-                      <div className="info-field">
-                        <p className="info-label">End Date</p>
-                        <p className="info-value">{formatDate(ballot.Ballot_EndDate)}</p>
-                      </div>
-                    </div>
-                    <div className="info-column">
-                      <div className="info-field">
-                        <p className="info-label">Positions</p>
-                        <p className="info-value">{ballot.ballotPositions?.length || 0}</p>
-                      </div>
-                      <div className="info-field">
-                        <p className="info-label">Candidates</p>
-                        <p className="info-value">{ballot.ballotCandidates?.length || 0}</p>
-                      </div>
-                    </div>
+          <>
+              {/* Ballot Information Card - Modern Design */}
+              <div className="ballot-info-card">
+                <div className="ballot-info-header">
+                  <div className="ballot-info-title">
+                    <i className="fas fa-info-circle"></i>
+                    <h3>Ballot Information</h3>
+                  </div>
+                  <div className="ballot-status-indicator">
+                    <span className={`status-dot ${ballotStatus.status}`}></span>
+                    <span className="status-text">{ballotStatus.text}</span>
                   </div>
                 </div>
-              </div>
-
-              {/* Voting Rules Card */}
-              <div className="info-card">
-                <div className="info-card-header">
-                  <h3>Voting Rules</h3>
-                </div>
-                <div className="info-card-content">
-                  <div className="info-grid">
-                    <div className="info-column">
-                      <div className="info-field">
-                        <p className="info-label">Max Votes Per User</p>
-                        <p className="info-value">{ballot.Ballot_MaxVotesPerUser}</p>
-                      </div>
-                      <div className="info-field">
-                        <p className="info-label">Allow Multiple Votes</p>
-                        <p className="info-value">{ballot.Ballot_AllowMultipleVotes ? 'Yes' : 'No'}</p>
-                      </div>
+                
+                <div className="ballot-info-grid">
+                  {/* Date Information */}
+                  <div className="info-section">
+                    <div className="section-header">
+                      <i className="fas fa-calendar-alt"></i>
+                      <h4>Schedule</h4>
                     </div>
-                    <div className="info-column">
-                      <div className="info-field">
-                        <p className="info-label">Require All Positions</p>
-                        <p className="info-value">{ballot.Ballot_RequireAllPositions ? 'Yes' : 'No'}</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Results Settings Card */}
-              <div className="info-card">
-                <div className="info-card-header">
-                  <h3>Results Settings</h3>
-                </div>
-                <div className="info-card-content">
-                  <div className="info-grid">
-                    <div className="info-column">
-                      <div className="info-field">
-                        <p className="info-label">Show Results</p>
-                        <p className="info-value">{ballot.Ballot_ShowResults ? 'Yes' : 'No'}</p>
-                      </div>
-                      <div className="info-field">
-                        <p className="info-label">Live Results</p>
-                        <p className="info-value">{ballot.Ballot_ShowLiveResults ? 'Yes' : 'No'}</p>
-                      </div>
-                    </div>
-                    {ballot.Ballot_ShowResultsAfter && (
-                      <div className="info-column">
-                        <div className="info-field">
-                          <p className="info-label">Show After</p>
-                          <p className="info-value">{formatDate(ballot.Ballot_ShowResultsAfter)}</p>
+                    <div className="info-items">
+                      <div className="info-item">
+                        <div className="info-icon start-date">
+                          <i className="fas fa-play"></i>
+                        </div>
+                        <div className="info-content">
+                          <span className="info-label">Start Date</span>
+                          <span className="info-value">{formatDate(ballot.Ballot_StartDate)}</span>
                         </div>
                       </div>
-                    )}
+                      <div className="info-item">
+                        <div className="info-icon end-date">
+                          <i className="fas fa-stop"></i>
+                        </div>
+                        <div className="info-content">
+                          <span className="info-label">End Date</span>
+                          <span className="info-value">{formatDate(ballot.Ballot_EndDate)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Statistics Information */}
+                  <div className="info-section">
+                    <div className="section-header">
+                      <i className="fas fa-chart-bar"></i>
+                      <h4>Statistics</h4>
+                    </div>
+                    <div className="info-items">
+                      <div className="info-item">
+                        <div className="info-icon positions">
+                          <i className="fas fa-user-tie"></i>
+                        </div>
+                        <div className="info-content">
+                          <span className="info-label">Positions</span>
+                          <span className="info-value">{ballot.ballotPositions?.length || 0}</span>
+                        </div>
+                      </div>
+                      <div className="info-item">
+                        <div className="info-icon candidates">
+                          <i className="fas fa-users"></i>
+                        </div>
+                        <div className="info-content">
+                          <span className="info-label">Candidates</span>
+                          <span className="info-value">{ballot.ballotCandidates?.length || 0}</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -839,8 +867,7 @@ const BallotDetails = () => {
                   Delete Ballot
                 </button>
               </div>
-            </div>
-          </div>
+          </>
         )}
 
         {activeTab === 'positions' && (

@@ -55,11 +55,11 @@ export class TrashController {
     return await this.trashService.getDeletedVoters();
   }
 
-  @Get('elections')
-  @ApiOperation({ summary: 'Get all deleted elections (deprecated)' })
-  @ApiResponse({ status: 200, description: 'List of deleted elections' })
-  async getDeletedElections() {
-    return []; // Elections no longer exist
+  @Get('ballots')
+  @ApiOperation({ summary: 'Get all deleted ballots' })
+  @ApiResponse({ status: 200, description: 'List of deleted ballots' })
+  async getDeletedBallots() {
+    return await this.trashService.getDeletedBallots();
   }
 
   @Post('restore/candidate/:id')
@@ -102,12 +102,12 @@ export class TrashController {
     return await this.trashService.restoreVoter(id);
   }
 
-  @Post('restore/election/:id')
-  @ApiOperation({ summary: 'Restore deleted election (deprecated)' })
-  @ApiResponse({ status: 200, description: 'Election restored successfully' })
-  @ApiResponse({ status: 404, description: 'Election not found' })
-  async restoreElection(@Param('id') id: string) {
-    return { message: 'Elections no longer exist' };
+  @Post('restore/ballot/:id')
+  @ApiOperation({ summary: 'Restore deleted ballot' })
+  @ApiResponse({ status: 200, description: 'Ballot restored successfully' })
+  @ApiResponse({ status: 404, description: 'Ballot not found' })
+  async restoreBallot(@Param('id') id: string) {
+    return await this.trashService.restoreBallot(id);
   }
 
   @Post('restore/bulk')
@@ -173,14 +173,14 @@ export class TrashController {
     return await this.trashService.permanentlyDeleteVoter(id);
   }
 
-  @Delete('permanent/election/:id')
+  @Delete('permanent/ballot/:id')
   @Roles(Role.SUPERADMIN, Role.ADMIN)
-  @ApiOperation({ summary: 'Permanently delete election (cannot be undone)' })
-  @ApiResponse({ status: 200, description: 'Election permanently deleted' })
-  @ApiResponse({ status: 404, description: 'Election not found' })
-  @ApiResponse({ status: 409, description: 'Cannot delete election with voting history' })
-  async permanentlyDeleteElection(@Param('id') id: string) {
-    return { message: 'Elections no longer exist' };
+  @ApiOperation({ summary: 'Permanently delete ballot (cannot be undone)' })
+  @ApiResponse({ status: 200, description: 'Ballot permanently deleted' })
+  @ApiResponse({ status: 404, description: 'Ballot not found' })
+  @ApiResponse({ status: 409, description: 'Cannot delete ballot with voting history' })
+  async permanentlyDeleteBallot(@Param('id') id: string) {
+    return await this.trashService.permanentlyDeleteBallot(id);
   }
 
   @Delete('empty')

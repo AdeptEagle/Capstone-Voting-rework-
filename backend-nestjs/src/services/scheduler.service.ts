@@ -12,21 +12,6 @@ export class SchedulerService {
     private readonly prisma: PrismaService
   ) {}
 
-  // Run every minute to check for expired elections
-  @Cron(CronExpression.EVERY_MINUTE)
-  async handleAutoEndElections() {
-    try {
-      this.logger.log('🕐 Checking for expired elections...');
-      // TODO: Implement ballot auto-end functionality
-      const result = { message: 'Ballot auto-end not implemented yet' };
-      
-      // TODO: Implement ballot auto-end functionality
-      this.logger.log('Ballot auto-end functionality not implemented yet');
-    } catch (error) {
-      this.logger.error('❌ Error in auto-end elections check:', error);
-    }
-  }
-
   // Run every minute to check for ballots that should start
   @Cron(CronExpression.EVERY_MINUTE)
   async handleAutoStartBallots() {
@@ -67,27 +52,27 @@ export class SchedulerService {
     }
   }
 
-  // Run every 5 minutes to log election status
+  // Run every 5 minutes to log ballot status
   @Cron(CronExpression.EVERY_5_MINUTES)
-  async logElectionStatus() {
+  async logBallotStatus() {
     try {
       // TODO: Implement ballot status logging
-      const activeElections = [];
+      const activeBallots = [];
       const now = new Date();
       
-      if (activeElections.length > 0) {
-        this.logger.log(`📊 Active elections: ${activeElections.length}`);
-        activeElections.forEach(election => {
-          const endDate = new Date(election.endDate);
+      if (activeBallots.length > 0) {
+        this.logger.log(`📊 Active ballots: ${activeBallots.length}`);
+        activeBallots.forEach(ballot => {
+          const endDate = new Date(ballot.Ballot_EndDate);
           const timeRemaining = Math.max(0, endDate.getTime() - now.getTime());
           const hoursRemaining = Math.floor(timeRemaining / (1000 * 60 * 60));
           const minutesRemaining = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
           
-          this.logger.log(`   🗳️ ${election.Election_Title}: ${hoursRemaining}h ${minutesRemaining}m remaining`);
+          this.logger.log(`   🗳️ ${ballot.Ballot_Title}: ${hoursRemaining}h ${minutesRemaining}m remaining`);
         });
       }
     } catch (error) {
-      this.logger.error('❌ Error logging election status:', error);
+      this.logger.error('❌ Error logging ballot status:', error);
     }
   }
 

@@ -165,30 +165,6 @@ model Vote {
   @@map("votes")
 }
 
-model ElectionPosition {
-  id         String   @id @db.VarChar(50)
-  electionId String   @db.VarChar(50)
-  positionId String   @db.VarChar(50)
-  createdAt  DateTime @default(now()) @map("created_at")
-  election   Election @relation(fields: [electionId], references: [id])
-  position   Position @relation(fields: [positionId], references: [id])
-
-  @@unique([electionId, positionId], map: "elections_electionId_positionId_key")
-  @@map("election_positions")
-}
-
-model ElectionCandidate {
-  id          String    @id @db.VarChar(50)
-  candidateId String    @db.VarChar(50)
-  electionId  String    @db.VarChar(50)
-  createdAt   DateTime  @default(now()) @map("created_at")
-  candidate   Candidate @relation(fields: [candidateId], references: [id])
-  election    Election  @relation(fields: [electionId], references: [id])
-
-  @@unique([electionId, candidateId])
-  @@map("election_candidates")
-}
-
 model PasswordResetToken {
   id               String   @id @db.VarChar(50)
   ResetToken_Email String   @unique @map("reset_token_email") @db.VarChar(255)
@@ -209,7 +185,6 @@ model AuditLog {
   metadata   Json?
   severity   String   @db.VarChar(20)
   createdAt  DateTime @default(now()) @map("created_at")
-  electionId String?  @db.VarChar(50)
   user       Voter?   @relation(fields: [userId], references: [id])
 
   @@map("audit_logs")

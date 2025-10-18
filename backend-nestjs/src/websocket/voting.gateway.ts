@@ -44,18 +44,18 @@ export class VotingGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   }
 
   // Real-time vote updates
-  emitVoteUpdate(electionId: string, voteData: any) {
+  emitVoteUpdate(ballotId: string, voteData: any) {
     this.server.emit('vote-updated', {
-      electionId,
+      ballotId,
       voteData,
       timestamp: new Date().toISOString(),
     });
   }
 
-  // Real-time election status updates
-  emitElectionStatusUpdate(electionId: string, status: string, data?: any) {
-    this.server.emit('election-status-updated', {
-      electionId,
+  // Real-time ballot status updates
+  emitBallotStatusUpdate(ballotId: string, status: string, data?: any) {
+    this.server.emit('ballot-status-updated', {
+      ballotId,
       status,
       data,
       timestamp: new Date().toISOString(),
@@ -105,26 +105,26 @@ export class VotingGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     });
   }
 
-  // Real-time election creation
-  emitElectionCreated(electionData: any) {
-    this.server.emit('election-created', {
-      electionData,
+  // Real-time ballot creation
+  emitBallotCreated(ballotData: any) {
+    this.server.emit('ballot-created', {
+      ballotData,
       timestamp: new Date().toISOString(),
     });
   }
 
-  // Real-time election updates
-  emitElectionUpdated(electionData: any) {
-    this.server.emit('election-updated', {
-      electionData,
+  // Real-time ballot updates
+  emitBallotUpdated(ballotData: any) {
+    this.server.emit('ballot-updated', {
+      ballotData,
       timestamp: new Date().toISOString(),
     });
   }
 
   // Real-time results updates
-  emitResultsUpdate(electionId: string, resultsData: any) {
+  emitResultsUpdate(ballotId: string, resultsData: any) {
     this.server.emit('results-updated', {
-      electionId,
+      ballotId,
       resultsData,
       timestamp: new Date().toISOString(),
     });
@@ -167,23 +167,23 @@ export class VotingGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     console.log('✅ [WebSocket] Test event emitted successfully');
   }
 
-  // Join specific election room
-  @SubscribeMessage('join-election')
-  handleJoinElection(client: Socket, electionId: string) {
-    client.join(`election-${electionId}`);
-    client.emit('joined-election', {
-      electionId,
-      message: `Joined election room: ${electionId}`,
+  // Join specific ballot room
+  @SubscribeMessage('join-ballot')
+  handleJoinBallot(client: Socket, ballotId: string) {
+    client.join(`ballot-${ballotId}`);
+    client.emit('joined-ballot', {
+      ballotId,
+      message: `Joined ballot room: ${ballotId}`,
     });
   }
 
-  // Leave specific election room
-  @SubscribeMessage('leave-election')
-  handleLeaveElection(client: Socket, electionId: string) {
-    client.leave(`election-${electionId}`);
-    client.emit('left-election', {
-      electionId,
-      message: `Left election room: ${electionId}`,
+  // Leave specific ballot room
+  @SubscribeMessage('leave-ballot')
+  handleLeaveBallot(client: Socket, ballotId: string) {
+    client.leave(`ballot-${ballotId}`);
+    client.emit('left-ballot', {
+      ballotId,
+      message: `Left ballot room: ${ballotId}`,
     });
   }
 
@@ -210,9 +210,9 @@ export class VotingGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     });
   }
 
-  // Broadcast to specific election room
-  emitToElectionRoom(electionId: string, event: string, data: any) {
-    this.server.to(`election-${electionId}`).emit(event, {
+  // Broadcast to specific ballot room
+  emitToBallotRoom(ballotId: string, event: string, data: any) {
+    this.server.to(`ballot-${ballotId}`).emit(event, {
       ...data,
       timestamp: new Date().toISOString(),
     });

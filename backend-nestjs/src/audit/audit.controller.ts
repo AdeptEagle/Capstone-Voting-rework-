@@ -80,22 +80,22 @@ export class AuditController {
     }
   }
 
-  @Get('election-report/:electionId')
+  @Get('ballot-report/:ballotId')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Get comprehensive audit report for an election' })
-  @ApiResponse({ status: 200, description: 'Election audit report' })
-  async getElectionAuditReport(@Param('electionId') electionId: string) {
+  @ApiOperation({ summary: 'Get comprehensive audit report for a ballot' })
+  @ApiResponse({ status: 200, description: 'Ballot audit report' })
+  async getBallotAuditReport(@Param('ballotId') ballotId: string) {
     try {
-      const report = await this.auditService.getElectionAuditReport(electionId);
+      const report = await this.auditService.getBallotAuditReport(ballotId);
       return {
         success: true,
-        message: 'Election audit report generated',
+        message: 'Ballot audit report generated',
         data: report,
       };
     } catch (error) {
       throw new HttpException(
-        'Failed to generate election audit report',
+        'Failed to generate ballot audit report',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
@@ -122,19 +122,19 @@ export class AuditController {
     }
   }
 
-  @Get('security-alerts/:electionId')
+  @Get('security-alerts/:ballotId')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Get security alerts for an election' })
+  @ApiOperation({ summary: 'Get security alerts for a ballot' })
   @ApiResponse({ status: 200, description: 'Security alerts' })
-  async getSecurityAlerts(@Param('electionId') electionId: string) {
+  async getSecurityAlerts(@Param('ballotId') ballotId: string) {
     try {
-      const alerts = await this.auditService.detectSuspiciousPatterns(electionId);
+      const alerts = await this.auditService.detectSuspiciousPatterns(ballotId);
       return {
         success: true,
         message: 'Security alerts retrieved',
         data: {
-          electionId,
+          ballotId,
           alerts,
           alertCount: alerts.length,
           criticalAlerts: alerts.filter(alert => alert.severity === 'CRITICAL').length,
@@ -149,14 +149,14 @@ export class AuditController {
     }
   }
 
-  @Get('export/:electionId')
+  @Get('export/:ballotId')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Export audit data for compliance reporting' })
   @ApiResponse({ status: 200, description: 'Audit data export' })
-  async exportAuditData(@Param('electionId') electionId: string) {
+  async exportAuditData(@Param('ballotId') ballotId: string) {
     try {
-      const exportData = await this.auditService.exportAuditData(electionId);
+      const exportData = await this.auditService.exportAuditData(ballotId);
       return {
         success: true,
         message: 'Audit data exported successfully',
@@ -220,17 +220,17 @@ export class AuditController {
     }
   }
 
-  @Get('compliance-status/:electionId')
+  @Get('compliance-status/:ballotId')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Get compliance status for an election' })
+  @ApiOperation({ summary: 'Get compliance status for a ballot' })
   @ApiResponse({ status: 200, description: 'Compliance status' })
-  async getComplianceStatus(@Param('electionId') electionId: string) {
+  async getComplianceStatus(@Param('ballotId') ballotId: string) {
     try {
-      const report = await this.auditService.getElectionAuditReport(electionId);
+      const report = await this.auditService.getBallotAuditReport(ballotId);
       
       const complianceStatus = {
-        electionId,
+        ballotId,
         integrityScore: report.integrityScore,
         complianceStatus: report.complianceStatus,
         totalVotes: report.totalVotes,
@@ -258,7 +258,7 @@ export class AuditController {
     const recommendations: string[] = [];
 
     if (report.integrityScore < 95) {
-      recommendations.push('Review disputed votes to ensure election integrity');
+      recommendations.push('Review disputed votes to ensure ballot integrity');
     }
 
     if (report.securityAlerts.some(alert => alert.severity === 'CRITICAL')) {
@@ -274,7 +274,7 @@ export class AuditController {
     }
 
     if (report.integrityScore >= 95 && report.securityAlerts.length === 0) {
-      recommendations.push('Election appears to be compliant with security standards');
+      recommendations.push('Ballot appears to be compliant with security standards');
     }
 
     return recommendations;

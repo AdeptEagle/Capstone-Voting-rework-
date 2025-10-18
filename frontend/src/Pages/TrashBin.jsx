@@ -22,7 +22,7 @@ const TrashBin = () => {
     { key: 'departments', label: 'Departments', icon: '🏢' },
     { key: 'courses', label: 'Courses', icon: '📚' },
     { key: 'voters', label: 'Voters', icon: '🗳️' },
-    { key: 'elections', label: 'Elections', icon: '🗳️' }
+    { key: 'ballots', label: 'Ballots', icon: '🗳️' }
   ];
 
   useEffect(() => {

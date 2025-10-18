@@ -19,11 +19,11 @@ export declare class BallotTemplateService {
         BallotTemplate_Description: string | null;
         BallotTemplate_Data: import("@prisma/client/runtime/library").JsonValue;
         BallotTemplate_IsPublic: boolean;
-        BallotTemplate_CreatedBy: string;
         BallotTemplate_CreatedAt: Date;
         BallotTemplate_UpdatedAt: Date;
         BallotTemplate_DeletedAt: Date | null;
         BallotTemplate_IsDeleted: boolean;
+        BallotTemplate_CreatedBy: string;
     }>;
     getAllTemplates(includePublic?: boolean, createdBy?: string): Promise<({
         createdByAdmin: {
@@ -37,11 +37,11 @@ export declare class BallotTemplateService {
         BallotTemplate_Description: string | null;
         BallotTemplate_Data: import("@prisma/client/runtime/library").JsonValue;
         BallotTemplate_IsPublic: boolean;
-        BallotTemplate_CreatedBy: string;
         BallotTemplate_CreatedAt: Date;
         BallotTemplate_UpdatedAt: Date;
         BallotTemplate_DeletedAt: Date | null;
         BallotTemplate_IsDeleted: boolean;
+        BallotTemplate_CreatedBy: string;
     })[]>;
     getTemplateById(id: string): Promise<{
         createdByAdmin: {
@@ -55,11 +55,11 @@ export declare class BallotTemplateService {
         BallotTemplate_Description: string | null;
         BallotTemplate_Data: import("@prisma/client/runtime/library").JsonValue;
         BallotTemplate_IsPublic: boolean;
-        BallotTemplate_CreatedBy: string;
         BallotTemplate_CreatedAt: Date;
         BallotTemplate_UpdatedAt: Date;
         BallotTemplate_DeletedAt: Date | null;
         BallotTemplate_IsDeleted: boolean;
+        BallotTemplate_CreatedBy: string;
     }>;
     updateTemplate(id: string, updateTemplateDto: UpdateBallotTemplateDto, updatedBy: string): Promise<{
         createdByAdmin: {
@@ -73,11 +73,11 @@ export declare class BallotTemplateService {
         BallotTemplate_Description: string | null;
         BallotTemplate_Data: import("@prisma/client/runtime/library").JsonValue;
         BallotTemplate_IsPublic: boolean;
-        BallotTemplate_CreatedBy: string;
         BallotTemplate_CreatedAt: Date;
         BallotTemplate_UpdatedAt: Date;
         BallotTemplate_DeletedAt: Date | null;
         BallotTemplate_IsDeleted: boolean;
+        BallotTemplate_CreatedBy: string;
     }>;
     deleteTemplate(id: string, deletedBy: string): Promise<{
         id: string;
@@ -85,11 +85,11 @@ export declare class BallotTemplateService {
         BallotTemplate_Description: string | null;
         BallotTemplate_Data: import("@prisma/client/runtime/library").JsonValue;
         BallotTemplate_IsPublic: boolean;
-        BallotTemplate_CreatedBy: string;
         BallotTemplate_CreatedAt: Date;
         BallotTemplate_UpdatedAt: Date;
         BallotTemplate_DeletedAt: Date | null;
         BallotTemplate_IsDeleted: boolean;
+        BallotTemplate_CreatedBy: string;
     }>;
     createBallotFromTemplate(templateId: string, createBallotDto: CreateBallotFromTemplateDto, createdBy: string): Promise<{
         id: string;
@@ -106,11 +106,11 @@ export declare class BallotTemplateService {
         Ballot_ShowResultsAfter: Date | null;
         Ballot_ShowLiveResults: boolean;
         Ballot_AllowAbstain: boolean;
-        Ballot_CreatedBy: string;
         Ballot_CreatedAt: Date;
         Ballot_UpdatedAt: Date;
         Ballot_DeletedAt: Date | null;
         Ballot_IsDeleted: boolean;
+        Ballot_CreatedBy: string;
     }>;
     cloneTemplate(templateId: string, newName: string, createdBy: string): Promise<{
         createdByAdmin: {
@@ -124,11 +124,11 @@ export declare class BallotTemplateService {
         BallotTemplate_Description: string | null;
         BallotTemplate_Data: import("@prisma/client/runtime/library").JsonValue;
         BallotTemplate_IsPublic: boolean;
-        BallotTemplate_CreatedBy: string;
         BallotTemplate_CreatedAt: Date;
         BallotTemplate_UpdatedAt: Date;
         BallotTemplate_DeletedAt: Date | null;
         BallotTemplate_IsDeleted: boolean;
+        BallotTemplate_CreatedBy: string;
     }>;
     private validateTemplateData;
     private addPositionToBallot;

@@ -21,7 +21,7 @@ export interface AuditEvent {
 export interface VoteAudit {
   voteId: string;
   voterId: string;
-  electionId: string;
+  ballotId: string;
   candidateId: string;
   timestamp: Date;
   verificationCode: string;
@@ -162,7 +162,7 @@ export class AuditService {
     return {
       voteId: voteData.voteId,
       voterId: voteData.voterId,
-      electionId: voteData.ballotId, // Using ballotId as electionId for compatibility
+      ballotId: voteData.ballotId, // Using ballotId for ballot system
       candidateId: voteData.candidateId,
       timestamp: voteData.timestamp,
       verificationCode,
@@ -286,14 +286,14 @@ export class AuditService {
   /**
    * Detect suspicious voting patterns
    */
-  async detectSuspiciousPatterns(electionId: string): Promise<SecurityAlert[]> {
+  async detectSuspiciousPatterns(ballotId: string): Promise<SecurityAlert[]> {
     const alerts: SecurityAlert[] = [];
 
     // Check for rapid voting from same IP
     const rapidVoting = await this.prisma.vote.groupBy({
       by: ['voterId'],
       where: {
-        // ballotId, // TODO: Add ballotId parameter
+        ballotId: ballotId,
         createdAt: {
           gte: new Date(Date.now() - 5 * 60 * 1000), // Last 5 minutes
         },
@@ -370,9 +370,9 @@ export class AuditService {
   }
 
   /**
-   * Get comprehensive audit report for an election
+   * Get comprehensive audit report for a ballot
    */
-  async getElectionAuditReport(electionId: string): Promise<{
+  async getBallotAuditReport(ballotId: string): Promise<{
     ballotId: string;
     totalVotes: number;
     verifiedVotes: number;
@@ -383,13 +383,14 @@ export class AuditService {
     complianceStatus: 'COMPLIANT' | 'NON_COMPLIANT' | 'UNDER_REVIEW';
   }> {
     const votes = await this.prisma.vote.findMany({
+      where: { ballotId: ballotId }
     });
 
     const auditEvents = await this.prisma.auditLog.findMany({
       orderBy: { timestamp: 'asc' },
     });
 
-    const securityAlerts = await this.detectSuspiciousPatterns(electionId);
+    const securityAlerts = await this.detectSuspiciousPatterns(ballotId);
 
     // Verify each vote
     const verificationResults = await Promise.all(
@@ -415,7 +416,7 @@ export class AuditService {
     }
 
     return {
-      ballotId: 'BALLOT-1', // TODO: Pass actual ballotId parameter
+      ballotId: ballotId,
       totalVotes: votes.length,
       verifiedVotes,
       disputedVotes,
@@ -440,9 +441,9 @@ export class AuditService {
   async getVoterHistory(voterId: string): Promise<{
     voterId: string;
     totalVotes: number;
-    elections: Array<{
+    ballots: Array<{
       ballotId: string;
-      electionTitle: string;
+      ballotTitle: string;
       voteCount: number;
       lastVoteDate: Date;
       verificationCodes: string[];
@@ -461,11 +462,11 @@ export class AuditService {
       orderBy: { timestamp: 'desc' },
     });
 
-    // Group votes by election
-    const electionMap = new Map();
+    // Group votes by ballot
+    const ballotMap = new Map();
     votes.forEach(vote => {
-      if (!electionMap.has(vote.ballotId)) {
-        electionMap.set(vote.ballotId, {
+      if (!ballotMap.has(vote.ballotId)) {
+        ballotMap.set(vote.ballotId, {
           ballotTitle: 'Ballot Title', // TODO: Add ballot relation to vote
           voteCount: 0,
           lastVoteDate: vote.createdAt,
@@ -477,7 +478,7 @@ export class AuditService {
     return {
       voterId,
       totalVotes: votes.length,
-      elections: [], // Elections replaced with ballots
+      ballots: [], // Ballots instead of elections
       auditTrail: auditEvents.map(event => ({
         eventType: event.eventType as any,
         timestamp: event.timestamp,
@@ -493,7 +494,7 @@ export class AuditService {
   /**
    * Export audit data for compliance reporting
    */
-  async exportAuditData(electionId: string): Promise<{
+  async exportAuditData(ballotId: string): Promise<{
     ballotId: string;
     exportDate: Date;
     auditReport: any;
@@ -501,7 +502,7 @@ export class AuditService {
     securityAlerts: SecurityAlert[];
     complianceReport: any;
   }> {
-    const auditReport = await this.getElectionAuditReport(electionId);
+    const auditReport = await this.getBallotAuditReport(ballotId);
     const votes = await this.prisma.vote.findMany({
       include: {
         voter: true,
@@ -521,7 +522,7 @@ export class AuditService {
     }));
 
     const complianceReport = {
-      // ballotId, // TODO: Add ballotId to return type
+      ballotId: ballotId,
       exportDate: new Date(),
       totalVotes: auditReport.totalVotes,
       verifiedVotes: auditReport.verifiedVotes,
@@ -532,7 +533,7 @@ export class AuditService {
     };
 
     return {
-      ballotId: 'BALLOT-1', // TODO: Pass actual ballotId parameter
+      ballotId: ballotId,
       exportDate: new Date(),
       auditReport,
       voteDetails,

@@ -35,16 +35,16 @@ let VotingGateway = VotingGateway_1 = class VotingGateway {
         this.logger.log(`Client disconnected: ${client.id}`);
         this.connectedClients.delete(client.id);
     }
-    emitVoteUpdate(electionId, voteData) {
+    emitVoteUpdate(ballotId, voteData) {
         this.server.emit('vote-updated', {
-            electionId,
+            ballotId,
             voteData,
             timestamp: new Date().toISOString(),
         });
     }
-    emitElectionStatusUpdate(electionId, status, data) {
-        this.server.emit('election-status-updated', {
-            electionId,
+    emitBallotStatusUpdate(ballotId, status, data) {
+        this.server.emit('ballot-status-updated', {
+            ballotId,
             status,
             data,
             timestamp: new Date().toISOString(),
@@ -83,21 +83,21 @@ let VotingGateway = VotingGateway_1 = class VotingGateway {
             timestamp: new Date().toISOString(),
         });
     }
-    emitElectionCreated(electionData) {
-        this.server.emit('election-created', {
-            electionData,
+    emitBallotCreated(ballotData) {
+        this.server.emit('ballot-created', {
+            ballotData,
             timestamp: new Date().toISOString(),
         });
     }
-    emitElectionUpdated(electionData) {
-        this.server.emit('election-updated', {
-            electionData,
+    emitBallotUpdated(ballotData) {
+        this.server.emit('ballot-updated', {
+            ballotData,
             timestamp: new Date().toISOString(),
         });
     }
-    emitResultsUpdate(electionId, resultsData) {
+    emitResultsUpdate(ballotId, resultsData) {
         this.server.emit('results-updated', {
-            electionId,
+            ballotId,
             resultsData,
             timestamp: new Date().toISOString(),
         });
@@ -131,18 +131,18 @@ let VotingGateway = VotingGateway_1 = class VotingGateway {
         });
         console.log('✅ [WebSocket] Test event emitted successfully');
     }
-    handleJoinElection(client, electionId) {
-        client.join(`election-${electionId}`);
-        client.emit('joined-election', {
-            electionId,
-            message: `Joined election room: ${electionId}`,
+    handleJoinBallot(client, ballotId) {
+        client.join(`ballot-${ballotId}`);
+        client.emit('joined-ballot', {
+            ballotId,
+            message: `Joined ballot room: ${ballotId}`,
         });
     }
-    handleLeaveElection(client, electionId) {
-        client.leave(`election-${electionId}`);
-        client.emit('left-election', {
-            electionId,
-            message: `Left election room: ${electionId}`,
+    handleLeaveBallot(client, ballotId) {
+        client.leave(`ballot-${ballotId}`);
+        client.emit('left-ballot', {
+            ballotId,
+            message: `Left ballot room: ${ballotId}`,
         });
     }
     handleGetClientsCount(client) {
@@ -160,8 +160,8 @@ let VotingGateway = VotingGateway_1 = class VotingGateway {
             timestamp: new Date().toISOString(),
         });
     }
-    emitToElectionRoom(electionId, event, data) {
-        this.server.to(`election-${electionId}`).emit(event, {
+    emitToBallotRoom(ballotId, event, data) {
+        this.server.to(`ballot-${ballotId}`).emit(event, {
             ...data,
             timestamp: new Date().toISOString(),
         });
@@ -182,17 +182,17 @@ __decorate([
     __metadata("design:type", socket_io_1.Server)
 ], VotingGateway.prototype, "server", void 0);
 __decorate([
-    (0, websockets_1.SubscribeMessage)('join-election'),
+    (0, websockets_1.SubscribeMessage)('join-ballot'),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [socket_io_1.Socket, String]),
     __metadata("design:returntype", void 0)
-], VotingGateway.prototype, "handleJoinElection", null);
+], VotingGateway.prototype, "handleJoinBallot", null);
 __decorate([
-    (0, websockets_1.SubscribeMessage)('leave-election'),
+    (0, websockets_1.SubscribeMessage)('leave-ballot'),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [socket_io_1.Socket, String]),
     __metadata("design:returntype", void 0)
-], VotingGateway.prototype, "handleLeaveElection", null);
+], VotingGateway.prototype, "handleLeaveBallot", null);
 __decorate([
     (0, websockets_1.SubscribeMessage)('get-clients-count'),
     __metadata("design:type", Function),

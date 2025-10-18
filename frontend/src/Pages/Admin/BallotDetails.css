@@ -1,7 +1,6 @@
 .ballot-details-container {
   width: 100%;
   padding: 24px 32px;
-  background: #f8fafc;
   min-height: 100vh;
 }
 
@@ -251,9 +250,9 @@
 }
 
 .tab-content {
-  background: #f1f5f9;
+  background: white;
   border-radius: 0.5rem;
-  padding: 0;
+  padding: 1.5rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   min-height: 500px;
 }
@@ -807,6 +806,238 @@
 .refresh-btn:hover {
   background: #f1f5f9;
   border-color: #cbd5e1;
+}
+
+.refresh-btn.refreshing {
+  background: #dbeafe;
+  border-color: #3b82f6;
+  color: #1d4ed8;
+}
+
+.refresh-btn.refreshing:hover {
+  background: #dbeafe;
+  border-color: #3b82f6;
+}
+
+.refresh-indicator {
+  font-size: 0.75rem;
+  margin-left: 0.5rem;
+  color: #1d4ed8;
+  font-weight: 500;
+}
+
+/* Modern Ballot Information Card */
+.ballot-info-card {
+  background: transparent;
+  border-radius: 0;
+  padding: 0;
+  box-shadow: none;
+  margin-bottom: 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+
+.ballot-info-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.6);
+}
+
+.ballot-info-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ballot-info-title i {
+  color: #3b82f6;
+  font-size: 1.25rem;
+}
+
+.ballot-info-title h3 {
+  color: #1f2937;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.ballot-status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: rgba(59, 130, 246, 0.1);
+  border-radius: 20px;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+.status-dot.active {
+  background: #10b981;
+}
+
+.status-dot.draft {
+  background: #6b7280;
+}
+
+.status-dot.ended {
+  background: #ef4444;
+}
+
+.status-dot.upcoming {
+  background: #f59e0b;
+}
+
+.status-text {
+  color: #374151;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.ballot-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.info-section {
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.3s ease;
+}
+
+.info-section:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.4);
+}
+
+.section-header i {
+  color: #6366f1;
+  font-size: 1rem;
+}
+
+.section-header h4 {
+  color: #374151;
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.info-items {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.info-item:hover {
+  background: rgba(255, 255, 255, 1);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+.info-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  color: white;
+  flex-shrink: 0;
+}
+
+.info-icon.start-date {
+  background: linear-gradient(135deg, #10b981, #059669);
+}
+
+.info-icon.end-date {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+}
+
+.info-icon.positions {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+}
+
+.info-icon.candidates {
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+}
+
+.info-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.info-label {
+  color: #6b7280;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.info-value {
+  color: #1f2937;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .ballot-info-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .ballot-info-header {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  
+  .ballot-info-card {
+    margin-bottom: 1.5rem;
+  }
 }
 
 .last-updated {
@@ -1582,7 +1813,7 @@
   }
 
   .tab-content {
-    padding: 20px;
+    padding: 1rem;
   }
 
   .info-card,

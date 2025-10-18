@@ -54,7 +54,6 @@ export declare class AdminController {
                 position: string;
                 candidate: string;
                 voter: string;
-                election: string;
                 vote: string;
             };
             padded: {
@@ -64,7 +63,6 @@ export declare class AdminController {
                 position: string;
                 candidate: string;
                 voter: string;
-                election: string;
                 vote: string;
             };
             year: {
@@ -85,7 +83,6 @@ export declare class AdminController {
             position: number;
             candidate: number;
             voter: number;
-            election: number;
             vote: number;
         };
     }>;

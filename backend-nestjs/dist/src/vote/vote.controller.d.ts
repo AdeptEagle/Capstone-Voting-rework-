@@ -81,13 +81,12 @@ export declare class VoteController {
         candidateId: string;
         auditHash: string | null;
         verificationCode: string | null;
-        electionId: string | null;
         ballotId: string | null;
     }>;
     confirmVote(createVoteDto: CreateVoteDto): Promise<{
         message: string;
     }>;
-    getActiveElectionResults(): Promise<any[]>;
+    getActiveBallotResults(): Promise<any[]>;
     getRealTimeStats(): Promise<{
         totalVotes: number;
         totalVoters: number;
@@ -136,7 +135,6 @@ export declare class VoteController {
             candidateId: string;
             auditHash: string | null;
             verificationCode: string | null;
-            electionId: string | null;
             ballotId: string | null;
         })[];
         availablePositions: {
@@ -188,7 +186,6 @@ export declare class VoteController {
         candidateId: string;
         auditHash: string | null;
         verificationCode: string | null;
-        electionId: string | null;
         ballotId: string | null;
     })[]>;
     getVotesByVoter(voterId: string): Promise<({
@@ -225,7 +222,6 @@ export declare class VoteController {
         candidateId: string;
         auditHash: string | null;
         verificationCode: string | null;
-        electionId: string | null;
         ballotId: string | null;
     })[]>;
     getVoteResults(ballotId: string): Promise<{
@@ -303,7 +299,6 @@ export declare class VoteController {
         candidateId: string;
         auditHash: string | null;
         verificationCode: string | null;
-        electionId: string | null;
         ballotId: string | null;
     }>;
     deleteVote(id: string): Promise<{
@@ -317,7 +312,6 @@ export declare class VoteController {
         candidateId: string;
         auditHash: string | null;
         verificationCode: string | null;
-        electionId: string | null;
         ballotId: string | null;
     }>;
     resetVoterStatus(voterId: string): Promise<{

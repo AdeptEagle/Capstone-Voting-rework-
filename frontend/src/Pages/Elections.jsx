@@ -419,7 +419,7 @@ const Elections = () => {
           <Button 
             variant="link" 
             className="p-0 ms-2" 
-            onClick={() => window.location.href = '/trash-bin?tab=elections'}
+            onClick={() => window.location.href = '/trash-bin?tab=ballots'}
           >
             Go to Trash Bin
           </Button>

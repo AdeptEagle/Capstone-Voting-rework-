@@ -5,9 +5,8 @@ export declare class SchedulerService {
     private readonly prisma;
     private readonly logger;
     constructor(ballotService: BallotService, prisma: PrismaService);
-    handleAutoEndElections(): Promise<void>;
     handleAutoStartBallots(): Promise<void>;
     handleAutoEndBallots(): Promise<void>;
-    logElectionStatus(): Promise<void>;
+    logBallotStatus(): Promise<void>;
     cleanupInactiveSessions(): Promise<void>;
 }

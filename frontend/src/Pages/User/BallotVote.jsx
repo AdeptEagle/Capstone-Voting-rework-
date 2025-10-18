@@ -60,11 +60,35 @@ const BallotVote = () => {
       console.log('🔍 BallotVote: Full ballot data received:', ballotData);
       console.log('🔍 BallotVote: Ballot_AllowAbstain value:', ballotData.Ballot_AllowAbstain);
       console.log('🔍 BallotVote: Ballot_AllowAbstain type:', typeof ballotData.Ballot_AllowAbstain);
-      setBallot(ballotData);
+      console.log('🔍 BallotVote: Ballot positions order:', ballotData.ballotPositions.map((bp, index) => ({
+        index,
+        positionId: bp.position.id,
+        positionTitle: bp.position.Position_Title,
+        displayOrder: bp.BallotPosition_DisplayOrder
+      })));
+      // Ensure positions are sorted by display order (safety check)
+      const sortedBallotData = {
+        ...ballotData,
+        ballotPositions: ballotData.ballotPositions.sort((a, b) => {
+          const orderA = a.BallotPosition_DisplayOrder || 999;
+          const orderB = b.BallotPosition_DisplayOrder || 999;
+          console.log(`🔍 Sorting: ${a.position.Position_Title} (${orderA}) vs ${b.position.Position_Title} (${orderB})`);
+          return orderA - orderB;
+        })
+      };
+      
+      console.log('🔍 BallotVote: Sorted positions:', sortedBallotData.ballotPositions.map((bp, index) => ({
+        index,
+        positionId: bp.position.id,
+        positionTitle: bp.position.Position_Title,
+        displayOrder: bp.BallotPosition_DisplayOrder
+      })));
+      
+      setBallot(sortedBallotData);
       
       // Initialize selected votes for each position
       const initialVotes = {};
-      ballotData.ballotPositions.forEach(position => {
+      sortedBallotData.ballotPositions.forEach(position => {
         initialVotes[position.position.id] = [];
       });
       setSelectedVotes(initialVotes);

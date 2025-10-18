@@ -242,7 +242,6 @@ export declare class VoterController {
             candidateId: string;
             auditHash: string | null;
             verificationCode: string | null;
-            electionId: string | null;
             ballotId: string | null;
         })[];
         statistics: {
