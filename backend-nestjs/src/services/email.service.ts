@@ -6,8 +6,9 @@ export class EmailService {
   private transporter: nodemailer.Transporter;
 
   constructor() {
-    // Gmail SMTP Configuration
+    // Email Service Configuration
     console.log('📧 Initializing email service...');
+    console.log('📧 EMAIL_SERVICE:', process.env.EMAIL_SERVICE || 'gmail');
     console.log('📧 GMAIL_USER:', process.env.GMAIL_USER ? 'Set' : 'Not set');
     console.log('📧 GMAIL_PASSWORD:', process.env.GMAIL_PASSWORD ? 'Set' : 'Not set');
     console.log('📧 FRONTEND_URL:', process.env.FRONTEND_URL ? 'Set' : 'Not set');
@@ -26,24 +27,54 @@ export class EmailService {
       console.log('🔍 GMAIL_PASSWORD first 4 chars:', process.env.GMAIL_PASSWORD.substring(0, 4));
     }
     
-    if (!process.env.GMAIL_USER || !process.env.GMAIL_PASSWORD) {
-      console.error('❌ Email service configuration missing! GMAIL_USER and GMAIL_PASSWORD must be set.');
-      console.error('⚠️ Email functionality will be disabled. App will continue to run without email features.');
-      console.error('🔧 To fix: Set GMAIL_USER and GMAIL_PASSWORD environment variables in your deployment platform.');
+    // Check for email service configuration
+    const emailService = process.env.EMAIL_SERVICE || 'gmail';
+    
+    if (emailService === 'gmail') {
+      if (!process.env.GMAIL_USER || !process.env.GMAIL_PASSWORD) {
+        console.error('❌ Gmail configuration missing! GMAIL_USER and GMAIL_PASSWORD must be set.');
+        console.error('⚠️ Email functionality will be disabled. App will continue to run without email features.');
+        console.error('🔧 To fix: Set GMAIL_USER and GMAIL_PASSWORD environment variables in your deployment platform.');
+        
+        this.transporter = null;
+        return;
+      }
       
-      // Don't throw error - allow app to start without email service
+      this.transporter = nodemailer.createTransport({
+        host: 'smtp.gmail.com',
+        port: 587,
+        secure: false, // true for 465, false for other ports
+        auth: {
+          user: process.env.GMAIL_USER,
+          pass: process.env.GMAIL_PASSWORD, // Use App Password if 2FA is enabled
+        },
+        tls: {
+          rejectUnauthorized: false
+        },
+        connectionTimeout: 60000, // 60 seconds
+        greetingTimeout: 30000, // 30 seconds
+        socketTimeout: 60000, // 60 seconds
+      });
+    } else if (emailService === 'sendgrid') {
+      // SendGrid configuration (alternative service)
+      if (!process.env.SENDGRID_API_KEY) {
+        console.error('❌ SendGrid configuration missing! SENDGRID_API_KEY must be set.');
+        this.transporter = null;
+        return;
+      }
+      
+      this.transporter = nodemailer.createTransport({
+        service: 'SendGrid',
+        auth: {
+          user: 'apikey',
+          pass: process.env.SENDGRID_API_KEY,
+        },
+      });
+    } else {
+      console.error(`❌ Unsupported email service: ${emailService}`);
       this.transporter = null;
       return;
     }
-    
-    this.transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.GMAIL_USER,
-        pass: process.env.GMAIL_PASSWORD, // Regular password for school project
-        // For production with 2FA: use GMAIL_APP_PASSWORD instead
-      },
-    });
     
     // Verify connection
     this.transporter.verify((error, success) => {

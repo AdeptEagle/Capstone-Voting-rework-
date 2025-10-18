@@ -15,6 +15,7 @@ const nodemailer = require("nodemailer");
 let EmailService = class EmailService {
     constructor() {
         console.log('📧 Initializing email service...');
+        console.log('📧 EMAIL_SERVICE:', process.env.EMAIL_SERVICE || 'gmail');
         console.log('📧 GMAIL_USER:', process.env.GMAIL_USER ? 'Set' : 'Not set');
         console.log('📧 GMAIL_PASSWORD:', process.env.GMAIL_PASSWORD ? 'Set' : 'Not set');
         console.log('📧 FRONTEND_URL:', process.env.FRONTEND_URL ? 'Set' : 'Not set');
@@ -28,20 +29,50 @@ let EmailService = class EmailService {
             console.log('🔍 GMAIL_PASSWORD length:', process.env.GMAIL_PASSWORD.length);
             console.log('🔍 GMAIL_PASSWORD first 4 chars:', process.env.GMAIL_PASSWORD.substring(0, 4));
         }
-        if (!process.env.GMAIL_USER || !process.env.GMAIL_PASSWORD) {
-            console.error('❌ Email service configuration missing! GMAIL_USER and GMAIL_PASSWORD must be set.');
-            console.error('⚠️ Email functionality will be disabled. App will continue to run without email features.');
-            console.error('🔧 To fix: Set GMAIL_USER and GMAIL_PASSWORD environment variables in your deployment platform.');
+        const emailService = process.env.EMAIL_SERVICE || 'gmail';
+        if (emailService === 'gmail') {
+            if (!process.env.GMAIL_USER || !process.env.GMAIL_PASSWORD) {
+                console.error('❌ Gmail configuration missing! GMAIL_USER and GMAIL_PASSWORD must be set.');
+                console.error('⚠️ Email functionality will be disabled. App will continue to run without email features.');
+                console.error('🔧 To fix: Set GMAIL_USER and GMAIL_PASSWORD environment variables in your deployment platform.');
+                this.transporter = null;
+                return;
+            }
+            this.transporter = nodemailer.createTransport({
+                host: 'smtp.gmail.com',
+                port: 587,
+                secure: false,
+                auth: {
+                    user: process.env.GMAIL_USER,
+                    pass: process.env.GMAIL_PASSWORD,
+                },
+                tls: {
+                    rejectUnauthorized: false
+                },
+                connectionTimeout: 60000,
+                greetingTimeout: 30000,
+                socketTimeout: 60000,
+            });
+        }
+        else if (emailService === 'sendgrid') {
+            if (!process.env.SENDGRID_API_KEY) {
+                console.error('❌ SendGrid configuration missing! SENDGRID_API_KEY must be set.');
+                this.transporter = null;
+                return;
+            }
+            this.transporter = nodemailer.createTransport({
+                service: 'SendGrid',
+                auth: {
+                    user: 'apikey',
+                    pass: process.env.SENDGRID_API_KEY,
+                },
+            });
+        }
+        else {
+            console.error(`❌ Unsupported email service: ${emailService}`);
             this.transporter = null;
             return;
         }
-        this.transporter = nodemailer.createTransport({
-            service: 'gmail',
-            auth: {
-                user: process.env.GMAIL_USER,
-                pass: process.env.GMAIL_PASSWORD,
-            },
-        });
         this.transporter.verify((error, success) => {
             if (error) {
                 console.error('❌ Email service verification failed:', error);
@@ -55,6 +86,10 @@ let EmailService = class EmailService {
         if (!this.transporter) {
             console.error('❌ Email service not configured - cannot send password reset email');
             throw new Error('Email service not configured. Please contact administrator.');
+        }
+        if (!process.env.FRONTEND_URL) {
+            console.error('❌ FRONTEND_URL environment variable is not set');
+            throw new Error('Frontend URL not configured. Please contact administrator.');
         }
         const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
         const mailOptions = {

@@ -14,7 +14,12 @@ PORT=8080
 # Frontend URL (update with your frontend Railway URL)
 FRONTEND_URL="https://your-frontend-app.railway.app"
 
-# Cloudinary (if using image uploads)
-# CLOUDINARY_CLOUD_NAME="your-cloud-name"
-# CLOUDINARY_API_KEY="your-api-key"
-# CLOUDINARY_API_SECRET="your-api-secret"
+# Email Service Configuration
+EMAIL_SERVICE="gmail"  # Options: gmail, sendgrid
+
+# Gmail SMTP Configuration (if EMAIL_SERVICE=gmail)
+GMAIL_USER="your-gmail@gmail.com"
+GMAIL_PASSWORD="your-16-character-app-password"
+
+# SendGrid Configuration (if EMAIL_SERVICE=sendgrid)
+# SENDGRID_API_KEY="your-sendgrid-api-key"
