@@ -67,6 +67,12 @@ export class EmailService {
       throw new Error('Email service not configured. Please contact administrator.');
     }
     
+    // Check if FRONTEND_URL is configured
+    if (!process.env.FRONTEND_URL) {
+      console.error('❌ FRONTEND_URL environment variable is not set');
+      throw new Error('Frontend URL not configured. Please contact administrator.');
+    }
+    
     const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
     
     const mailOptions = {
