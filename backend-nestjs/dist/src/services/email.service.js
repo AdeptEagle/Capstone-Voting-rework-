@@ -14,12 +14,28 @@ const common_1 = require("@nestjs/common");
 const nodemailer = require("nodemailer");
 let EmailService = class EmailService {
     constructor() {
+        console.log('📧 Initializing email service...');
+        console.log('📧 GMAIL_USER:', process.env.GMAIL_USER ? 'Set' : 'Not set');
+        console.log('📧 GMAIL_PASSWORD:', process.env.GMAIL_PASSWORD ? 'Set' : 'Not set');
+        console.log('📧 FRONTEND_URL:', process.env.FRONTEND_URL ? 'Set' : 'Not set');
+        if (!process.env.GMAIL_USER || !process.env.GMAIL_PASSWORD) {
+            console.error('❌ Email service configuration missing! GMAIL_USER and GMAIL_PASSWORD must be set.');
+            throw new Error('Email service configuration missing');
+        }
         this.transporter = nodemailer.createTransport({
             service: 'gmail',
             auth: {
                 user: process.env.GMAIL_USER,
                 pass: process.env.GMAIL_PASSWORD,
             },
+        });
+        this.transporter.verify((error, success) => {
+            if (error) {
+                console.error('❌ Email service verification failed:', error);
+            }
+            else {
+                console.log('✅ Email service verified successfully');
+            }
         });
     }
     async sendPasswordResetEmail(to, resetToken, userType, userName, userId) {

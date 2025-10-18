@@ -519,7 +519,14 @@ let AuthService = class AuthService {
                     expiresAt,
                 },
             });
-            await this.emailService.sendPasswordResetEmail(ResetToken_Email, resetToken, userType, userType === 'voter' ? user.Voter_Name : user.Admin_Username, userType === 'voter' ? user.Voter_StudentId : user.Admin_Username);
+            try {
+                await this.emailService.sendPasswordResetEmail(ResetToken_Email, resetToken, userType, userType === 'voter' ? user.Voter_Name : user.Admin_Username, userType === 'voter' ? user.Voter_StudentId : user.Admin_Username);
+                console.log(`✅ Password reset email sent successfully to ${ResetToken_Email}`);
+            }
+            catch (emailError) {
+                console.error('❌ Failed to send password reset email:', emailError);
+                console.log('⚠️ Password reset token created but email failed to send');
+            }
             return {
                 message: userType === 'admin'
                     ? 'Password reset link has been sent to your admin email address. Please check your inbox and follow the instructions to reset your password.'
@@ -536,7 +543,14 @@ let AuthService = class AuthService {
                     expiresAt,
                 },
             });
-            await this.emailService.sendPasswordResetEmail(ResetToken_Email, resetToken, userType, userType === 'voter' ? user.Voter_Name : user.Admin_Username, userType === 'voter' ? user.Voter_StudentId : user.Admin_Username);
+            try {
+                await this.emailService.sendPasswordResetEmail(ResetToken_Email, resetToken, userType, userType === 'voter' ? user.Voter_Name : user.Admin_Username, userType === 'voter' ? user.Voter_StudentId : user.Admin_Username);
+                console.log(`✅ Password reset email sent successfully to ${ResetToken_Email}`);
+            }
+            catch (emailError) {
+                console.error('❌ Failed to send password reset email:', emailError);
+                console.log('⚠️ Password reset token created but email failed to send');
+            }
             return {
                 message: userType === 'admin'
                     ? 'Password reset link has been sent to your admin email address. Please check your inbox and follow the instructions to reset your password.'

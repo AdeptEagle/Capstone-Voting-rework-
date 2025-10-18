@@ -21,11 +21,20 @@ const ForgotPassword = () => {
 
     try {
       console.log('Making API request to /auth/forgot-password');
+      
+      // Add timeout to prevent hanging
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+      
       const response = await api.post('/auth/forgot-password', {
         ResetToken_Email: email,
         userType: 'voter',
         verificationField: studentId
+      }, {
+        signal: controller.signal
       });
+      
+      clearTimeout(timeoutId);
 
       console.log('API response:', response.data);
       setMessage(response.data.message);
@@ -37,7 +46,10 @@ const ForgotPassword = () => {
       // Handle different error response structures
       let errorMessage = 'Failed to request password reset';
       
-      if (error.response?.data) {
+      // Handle timeout errors
+      if (error.name === 'AbortError') {
+        errorMessage = 'Request timed out. Please check your internet connection and try again.';
+      } else if (error.response?.data) {
         // NestJS BadRequestException returns message in error.response.data.message
         if (error.response.data.message) {
           errorMessage = error.response.data.message;
