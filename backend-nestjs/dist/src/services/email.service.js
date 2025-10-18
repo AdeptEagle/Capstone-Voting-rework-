@@ -12,7 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.EmailService = void 0;
 const common_1 = require("@nestjs/common");
 const nodemailer = require("nodemailer");
-const axios_1 = require("axios");
+const resend_1 = require("resend");
 let EmailService = class EmailService {
     constructor() {
         this.useApiService = false;
@@ -48,6 +48,7 @@ let EmailService = class EmailService {
                 this.transporter = null;
                 return;
             }
+            this.resend = new resend_1.Resend(process.env.RESEND_API_KEY);
             console.log('✅ Resend API configuration found - using API service');
             this.transporter = null;
         }
@@ -154,23 +155,18 @@ let EmailService = class EmailService {
     }
     async sendEmailViaResend(to, subject, html, text) {
         try {
-            const response = await axios_1.default.post('https://api.resend.com/emails', {
+            const response = await this.resend.emails.send({
                 from: process.env.RESEND_FROM_EMAIL,
                 to: [to],
                 subject: subject,
                 html: html,
                 text: text || html.replace(/<[^>]*>/g, ''),
-            }, {
-                headers: {
-                    'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
-                    'Content-Type': 'application/json',
-                },
             });
-            console.log('✅ Email sent via Resend API:', response.data);
+            console.log('✅ Email sent via Resend API:', response);
         }
         catch (error) {
-            console.error('❌ Resend API error:', error.response?.data || error.message);
-            throw new Error(`Failed to send email via Resend: ${error.response?.data?.message || error.message}`);
+            console.error('❌ Resend API error:', error);
+            throw new Error(`Failed to send email via Resend: ${error.message}`);
         }
     }
     async sendPasswordResetEmail(to, resetToken, userType, userName, userId) {

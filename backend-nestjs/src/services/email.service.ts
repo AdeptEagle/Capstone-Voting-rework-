@@ -1,12 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
-import axios from 'axios';
+import { Resend } from 'resend';
 
 @Injectable()
 export class EmailService {
   private transporter: nodemailer.Transporter;
   private useApiService: boolean = false;
   private apiService: string = '';
+  private resend: Resend;
 
   constructor() {
     // Email Service Configuration
@@ -48,6 +49,8 @@ export class EmailService {
         return;
       }
       
+      // Initialize Resend client
+      this.resend = new Resend(process.env.RESEND_API_KEY);
       console.log('✅ Resend API configuration found - using API service');
       this.transporter = null; // We'll use API instead of SMTP
     } else if (emailService === 'gmail') {
@@ -162,7 +165,7 @@ export class EmailService {
     }
   }
 
-  // Resend API method
+  // Resend API method using official Resend package
   private async sendEmailViaResend(
     to: string,
     subject: string,
@@ -170,23 +173,18 @@ export class EmailService {
     text?: string
   ): Promise<void> {
     try {
-      const response = await axios.post('https://api.resend.com/emails', {
+      const response = await this.resend.emails.send({
         from: process.env.RESEND_FROM_EMAIL,
         to: [to],
         subject: subject,
         html: html,
         text: text || html.replace(/<[^>]*>/g, ''), // Strip HTML tags for text version
-      }, {
-        headers: {
-          'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
       });
 
-      console.log('✅ Email sent via Resend API:', response.data);
+      console.log('✅ Email sent via Resend API:', response);
     } catch (error) {
-      console.error('❌ Resend API error:', error.response?.data || error.message);
-      throw new Error(`Failed to send email via Resend: ${error.response?.data?.message || error.message}`);
+      console.error('❌ Resend API error:', error);
+      throw new Error(`Failed to send email via Resend: ${error.message}`);
     }
   }
 
