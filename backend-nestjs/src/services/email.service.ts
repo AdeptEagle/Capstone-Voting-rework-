@@ -14,7 +14,12 @@ export class EmailService {
     
     if (!process.env.GMAIL_USER || !process.env.GMAIL_PASSWORD) {
       console.error('❌ Email service configuration missing! GMAIL_USER and GMAIL_PASSWORD must be set.');
-      throw new Error('Email service configuration missing');
+      console.error('⚠️ Email functionality will be disabled. App will continue to run without email features.');
+      console.error('🔧 To fix: Set GMAIL_USER and GMAIL_PASSWORD environment variables in your deployment platform.');
+      
+      // Don't throw error - allow app to start without email service
+      this.transporter = null;
+      return;
     }
     
     this.transporter = nodemailer.createTransport({
@@ -43,6 +48,11 @@ export class EmailService {
     userName?: string,
     userId?: string
   ): Promise<void> {
+    if (!this.transporter) {
+      console.error('❌ Email service not configured - cannot send password reset email');
+      throw new Error('Email service not configured. Please contact administrator.');
+    }
+    
     const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
     
     const mailOptions = {
@@ -124,6 +134,11 @@ export class EmailService {
   }
 
   async sendPasswordChangedEmail(to: string, userType: 'voter' | 'admin'): Promise<void> {
+    if (!this.transporter) {
+      console.error('❌ Email service not configured - cannot send password changed email');
+      throw new Error('Email service not configured. Please contact administrator.');
+    }
+    
     const mailOptions = {
       from: process.env.GMAIL_USER,
       to: to,
