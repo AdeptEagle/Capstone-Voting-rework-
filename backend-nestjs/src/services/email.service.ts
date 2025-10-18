@@ -12,6 +12,20 @@ export class EmailService {
     console.log('📧 GMAIL_PASSWORD:', process.env.GMAIL_PASSWORD ? 'Set' : 'Not set');
     console.log('📧 FRONTEND_URL:', process.env.FRONTEND_URL ? 'Set' : 'Not set');
     
+    // Debug: Show all environment variables that start with GMAIL
+    console.log('🔍 Debug - All GMAIL environment variables:');
+    Object.keys(process.env).forEach(key => {
+      if (key.startsWith('GMAIL')) {
+        console.log(`🔍 ${key}:`, process.env[key] ? 'Set' : 'Not set');
+      }
+    });
+    
+    // Debug: Show the actual value length (for security, don't show the full value)
+    if (process.env.GMAIL_PASSWORD) {
+      console.log('🔍 GMAIL_PASSWORD length:', process.env.GMAIL_PASSWORD.length);
+      console.log('🔍 GMAIL_PASSWORD first 4 chars:', process.env.GMAIL_PASSWORD.substring(0, 4));
+    }
+    
     if (!process.env.GMAIL_USER || !process.env.GMAIL_PASSWORD) {
       console.error('❌ Email service configuration missing! GMAIL_USER and GMAIL_PASSWORD must be set.');
       console.error('⚠️ Email functionality will be disabled. App will continue to run without email features.');
