@@ -638,17 +638,22 @@ export class AuthService {
           userType === 'voter' ? user.Voter_StudentId : user.Admin_Username
         );
         console.log(`✅ Password reset email sent successfully to ${ResetToken_Email}`);
+        
+        return {
+          message: userType === 'admin' 
+            ? 'Password reset link has been sent to your admin email address. Please check your inbox and follow the instructions to reset your password.'
+            : 'Password reset link has been sent to your email address. Please check your inbox and follow the instructions to reset your password.',
+        };
       } catch (emailError) {
         console.error('❌ Failed to send password reset email:', emailError);
-        // Don't fail the entire request if email fails - user can still reset password
         console.log('⚠️ Password reset token created but email failed to send');
+        
+        // Return error response to frontend
+        throw new BadRequestException(
+          'Password reset token has been created, but we were unable to send the email. ' +
+          'Please contact your administrator for assistance or try again later.'
+        );
       }
-
-      return {
-        message: userType === 'admin' 
-          ? 'Password reset link has been sent to your admin email address. Please check your inbox and follow the instructions to reset your password.'
-          : 'Password reset link has been sent to your email address. Please check your inbox and follow the instructions to reset your password.',
-      };
     } catch (error) {
       // If the unique constraint doesn't exist yet, try a simpler approach
       console.log('Database constraint issue, trying alternative approach...');
@@ -673,17 +678,22 @@ export class AuthService {
           userType === 'voter' ? user.Voter_StudentId : user.Admin_Username
         );
         console.log(`✅ Password reset email sent successfully to ${ResetToken_Email}`);
+        
+        return {
+          message: userType === 'admin' 
+            ? 'Password reset link has been sent to your admin email address. Please check your inbox and follow the instructions to reset your password.'
+            : 'Password reset link has been sent to your email address. Please check your inbox and follow the instructions to reset your password.',
+        };
       } catch (emailError) {
         console.error('❌ Failed to send password reset email:', emailError);
-        // Don't fail the entire request if email fails - user can still reset password
         console.log('⚠️ Password reset token created but email failed to send');
+        
+        // Return error response to frontend
+        throw new BadRequestException(
+          'Password reset token has been created, but we were unable to send the email. ' +
+          'Please contact your administrator for assistance or try again later.'
+        );
       }
-
-      return {
-        message: userType === 'admin' 
-          ? 'Password reset link has been sent to your admin email address. Please check your inbox and follow the instructions to reset your password.'
-          : 'Password reset link has been sent to your email address. Please check your inbox and follow the instructions to reset your password.',
-      };
     }
   }
 
