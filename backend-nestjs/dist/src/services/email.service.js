@@ -12,165 +12,39 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.EmailService = void 0;
 const common_1 = require("@nestjs/common");
 const nodemailer = require("nodemailer");
-const resend_1 = require("resend");
 let EmailService = class EmailService {
     constructor() {
-        this.useApiService = false;
-        this.apiService = '';
         console.log('📧 Initializing email service...');
-        console.log('📧 EMAIL_SERVICE:', process.env.EMAIL_SERVICE || 'brevo');
+        console.log('📧 EMAIL_SERVICE:', process.env.EMAIL_SERVICE || 'sendgrid');
         console.log('📧 FRONTEND_URL:', process.env.FRONTEND_URL ? 'Set' : 'Not set');
-        const emailService = process.env.EMAIL_SERVICE || 'brevo';
+        const emailService = process.env.EMAIL_SERVICE || 'sendgrid';
         console.log(`🔍 Debug - ${emailService.toUpperCase()} environment variables:`);
-        if (emailService === 'resend') {
-            this.useApiService = true;
-            this.apiService = 'resend';
-            console.log('🔍 RESEND_API_KEY:', process.env.RESEND_API_KEY ? 'Set' : 'Not set');
-            console.log('🔍 RESEND_FROM_EMAIL:', process.env.RESEND_FROM_EMAIL ? 'Set' : 'Not set');
-        }
-        else if (emailService === 'brevo') {
-            console.log('🔍 BREVO_SMTP_LOGIN:', process.env.BREVO_SMTP_LOGIN ? 'Set' : 'Not set');
-            console.log('🔍 BREVO_SMTP_KEY:', process.env.BREVO_SMTP_KEY ? 'Set' : 'Not set');
-            console.log('🔍 BREVO_SENDER_EMAIL:', process.env.BREVO_SENDER_EMAIL ? 'Set' : 'Not set');
-        }
-        else if (emailService === 'gmail') {
-            console.log('🔍 GMAIL_USER:', process.env.GMAIL_USER ? 'Set' : 'Not set');
-            console.log('🔍 GMAIL_PASSWORD:', process.env.GMAIL_PASSWORD ? 'Set' : 'Not set');
-        }
-        else if (emailService === 'sendgrid') {
-            console.log('🔍 SENDGRID_API_KEY:', process.env.SENDGRID_API_KEY ? 'Set' : 'Not set');
-        }
-        if (emailService === 'resend') {
-            if (!process.env.RESEND_API_KEY || !process.env.RESEND_FROM_EMAIL) {
-                console.error('❌ Resend configuration missing! RESEND_API_KEY and RESEND_FROM_EMAIL must be set.');
-                console.error('⚠️ Email functionality will be disabled. App will continue to run without email features.');
-                console.error('🔧 To fix: Set RESEND_API_KEY and RESEND_FROM_EMAIL environment variables in your deployment platform.');
-                this.transporter = null;
-                return;
-            }
-            this.resend = new resend_1.Resend(process.env.RESEND_API_KEY);
-            console.log('✅ Resend API configuration found - using API service');
-            this.transporter = null;
-        }
-        else if (emailService === 'gmail') {
-            if (!process.env.GMAIL_USER || !process.env.GMAIL_PASSWORD) {
-                console.error('❌ Gmail configuration missing! GMAIL_USER and GMAIL_PASSWORD must be set.');
-                console.error('⚠️ Email functionality will be disabled. App will continue to run without email features.');
-                console.error('🔧 To fix: Set GMAIL_USER and GMAIL_PASSWORD environment variables in your deployment platform.');
-                this.transporter = null;
-                return;
-            }
-            this.transporter = nodemailer.createTransport({
-                host: 'smtp.gmail.com',
-                port: 587,
-                secure: false,
-                auth: {
-                    user: process.env.GMAIL_USER,
-                    pass: process.env.GMAIL_PASSWORD,
-                },
-                tls: {
-                    rejectUnauthorized: false
-                },
-                connectionTimeout: 60000,
-                greetingTimeout: 30000,
-                socketTimeout: 60000,
-            });
-        }
-        else if (emailService === 'brevo') {
-            if (!process.env.BREVO_SMTP_KEY || !process.env.BREVO_SMTP_LOGIN) {
-                console.error('❌ Brevo configuration missing! BREVO_SMTP_KEY and BREVO_SMTP_LOGIN must be set.');
-                console.error('⚠️ Email functionality will be disabled. App will continue to run without email features.');
-                console.error('🔧 To fix: Set BREVO_SMTP_KEY and BREVO_SMTP_LOGIN environment variables in your deployment platform.');
-                this.transporter = null;
-                return;
-            }
-            const smtpConfigs = [
-                {
-                    host: 'smtp-relay.brevo.com',
-                    port: 587,
-                    secure: false,
-                    auth: {
-                        user: process.env.BREVO_SMTP_LOGIN,
-                        pass: process.env.BREVO_SMTP_KEY,
-                    },
-                    tls: {
-                        rejectUnauthorized: false
-                    },
-                    connectionTimeout: 30000,
-                    greetingTimeout: 15000,
-                    socketTimeout: 30000,
-                },
-                {
-                    host: 'smtp-relay.brevo.com',
-                    port: 465,
-                    secure: true,
-                    auth: {
-                        user: process.env.BREVO_SMTP_LOGIN,
-                        pass: process.env.BREVO_SMTP_KEY,
-                    },
-                    tls: {
-                        rejectUnauthorized: false
-                    },
-                    connectionTimeout: 30000,
-                    greetingTimeout: 15000,
-                    socketTimeout: 30000,
-                }
-            ];
-            console.log(`🔧 Creating Brevo SMTP transporter (port 587)...`);
-            this.transporter = nodemailer.createTransport(smtpConfigs[0]);
-            console.log(`✅ Brevo SMTP transporter created successfully!`);
-        }
-        else if (emailService === 'sendgrid') {
-            if (!process.env.SENDGRID_API_KEY) {
-                console.error('❌ SendGrid configuration missing! SENDGRID_API_KEY must be set.');
-                this.transporter = null;
-                return;
-            }
-            this.transporter = nodemailer.createTransport({
-                service: 'SendGrid',
-                auth: {
-                    user: 'apikey',
-                    pass: process.env.SENDGRID_API_KEY,
-                },
-            });
-        }
-        else {
-            console.error(`❌ Unsupported email service: ${emailService}`);
+        console.log('🔍 SENDGRID_API_KEY:', process.env.SENDGRID_API_KEY ? 'Set' : 'Not set');
+        if (!process.env.SENDGRID_API_KEY) {
+            console.error('❌ SendGrid configuration missing! SENDGRID_API_KEY must be set.');
+            console.error('⚠️ Email functionality will be disabled. App will continue to run without email features.');
+            console.error('🔧 To fix: Set SENDGRID_API_KEY environment variable in your deployment platform.');
             this.transporter = null;
             return;
         }
-        if (this.transporter && !this.useApiService) {
-            this.transporter.verify((error, success) => {
-                if (error) {
-                    console.error('❌ Email service verification failed:', error);
-                }
-                else {
-                    console.log('✅ Email service verified successfully');
-                }
-            });
-        }
-        else if (this.useApiService) {
-            console.log('✅ API email service configured - no SMTP verification needed');
-        }
-    }
-    async sendEmailViaResend(to, subject, html, text) {
-        try {
-            const response = await this.resend.emails.send({
-                from: process.env.RESEND_FROM_EMAIL,
-                to: [to],
-                subject: subject,
-                html: html,
-                text: text || html.replace(/<[^>]*>/g, ''),
-            });
-            console.log('✅ Email sent via Resend API:', response);
-        }
-        catch (error) {
-            console.error('❌ Resend API error:', error);
-            throw new Error(`Failed to send email via Resend: ${error.message}`);
-        }
+        this.transporter = nodemailer.createTransport({
+            service: 'SendGrid',
+            auth: {
+                user: 'apikey',
+                pass: process.env.SENDGRID_API_KEY,
+            },
+        });
+        this.transporter.verify((error, success) => {
+            if (error) {
+                console.error('❌ SendGrid verification failed:', error);
+            }
+            else {
+                console.log('✅ SendGrid verified successfully');
+            }
+        });
     }
     async sendPasswordResetEmail(to, resetToken, userType, userName, userId) {
-        if (!this.transporter && !this.useApiService) {
+        if (!this.transporter) {
             console.error('❌ Email service not configured - cannot send password reset email');
             throw new Error('Email service not configured. Please contact administrator.');
         }
@@ -178,18 +52,9 @@ let EmailService = class EmailService {
             console.error('❌ FRONTEND_URL environment variable is not set');
             throw new Error('Frontend URL not configured. Please contact administrator.');
         }
-        const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
-        const senderEmail = process.env.BREVO_SMTP_LOGIN || process.env.BREVO_SENDER_EMAIL;
-        console.log(`📧 Sender email configuration:`);
-        console.log(`📧 BREVO_SMTP_LOGIN: ${process.env.BREVO_SMTP_LOGIN || 'Not set'}`);
-        console.log(`📧 BREVO_SENDER_EMAIL: ${process.env.BREVO_SENDER_EMAIL || 'Not set'}`);
-        console.log(`📧 Final sender: ${senderEmail || 'NOT CONFIGURED'}`);
-        if (!senderEmail) {
-            console.error('❌ No sender email configured! Set BREVO_SMTP_LOGIN or BREVO_SENDER_EMAIL');
-            throw new Error('Sender email not configured. Please set BREVO_SMTP_LOGIN or BREVO_SENDER_EMAIL environment variable.');
-        }
+        const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}&type=${userType}`;
         const mailOptions = {
-            from: senderEmail,
+            from: 'BallotBlitz Voting System <adea.votingsys@gmail.com>',
             to: to,
             subject: 'Password Reset Request for Ballotblitz',
             html: `
@@ -247,52 +112,36 @@ let EmailService = class EmailService {
         try {
             console.log(`📧 Attempting to send password reset email to ${to}`);
             console.log(`🔗 Reset link: ${resetLink}`);
-            if (this.useApiService && this.apiService === 'resend') {
-                await this.sendEmailViaResend(to, mailOptions.subject, mailOptions.html);
-                console.log(`✅ Password reset email sent successfully via Resend API to ${to}`);
-            }
-            else {
-                const info = await this.transporter.sendMail(mailOptions);
-                console.log(`✅ Password reset email sent successfully to ${to}`);
-                console.log(`📧 Message ID: ${info.messageId}`);
-                console.log(`📧 Response: ${info.response}`);
-                return info;
-            }
+            const info = await this.transporter.sendMail(mailOptions);
+            console.log(`✅ Password reset email sent successfully to ${to}`);
+            console.log(`📧 Message ID: ${info.messageId}`);
+            console.log(`📧 Response: ${info.response}`);
+            return info;
         }
         catch (error) {
             console.error('❌ Error sending password reset email:', error);
-            if (this.useApiService) {
-                console.error('❌ API Error details:', error.message);
-            }
-            else {
-                console.error('❌ SMTP Error details:', {
-                    code: error.code,
-                    command: error.command,
-                    response: error.response,
-                    responseCode: error.responseCode
-                });
-            }
+            console.error('❌ SendGrid Error details:', {
+                code: error.code,
+                command: error.command,
+                response: error.response,
+                responseCode: error.responseCode
+            });
             throw new Error('Failed to send password reset email');
         }
     }
     async sendPasswordChangedEmail(to, userType) {
-        if (!this.transporter && !this.useApiService) {
+        if (!this.transporter) {
             console.error('❌ Email service not configured - cannot send password changed email');
             throw new Error('Email service not configured. Please contact administrator.');
         }
-        const senderEmail = process.env.BREVO_SMTP_LOGIN || process.env.BREVO_SENDER_EMAIL;
-        if (!senderEmail) {
-            console.error('❌ No sender email configured for password changed email!');
-            throw new Error('Sender email not configured. Please set BREVO_SMTP_LOGIN or BREVO_SENDER_EMAIL environment variable.');
-        }
         const mailOptions = {
-            from: senderEmail,
+            from: 'BallotBlitz Voting System <adea.votingsys@gmail.com>',
             to: to,
-            subject: 'Password Successfully Changed - Voting System',
+            subject: 'Password Changed Successfully - Ballotblitz',
             html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <div style="background-color: #d4edda; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-            <h2 style="color: #155724; margin: 0;">✅ Password Successfully Changed</h2>
+          <div style="text-align: center; margin-bottom: 20px;">
+            <h2 style="color: #28a745; margin: 0;">✅ Password Changed Successfully</h2>
           </div>
           
           <div style="background-color: #ffffff; padding: 20px; border-radius: 8px; border: 1px solid #e9ecef;">
@@ -301,8 +150,7 @@ let EmailService = class EmailService {
             </p>
             
             <p style="color: #333; margin-bottom: 20px;">
-              Your password has been successfully changed. If you did not make this change, 
-              please contact your system administrator immediately.
+              Your password has been successfully changed for your Ballotblitz account.
             </p>
             
             <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
@@ -320,16 +168,10 @@ let EmailService = class EmailService {
       `,
         };
         try {
-            if (this.useApiService && this.apiService === 'resend') {
-                await this.sendEmailViaResend(to, mailOptions.subject, mailOptions.html);
-                console.log(`✅ Password changed confirmation email sent via Resend API to ${to}`);
-            }
-            else {
-                const info = await this.transporter.sendMail(mailOptions);
-                console.log(`✅ Password changed confirmation email sent to ${to}`);
-                console.log(`📧 Real confirmation email sent via ${process.env.EMAIL_SERVICE || 'brevo'} to ${to}`);
-                return info;
-            }
+            const info = await this.transporter.sendMail(mailOptions);
+            console.log(`✅ Password changed confirmation email sent to ${to}`);
+            console.log(`📧 Real confirmation email sent via SendGrid to ${to}`);
+            return info;
         }
         catch (error) {
             console.error('❌ Error sending password changed email:', error);
@@ -337,62 +179,24 @@ let EmailService = class EmailService {
     }
     async testConnection() {
         try {
-            const emailService = process.env.EMAIL_SERVICE || 'brevo';
-            console.log(`✅ Testing ${emailService.toUpperCase()} SMTP connection...`);
-            if (emailService === 'brevo') {
-                console.log(`📧 Brevo Login: ${process.env.BREVO_SMTP_LOGIN}`);
-                console.log(`🔑 Brevo Key: ${process.env.BREVO_SMTP_KEY ? '***configured***' : 'NOT CONFIGURED'}`);
-                const configs = [
-                    { port: 587, secure: false },
-                    { port: 465, secure: true }
-                ];
-                for (const config of configs) {
-                    try {
-                        console.log(`🔧 Testing Brevo SMTP on port ${config.port}...`);
-                        this.transporter = nodemailer.createTransport({
-                            host: 'smtp-relay.brevo.com',
-                            port: config.port,
-                            secure: config.secure,
-                            auth: {
-                                user: process.env.BREVO_SMTP_LOGIN,
-                                pass: process.env.BREVO_SMTP_KEY,
-                            },
-                            tls: {
-                                rejectUnauthorized: false
-                            },
-                            connectionTimeout: 30000,
-                            greetingTimeout: 15000,
-                            socketTimeout: 30000,
-                        });
-                        await this.transporter.verify();
-                        console.log(`✅ Brevo SMTP port ${config.port} working!`);
-                        break;
-                    }
-                    catch (error) {
-                        console.log(`❌ Port ${config.port} failed:`, error.message);
-                        if (config === configs[configs.length - 1]) {
-                            throw error;
-                        }
-                    }
-                }
+            console.log(`✅ Testing SendGrid connection...`);
+            console.log(`📧 SendGrid API Key: ${process.env.SENDGRID_API_KEY ? '***configured***' : 'NOT CONFIGURED'}`);
+            if (!this.transporter) {
+                console.error('❌ SendGrid transporter not initialized');
+                return false;
             }
-            else if (emailService === 'gmail') {
-                console.log(`📧 Gmail User: ${process.env.GMAIL_USER}`);
-                console.log(`🔑 Gmail Password: ${process.env.GMAIL_PASSWORD ? '***configured***' : 'NOT CONFIGURED'}`);
-                this.transporter = nodemailer.createTransport({
-                    service: 'gmail',
-                    auth: {
-                        user: process.env.GMAIL_USER,
-                        pass: process.env.GMAIL_PASSWORD,
-                    },
-                });
+            const isVerified = await this.transporter.verify();
+            if (isVerified) {
+                console.log('✅ SendGrid connection test successful');
+                return true;
             }
-            await this.transporter.verify();
-            console.log('✅ Email service connection verified');
-            return true;
+            else {
+                console.error('❌ SendGrid connection test failed');
+                return false;
+            }
         }
         catch (error) {
-            console.error('❌ Email service connection failed:', error);
+            console.error('❌ SendGrid connection test error:', error);
             return false;
         }
     }
