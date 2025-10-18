@@ -28,7 +28,7 @@ export class EmailService {
     }
     
     // Check for email service configuration
-    const emailService = process.env.EMAIL_SERVICE || 'gmail';
+    const emailService = process.env.EMAIL_SERVICE || 'brevo';
     
     if (emailService === 'gmail') {
       if (!process.env.GMAIL_USER || !process.env.GMAIL_PASSWORD) {
@@ -47,6 +47,32 @@ export class EmailService {
         auth: {
           user: process.env.GMAIL_USER,
           pass: process.env.GMAIL_PASSWORD, // Use App Password if 2FA is enabled
+        },
+        tls: {
+          rejectUnauthorized: false
+        },
+        connectionTimeout: 60000, // 60 seconds
+        greetingTimeout: 30000, // 30 seconds
+        socketTimeout: 60000, // 60 seconds
+      });
+    } else if (emailService === 'brevo') {
+      // Brevo SMTP configuration
+      if (!process.env.BREVO_SMTP_KEY || !process.env.BREVO_SMTP_LOGIN) {
+        console.error('❌ Brevo configuration missing! BREVO_SMTP_KEY and BREVO_SMTP_LOGIN must be set.');
+        console.error('⚠️ Email functionality will be disabled. App will continue to run without email features.');
+        console.error('🔧 To fix: Set BREVO_SMTP_KEY and BREVO_SMTP_LOGIN environment variables in your deployment platform.');
+        
+        this.transporter = null;
+        return;
+      }
+      
+      this.transporter = nodemailer.createTransport({
+        host: 'smtp-relay.brevo.com',
+        port: 587,
+        secure: false, // true for 465, false for other ports
+        auth: {
+          user: process.env.BREVO_SMTP_LOGIN,
+          pass: process.env.BREVO_SMTP_KEY,
         },
         tls: {
           rejectUnauthorized: false

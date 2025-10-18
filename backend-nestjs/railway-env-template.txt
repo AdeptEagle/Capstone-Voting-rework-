@@ -15,7 +15,11 @@ PORT=8080
 FRONTEND_URL="https://your-frontend-app.railway.app"
 
 # Email Service Configuration
-EMAIL_SERVICE="gmail"  # Options: gmail, sendgrid
+EMAIL_SERVICE="brevo"  # Options: gmail, brevo, sendgrid
+
+# Brevo SMTP Configuration (if EMAIL_SERVICE=brevo) - RECOMMENDED
+BREVO_SMTP_LOGIN="99936e001@smtp-brevo.com"
+BREVO_SMTP_KEY="your-brevo-smtp-key"
 
 # Gmail SMTP Configuration (if EMAIL_SERVICE=gmail)
 GMAIL_USER="your-gmail@gmail.com"

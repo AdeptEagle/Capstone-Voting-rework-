@@ -29,7 +29,7 @@ let EmailService = class EmailService {
             console.log('🔍 GMAIL_PASSWORD length:', process.env.GMAIL_PASSWORD.length);
             console.log('🔍 GMAIL_PASSWORD first 4 chars:', process.env.GMAIL_PASSWORD.substring(0, 4));
         }
-        const emailService = process.env.EMAIL_SERVICE || 'gmail';
+        const emailService = process.env.EMAIL_SERVICE || 'brevo';
         if (emailService === 'gmail') {
             if (!process.env.GMAIL_USER || !process.env.GMAIL_PASSWORD) {
                 console.error('❌ Gmail configuration missing! GMAIL_USER and GMAIL_PASSWORD must be set.');
@@ -45,6 +45,30 @@ let EmailService = class EmailService {
                 auth: {
                     user: process.env.GMAIL_USER,
                     pass: process.env.GMAIL_PASSWORD,
+                },
+                tls: {
+                    rejectUnauthorized: false
+                },
+                connectionTimeout: 60000,
+                greetingTimeout: 30000,
+                socketTimeout: 60000,
+            });
+        }
+        else if (emailService === 'brevo') {
+            if (!process.env.BREVO_SMTP_KEY || !process.env.BREVO_SMTP_LOGIN) {
+                console.error('❌ Brevo configuration missing! BREVO_SMTP_KEY and BREVO_SMTP_LOGIN must be set.');
+                console.error('⚠️ Email functionality will be disabled. App will continue to run without email features.');
+                console.error('🔧 To fix: Set BREVO_SMTP_KEY and BREVO_SMTP_LOGIN environment variables in your deployment platform.');
+                this.transporter = null;
+                return;
+            }
+            this.transporter = nodemailer.createTransport({
+                host: 'smtp-relay.brevo.com',
+                port: 587,
+                secure: false,
+                auth: {
+                    user: process.env.BREVO_SMTP_LOGIN,
+                    pass: process.env.BREVO_SMTP_KEY,
                 },
                 tls: {
                     rejectUnauthorized: false
