@@ -133,7 +133,7 @@ export class EmailService {
     const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
     
     const mailOptions = {
-      from: process.env.GMAIL_USER,
+      from: process.env.BREVO_SENDER_EMAIL || process.env.BREVO_SMTP_LOGIN || 'noreply@ballotblitz.com',
       to: to,
       subject: 'Password Reset Request for Ballotblitz',
       html: `
@@ -217,7 +217,7 @@ export class EmailService {
     }
     
     const mailOptions = {
-      from: process.env.GMAIL_USER,
+      from: process.env.BREVO_SENDER_EMAIL || process.env.BREVO_SMTP_LOGIN || 'noreply@ballotblitz.com',
       to: to,
       subject: 'Password Successfully Changed - Voting System',
       html: `

@@ -20,6 +20,7 @@ EMAIL_SERVICE="brevo"  # Options: gmail, brevo, sendgrid
 # Brevo SMTP Configuration (if EMAIL_SERVICE=brevo) - RECOMMENDED
 BREVO_SMTP_LOGIN="99936e001@smtp-brevo.com"
 BREVO_SMTP_KEY="your-brevo-smtp-key"
+BREVO_SENDER_EMAIL="noreply@ballotblitz.com"  # Verified sender email in Brevo
 
 # Gmail SMTP Configuration (if EMAIL_SERVICE=gmail)
 GMAIL_USER="your-gmail@gmail.com"

@@ -117,7 +117,7 @@ let EmailService = class EmailService {
         }
         const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
         const mailOptions = {
-            from: process.env.GMAIL_USER,
+            from: process.env.BREVO_SENDER_EMAIL || process.env.BREVO_SMTP_LOGIN || 'noreply@ballotblitz.com',
             to: to,
             subject: 'Password Reset Request for Ballotblitz',
             html: `
@@ -198,7 +198,7 @@ let EmailService = class EmailService {
             throw new Error('Email service not configured. Please contact administrator.');
         }
         const mailOptions = {
-            from: process.env.GMAIL_USER,
+            from: process.env.BREVO_SENDER_EMAIL || process.env.BREVO_SMTP_LOGIN || 'noreply@ballotblitz.com',
             to: to,
             subject: 'Password Successfully Changed - Voting System',
             html: `

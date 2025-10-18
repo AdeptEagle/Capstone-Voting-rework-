@@ -655,45 +655,16 @@ export class AuthService {
         );
       }
     } catch (error) {
-      // If the unique constraint doesn't exist yet, try a simpler approach
-      console.log('Database constraint issue, trying alternative approach...');
+      console.error('❌ Error creating password reset token:', error);
       
-      // Create token with a simple approach
-      await this.prisma.passwordResetToken.create({
-        data: {
-          id: await this.idGenerator.generatePasswordResetTokenId(), // Use correct method
-          ResetToken_Email: ResetToken_Email,
-          token: resetToken,
-          expiresAt,
-        },
-      });
-
-      // Send password reset email
-      try {
-        await this.emailService.sendPasswordResetEmail(
-          ResetToken_Email, 
-          resetToken, 
-          userType,
-          userType === 'voter' ? user.Voter_Name : user.Admin_Username,
-          userType === 'voter' ? user.Voter_StudentId : user.Admin_Username
-        );
-        console.log(`✅ Password reset email sent successfully to ${ResetToken_Email}`);
-        
-        return {
-          message: userType === 'admin' 
-            ? 'Password reset link has been sent to your admin email address. Please check your inbox and follow the instructions to reset your password.'
-            : 'Password reset link has been sent to your email address. Please check your inbox and follow the instructions to reset your password.',
-        };
-      } catch (emailError) {
-        console.error('❌ Failed to send password reset email:', emailError);
-        console.log('⚠️ Password reset token created but email failed to send');
-        
-        // Return error response to frontend
-        throw new BadRequestException(
-          'Password reset token has been created, but we were unable to send the email. ' +
-          'Please contact your administrator for assistance or try again later.'
-        );
+      // If it's a unique constraint error, the token already exists
+      if (error.code === 'P2002') {
+        console.log('⚠️ Password reset token already exists for this email');
+        throw new BadRequestException('A password reset request has already been sent to this email. Please check your inbox or wait before requesting another reset.');
       }
+      
+      // For other errors, re-throw
+      throw new BadRequestException('Unable to process password reset request. Please try again later.');
     }
   }
 
