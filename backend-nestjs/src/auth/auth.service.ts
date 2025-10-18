@@ -170,7 +170,8 @@ export class AuthService {
       sameSite: 'lax', // Changed from 'strict' to 'lax' to allow cross-origin requests
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
       path: '/',
-      domain: process.env.NODE_ENV === 'production' ? '.up.railway.app' : undefined, // Set domain for Railway
+      // Don't set domain in development to allow localhost cookies
+      domain: process.env.NODE_ENV === 'production' ? '.up.railway.app' : undefined,
     });
 
     // Log admin login
@@ -296,7 +297,8 @@ export class AuthService {
       sameSite: 'lax', // Changed from 'strict' to 'lax' to allow cross-origin requests
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
       path: '/',
-      domain: process.env.NODE_ENV === 'production' ? '.up.railway.app' : undefined, // Set domain for Railway
+      // Don't set domain in development to allow localhost cookies
+      domain: process.env.NODE_ENV === 'production' ? '.up.railway.app' : undefined,
     });
 
     // Log user login
@@ -509,7 +511,8 @@ export class AuthService {
       sameSite: 'lax', // Changed from 'strict' to 'lax' to allow cross-origin requests
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
       path: '/',
-      domain: process.env.NODE_ENV === 'production' ? '.up.railway.app' : undefined, // Set domain for Railway
+      // Don't set domain in development to allow localhost cookies
+      domain: process.env.NODE_ENV === 'production' ? '.up.railway.app' : undefined,
     });
 
       return {
@@ -556,22 +559,53 @@ export class AuthService {
     }
   }
 
-  async requestPasswordReset(requestPasswordResetDto: { ResetToken_Email: string; userType: 'voter' | 'admin' }) {
-    const { ResetToken_Email, userType } = requestPasswordResetDto;
+  async requestPasswordReset(requestPasswordResetDto: { 
+    ResetToken_Email: string; 
+    userType: 'voter' | 'admin';
+    verificationField: string;
+  }) {
+    const { ResetToken_Email, userType, verificationField } = requestPasswordResetDto;
 
-    // Check if user exists
+    // SECURITY FIX: Find user by ID/username first, then verify email matches
+    console.log(`🔒 Password reset attempt: ${userType} with ID/Username: ${verificationField}, Email: ${ResetToken_Email}`);
+    
     let user;
     if (userType === 'voter') {
-      user = await this.prisma.voter.findUnique({ where: { Voter_Email: ResetToken_Email } });
+      // Find voter by student ID first
+      user = await this.prisma.voter.findUnique({ 
+        where: { Voter_StudentId: verificationField } 
+      });
+      
+      // DEBUG: Log what we found in the database
+      if (user) {
+        console.log(`🔍 DEBUG: Found voter with Student ID ${verificationField}`);
+        console.log(`🔍 DEBUG: Database email: "${user.Voter_Email}"`);
+        console.log(`🔍 DEBUG: Provided email: "${ResetToken_Email}"`);
+        console.log(`🔍 DEBUG: Emails match: ${user.Voter_Email === ResetToken_Email}`);
+      } else {
+        console.log(`🔍 DEBUG: No voter found with Student ID ${verificationField}`);
+      }
+      
+      // Verify that the email matches the user's actual email
+      if (!user || user.Voter_Email !== ResetToken_Email) {
+        console.log(`❌ Security: Password reset failed - Student ID ${verificationField} does not match email ${ResetToken_Email}`);
+        // Return error status for frontend to handle properly
+        throw new BadRequestException('The Student ID and email address do not match our records. Please verify your credentials and try again.');
+      }
+      console.log(`✅ Security: Password reset verified - Student ID ${verificationField} matches email ${ResetToken_Email}`);
     } else {
-      user = await this.prisma.admin.findUnique({ where: { Admin_Email: ResetToken_Email } });
-    }
-
-    if (!user) {
-      // Don't reveal if user exists or not for security
-      return {
-        message: 'If an account with this email exists, a password reset link has been sent.',
-      };
+      // Find admin by username first
+      user = await this.prisma.admin.findUnique({ 
+        where: { Admin_Username: verificationField } 
+      });
+      
+      // Verify that the email matches the user's actual email
+      if (!user || user.Admin_Email !== ResetToken_Email) {
+        console.log(`❌ Security: Password reset failed - Username ${verificationField} does not match email ${ResetToken_Email}`);
+        // Return error status for frontend to handle properly
+        throw new BadRequestException('The Admin Username and email address do not match our records. Please verify your credentials and try again.');
+      }
+      console.log(`✅ Security: Password reset verified - Username ${verificationField} matches email ${ResetToken_Email}`);
     }
 
     // Generate reset token
@@ -595,10 +629,18 @@ export class AuthService {
       });
 
       // Send password reset email
-      await this.emailService.sendPasswordResetEmail(ResetToken_Email, resetToken, userType);
+      await this.emailService.sendPasswordResetEmail(
+        ResetToken_Email, 
+        resetToken, 
+        userType,
+        userType === 'voter' ? user.Voter_Name : user.Admin_Username,
+        userType === 'voter' ? user.Voter_StudentId : user.Admin_Username
+      );
 
       return {
-        message: 'If an account with this email exists, a password reset link has been sent.',
+        message: userType === 'admin' 
+          ? 'Password reset link has been sent to your admin email address. Please check your inbox and follow the instructions to reset your password.'
+          : 'Password reset link has been sent to your email address. Please check your inbox and follow the instructions to reset your password.',
       };
     } catch (error) {
       // If the unique constraint doesn't exist yet, try a simpler approach
@@ -615,10 +657,18 @@ export class AuthService {
       });
 
       // Send password reset email
-      await this.emailService.sendPasswordResetEmail(ResetToken_Email, resetToken, userType);
+      await this.emailService.sendPasswordResetEmail(
+        ResetToken_Email, 
+        resetToken, 
+        userType,
+        userType === 'voter' ? user.Voter_Name : user.Admin_Username,
+        userType === 'voter' ? user.Voter_StudentId : user.Admin_Username
+      );
 
       return {
-        message: 'If an account with this email exists, a password reset link has been sent.',
+        message: userType === 'admin' 
+          ? 'Password reset link has been sent to your admin email address. Please check your inbox and follow the instructions to reset your password.'
+          : 'Password reset link has been sent to your email address. Please check your inbox and follow the instructions to reset your password.',
       };
     }
   }

@@ -120,6 +120,7 @@ export class AdminController {
     if (req.user.role !== 'SUPERADMIN') {
       throw new ForbiddenException('Access denied - Super Admin required');
     }
+    
     return this.adminService.getAdminLoginLogs(
       parseInt(page),
       parseInt(limit),
@@ -168,6 +169,7 @@ export class AdminController {
     if (req.user.role !== 'SUPERADMIN') {
       throw new ForbiddenException('Access denied - Super Admin required');
     }
+    
     return this.adminService.getUserLoginLogs(
       parseInt(page),
       parseInt(limit),

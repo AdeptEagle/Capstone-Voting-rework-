@@ -67,11 +67,11 @@ export declare class VoteService {
         ipAddress: string | null;
         userAgent: string | null;
         sessionId: string | null;
-        auditHash: string | null;
-        candidateId: string;
-        electionId: string | null;
-        verificationCode: string | null;
         voterId: string;
+        candidateId: string;
+        auditHash: string | null;
+        verificationCode: string | null;
+        electionId: string | null;
         ballotId: string | null;
     }>;
     createVote(createVoteDto: CreateVoteDto): Promise<{
@@ -119,10 +119,10 @@ export declare class VoteService {
             Candidate_StudentId: string;
             photo: string | null;
             manifesto: string | null;
-            party_list_name: string | null;
-            courseId: string | null;
             positionId: string;
+            courseId: string | null;
             partyListId: string | null;
+            party_list_name: string | null;
         };
         voter: {
             id: string;
@@ -131,8 +131,8 @@ export declare class VoteService {
             updatedAt: Date;
             deletedAt: Date | null;
             isDeleted: boolean;
-            departmentId: string;
-            courseId: string;
+            departmentId: string | null;
+            courseId: string | null;
             Voter_Name: string;
             Voter_Email: string;
             Voter_StudentId: string;
@@ -145,11 +145,11 @@ export declare class VoteService {
         ipAddress: string | null;
         userAgent: string | null;
         sessionId: string | null;
-        auditHash: string | null;
-        candidateId: string;
-        electionId: string | null;
-        verificationCode: string | null;
         voterId: string;
+        candidateId: string;
+        auditHash: string | null;
+        verificationCode: string | null;
+        electionId: string | null;
         ballotId: string | null;
     }>;
     getVotesByBallot(ballotId: string): Promise<({
@@ -190,11 +190,11 @@ export declare class VoteService {
         ipAddress: string | null;
         userAgent: string | null;
         sessionId: string | null;
-        auditHash: string | null;
-        candidateId: string;
-        electionId: string | null;
-        verificationCode: string | null;
         voterId: string;
+        candidateId: string;
+        auditHash: string | null;
+        verificationCode: string | null;
+        electionId: string | null;
         ballotId: string | null;
     })[]>;
     getVotesByVoter(voterId: string): Promise<({
@@ -227,11 +227,11 @@ export declare class VoteService {
         ipAddress: string | null;
         userAgent: string | null;
         sessionId: string | null;
-        auditHash: string | null;
-        candidateId: string;
-        electionId: string | null;
-        verificationCode: string | null;
         voterId: string;
+        candidateId: string;
+        auditHash: string | null;
+        verificationCode: string | null;
+        electionId: string | null;
         ballotId: string | null;
     })[]>;
     getVoteResults(ballotId: string): Promise<{
@@ -254,11 +254,11 @@ export declare class VoteService {
         ipAddress: string | null;
         userAgent: string | null;
         sessionId: string | null;
-        auditHash: string | null;
-        candidateId: string;
-        electionId: string | null;
-        verificationCode: string | null;
         voterId: string;
+        candidateId: string;
+        auditHash: string | null;
+        verificationCode: string | null;
+        electionId: string | null;
         ballotId: string | null;
     }>;
     resetVoterStatus(voterId: string): Promise<{
@@ -268,8 +268,8 @@ export declare class VoteService {
         updatedAt: Date;
         deletedAt: Date | null;
         isDeleted: boolean;
-        departmentId: string;
-        courseId: string;
+        departmentId: string | null;
+        courseId: string | null;
         Voter_Name: string;
         Voter_Email: string;
         Voter_StudentId: string;
@@ -309,11 +309,11 @@ export declare class VoteService {
             ipAddress: string | null;
             userAgent: string | null;
             sessionId: string | null;
-            auditHash: string | null;
-            candidateId: string;
-            electionId: string | null;
-            verificationCode: string | null;
             voterId: string;
+            candidateId: string;
+            auditHash: string | null;
+            verificationCode: string | null;
+            electionId: string | null;
             ballotId: string | null;
         })[];
         availablePositions: {

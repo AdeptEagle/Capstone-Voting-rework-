@@ -20,7 +20,6 @@ model Admin {
   ballots         Ballot[]
   courses         Course[]
   departments     Department[]
-  elections       Election[]
 
   @@map("admins")
 }
@@ -29,11 +28,11 @@ model Department {
   id                     String      @id @db.VarChar(50)
   Department_Name        String      @map("department_name") @db.VarChar(255)
   Department_Description String?     @map("department_description")
+  createdBy              String      @db.VarChar(50)
   createdAt              DateTime    @default(now()) @map("created_at")
   updatedAt              DateTime    @updatedAt @map("updated_at")
   deletedAt              DateTime?   @map("deleted_at")
   isDeleted              Boolean     @default(false) @map("is_deleted")
-  createdBy              String
   candidates             Candidate[]
   courses                Course[]
   admin                  Admin       @relation(fields: [createdBy], references: [id])
@@ -47,12 +46,12 @@ model Course {
   Course_Name        String      @map("course_name") @db.VarChar(255)
   Course_Code        String      @unique @map("course_code") @db.VarChar(50)
   Course_Description String?     @map("course_description")
+  departmentId       String      @db.VarChar(50)
+  createdBy          String      @db.VarChar(50)
   createdAt          DateTime    @default(now()) @map("created_at")
   updatedAt          DateTime    @updatedAt @map("updated_at")
   deletedAt          DateTime?   @map("deleted_at")
   isDeleted          Boolean     @default(false) @map("is_deleted")
-  createdBy          String
-  departmentId       String
   candidates         Candidate[]
   admin              Admin       @relation(fields: [createdBy], references: [id])
   department         Department  @relation(fields: [departmentId], references: [id])
@@ -71,10 +70,10 @@ model Position {
   isDeleted            Boolean               @default(false) @map("is_deleted")
   displayOrder         Int                   @default(0)
   voteLimit            Int                   @default(1)
+  ballot_candidates    BallotCandidate[]
   ballotPositions      BallotPosition[]
   resultDetails        BallotResultDetails[]
   candidates           Candidate[]
-  electionPositions    ElectionPosition[]
   votes                Vote[]
 
   @@map("positions")
@@ -102,23 +101,22 @@ model Candidate {
   Candidate_StudentId String                @unique @map("candidate_student_id") @db.VarChar(50)
   photo               String?               @db.VarChar(255)
   manifesto           String?
-  party_list_name     String?               @map("party_list_name") @db.VarChar(255)
+  positionId          String                @db.VarChar(50)
+  departmentId        String?               @db.VarChar(50)
+  courseId            String?               @db.VarChar(50)
   createdAt           DateTime              @default(now()) @map("created_at")
   updatedAt           DateTime              @updatedAt @map("updated_at")
   deletedAt           DateTime?             @map("deleted_at")
   isDeleted           Boolean               @default(false) @map("is_deleted")
-  courseId            String?
-  departmentId        String?
-  positionId          String
   partyListId         String?               @map("party_list_id") @db.VarChar(50)
+  party_list_name     String?               @map("party_list_name") @db.VarChar(255)
   ballotCandidates    BallotCandidate[]
   resultDetails       BallotResultDetails[]
+  votes               Vote[]
   course              Course?               @relation(fields: [courseId], references: [id])
   department          Department?           @relation(fields: [departmentId], references: [id])
   partyList           PartyList?            @relation(fields: [partyListId], references: [id])
   position            Position              @relation(fields: [positionId], references: [id])
-  electionCandidates  ElectionCandidate[]
-  votes               Vote[]
 
   @@map("candidates")
 }
@@ -129,85 +127,61 @@ model Voter {
   Voter_Email     String              @unique @map("voter_email") @db.VarChar(255)
   Voter_StudentId String              @unique @map("voter_student_id") @db.VarChar(50)
   password        String?             @db.VarChar(255)
+  departmentId    String?             @db.VarChar(50)
+  courseId        String?             @db.VarChar(50)
+  hasVoted        Boolean             @default(false)
   createdAt       DateTime            @default(now()) @map("created_at")
   updatedAt       DateTime            @updatedAt @map("updated_at")
   deletedAt       DateTime?           @map("deleted_at")
   isDeleted       Boolean             @default(false) @map("is_deleted")
-  courseId        String
-  departmentId    String
-  hasVoted        Boolean             @default(false)
   auditLogs       AuditLog[]
   ballotHistory   UserBallotHistory[]
   loginLogs       UserLoginLog[]
-  course          Course              @relation(fields: [courseId], references: [id])
-  department      Department          @relation(fields: [departmentId], references: [id])
+  course          Course?             @relation(fields: [courseId], references: [id])
+  department      Department?         @relation(fields: [departmentId], references: [id])
   votes           Vote[]
 
   @@map("voters")
 }
 
-model Election {
-  id                   String              @id @db.VarChar(50)
-  Election_Title       String              @map("election_title") @db.VarChar(255)
-  Election_Description String?             @map("election_description")
-  createdAt            DateTime            @default(now()) @map("created_at")
-  updatedAt            DateTime            @updatedAt @map("updated_at")
-  deletedAt            DateTime?           @map("deleted_at")
-  isDeleted            Boolean             @default(false) @map("is_deleted")
-  createdBy            String
-  endDate              DateTime
-  isActive             Boolean             @default(false)
-  startDate            DateTime
-  status               String              @default("draft") @db.VarChar(50)
-  auditLogs            AuditLog[]
-  electionCandidates   ElectionCandidate[]
-  electionPositions    ElectionPosition[]
-  admin                Admin               @relation(fields: [createdBy], references: [id])
-  votes                Vote[]
-
-  @@map("elections")
-}
-
 model Vote {
   id               String    @id @db.VarChar(50)
+  voterId          String    @db.VarChar(50)
+  candidateId      String    @db.VarChar(50)
+  positionId       String    @db.VarChar(50)
   createdAt        DateTime  @default(now()) @map("created_at")
   auditHash        String?   @db.VarChar(255)
-  candidateId      String
-  electionId       String?
   ipAddress        String?   @db.VarChar(45)
-  positionId       String
   sessionId        String?   @db.VarChar(255)
   userAgent        String?
   verificationCode String?   @db.VarChar(255)
-  voterId          String
-  ballotId         String?
+  ballotId         String?   @db.VarChar(50)
   ballot           Ballot?   @relation(fields: [ballotId], references: [id])
   candidate        Candidate @relation(fields: [candidateId], references: [id])
-  election         Election? @relation(fields: [electionId], references: [id])
   position         Position  @relation(fields: [positionId], references: [id])
   voter            Voter     @relation(fields: [voterId], references: [id])
 
-  @@unique([voterId, electionId, positionId, candidateId, ballotId])
+  @@unique([voterId, positionId, candidateId])
   @@map("votes")
 }
 
 model ElectionPosition {
-  createdAt  DateTime @default(now()) @map("created_at")
   id         String   @id @db.VarChar(50)
-  electionId String
-  positionId String
+  electionId String   @db.VarChar(50)
+  positionId String   @db.VarChar(50)
+  createdAt  DateTime @default(now()) @map("created_at")
   election   Election @relation(fields: [electionId], references: [id])
   position   Position @relation(fields: [positionId], references: [id])
 
-  @@unique([electionId, positionId])
+  @@unique([electionId, positionId], map: "elections_electionId_positionId_key")
   @@map("election_positions")
 }
 
 model ElectionCandidate {
-  createdAt   DateTime  @default(now()) @map("created_at")
   id          String    @id @db.VarChar(50)
-  candidateId String
-  electionId  String
+  candidateId String    @db.VarChar(50)
+  electionId  String    @db.VarChar(50)
+  createdAt   DateTime  @default(now()) @map("created_at")
   candidate   Candidate @relation(fields: [candidateId], references: [id])
   election    Election  @relation(fields: [electionId], references: [id])
 
@@ -219,25 +193,24 @@ model PasswordResetToken {
   id               String   @id @db.VarChar(50)
   ResetToken_Email String   @unique @map("reset_token_email") @db.VarChar(255)
   token            String   @unique @db.VarChar(255)
-  createdAt        DateTime @default(now()) @map("created_at")
   expiresAt        DateTime
+  createdAt        DateTime @default(now()) @map("created_at")
 
   @@map("password_reset_tokens")
 }
 
 model AuditLog {
-  id         String    @id @db.VarChar(50)
-  createdAt  DateTime  @default(now()) @map("created_at")
-  action     String    @db.VarChar(255)
+  id         String   @id @db.VarChar(50)
+  eventType  String   @db.VarChar(50)
+  timestamp  DateTime @default(now())
+  userId     String?  @db.VarChar(50)
+  action     String   @db.VarChar(255)
   details    Json?
-  electionId String?   @db.VarChar(50)
-  eventType  String    @db.VarChar(50)
   metadata   Json?
-  severity   String    @db.VarChar(20)
-  timestamp  DateTime  @default(now())
-  userId     String?   @db.VarChar(50)
-  election   Election? @relation(fields: [electionId], references: [id])
-  user       Voter?    @relation(fields: [userId], references: [id])
+  severity   String   @db.VarChar(20)
+  createdAt  DateTime @default(now()) @map("created_at")
+  electionId String?  @db.VarChar(50)
+  user       Voter?   @relation(fields: [userId], references: [id])
 
   @@map("audit_logs")
 }
@@ -257,7 +230,7 @@ model Ballot {
   Ballot_ShowResultsAfter    DateTime?             @map("ballot_show_results_after")
   Ballot_ShowLiveResults     Boolean               @default(true) @map("ballot_show_live_results")
   Ballot_AllowAbstain        Boolean               @default(false) @map("ballot_allow_abstain")
-  Ballot_CreatedBy           String                @map("ballot_created_by")
+  Ballot_CreatedBy           String                @map("ballot_created_by") @db.VarChar(50)
   Ballot_CreatedAt           DateTime              @default(now()) @map("ballot_created_at")
   Ballot_UpdatedAt           DateTime              @updatedAt @map("ballot_updated_at")
   Ballot_DeletedAt           DateTime?             @map("ballot_deleted_at")
@@ -266,17 +239,17 @@ model Ballot {
   ballotPositions            BallotPosition[]
   resultDetails              BallotResultDetails[]
   results                    BallotResults?
+  votes                      Vote[]
   createdByAdmin             Admin                 @relation(fields: [Ballot_CreatedBy], references: [id])
   userHistory                UserBallotHistory[]
-  votes                      Vote[]
 
   @@map("ballots")
 }
 
 model UserBallotHistory {
   id                             String    @id @db.VarChar(50)
-  UserBallotHistory_UserId       String    @map("user_ballot_history_user_id")
-  UserBallotHistory_BallotId     String    @map("user_ballot_history_ballot_id")
+  UserBallotHistory_UserId       String    @map("user_ballot_history_user_id") @db.VarChar(50)
+  UserBallotHistory_BallotId     String    @map("user_ballot_history_ballot_id") @db.VarChar(50)
   UserBallotHistory_VotedAt      DateTime? @map("user_ballot_history_voted_at")
   UserBallotHistory_VoteCount    Int       @default(0) @map("user_ballot_history_vote_count")
   UserBallotHistory_IsCompleted  Boolean   @default(false) @map("user_ballot_history_is_completed")
@@ -284,67 +257,66 @@ model UserBallotHistory {
   ballot                         Ballot    @relation(fields: [UserBallotHistory_BallotId], references: [id])
   user                           Voter     @relation(fields: [UserBallotHistory_UserId], references: [id])
 
-  @@unique([UserBallotHistory_UserId, UserBallotHistory_BallotId])
+  @@unique([UserBallotHistory_UserId, UserBallotHistory_BallotId], map: "user_ballot_history_user_ballot_history_user_id_user_ballot_his")
   @@map("user_ballot_history")
 }
 
 model BallotPosition {
-  id                          String            @id @db.VarChar(50)
-  BallotPosition_BallotId     String            @map("ballot_position_ballot_id")
-  BallotPosition_PositionId   String            @map("ballot_position_position_id")
-  BallotPosition_DisplayOrder Int               @default(0) @map("ballot_position_display_order")
-  BallotPosition_IsRequired   Boolean           @default(true) @map("ballot_position_is_required")
-  ballotCandidates            BallotCandidate[]
-  ballot                      Ballot            @relation(fields: [BallotPosition_BallotId], references: [id])
-  position                    Position          @relation(fields: [BallotPosition_PositionId], references: [id])
+  id                          String   @id @db.VarChar(50)
+  BallotPosition_BallotId     String   @map("ballot_position_ballot_id") @db.VarChar(50)
+  BallotPosition_PositionId   String   @map("ballot_position_position_id") @db.VarChar(50)
+  BallotPosition_DisplayOrder Int      @default(0) @map("ballot_position_display_order")
+  BallotPosition_IsRequired   Boolean  @default(true) @map("ballot_position_is_required")
+  ballot                      Ballot   @relation(fields: [BallotPosition_BallotId], references: [id])
+  position                    Position @relation(fields: [BallotPosition_PositionId], references: [id])
 
-  @@unique([BallotPosition_BallotId, BallotPosition_PositionId])
+  @@unique([BallotPosition_BallotId, BallotPosition_PositionId], map: "ballot_positions_ballot_position_ballot_id_ballot_position_posi")
   @@map("ballot_positions")
 }
 
 model BallotCandidate {
-  id                          String         @id @db.VarChar(50)
-  BallotCandidate_BallotId    String         @map("ballot_candidate_ballot_id")
-  BallotCandidate_CandidateId String         @map("ballot_candidate_candidate_id")
-  BallotCandidate_PositionId  String         @map("ballot_candidate_position_id")
-  BallotCandidate_IsActive    Boolean        @default(true) @map("ballot_candidate_is_active")
-  ballotPosition              BallotPosition @relation(fields: [BallotCandidate_BallotId, BallotCandidate_PositionId], references: [BallotPosition_BallotId, BallotPosition_PositionId])
-  ballot                      Ballot         @relation(fields: [BallotCandidate_BallotId], references: [id])
-  candidate                   Candidate      @relation(fields: [BallotCandidate_CandidateId], references: [id])
+  id                          String    @id @db.VarChar(50)
+  BallotCandidate_BallotId    String    @map("ballot_candidate_ballot_id") @db.VarChar(50)
+  BallotCandidate_CandidateId String    @map("ballot_candidate_candidate_id") @db.VarChar(50)
+  BallotCandidate_PositionId  String    @map("ballot_candidate_position_id") @db.VarChar(50)
+  BallotCandidate_IsActive    Boolean   @default(true) @map("ballot_candidate_is_active")
+  ballot                      Ballot    @relation(fields: [BallotCandidate_BallotId], references: [id])
+  candidate                   Candidate @relation(fields: [BallotCandidate_CandidateId], references: [id])
+  positions                   Position  @relation(fields: [BallotCandidate_PositionId], references: [id])
 
-  @@unique([BallotCandidate_BallotId, BallotCandidate_CandidateId])
+  @@unique([BallotCandidate_BallotId, BallotCandidate_CandidateId], map: "ballot_candidates_ballot_candidate_ballot_id_ballot_candidate_c")
   @@map("ballot_candidates")
 }
 
 model BallotResults {
-  id                         String                @id @db.VarChar(50)
-  BallotResults_BallotId     String                @unique @map("ballot_results_ballot_id")
-  BallotResults_TotalVotes   Int                   @default(0) @map("ballot_results_total_votes")
-  BallotResults_TotalVoters  Int                   @default(0) @map("ballot_results_total_voters")
-  BallotResults_VoterTurnout Float                 @default(0) @map("ballot_results_voter_turnout")
-  BallotResults_LastUpdated  DateTime              @default(now()) @map("ballot_results_last_updated")
-  BallotResults_IsFinal      Boolean               @default(false) @map("ballot_results_is_final")
-  resultDetails              BallotResultDetails[] @relation("BallotResultDetailsToBallotResults")
-  ballot                     Ballot                @relation(fields: [BallotResults_BallotId], references: [id])
+  id                         String   @id @db.VarChar(50)
+  BallotResults_BallotId     String   @unique @map("ballot_results_ballot_id") @db.VarChar(50)
+  BallotResults_TotalVotes   Int      @default(0) @map("ballot_results_total_votes")
+  BallotResults_TotalVoters  Int      @default(0) @map("ballot_results_total_voters")
+  BallotResults_VoterTurnout Float    @default(0) @map("ballot_results_voter_turnout")
+  BallotResults_LastUpdated  DateTime @default(now()) @map("ballot_results_last_updated")
+  BallotResults_IsFinal      Boolean  @default(false) @map("ballot_results_is_final")
+  ballot                     Ballot   @relation(fields: [BallotResults_BallotId], references: [id])
+  resultDetails               BallotResultDetails[]
 
   @@map("ballot_results")
 }
 
 model BallotResultDetails {
-  id                              String        @id @db.VarChar(50)
-  BallotResultDetails_BallotId    String        @map("ballot_result_details_ballot_id")
-  BallotResultDetails_PositionId  String        @map("ballot_result_details_position_id")
-  BallotResultDetails_CandidateId String        @map("ballot_result_details_candidate_id")
-  BallotResultDetails_VoteCount   Int           @default(0) @map("ballot_result_details_vote_count")
-  BallotResultDetails_Percentage  Float         @default(0) @map("ballot_result_details_percentage")
-  BallotResultDetails_Rank        Int           @default(0) @map("ballot_result_details_rank")
-  BallotResultDetails_LastUpdated DateTime      @default(now()) @map("ballot_result_details_last_updated")
-  ballot                          Ballot        @relation(fields: [BallotResultDetails_BallotId], references: [id], map: "ballot_result_details_ballot_fkey")
-  ballotResults                   BallotResults @relation("BallotResultDetailsToBallotResults", fields: [BallotResultDetails_BallotId], references: [BallotResults_BallotId], map: "ballot_result_details_ballot_results_fkey")
-  candidate                       Candidate     @relation(fields: [BallotResultDetails_CandidateId], references: [id], map: "ballot_result_details_candidate_fkey")
-  position                        Position      @relation(fields: [BallotResultDetails_PositionId], references: [id], map: "ballot_result_details_position_fkey")
+  id                              String    @id @db.VarChar(50)
+  BallotResultDetails_BallotId    String    @map("ballot_result_details_ballot_id") @db.VarChar(50)
+  BallotResultDetails_PositionId  String    @map("ballot_result_details_position_id") @db.VarChar(50)
+  BallotResultDetails_CandidateId String    @map("ballot_result_details_candidate_id") @db.VarChar(50)
+  BallotResultDetails_VoteCount   Int       @default(0) @map("ballot_result_details_vote_count")
+  BallotResultDetails_Percentage  Float     @default(0) @map("ballot_result_details_percentage")
+  BallotResultDetails_Rank        Int       @default(0) @map("ballot_result_details_rank")
+  BallotResultDetails_LastUpdated DateTime  @default(now()) @map("ballot_result_details_last_updated")
+  ballot                          Ballot    @relation(fields: [BallotResultDetails_BallotId], references: [id], map: "ballot_result_details_ballot_fkey")
+  ballotResults                   BallotResults @relation(fields: [BallotResultDetails_BallotId], references: [BallotResults_BallotId])
+  candidate                       Candidate @relation(fields: [BallotResultDetails_CandidateId], references: [id], map: "ballot_result_details_candidate_fkey")
+  position                        Position  @relation(fields: [BallotResultDetails_PositionId], references: [id], map: "ballot_result_details_position_fkey")
 
-  @@unique([BallotResultDetails_BallotId, BallotResultDetails_PositionId, BallotResultDetails_CandidateId])
+  @@unique([BallotResultDetails_BallotId, BallotResultDetails_PositionId, BallotResultDetails_CandidateId], map: "ballot_result_details_ballot_result_details_ballot_id_ballot_re")
   @@map("ballot_result_details")
 }
 
@@ -354,7 +326,7 @@ model BallotTemplate {
   BallotTemplate_Description String?   @map("ballot_template_description")
   BallotTemplate_Data        Json      @map("ballot_template_data")
   BallotTemplate_IsPublic    Boolean   @default(false) @map("ballot_template_is_public")
-  BallotTemplate_CreatedBy   String    @map("ballot_template_created_by")
+  BallotTemplate_CreatedBy   String    @map("ballot_template_created_by") @db.VarChar(50)
   BallotTemplate_CreatedAt   DateTime  @default(now()) @map("ballot_template_created_at")
   BallotTemplate_UpdatedAt   DateTime  @updatedAt @map("ballot_template_updated_at")
   BallotTemplate_DeletedAt   DateTime? @map("ballot_template_deleted_at")

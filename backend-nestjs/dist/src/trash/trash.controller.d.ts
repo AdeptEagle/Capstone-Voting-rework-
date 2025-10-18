@@ -57,10 +57,10 @@ export declare class TrashController {
         Candidate_StudentId: string;
         photo: string | null;
         manifesto: string | null;
-        party_list_name: string | null;
-        courseId: string | null;
         positionId: string;
+        courseId: string | null;
         partyListId: string | null;
+        party_list_name: string | null;
     })[]>;
     getDeletedPositions(): Promise<{
         id: string;
@@ -146,8 +146,8 @@ export declare class TrashController {
         updatedAt: Date;
         deletedAt: Date | null;
         isDeleted: boolean;
-        departmentId: string;
-        courseId: string;
+        departmentId: string | null;
+        courseId: string | null;
         Voter_Name: string;
         Voter_Email: string;
         Voter_StudentId: string;
@@ -166,10 +166,10 @@ export declare class TrashController {
         Candidate_StudentId: string;
         photo: string | null;
         manifesto: string | null;
-        party_list_name: string | null;
-        courseId: string | null;
         positionId: string;
+        courseId: string | null;
         partyListId: string | null;
+        party_list_name: string | null;
     }>;
     restorePosition(id: string): Promise<{
         id: string;
@@ -211,8 +211,8 @@ export declare class TrashController {
         updatedAt: Date;
         deletedAt: Date | null;
         isDeleted: boolean;
-        departmentId: string;
-        courseId: string;
+        departmentId: string | null;
+        courseId: string | null;
         Voter_Name: string;
         Voter_Email: string;
         Voter_StudentId: string;
@@ -239,10 +239,10 @@ export declare class TrashController {
         Candidate_StudentId: string;
         photo: string | null;
         manifesto: string | null;
-        party_list_name: string | null;
-        courseId: string | null;
         positionId: string;
+        courseId: string | null;
         partyListId: string | null;
+        party_list_name: string | null;
     }>;
     permanentlyDeletePosition(id: string): Promise<{
         id: string;
@@ -284,8 +284,8 @@ export declare class TrashController {
         updatedAt: Date;
         deletedAt: Date | null;
         isDeleted: boolean;
-        departmentId: string;
-        courseId: string;
+        departmentId: string | null;
+        courseId: string | null;
         Voter_Name: string;
         Voter_Email: string;
         Voter_StudentId: string;

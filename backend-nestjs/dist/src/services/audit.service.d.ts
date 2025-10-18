@@ -41,9 +41,9 @@ export declare class AuditService {
         userId: string | null;
         electionId: string | null;
         timestamp: Date;
+        eventType: string;
         action: string;
         details: import("@prisma/client/runtime/library").JsonValue | null;
-        eventType: string;
         metadata: import("@prisma/client/runtime/library").JsonValue | null;
         severity: string;
     }[]>;

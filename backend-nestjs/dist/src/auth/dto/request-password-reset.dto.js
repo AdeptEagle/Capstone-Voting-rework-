@@ -35,4 +35,13 @@ __decorate([
     (0, class_validator_1.IsIn)(['voter', 'admin']),
     __metadata("design:type", String)
 ], RequestPasswordResetDto.prototype, "userType", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Additional verification field - Username for admin, Student ID for voter',
+        example: 'admin123',
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], RequestPasswordResetDto.prototype, "verificationField", void 0);
 //# sourceMappingURL=request-password-reset.dto.js.map

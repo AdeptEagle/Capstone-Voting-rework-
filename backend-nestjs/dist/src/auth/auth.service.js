@@ -473,18 +473,37 @@ let AuthService = class AuthService {
         }
     }
     async requestPasswordReset(requestPasswordResetDto) {
-        const { ResetToken_Email, userType } = requestPasswordResetDto;
+        const { ResetToken_Email, userType, verificationField } = requestPasswordResetDto;
+        console.log(`🔒 Password reset attempt: ${userType} with ID/Username: ${verificationField}, Email: ${ResetToken_Email}`);
         let user;
         if (userType === 'voter') {
-            user = await this.prisma.voter.findUnique({ where: { Voter_Email: ResetToken_Email } });
+            user = await this.prisma.voter.findUnique({
+                where: { Voter_StudentId: verificationField }
+            });
+            if (user) {
+                console.log(`🔍 DEBUG: Found voter with Student ID ${verificationField}`);
+                console.log(`🔍 DEBUG: Database email: "${user.Voter_Email}"`);
+                console.log(`🔍 DEBUG: Provided email: "${ResetToken_Email}"`);
+                console.log(`🔍 DEBUG: Emails match: ${user.Voter_Email === ResetToken_Email}`);
+            }
+            else {
+                console.log(`🔍 DEBUG: No voter found with Student ID ${verificationField}`);
+            }
+            if (!user || user.Voter_Email !== ResetToken_Email) {
+                console.log(`❌ Security: Password reset failed - Student ID ${verificationField} does not match email ${ResetToken_Email}`);
+                throw new common_1.BadRequestException('The Student ID and email address do not match our records. Please verify your credentials and try again.');
+            }
+            console.log(`✅ Security: Password reset verified - Student ID ${verificationField} matches email ${ResetToken_Email}`);
         }
         else {
-            user = await this.prisma.admin.findUnique({ where: { Admin_Email: ResetToken_Email } });
-        }
-        if (!user) {
-            return {
-                message: 'If an account with this email exists, a password reset link has been sent.',
-            };
+            user = await this.prisma.admin.findUnique({
+                where: { Admin_Username: verificationField }
+            });
+            if (!user || user.Admin_Email !== ResetToken_Email) {
+                console.log(`❌ Security: Password reset failed - Username ${verificationField} does not match email ${ResetToken_Email}`);
+                throw new common_1.BadRequestException('The Admin Username and email address do not match our records. Please verify your credentials and try again.');
+            }
+            console.log(`✅ Security: Password reset verified - Username ${verificationField} matches email ${ResetToken_Email}`);
         }
         const resetToken = (0, crypto_1.randomBytes)(32).toString('hex');
         const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
@@ -500,9 +519,11 @@ let AuthService = class AuthService {
                     expiresAt,
                 },
             });
-            await this.emailService.sendPasswordResetEmail(ResetToken_Email, resetToken, userType);
+            await this.emailService.sendPasswordResetEmail(ResetToken_Email, resetToken, userType, userType === 'voter' ? user.Voter_Name : user.Admin_Username, userType === 'voter' ? user.Voter_StudentId : user.Admin_Username);
             return {
-                message: 'If an account with this email exists, a password reset link has been sent.',
+                message: userType === 'admin'
+                    ? 'Password reset link has been sent to your admin email address. Please check your inbox and follow the instructions to reset your password.'
+                    : 'Password reset link has been sent to your email address. Please check your inbox and follow the instructions to reset your password.',
             };
         }
         catch (error) {
@@ -515,9 +536,11 @@ let AuthService = class AuthService {
                     expiresAt,
                 },
             });
-            await this.emailService.sendPasswordResetEmail(ResetToken_Email, resetToken, userType);
+            await this.emailService.sendPasswordResetEmail(ResetToken_Email, resetToken, userType, userType === 'voter' ? user.Voter_Name : user.Admin_Username, userType === 'voter' ? user.Voter_StudentId : user.Admin_Username);
             return {
-                message: 'If an account with this email exists, a password reset link has been sent.',
+                message: userType === 'admin'
+                    ? 'Password reset link has been sent to your admin email address. Please check your inbox and follow the instructions to reset your password.'
+                    : 'Password reset link has been sent to your email address. Please check your inbox and follow the instructions to reset your password.',
             };
         }
     }

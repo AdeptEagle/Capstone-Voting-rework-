@@ -20,27 +20,29 @@ export class EmailService {
   async sendPasswordResetEmail(
     to: string,
     resetToken: string,
-    userType: 'voter' | 'admin'
+    userType: 'voter' | 'admin',
+    userName?: string,
+    userId?: string
   ): Promise<void> {
     const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
     
     const mailOptions = {
       from: process.env.GMAIL_USER,
       to: to,
-      subject: 'Password Reset Request - Voting System',
+      subject: 'Password Reset Request for Ballotblitz',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+          <div style="text-align: center; margin-bottom: 20px;">
             <h2 style="color: #333; margin: 0;">🔐 Password Reset Request</h2>
           </div>
           
           <div style="background-color: #ffffff; padding: 20px; border-radius: 8px; border: 1px solid #e9ecef;">
             <p style="color: #666; margin-bottom: 20px;">
-              Hello ${userType === 'voter' ? 'Voter' : 'Admin'},
+              Hello ${userName || (userType === 'voter' ? 'Voter' : 'Admin')} ${userId ? `(${userId})` : ''},
             </p>
             
             <p style="color: #333; margin-bottom: 20px;">
-              We received a request to reset your password for the Voting System. 
+              We received a request to reset your password for Ballotblitz. 
               If you didn't make this request, you can safely ignore this email.
             </p>
             
@@ -74,7 +76,7 @@ export class EmailService {
           </div>
           
           <div style="text-align: center; margin-top: 20px; color: #666; font-size: 12px;">
-            <p>This is an automated message from the Voting System.</p>
+            <p>This is an automated message from Ballotblitz.</p>
             <p>If you have any questions, please contact your system administrator.</p>
           </div>
         </div>
@@ -82,12 +84,22 @@ export class EmailService {
     };
 
     try {
+      console.log(`📧 Attempting to send password reset email to ${to}`);
+      console.log(`🔗 Reset link: ${resetLink}`);
+      
       const info = await this.transporter.sendMail(mailOptions);
-      console.log(`✅ Password reset email sent to ${to}`);
-      console.log(`📧 Real email sent via Gmail to ${to}`);
+      console.log(`✅ Password reset email sent successfully to ${to}`);
+      console.log(`📧 Message ID: ${info.messageId}`);
+      console.log(`📧 Response: ${info.response}`);
       return info;
     } catch (error) {
       console.error('❌ Error sending password reset email:', error);
+      console.error('❌ Error details:', {
+        code: error.code,
+        command: error.command,
+        response: error.response,
+        responseCode: error.responseCode
+      });
       throw new Error('Failed to send password reset email');
     }
   }

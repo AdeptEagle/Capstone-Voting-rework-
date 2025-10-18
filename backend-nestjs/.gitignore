@@ -2,10 +2,12 @@ node_modules/
 
 # Environment variables
 .env
+.env.*
 .env.local
 .env.development
 .env.production
 .env.staging
+env-example.txt
 
 # Build outputs
 dist/
@@ -47,6 +49,9 @@ Thumbs.db
 *.swp
 *.swo
 
-# Temporary files
-tmp/
-temp/
+# Migration lock files
+prisma/migrations/migration_lock.toml
+
+# Debug and test files
+debug-*.js
+test-*.js

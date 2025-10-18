@@ -40,10 +40,10 @@ export declare class CandidateController {
         Candidate_StudentId: string;
         photo: string | null;
         manifesto: string | null;
-        party_list_name: string | null;
-        courseId: string | null;
         positionId: string;
+        courseId: string | null;
         partyListId: string | null;
+        party_list_name: string | null;
     })[]>;
     createCandidate(createCandidateDto: CreateCandidateDto, photo?: any): Promise<{
         message: string;
@@ -73,10 +73,10 @@ export declare class CandidateController {
             Candidate_StudentId: string;
             photo: string | null;
             manifesto: string | null;
-            party_list_name: string | null;
-            courseId: string | null;
             positionId: string;
+            courseId: string | null;
             partyListId: string | null;
+            party_list_name: string | null;
         };
     }>;
     getCandidateById(id: string): Promise<{
@@ -109,10 +109,10 @@ export declare class CandidateController {
         Candidate_StudentId: string;
         photo: string | null;
         manifesto: string | null;
-        party_list_name: string | null;
-        courseId: string | null;
         positionId: string;
+        courseId: string | null;
         partyListId: string | null;
+        party_list_name: string | null;
     }>;
     updateCandidate(id: string, updateCandidateDto: UpdateCandidateDto, photo?: any): Promise<{
         message: string;
@@ -142,10 +142,10 @@ export declare class CandidateController {
             Candidate_StudentId: string;
             photo: string | null;
             manifesto: string | null;
-            party_list_name: string | null;
-            courseId: string | null;
             positionId: string;
+            courseId: string | null;
             partyListId: string | null;
+            party_list_name: string | null;
         };
     }>;
     deleteCandidate(id: string): Promise<{

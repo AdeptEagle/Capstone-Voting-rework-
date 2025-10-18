@@ -24,8 +24,8 @@ export declare class VoterService {
         updatedAt: Date;
         deletedAt: Date | null;
         isDeleted: boolean;
-        departmentId: string;
-        courseId: string;
+        departmentId: string | null;
+        courseId: string | null;
         Voter_Name: string;
         Voter_Email: string;
         Voter_StudentId: string;
@@ -48,8 +48,8 @@ export declare class VoterService {
         updatedAt: Date;
         deletedAt: Date | null;
         isDeleted: boolean;
-        departmentId: string;
-        courseId: string;
+        departmentId: string | null;
+        courseId: string | null;
         Voter_Name: string;
         Voter_Email: string;
         Voter_StudentId: string;
@@ -72,8 +72,8 @@ export declare class VoterService {
         updatedAt: Date;
         deletedAt: Date | null;
         isDeleted: boolean;
-        departmentId: string;
-        courseId: string;
+        departmentId: string | null;
+        courseId: string | null;
         Voter_Name: string;
         Voter_Email: string;
         Voter_StudentId: string;
@@ -119,8 +119,8 @@ export declare class VoterService {
             updatedAt: Date;
             deletedAt: Date | null;
             isDeleted: boolean;
-            departmentId: string;
-            courseId: string;
+            departmentId: string | null;
+            courseId: string | null;
             Voter_Name: string;
             Voter_Email: string;
             Voter_StudentId: string;
@@ -139,8 +139,8 @@ export declare class VoterService {
             updatedAt: Date;
             deletedAt: Date | null;
             isDeleted: boolean;
-            departmentId: string;
-            courseId: string;
+            departmentId: string | null;
+            courseId: string | null;
             Voter_Name: string;
             Voter_Email: string;
             Voter_StudentId: string;
@@ -156,8 +156,8 @@ export declare class VoterService {
             updatedAt: Date;
             deletedAt: Date | null;
             isDeleted: boolean;
-            departmentId: string;
-            courseId: string;
+            departmentId: string | null;
+            courseId: string | null;
             Voter_Name: string;
             Voter_Email: string;
             Voter_StudentId: string;
@@ -242,11 +242,11 @@ export declare class VoterService {
             ipAddress: string | null;
             userAgent: string | null;
             sessionId: string | null;
-            auditHash: string | null;
-            candidateId: string;
-            electionId: string | null;
-            verificationCode: string | null;
             voterId: string;
+            candidateId: string;
+            auditHash: string | null;
+            verificationCode: string | null;
+            electionId: string | null;
             ballotId: string | null;
         })[];
         statistics: {

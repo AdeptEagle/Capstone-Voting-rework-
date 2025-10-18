@@ -19,4 +19,12 @@ export class RequestPasswordResetDto {
   @IsNotEmpty()
   @IsIn(['voter', 'admin'])
   userType: 'voter' | 'admin';
+
+  @ApiProperty({
+    description: 'Additional verification field - Username for admin, Student ID for voter',
+    example: 'admin123',
+  })
+  @IsString()
+  @IsNotEmpty()
+  verificationField: string;
 } 

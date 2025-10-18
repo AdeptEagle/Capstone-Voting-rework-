@@ -127,6 +127,7 @@ export declare class AuthService {
     requestPasswordReset(requestPasswordResetDto: {
         ResetToken_Email: string;
         userType: 'voter' | 'admin';
+        verificationField: string;
     }): Promise<{
         message: string;
     }>;

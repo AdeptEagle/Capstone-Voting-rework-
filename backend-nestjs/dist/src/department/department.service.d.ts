@@ -141,9 +141,9 @@ export declare class DepartmentService {
         Candidate_StudentId: string;
         photo: string | null;
         manifesto: string | null;
-        party_list_name: string | null;
-        courseId: string | null;
         positionId: string;
+        courseId: string | null;
         partyListId: string | null;
+        party_list_name: string | null;
     })[]>;
 }
