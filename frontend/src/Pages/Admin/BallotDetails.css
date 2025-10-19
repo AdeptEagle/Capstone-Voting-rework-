@@ -3544,8 +3544,8 @@
   font-weight: 500;
 }
 
-.partylist-stats {
-  space-y: 1rem;
+.partylist-stats > * + * {
+  margin-top: 1rem;
 }
 
 .stat-row {
