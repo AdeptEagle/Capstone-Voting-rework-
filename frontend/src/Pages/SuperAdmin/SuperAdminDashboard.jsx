@@ -469,7 +469,7 @@ const SuperAdminDashboard = () => {
               <div className="card-body">
                 <div className="alert alert-danger mb-3">
                   <p className="mb-0">
-                    <strong>⚠️ CRITICAL WARNING:</strong> This action will permanently delete ALL user-generated data from the system! <p>What will be deleted: All voters and voter accounts, all candidates and candidate data, all ballots and voting data, all votes cast by users, all party lists, all regular admin accounts, and all audit logs and login history.</p> What will be preserved: SuperAdmin accounts (for system access), built-in positions and templates, departments and courses, and system configurations.
+                    <strong>⚠️ CRITICAL WARNING:</strong> This action will permanently delete ALL user-generated data from the system! What will be deleted: All voters and voter accounts, all candidates and candidate data, all ballots and voting data, all votes cast by users, all party lists, all regular admin accounts, and all audit logs and login history. What will be preserved: SuperAdmin accounts (for system access), built-in positions and templates, departments and courses, and system configurations.
                   </p>
                 </div>
                 

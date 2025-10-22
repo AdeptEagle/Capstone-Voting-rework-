@@ -66,29 +66,29 @@ export class NuclearResetService {
         const deletedPartyLists = await prisma.partyList.deleteMany();
         console.log(`🗑️ Deleted ${deletedPartyLists.count} party lists`);
 
-        // 7. Delete voters
-        const deletedVoters = await prisma.voter.deleteMany();
-        console.log(`🗑️ Deleted ${deletedVoters.count} voters`);
-
-        // Note: Courses and departments are preserved as they are essential system data
-        // Note: Positions are preserved as they are built-in system data
-
-        // 8. Delete audit logs
-        const deletedAuditLogs = await prisma.auditLog.deleteMany();
-        console.log(`🗑️ Deleted ${deletedAuditLogs.count} audit logs`);
-
-        // 11. Delete login logs
+        // 7. Delete login logs (must be done before voters due to foreign key constraints)
         const deletedAdminLoginLogs = await prisma.adminLoginLog.deleteMany();
         console.log(`🗑️ Deleted ${deletedAdminLoginLogs.count} admin login logs`);
 
         const deletedUserLoginLogs = await prisma.userLoginLog.deleteMany();
         console.log(`🗑️ Deleted ${deletedUserLoginLogs.count} user login logs`);
 
-        // 12. Delete password reset tokens
+        // 8. Delete password reset tokens (must be done before voters due to foreign key constraints)
         const deletedPasswordResetTokens = await prisma.passwordResetToken.deleteMany();
         console.log(`🗑️ Deleted ${deletedPasswordResetTokens.count} password reset tokens`);
 
-        // 13. Delete regular admins (keep only SUPERADMIN role)
+        // 9. Delete voters (after login logs and password reset tokens)
+        const deletedVoters = await prisma.voter.deleteMany();
+        console.log(`🗑️ Deleted ${deletedVoters.count} voters`);
+
+        // Note: Courses and departments are preserved as they are essential system data
+        // Note: Positions are preserved as they are built-in system data
+
+        // 10. Delete audit logs
+        const deletedAuditLogs = await prisma.auditLog.deleteMany();
+        console.log(`🗑️ Deleted ${deletedAuditLogs.count} audit logs`);
+
+        // 11. Delete regular admins (keep only SUPERADMIN role)
         const deletedAdmins = await prisma.admin.deleteMany({
           where: {
             role: 'ADMIN' // Only delete ADMIN role, preserve SUPERADMIN
