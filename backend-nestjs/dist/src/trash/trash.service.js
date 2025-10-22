@@ -342,7 +342,7 @@ let TrashService = class TrashService {
             where: { id: voterId }
         });
     }
-    async permanentlyDeleteBallot(ballotId) {
+    async permanentlyDeleteBallot(ballotId, forceDelete = false) {
         const ballot = await this.prisma.ballot.findUnique({
             where: { id: ballotId },
             include: {
@@ -361,8 +361,28 @@ let TrashService = class TrashService {
         if (!ballot.Ballot_IsDeleted) {
             throw new common_1.ForbiddenException('Ballot is not deleted');
         }
-        if (ballot._count.votes > 0) {
+        if (ballot._count.votes > 0 && !forceDelete) {
             throw new common_1.ConflictException('Cannot permanently delete ballot with voting history. Votes must be preserved for audit purposes.');
+        }
+        if (ballot._count.votes > 0 && forceDelete) {
+            await this.prisma.vote.deleteMany({
+                where: { ballotId: ballotId }
+            });
+            await this.prisma.ballotCandidate.deleteMany({
+                where: { BallotCandidate_BallotId: ballotId }
+            });
+            await this.prisma.ballotPosition.deleteMany({
+                where: { BallotPosition_BallotId: ballotId }
+            });
+            await this.prisma.ballotResults.deleteMany({
+                where: { BallotResults_BallotId: ballotId }
+            });
+            await this.prisma.ballotResultDetails.deleteMany({
+                where: { BallotResultDetails_BallotId: ballotId }
+            });
+            await this.prisma.userBallotHistory.deleteMany({
+                where: { UserBallotHistory_BallotId: ballotId }
+            });
         }
         return await this.prisma.ballot.delete({
             where: { id: ballotId }

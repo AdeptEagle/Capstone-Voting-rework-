@@ -12,6 +12,7 @@ const TrashBin = () => {
   const [error, setError] = useState(null);
   const [showRestoreModal, setShowRestoreModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showForceDeleteModal, setShowForceDeleteModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
@@ -90,15 +91,21 @@ const TrashBin = () => {
     }
   };
 
-  const handlePermanentDelete = async (itemId) => {
+  const handlePermanentDelete = async (itemId, forceDelete = false) => {
     setActionLoading(true);
     setError(null);
     
     try {
-      await api.delete(`/trash/permanent/${activeTab.slice(0, -1)}/${itemId}`);
+      let url = `/trash/permanent/${activeTab.slice(0, -1)}/${itemId}`;
+      if (activeTab === 'ballots' && forceDelete) {
+        url += '?force=true';
+      }
+      
+      await api.delete(url);
       
       setSuccessMessage('Item permanently deleted!');
       setShowDeleteModal(false);
+      setShowForceDeleteModal(false);
       
       // Refresh data
       await Promise.all([
@@ -112,6 +119,12 @@ const TrashBin = () => {
       
       // Handle specific error cases
       if (error.response?.status === 409) {
+        // For ballots with vote history, show force delete option
+        if (activeTab === 'ballots') {
+          setShowDeleteModal(false);
+          setShowForceDeleteModal(true);
+          return;
+        }
         setError(error.response.data.message || 'Cannot permanently delete this item due to existing dependencies');
       } else if (error.response?.status === 404) {
         setError('Item not found');
@@ -250,8 +263,8 @@ const TrashBin = () => {
         <div>
           <Alert variant="warning" className="mb-3">
             <FaInfoCircle className="me-2" />
-            <strong>Important:</strong> Ballots with voting history cannot be permanently deleted for audit purposes. 
-            Only ballots that have never received votes can be permanently removed from the system.
+            <strong>Important:</strong> Ballots with voting history require additional confirmation to permanently delete. 
+            This action will destroy all voting data and audit trails. Use with extreme caution.
           </Alert>
           {renderTableContent(currentColumns)}
         </div>
@@ -542,6 +555,66 @@ const TrashBin = () => {
             disabled={actionLoading}
           >
                          {actionLoading ? <Spinner size="sm" /> : 'Permanently Delete'}
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Force Delete Confirmation Modal for Ballots with Vote History */}
+      <Modal show={showForceDeleteModal} onHide={() => setShowForceDeleteModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title className="text-danger">
+            <FaExclamationTriangle className="me-2" />
+            ⚠️ CRITICAL WARNING: Force Delete Ballot with Vote History
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <div className="alert alert-warning">
+            <h6 className="alert-heading">Legal and Compliance Notice:</h6>
+            <div className="mb-0 force-horizontal-text">
+              Deleting ballots with vote history may violate election integrity requirements, 
+              audit compliance standards, and legal obligations. This action should only be 
+              performed in exceptional circumstances with proper authorization.
+            </div>
+          </div>
+
+          <div className="force-horizontal-text" style={{ marginBottom: '10px' }}>
+            Are you absolutely certain you want to <strong>permanently delete</strong> this ballot 
+            and <strong>destroy all voting data</strong>?
+          </div>
+          
+          <div className="force-horizontal-text" style={{ marginBottom: '10px' }}>
+            <strong>Ballot:</strong> {selectedItem?.Ballot_Title}
+          </div>
+          
+          <div className="form-check">
+            <input 
+              className="form-check-input" 
+              type="checkbox" 
+              id="confirmForceDelete" 
+              required
+            />
+            <label className="form-check-label text-danger fw-bold" htmlFor="confirmForceDelete">
+              I understand the consequences and take full responsibility for this action
+            </label>
+          </div>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowForceDeleteModal(false)}>
+            Cancel
+          </Button>
+          <Button
+            variant="danger"
+            onClick={() => {
+              const checkbox = document.getElementById('confirmForceDelete');
+              if (checkbox.checked) {
+                handlePermanentDelete(selectedItem?.id, true);
+              } else {
+                alert('You must confirm that you understand the consequences before proceeding.');
+              }
+            }}
+            disabled={actionLoading}
+          >
+            {actionLoading ? <Spinner size="sm" /> : '⚠️ FORCE DELETE ALL DATA'}
           </Button>
         </Modal.Footer>
       </Modal>

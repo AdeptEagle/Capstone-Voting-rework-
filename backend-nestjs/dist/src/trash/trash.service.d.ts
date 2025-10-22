@@ -517,7 +517,7 @@ export declare class TrashService {
         Voter_StudentId: string;
         hasVoted: boolean;
     }>;
-    permanentlyDeleteBallot(ballotId: string): Promise<{
+    permanentlyDeleteBallot(ballotId: string, forceDelete?: boolean): Promise<{
         id: string;
         Ballot_Title: string;
         Ballot_Description: string | null;

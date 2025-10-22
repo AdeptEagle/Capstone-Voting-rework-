@@ -81,8 +81,9 @@ let TrashController = class TrashController {
     async permanentlyDeleteVoter(id) {
         return await this.trashService.permanentlyDeleteVoter(id);
     }
-    async permanentlyDeleteBallot(id) {
-        return await this.trashService.permanentlyDeleteBallot(id);
+    async permanentlyDeleteBallot(id, force) {
+        const forceDelete = force === 'true';
+        return await this.trashService.permanentlyDeleteBallot(id, forceDelete);
     }
     async emptyTrash() {
         return await this.trashService.emptyTrash();
@@ -287,8 +288,9 @@ __decorate([
     (0, swagger_1.ApiResponse)({ status: 404, description: 'Ballot not found' }),
     (0, swagger_1.ApiResponse)({ status: 409, description: 'Cannot delete ballot with voting history' }),
     __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Query)('force')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", Promise)
 ], TrashController.prototype, "permanentlyDeleteBallot", null);
 __decorate([

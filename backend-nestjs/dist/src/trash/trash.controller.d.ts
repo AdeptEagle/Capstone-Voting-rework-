@@ -339,7 +339,7 @@ export declare class TrashController {
         Voter_StudentId: string;
         hasVoted: boolean;
     }>;
-    permanentlyDeleteBallot(id: string): Promise<{
+    permanentlyDeleteBallot(id: string, force?: string): Promise<{
         id: string;
         Ballot_Title: string;
         Ballot_Description: string | null;

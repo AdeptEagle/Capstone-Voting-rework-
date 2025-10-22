@@ -147,6 +147,30 @@
   color: #6c757d !important;
 }
 
+/* Force horizontal text display for modal content */
+.force-horizontal-text {
+  white-space: normal !important;
+  word-break: normal !important;
+  line-height: 1.4 !important;
+  display: block !important;
+  width: 100% !important;
+  font-size: 14px !important;
+  font-family: inherit !important;
+  text-align: left !important;
+  writing-mode: horizontal-tb !important;
+  text-orientation: mixed !important;
+  unicode-bidi: normal !important;
+  direction: ltr !important;
+}
+
+/* Override any Bootstrap alert text issues */
+.alert .force-horizontal-text {
+  white-space: normal !important;
+  word-break: normal !important;
+  writing-mode: horizontal-tb !important;
+  text-orientation: mixed !important;
+}
+
 /* Animation for success messages */
 .alert-success {
   animation: slideInDown 0.3s ease-out;

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Delete, Param, Body, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Param, Body, UseGuards, HttpCode, HttpStatus, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { TrashService } from './trash.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -179,8 +179,12 @@ export class TrashController {
   @ApiResponse({ status: 200, description: 'Ballot permanently deleted' })
   @ApiResponse({ status: 404, description: 'Ballot not found' })
   @ApiResponse({ status: 409, description: 'Cannot delete ballot with voting history' })
-  async permanentlyDeleteBallot(@Param('id') id: string) {
-    return await this.trashService.permanentlyDeleteBallot(id);
+  async permanentlyDeleteBallot(
+    @Param('id') id: string,
+    @Query('force') force?: string
+  ) {
+    const forceDelete = force === 'true';
+    return await this.trashService.permanentlyDeleteBallot(id, forceDelete);
   }
 
   @Delete('empty')
