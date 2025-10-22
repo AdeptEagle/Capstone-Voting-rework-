@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getAdmins, getPositions, getCandidates, getVoters, getVotes, changePassword } from '../../services/api';
+import { getAdmins, getPositions, getCandidates, getVoters, getVotes, changePassword, getNuclearResetStatus, executeNuclearReset } from '../../services/api';
 import ElectionStatus from '../../components/ElectionStatus';
 import './SuperAdminDashboard.css';
 
@@ -30,6 +30,25 @@ const SuperAdminDashboard = () => {
     confirm: false
   });
   const [notification, setNotification] = useState(null);
+
+  // Nuclear Reset state
+  const [showNuclearResetModal, setShowNuclearResetModal] = useState(false);
+  const [nuclearResetStatus, setNuclearResetStatus] = useState(null);
+  const [nuclearResetLoading, setNuclearResetLoading] = useState(false);
+  const [nuclearResetStep, setNuclearResetStep] = useState(1); // 1: warning, 2: confirmation, 3: executing
+  const [nuclearResetConfirmations, setNuclearResetConfirmations] = useState({
+    understandConsequences: false,
+    backupData: false,
+    finalConfirmation: false
+  });
+  const [showNuclearResetSection, setShowNuclearResetSection] = useState(() => {
+    // Load from localStorage, default to true if not set
+    const saved = localStorage.getItem('nuclearResetSectionVisible');
+    return saved !== null ? JSON.parse(saved) : true;
+  });
+  const [nuclearResetTextConfirmation, setNuclearResetTextConfirmation] = useState(''); // Text confirmation input
+  const [nuclearResetPasswordConfirmation, setNuclearResetPasswordConfirmation] = useState(''); // Password confirmation input
+  const [showNuclearResetPassword, setShowNuclearResetPassword] = useState(false); // Password visibility toggle
 
   useEffect(() => {
     fetchStats();
@@ -153,6 +172,111 @@ const SuperAdminDashboard = () => {
       confirm: false
     });
     setNotification(null);
+  };
+
+  // Nuclear Reset functions
+  const fetchNuclearResetStatus = async () => {
+    try {
+      const status = await getNuclearResetStatus();
+      setNuclearResetStatus(status);
+    } catch (error) {
+      console.error('Error fetching nuclear reset status:', error);
+      setNotification({
+        type: 'error',
+        message: 'Failed to load system status'
+      });
+    }
+  };
+
+  const openNuclearResetModal = () => {
+    setNuclearResetStep(1);
+    setNuclearResetConfirmations({
+      understandConsequences: false,
+      backupData: false,
+      finalConfirmation: false
+    });
+    fetchNuclearResetStatus();
+    setShowNuclearResetModal(true);
+  };
+
+  const closeNuclearResetModal = () => {
+    setShowNuclearResetModal(false);
+    setNuclearResetStep(1);
+    setNuclearResetConfirmations({
+      understandConsequences: false,
+      backupData: false,
+      finalConfirmation: false
+    });
+    setNuclearResetStatus(null);
+    setNuclearResetTextConfirmation('');
+    setNuclearResetPasswordConfirmation('');
+    setShowNuclearResetPassword(false);
+  };
+
+  const handleNuclearResetConfirmation = (field) => {
+    setNuclearResetConfirmations(prev => ({
+      ...prev,
+      [field]: !prev[field]
+    }));
+  };
+
+  const handleNuclearResetSectionToggle = (checked) => {
+    setShowNuclearResetSection(checked);
+    // Save to localStorage
+    localStorage.setItem('nuclearResetSectionVisible', JSON.stringify(checked));
+  };
+
+  const executeNuclearResetAction = async () => {
+    // Validate inputs first
+    if (nuclearResetTextConfirmation !== 'DELETE ALL DATA') {
+      setNotification({
+        type: 'error',
+        message: 'Text confirmation does not match. Please type "DELETE ALL DATA" exactly.'
+      });
+      return;
+    }
+
+    if (!nuclearResetPasswordConfirmation) {
+      setNotification({
+        type: 'error',
+        message: 'Password confirmation is required.'
+      });
+      return;
+    }
+
+    setNuclearResetLoading(true);
+    setNuclearResetStep(4); // Go to execution step
+    
+    try {
+      // First verify the password by attempting to change password (this will validate current password)
+      // We'll use a simple approach - try to get current user info with the password
+      // For now, we'll proceed with the reset and let the backend handle password verification
+      
+      const result = await executeNuclearReset(nuclearResetPasswordConfirmation);
+      
+      setNotification({
+        type: 'success',
+        message: `Nuclear reset completed successfully! Deleted: ${result.deletedCounts.voters} voters, ${result.deletedCounts.candidates} candidates, ${result.deletedCounts.ballots} ballots, and more.`
+      });
+      
+      // Refresh stats after reset
+      await fetchStats();
+      
+      // Close modal after delay
+      setTimeout(() => {
+        closeNuclearResetModal();
+      }, 3000);
+      
+    } catch (error) {
+      console.error('Error executing nuclear reset:', error);
+      setNotification({
+        type: 'error',
+        message: 'Nuclear reset failed. Please check the logs for details.'
+      });
+      setNuclearResetStep(3); // Go back to additional confirmation step
+    } finally {
+      setNuclearResetLoading(false);
+    }
   };
 
   if (loading) {
@@ -331,6 +455,48 @@ const SuperAdminDashboard = () => {
         </div>
       </div>
 
+      {/* Nuclear Reset Section - Only show if enabled in settings */}
+      {showNuclearResetSection && (
+        <div className="row mb-4">
+          <div className="col-12">
+            <div className="card border-danger">
+              <div className="card-header bg-danger text-white">
+                <h5 className="mb-0">
+                  <i className="fas fa-radiation me-2"></i>
+                  🚨 Nuclear Reset - System Administrator Only
+                </h5>
+              </div>
+              <div className="card-body">
+                <div className="alert alert-danger mb-3">
+                  <p className="mb-0">
+                    <strong>⚠️ CRITICAL WARNING:</strong> This action will permanently delete ALL user-generated data from the system! <p>What will be deleted: All voters and voter accounts, all candidates and candidate data, all ballots and voting data, all votes cast by users, all party lists, all regular admin accounts, and all audit logs and login history.</p> What will be preserved: SuperAdmin accounts (for system access), built-in positions and templates, departments and courses, and system configurations.
+                  </p>
+                </div>
+                
+                <div className="alert alert-warning mb-3">
+                  <h6 className="alert-heading">Legal and Compliance Notice:</h6>
+                  <p className="mb-0">
+                    This action may violate data retention requirements, audit compliance standards, 
+                    and legal obligations. Use only in exceptional circumstances with proper authorization.
+                  </p>
+                </div>
+
+                <div className="d-flex justify-content-center">
+                  <button
+                    className="btn btn-danger btn-lg"
+                    onClick={openNuclearResetModal}
+                    disabled={nuclearResetLoading}
+                  >
+                    <i className="fas fa-radiation me-2"></i>
+                    🚨 Execute Nuclear Reset
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Settings Modal */}
       {showSettingsModal && (
         <div className="modal fade show" style={{ display: 'block' }} tabIndex="-1">
@@ -422,6 +588,35 @@ const SuperAdminDashboard = () => {
                       </div>
                     </div>
                   </div>
+
+                  {/* Nuclear Reset Settings Section */}
+                  <div className="settings-section mt-4">
+                    <h6 className="mb-3">
+                      <i className="fas fa-radiation me-2"></i>
+                      Nuclear Reset Settings
+                    </h6>
+                    
+                    <div className="mb-3">
+                      <div className="form-check form-switch">
+                         <input
+                           className="form-check-input"
+                           type="checkbox"
+                           id="showNuclearResetSection"
+                           checked={showNuclearResetSection}
+                           onChange={(e) => handleNuclearResetSectionToggle(e.target.checked)}
+                         />
+                        <label className="form-check-label" htmlFor="showNuclearResetSection">
+                          <strong>Show Nuclear Reset Section</strong>
+                        </label>
+                      </div>
+                      <small className="form-text text-muted">
+                        Toggle the visibility of the Nuclear Reset section in the dashboard. 
+                        When hidden, the dangerous reset functionality will not be visible.
+                        <br />
+                        <strong>Current status:</strong> {showNuclearResetSection ? 'Visible' : 'Hidden'}
+                      </small>
+                    </div>
+                  </div>
                 </div>
                 <div className="modal-footer">
                   <button
@@ -457,6 +652,266 @@ const SuperAdminDashboard = () => {
       
       {/* Modal Backdrop */}
       {showSettingsModal && <div className="modal-backdrop fade show"></div>}
+
+      {/* Nuclear Reset Modal */}
+      {showNuclearResetModal && (
+        <div className="modal fade show" style={{ display: 'block' }} tabIndex="-1">
+          <div className="modal-dialog modal-lg">
+            <div className="modal-content">
+              <div className="modal-header bg-danger text-white">
+                <h5 className="modal-title">
+                  <i className="fas fa-radiation me-2"></i>
+                  🚨 Nuclear Reset Confirmation
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close btn-close-white"
+                  onClick={closeNuclearResetModal}
+                  disabled={nuclearResetLoading}
+                ></button>
+              </div>
+              <div className="modal-body">
+                {nuclearResetStep === 1 && (
+                  <div>
+                    <div className="alert alert-danger mb-3">
+                      <h6 className="alert-heading">
+                        <i className="fas fa-exclamation-triangle me-2"></i>
+                        ⚠️ FINAL WARNING
+                      </h6>
+                      <p className="mb-2">
+                        <strong>You are about to permanently delete ALL user-generated data!</strong>
+                      </p>
+                      <p className="mb-0">
+                        This action cannot be undone and will result in complete data loss.
+                      </p>
+                    </div>
+
+                    {nuclearResetStatus && (
+                      <div className="alert alert-info mb-3">
+                        <h6 className="alert-heading">Current System Status:</h6>
+                        <div className="row">
+                          <div className="col-md-6">
+                            <ul className="mb-0">
+                              <li><strong>Voters:</strong> {nuclearResetStatus.voters}</li>
+                              <li><strong>Candidates:</strong> {nuclearResetStatus.candidates}</li>
+                              <li><strong>Ballots:</strong> {nuclearResetStatus.ballots}</li>
+                              <li><strong>Votes:</strong> {nuclearResetStatus.votes}</li>
+                            </ul>
+                          </div>
+                          <div className="col-md-6">
+                            <ul className="mb-0">
+                              <li><strong>Departments:</strong> {nuclearResetStatus.departments} (preserved)</li>
+                              <li><strong>Courses:</strong> {nuclearResetStatus.courses} (preserved)</li>
+                              <li><strong>Regular Admins:</strong> {nuclearResetStatus.regularAdmins}</li>
+                              <li><strong>SuperAdmins:</strong> {nuclearResetStatus.superAdmins} (preserved)</li>
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="d-flex justify-content-center">
+                      <button
+                        className="btn btn-danger btn-lg"
+                        onClick={() => setNuclearResetStep(2)}
+                      >
+                        <i className="fas fa-radiation me-2"></i>
+                        I Understand - Continue to Confirmation
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {nuclearResetStep === 2 && (
+                  <div>
+                    <div className="alert alert-danger mb-3">
+                      <h6 className="alert-heading">
+                        <i className="fas fa-exclamation-triangle me-2"></i>
+                        ⚠️ FINAL CONFIRMATION REQUIRED
+                      </h6>
+                      <p className="mb-0">
+                        Please confirm each statement below to proceed with the nuclear reset.
+                      </p>
+                    </div>
+
+                    <div className="mb-3">
+                      <div className="form-check">
+                        <input
+                          className="form-check-input"
+                          type="checkbox"
+                          id="understandConsequences"
+                          checked={nuclearResetConfirmations.understandConsequences}
+                          onChange={() => handleNuclearResetConfirmation('understandConsequences')}
+                        />
+                        <label className="form-check-label" htmlFor="understandConsequences">
+                          <strong>I understand that this action will permanently delete ALL user data and cannot be undone.</strong>
+                        </label>
+                      </div>
+                    </div>
+
+                    <div className="mb-3">
+                      <div className="form-check">
+                        <input
+                          className="form-check-input"
+                          type="checkbox"
+                          id="backupData"
+                          checked={nuclearResetConfirmations.backupData}
+                          onChange={() => handleNuclearResetConfirmation('backupData')}
+                        />
+                        <label className="form-check-label" htmlFor="backupData">
+                          <strong>I have backed up any important data and understand that this action violates audit compliance.</strong>
+                        </label>
+                      </div>
+                    </div>
+
+                    <div className="mb-3">
+                      <div className="form-check">
+                        <input
+                          className="form-check-input"
+                          type="checkbox"
+                          id="finalConfirmation"
+                          checked={nuclearResetConfirmations.finalConfirmation}
+                          onChange={() => handleNuclearResetConfirmation('finalConfirmation')}
+                        />
+                        <label className="form-check-label" htmlFor="finalConfirmation">
+                          <strong>I take full responsibility for this action and confirm that I have proper authorization.</strong>
+                        </label>
+                      </div>
+                    </div>
+
+                    <div className="d-flex justify-content-center gap-3">
+                      <button
+                        className="btn btn-secondary"
+                        onClick={() => setNuclearResetStep(1)}
+                        disabled={nuclearResetLoading}
+                      >
+                        Back
+                      </button>
+                      <button
+                        className="btn btn-danger btn-lg"
+                        onClick={() => setNuclearResetStep(3)}
+                        disabled={!nuclearResetConfirmations.understandConsequences || 
+                                 !nuclearResetConfirmations.backupData || 
+                                 !nuclearResetConfirmations.finalConfirmation ||
+                                 nuclearResetLoading}
+                      >
+                        <i className="fas fa-radiation me-2"></i>
+                        Continue to Final Confirmation
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {nuclearResetStep === 3 && (
+                  <div>
+                    <div className="alert alert-danger mb-3">
+                      <h6 className="alert-heading">
+                        <i className="fas fa-shield-alt me-2"></i>
+                        🔐 ADDITIONAL SECURITY CONFIRMATION
+                      </h6>
+                      <p className="mb-0">
+                        To prevent accidental execution, please complete the following security checks.
+                      </p>
+                    </div>
+
+                    <div className="mb-3">
+                      <label className="form-label">
+                        <strong>Type the following text exactly:</strong>
+                      </label>
+                      <div className="alert alert-warning mb-2">
+                        <code className="fs-5">DELETE ALL DATA</code>
+                      </div>
+                      <input
+                        type="text"
+                        className="form-control"
+                        placeholder="Type: DELETE ALL DATA"
+                        value={nuclearResetTextConfirmation}
+                        onChange={(e) => setNuclearResetTextConfirmation(e.target.value)}
+                        disabled={nuclearResetLoading}
+                      />
+                      {nuclearResetTextConfirmation && nuclearResetTextConfirmation !== 'DELETE ALL DATA' && (
+                        <div className="text-danger mt-1">
+                          <i className="fas fa-times me-1"></i>
+                          Text does not match exactly
+                        </div>
+                      )}
+                      {nuclearResetTextConfirmation === 'DELETE ALL DATA' && (
+                        <div className="text-success mt-1">
+                          <i className="fas fa-check me-1"></i>
+                          Text confirmation verified
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="mb-3">
+                      <label className="form-label">
+                        <strong>Enter your SuperAdmin password:</strong>
+                      </label>
+                      <div className="input-group">
+                        <input
+                          type={showNuclearResetPassword ? "text" : "password"}
+                          className="form-control"
+                          placeholder="Enter your password"
+                          value={nuclearResetPasswordConfirmation}
+                          onChange={(e) => setNuclearResetPasswordConfirmation(e.target.value)}
+                          disabled={nuclearResetLoading}
+                        />
+                        <span className="input-group-text">
+                          <i 
+                            className={`fas ${showNuclearResetPassword ? 'fa-eye-slash' : 'fa-eye'}`} 
+                            onClick={() => setShowNuclearResetPassword(!showNuclearResetPassword)}
+                            style={{ cursor: 'pointer' }}
+                          ></i>
+                        </span>
+                      </div>
+                      <small className="form-text text-muted">
+                        Your password will be verified before proceeding
+                      </small>
+                    </div>
+
+                    <div className="d-flex justify-content-center gap-3">
+                      <button
+                        className="btn btn-secondary"
+                        onClick={() => setNuclearResetStep(2)}
+                        disabled={nuclearResetLoading}
+                      >
+                        Back
+                      </button>
+                      <button
+                        className="btn btn-danger btn-lg"
+                        onClick={executeNuclearResetAction}
+                        disabled={nuclearResetTextConfirmation !== 'DELETE ALL DATA' || 
+                                 !nuclearResetPasswordConfirmation ||
+                                 nuclearResetLoading}
+                      >
+                        <i className="fas fa-radiation me-2"></i>
+                        🚨 EXECUTE NUCLEAR RESET
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {nuclearResetStep === 4 && (
+                  <div className="text-center">
+                    <div className="spinner-border text-danger mb-3" role="status" style={{ width: '3rem', height: '3rem' }}>
+                      <span className="visually-hidden">Executing...</span>
+                    </div>
+                    <h5 className="text-danger">Executing Nuclear Reset...</h5>
+                    <p className="text-muted">
+                      Please wait while the system removes all user-generated data.
+                      This may take a few moments.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Backdrop */}
+      {showSettingsModal && <div className="modal-backdrop fade show"></div>}
+      {showNuclearResetModal && <div className="modal-backdrop fade show"></div>}
     </div>
   );
 };

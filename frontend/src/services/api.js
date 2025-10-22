@@ -1622,4 +1622,25 @@ export const cleanupAllLogs = async () => {
   }
 };
 
+// Nuclear Reset API functions
+export const getNuclearResetStatus = async () => {
+  try {
+    const response = await api.get('/nuclear-reset/status');
+    return response.data;
+  } catch (error) {
+    console.error('Error getting nuclear reset status:', error);
+    throw error;
+  }
+};
+
+export const executeNuclearReset = async (password) => {
+  try {
+    const response = await api.post('/nuclear-reset/execute', { password });
+    return response.data;
+  } catch (error) {
+    console.error('Error executing nuclear reset:', error);
+    throw error;
+  }
+};
+
 export default api; 

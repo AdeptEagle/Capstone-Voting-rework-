@@ -23,8 +23,10 @@ import { TemplateInitializationService } from './services/template-initializatio
 import { PositionInitializationService } from './services/position-initialization.service';
 import { DepartmentCourseInitializationService } from './services/department-course-initialization.service';
 import { LogCleanupConfigService } from './services/log-cleanup-config.service';
+import { NuclearResetService } from './services/nuclear-reset.service';
 import { TimezoneController } from './controllers/timezone.controller';
 import { MaintenanceController } from './controllers/maintenance.controller';
+import { NuclearResetController } from './controllers/nuclear-reset.controller';
 import { WebsocketModule } from './websocket/websocket.module';
 import { HealthModule } from './health/health.module';
 
@@ -53,7 +55,7 @@ import { HealthModule } from './health/health.module';
     WebsocketModule,
     HealthModule,
   ],
-  controllers: [TimezoneController, MaintenanceController],
-  providers: [SchedulerService, TimezoneService, TemplateInitializationService, PositionInitializationService, DepartmentCourseInitializationService, LogCleanupConfigService],
+  controllers: [TimezoneController, MaintenanceController, NuclearResetController],
+  providers: [SchedulerService, TimezoneService, TemplateInitializationService, PositionInitializationService, DepartmentCourseInitializationService, LogCleanupConfigService, NuclearResetService],
 })
 export class AppModule {} 

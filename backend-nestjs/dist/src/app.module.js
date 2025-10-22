@@ -32,8 +32,10 @@ const template_initialization_service_1 = require("./services/template-initializ
 const position_initialization_service_1 = require("./services/position-initialization.service");
 const department_course_initialization_service_1 = require("./services/department-course-initialization.service");
 const log_cleanup_config_service_1 = require("./services/log-cleanup-config.service");
+const nuclear_reset_service_1 = require("./services/nuclear-reset.service");
 const timezone_controller_1 = require("./controllers/timezone.controller");
 const maintenance_controller_1 = require("./controllers/maintenance.controller");
+const nuclear_reset_controller_1 = require("./controllers/nuclear-reset.controller");
 const websocket_module_1 = require("./websocket/websocket.module");
 const health_module_1 = require("./health/health.module");
 let AppModule = class AppModule {
@@ -65,8 +67,8 @@ exports.AppModule = AppModule = __decorate([
             websocket_module_1.WebsocketModule,
             health_module_1.HealthModule,
         ],
-        controllers: [timezone_controller_1.TimezoneController, maintenance_controller_1.MaintenanceController],
-        providers: [scheduler_service_1.SchedulerService, timezone_service_1.TimezoneService, template_initialization_service_1.TemplateInitializationService, position_initialization_service_1.PositionInitializationService, department_course_initialization_service_1.DepartmentCourseInitializationService, log_cleanup_config_service_1.LogCleanupConfigService],
+        controllers: [timezone_controller_1.TimezoneController, maintenance_controller_1.MaintenanceController, nuclear_reset_controller_1.NuclearResetController],
+        providers: [scheduler_service_1.SchedulerService, timezone_service_1.TimezoneService, template_initialization_service_1.TemplateInitializationService, position_initialization_service_1.PositionInitializationService, department_course_initialization_service_1.DepartmentCourseInitializationService, log_cleanup_config_service_1.LogCleanupConfigService, nuclear_reset_service_1.NuclearResetService],
     })
 ], AppModule);
 //# sourceMappingURL=app.module.js.map
