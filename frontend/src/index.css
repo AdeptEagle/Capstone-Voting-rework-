@@ -197,6 +197,123 @@ main .bg-light {
   }
 }
 
+/* 1080p Monitor Optimizations (1920x1080 and smaller) */
+@media (max-width: 1920px) {
+  /* Reduce sidebar width for better space utilization */
+  .sidebar {
+    width: 200px;
+  }
+  
+  main {
+    margin-left: 200px;
+  }
+  
+  .app-header {
+    left: 200px;
+    width: calc(100% - 200px);
+  }
+  
+  /* Reduce padding for better space utilization */
+  main {
+    padding: 0 16px 16px 16px;
+  }
+  
+  /* Adjust font sizes for better readability on smaller screens */
+  .dashboard-title-pro {
+    font-size: 2rem !important;
+  }
+  
+  .dashboard-subtitle-pro {
+    font-size: 1rem !important;
+  }
+  
+  /* Reduce card padding */
+  .stat-card {
+    padding: 1rem !important;
+  }
+  
+  .dashboard-header-pro {
+    padding: 1.5rem 1.5rem 1.5rem 1.5rem !important;
+  }
+  
+  /* Further reduce spacing for 1080p monitors */
+  .user-dashboard-container {
+    padding: 16px 20px !important;
+  }
+  
+  .admin-dashboard {
+    padding: 0 0 1rem 0 !important;
+  }
+  
+  .superadmin-dashboard {
+    padding: 0 !important;
+  }
+  
+  /* Adjust grid layouts for better fit */
+  .stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) !important;
+    gap: 1rem !important;
+  }
+  
+  .dashboard-content {
+    grid-template-columns: 1.5fr 1fr !important;
+    gap: 1.5rem !important;
+  }
+  
+  /* Reduce font sizes */
+  .welcome-section h1 {
+    font-size: 1.75rem !important;
+  }
+  
+  .stat-content h3 {
+    font-size: 1.25rem !important;
+  }
+  
+  /* Adjust card heights and spacing */
+  .stat-card {
+    padding: 1rem !important;
+  }
+  
+  .stat-icon {
+    width: 2rem !important;
+    height: 2rem !important;
+  }
+}
+
+/* Large Monitor Optimizations (larger than 1920px) */
+@media (min-width: 1921px) {
+  /* Keep original larger spacing for high-resolution monitors */
+  .sidebar {
+    width: 250px;
+  }
+  
+  main {
+    margin-left: 250px;
+    padding: 0 20px 20px 20px;
+  }
+  
+  .app-header {
+    left: 250px;
+    width: calc(100% - 250px);
+  }
+  
+  .dashboard-title-pro {
+    font-size: 2.5rem;
+  }
+  
+  .dashboard-subtitle-pro {
+    font-size: 1.1rem;
+  }
+  
+  .stat-card {
+    padding: 1.5rem;
+  }
+  
+  .dashboard-header-pro {
+    padding: 2.5rem 2rem 2rem 2rem;
+  }
+}
+
 /* Disable all spinning animations globally */
 .fa-spin,
 .fa-spinner,

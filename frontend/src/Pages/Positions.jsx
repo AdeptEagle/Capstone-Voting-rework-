@@ -92,6 +92,13 @@ const Positions = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validate required fields
+    if (!formData.Position_Title.trim()) {
+      alert('Please enter a valid position title');
+      return;
+    }
+    
     try {
       if (editingPosition) {
         await updatePosition(editingPosition.id, {
@@ -386,9 +393,18 @@ const Positions = () => {
                       type="text"
                       className="form-control"
                       value={formData.Position_Title}
-                      onChange={(e) => setFormData({ ...formData, Position_Title: e.target.value })}
+                      onChange={(e) => {
+                        // Remove numbers and special characters, keep only letters and spaces
+                        const lettersOnly = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                        setFormData({ ...formData, Position_Title: lettersOnly });
+                      }}
+                      placeholder="Enter position title"
                       required
                     />
+                    <small className="form-text text-muted">
+                      <i className="fas fa-info-circle me-1"></i>
+                      Only letters and spaces are allowed. Numbers and special characters will be automatically removed.
+                    </small>
                   </div>
                   <div className="mb-3">
                     <label className="form-label">Description</label>

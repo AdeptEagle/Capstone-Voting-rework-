@@ -12,27 +12,27 @@ export declare class TrashService {
         total: number;
     }>;
     getDeletedCandidates(): Promise<({
+        course: {
+            id: string;
+            departmentId: string;
+            createdAt: Date;
+            updatedAt: Date;
+            deletedAt: Date | null;
+            isDeleted: boolean;
+            Course_Name: string;
+            Course_Code: string;
+            Course_Description: string | null;
+            createdBy: string;
+        };
         department: {
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            deletedAt: Date | null;
+            isDeleted: boolean;
+            createdBy: string;
             Department_Name: string;
             Department_Description: string | null;
-            deletedAt: Date | null;
-            isDeleted: boolean;
-            createdBy: string;
-        };
-        course: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            deletedAt: Date | null;
-            isDeleted: boolean;
-            createdBy: string;
-            Course_Name: string;
-            Course_Code: string;
-            Course_Description: string | null;
-            departmentId: string;
         };
         position: {
             id: string;
@@ -47,18 +47,18 @@ export declare class TrashService {
         };
     } & {
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        deletedAt: Date | null;
-        isDeleted: boolean;
-        departmentId: string | null;
         Candidate_Name: string;
         Candidate_Email: string;
         Candidate_StudentId: string;
         photo: string | null;
         manifesto: string | null;
         positionId: string;
+        departmentId: string | null;
         courseId: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        deletedAt: Date | null;
+        isDeleted: boolean;
         partyListId: string | null;
         party_list_name: string | null;
     })[]>;
@@ -76,78 +76,78 @@ export declare class TrashService {
     getDeletedDepartments(): Promise<({
         admin: {
             id: string;
+            createdAt: Date;
+            updatedAt: Date;
             Admin_Username: string;
             Admin_Email: string | null;
             password: string;
             role: import(".prisma/client").$Enums.Role;
-            createdAt: Date;
-            updatedAt: Date;
         };
     } & {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        Department_Name: string;
-        Department_Description: string | null;
         deletedAt: Date | null;
         isDeleted: boolean;
         createdBy: string;
+        Department_Name: string;
+        Department_Description: string | null;
     })[]>;
     getDeletedCourses(): Promise<({
         department: {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            Department_Name: string;
-            Department_Description: string | null;
             deletedAt: Date | null;
             isDeleted: boolean;
             createdBy: string;
+            Department_Name: string;
+            Department_Description: string | null;
         };
     } & {
         id: string;
+        departmentId: string;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
         isDeleted: boolean;
-        createdBy: string;
         Course_Name: string;
         Course_Code: string;
         Course_Description: string | null;
-        departmentId: string;
+        createdBy: string;
     })[]>;
     getDeletedVoters(): Promise<({
+        course: {
+            id: string;
+            departmentId: string;
+            createdAt: Date;
+            updatedAt: Date;
+            deletedAt: Date | null;
+            isDeleted: boolean;
+            Course_Name: string;
+            Course_Code: string;
+            Course_Description: string | null;
+            createdBy: string;
+        };
         department: {
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            deletedAt: Date | null;
+            isDeleted: boolean;
+            createdBy: string;
             Department_Name: string;
             Department_Description: string | null;
-            deletedAt: Date | null;
-            isDeleted: boolean;
-            createdBy: string;
-        };
-        course: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            deletedAt: Date | null;
-            isDeleted: boolean;
-            createdBy: string;
-            Course_Name: string;
-            Course_Code: string;
-            Course_Description: string | null;
-            departmentId: string;
         };
     } & {
         id: string;
-        password: string | null;
+        departmentId: string | null;
+        courseId: string | null;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
         isDeleted: boolean;
-        departmentId: string | null;
-        courseId: string | null;
+        password: string | null;
         Voter_Name: string;
         Voter_Email: string;
         Voter_StudentId: string;
@@ -156,12 +156,12 @@ export declare class TrashService {
     getDeletedBallots(): Promise<({
         createdByAdmin: {
             id: string;
+            createdAt: Date;
+            updatedAt: Date;
             Admin_Username: string;
             Admin_Email: string | null;
             password: string;
             role: import(".prisma/client").$Enums.Role;
-            createdAt: Date;
-            updatedAt: Date;
         };
     } & {
         id: string;
@@ -186,27 +186,27 @@ export declare class TrashService {
     })[]>;
     getTrashItems(): Promise<{
         candidates: ({
+            course: {
+                id: string;
+                departmentId: string;
+                createdAt: Date;
+                updatedAt: Date;
+                deletedAt: Date | null;
+                isDeleted: boolean;
+                Course_Name: string;
+                Course_Code: string;
+                Course_Description: string | null;
+                createdBy: string;
+            };
             department: {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
+                deletedAt: Date | null;
+                isDeleted: boolean;
+                createdBy: string;
                 Department_Name: string;
                 Department_Description: string | null;
-                deletedAt: Date | null;
-                isDeleted: boolean;
-                createdBy: string;
-            };
-            course: {
-                id: string;
-                createdAt: Date;
-                updatedAt: Date;
-                deletedAt: Date | null;
-                isDeleted: boolean;
-                createdBy: string;
-                Course_Name: string;
-                Course_Code: string;
-                Course_Description: string | null;
-                departmentId: string;
             };
             position: {
                 id: string;
@@ -221,18 +221,18 @@ export declare class TrashService {
             };
         } & {
             id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            deletedAt: Date | null;
-            isDeleted: boolean;
-            departmentId: string | null;
             Candidate_Name: string;
             Candidate_Email: string;
             Candidate_StudentId: string;
             photo: string | null;
             manifesto: string | null;
             positionId: string;
+            departmentId: string | null;
             courseId: string | null;
+            createdAt: Date;
+            updatedAt: Date;
+            deletedAt: Date | null;
+            isDeleted: boolean;
             partyListId: string | null;
             party_list_name: string | null;
         })[];
@@ -250,78 +250,78 @@ export declare class TrashService {
         departments: ({
             admin: {
                 id: string;
+                createdAt: Date;
+                updatedAt: Date;
                 Admin_Username: string;
                 Admin_Email: string | null;
                 password: string;
                 role: import(".prisma/client").$Enums.Role;
-                createdAt: Date;
-                updatedAt: Date;
             };
         } & {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            Department_Name: string;
-            Department_Description: string | null;
             deletedAt: Date | null;
             isDeleted: boolean;
             createdBy: string;
+            Department_Name: string;
+            Department_Description: string | null;
         })[];
         courses: ({
             department: {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
-                Department_Name: string;
-                Department_Description: string | null;
                 deletedAt: Date | null;
                 isDeleted: boolean;
                 createdBy: string;
+                Department_Name: string;
+                Department_Description: string | null;
             };
         } & {
             id: string;
+            departmentId: string;
             createdAt: Date;
             updatedAt: Date;
             deletedAt: Date | null;
             isDeleted: boolean;
-            createdBy: string;
             Course_Name: string;
             Course_Code: string;
             Course_Description: string | null;
-            departmentId: string;
+            createdBy: string;
         })[];
         voters: ({
+            course: {
+                id: string;
+                departmentId: string;
+                createdAt: Date;
+                updatedAt: Date;
+                deletedAt: Date | null;
+                isDeleted: boolean;
+                Course_Name: string;
+                Course_Code: string;
+                Course_Description: string | null;
+                createdBy: string;
+            };
             department: {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
+                deletedAt: Date | null;
+                isDeleted: boolean;
+                createdBy: string;
                 Department_Name: string;
                 Department_Description: string | null;
-                deletedAt: Date | null;
-                isDeleted: boolean;
-                createdBy: string;
-            };
-            course: {
-                id: string;
-                createdAt: Date;
-                updatedAt: Date;
-                deletedAt: Date | null;
-                isDeleted: boolean;
-                createdBy: string;
-                Course_Name: string;
-                Course_Code: string;
-                Course_Description: string | null;
-                departmentId: string;
             };
         } & {
             id: string;
-            password: string | null;
+            departmentId: string | null;
+            courseId: string | null;
             createdAt: Date;
             updatedAt: Date;
             deletedAt: Date | null;
             isDeleted: boolean;
-            departmentId: string | null;
-            courseId: string | null;
+            password: string | null;
             Voter_Name: string;
             Voter_Email: string;
             Voter_StudentId: string;
@@ -330,12 +330,12 @@ export declare class TrashService {
         ballots: ({
             createdByAdmin: {
                 id: string;
+                createdAt: Date;
+                updatedAt: Date;
                 Admin_Username: string;
                 Admin_Email: string | null;
                 password: string;
                 role: import(".prisma/client").$Enums.Role;
-                createdAt: Date;
-                updatedAt: Date;
             };
         } & {
             id: string;
@@ -370,18 +370,18 @@ export declare class TrashService {
     }>;
     restoreCandidate(candidateId: string): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        deletedAt: Date | null;
-        isDeleted: boolean;
-        departmentId: string | null;
         Candidate_Name: string;
         Candidate_Email: string;
         Candidate_StudentId: string;
         photo: string | null;
         manifesto: string | null;
         positionId: string;
+        departmentId: string | null;
         courseId: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        deletedAt: Date | null;
+        isDeleted: boolean;
         partyListId: string | null;
         party_list_name: string | null;
     }>;
@@ -400,33 +400,33 @@ export declare class TrashService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        Department_Name: string;
-        Department_Description: string | null;
         deletedAt: Date | null;
         isDeleted: boolean;
         createdBy: string;
+        Department_Name: string;
+        Department_Description: string | null;
     }>;
     restoreCourse(courseId: string): Promise<{
         id: string;
+        departmentId: string;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
         isDeleted: boolean;
-        createdBy: string;
         Course_Name: string;
         Course_Code: string;
         Course_Description: string | null;
-        departmentId: string;
+        createdBy: string;
     }>;
     restoreVoter(voterId: string): Promise<{
         id: string;
-        password: string | null;
+        departmentId: string | null;
+        courseId: string | null;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
         isDeleted: boolean;
-        departmentId: string | null;
-        courseId: string | null;
+        password: string | null;
         Voter_Name: string;
         Voter_Email: string;
         Voter_StudentId: string;
@@ -455,18 +455,18 @@ export declare class TrashService {
     }>;
     permanentlyDeleteCandidate(candidateId: string): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        deletedAt: Date | null;
-        isDeleted: boolean;
-        departmentId: string | null;
         Candidate_Name: string;
         Candidate_Email: string;
         Candidate_StudentId: string;
         photo: string | null;
         manifesto: string | null;
         positionId: string;
+        departmentId: string | null;
         courseId: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        deletedAt: Date | null;
+        isDeleted: boolean;
         partyListId: string | null;
         party_list_name: string | null;
     }>;
@@ -485,33 +485,33 @@ export declare class TrashService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        Department_Name: string;
-        Department_Description: string | null;
         deletedAt: Date | null;
         isDeleted: boolean;
         createdBy: string;
+        Department_Name: string;
+        Department_Description: string | null;
     }>;
     permanentlyDeleteCourse(courseId: string): Promise<{
         id: string;
+        departmentId: string;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
         isDeleted: boolean;
-        createdBy: string;
         Course_Name: string;
         Course_Code: string;
         Course_Description: string | null;
-        departmentId: string;
+        createdBy: string;
     }>;
     permanentlyDeleteVoter(voterId: string): Promise<{
         id: string;
-        password: string | null;
+        departmentId: string | null;
+        courseId: string | null;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
         isDeleted: boolean;
-        departmentId: string | null;
-        courseId: string | null;
+        password: string | null;
         Voter_Name: string;
         Voter_Email: string;
         Voter_StudentId: string;

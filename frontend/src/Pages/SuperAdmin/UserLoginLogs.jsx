@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getUserLoginLogs, getUserLoginStats, getVoters } from '../../services/api';
-import { checkCurrentUser, isSuperAdmin } from '../../services/auth';
+import { getUserLoginLogs, getUserLoginStats, getVoters, cleanupLoginLogs, cleanupAllLogs } from '../../services/api';
+import { checkCurrentUser, isSuperAdmin, isAdmin } from '../../services/auth';
 import './UserLoginLogs.css';
 
 const UserLoginLogs = () => {
@@ -19,6 +19,8 @@ const UserLoginLogs = () => {
   const [selectedCourse, setSelectedCourse] = useState('');
   const [showDetails, setShowDetails] = useState(null);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [isClearing, setIsClearing] = useState(false);
+  const [clearMessage, setClearMessage] = useState('');
   const navigate = useNavigate();
 
   const itemsPerPage = 20;
@@ -26,7 +28,7 @@ const UserLoginLogs = () => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        // Check if user is superadmin
+        // Check if user is authenticated
         const currentUser = await checkCurrentUser();
         
         if (!currentUser.isAuthenticated) {
@@ -35,10 +37,12 @@ const UserLoginLogs = () => {
           return;
         }
         
+        // Check if user is either SuperAdmin or Admin
         const superAdminCheck = await isSuperAdmin();
+        const adminCheck = await isAdmin();
         
-        if (!superAdminCheck) {
-          setAuthError('Access denied. Superadmin privileges required.');
+        if (!superAdminCheck && !adminCheck) {
+          setAuthError('Access denied. Admin or Superadmin privileges required.');
           setLoading(false);
           return;
         }
@@ -207,6 +211,74 @@ const UserLoginLogs = () => {
     setShowDetails(showDetails === logId ? null : logId);
   };
 
+  const handleClearLogs = async () => {
+    if (!window.confirm('Are you sure you want to clear all user login logs? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      setIsClearing(true);
+      setClearMessage('');
+      
+      const result = await cleanupLoginLogs();
+      
+      setClearMessage(`✅ Successfully cleared user login logs: ${result.message}`);
+      
+      // Refresh the data after clearing
+      await fetchData();
+      
+      // Clear the success message after 5 seconds
+      setTimeout(() => {
+        setClearMessage('');
+      }, 5000);
+      
+    } catch (error) {
+      console.error('Error clearing logs:', error);
+      setClearMessage('❌ Failed to clear logs. Please try again.');
+      
+      // Clear the error message after 5 seconds
+      setTimeout(() => {
+        setClearMessage('');
+      }, 5000);
+    } finally {
+      setIsClearing(false);
+    }
+  };
+
+  const handleClearAllLogs = async () => {
+    if (!window.confirm('Are you sure you want to clear ALL logs (Admin, User, and Audit logs)? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      setIsClearing(true);
+      setClearMessage('');
+      
+      const result = await cleanupAllLogs();
+      
+      setClearMessage(`✅ Successfully cleared all logs: ${result.message}`);
+      
+      // Refresh the data after clearing
+      await fetchData();
+      
+      // Clear the success message after 5 seconds
+      setTimeout(() => {
+        setClearMessage('');
+      }, 5000);
+      
+    } catch (error) {
+      console.error('Error clearing all logs:', error);
+      setClearMessage('❌ Failed to clear all logs. Please try again.');
+      
+      // Clear the error message after 5 seconds
+      setTimeout(() => {
+        setClearMessage('');
+      }, 5000);
+    } finally {
+      setIsClearing(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="d-flex justify-content-center align-items-center" style={{ height: '50vh' }}>
@@ -244,18 +316,42 @@ const UserLoginLogs = () => {
           </div>
           <div className="dashboard-header-actions">
             <button 
-              className="btn btn-outline-secondary" 
+              className="btn btn-outline-secondary me-2" 
               onClick={fetchData}
               disabled={loading}
             >
               <i className="fas fa-sync-alt me-1"></i>
               Refresh
             </button>
+            <button 
+              className="btn btn-outline-danger me-2" 
+              onClick={handleClearLogs}
+              disabled={isClearing || loading}
+              title="Clear User Login Logs"
+            >
+              <i className="fas fa-trash-alt me-1"></i>
+              {isClearing ? 'Clearing...' : 'Clear User Logs'}
+            </button>
+            <button 
+              className="btn btn-outline-warning" 
+              onClick={handleClearAllLogs}
+              disabled={isClearing || loading}
+              title="Clear All Logs (Admin, User, Audit)"
+            >
+              <i className="fas fa-broom me-1"></i>
+              {isClearing ? 'Clearing...' : 'Clear All Logs'}
+            </button>
           </div>
         </div>
       </div>
 
       {error && <div className="alert alert-danger">{error}</div>}
+      
+      {clearMessage && (
+        <div className={`alert ${clearMessage.includes('✅') ? 'alert-success' : 'alert-danger'}`}>
+          {clearMessage}
+        </div>
+      )}
 
       {/* Stats Cards */}
       <div className="row mb-4">

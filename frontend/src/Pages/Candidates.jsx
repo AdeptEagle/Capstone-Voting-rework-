@@ -199,6 +199,17 @@ const Candidates = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     
+    // Special handling for Candidate_Name to only allow letters and spaces
+    if (name === 'Candidate_Name') {
+      // Remove numbers and special characters, keep only letters and spaces
+      const lettersOnly = value.replace(/[^a-zA-Z\s]/g, '');
+      setFormData(prev => ({
+        ...prev,
+        [name]: lettersOnly
+      }));
+      return;
+    }
+    
     if (name === 'departmentId') {
       // Reset courseId when department changes
       setFormData(prev => ({
@@ -450,17 +461,32 @@ const Candidates = () => {
   };
 
   const handleDeletePartyList = async (partyList) => {
+    setError(''); // Clear any previous errors
+    setSuccessMessage(''); // Clear any previous success messages
+
+    // Check if party list has candidates
+    const hasCandidates = candidates.some(candidate => candidate.partyList?.id === partyList.id);
+
+    if (hasCandidates) {
+      const errorMessage = `Cannot delete "${partyList.name}" because it has ${candidates.filter(c => c.partyList?.id === partyList.id).length} candidate(s). Please remove all candidates from this party list first.`;
+      setError(errorMessage);
+      setTimeout(() => setError(''), 5000); // Clear error after 5 seconds
+      return; // Stop execution here
+    }
+
+    // If no candidates, proceed with a confirmation for actual deletion
     if (window.confirm(`Are you sure you want to delete the party list "${partyList.name}"? This action cannot be undone.`)) {
       try {
         await deletePartyList(partyList.id);
         setSuccessMessage(`Party list "${partyList.name}" deleted successfully!`);
         await fetchData();
-        
-        // Clear success message after 5 seconds
+
         setTimeout(() => setSuccessMessage(''), 5000);
       } catch (error) {
         console.error('Error deleting party list:', error);
-        setError('Failed to delete party list');
+        const errorMessage = error.response?.data?.message || error.message || 'Failed to delete party list. Please try again.';
+        setError(errorMessage);
+        setTimeout(() => setError(''), 5000);
       }
     }
   };
@@ -474,8 +500,8 @@ const Candidates = () => {
       return (
         candidate.Candidate_Name?.toLowerCase().includes(term) ||
         candidate.position?.Position_Title?.toLowerCase().includes(term) ||
-        candidate.department?.Department_Name?.toLowerCase().includes(term) ||
-        candidate.course?.Course_Name?.toLowerCase().includes(term)
+        candidate.department?.id?.toLowerCase().includes(term) ||
+        candidate.course?.Course_Code?.toLowerCase().includes(term)
       );
     })
     .sort((a, b) => {
@@ -495,6 +521,15 @@ const Candidates = () => {
   const groupCandidatesByPartyList = (candidates) => {
     const grouped = {};
     
+    // First, initialize all party lists (even empty ones)
+    partyLists.forEach(partyList => {
+      grouped[partyList.name] = {
+        partyList: partyList,
+        candidates: []
+      };
+    });
+    
+    // Then add candidates to their respective party lists
     candidates.forEach(candidate => {
       const partyListName = candidate.partyList?.name || 'Independent';
       if (!grouped[partyListName]) {
@@ -935,6 +970,13 @@ const Candidates = () => {
                 >
                   <i className="fas fa-edit"></i>
                 </button>
+                <button
+                  className="btn btn-sm btn-outline-danger party-list-delete-btn"
+                  onClick={() => handleDeletePartyList(group.partyList)}
+                  title="Delete Party List"
+                >
+                  <i className="fas fa-trash"></i>
+                </button>
               </div>
             </div>
             
@@ -947,8 +989,8 @@ const Candidates = () => {
                     <th style={{ width: '80px' }}>Photo</th>
                     <th style={{ width: '200px' }}>Name</th>
                     <th style={{ width: '180px' }}>Position</th>
-                    <th style={{ width: '200px' }}>Department</th>
-                    <th style={{ width: '200px' }}>Course</th>
+                    <th style={{ width: '120px' }}>Dept Code</th>
+                    <th style={{ width: '120px' }}>Course Code</th>
                     <th style={{ width: '120px', textAlign: 'center' }}>
                       <i className="fas fa-cogs me-1"></i>
                       Actions
@@ -956,7 +998,8 @@ const Candidates = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {group.candidates.map((candidate, candidateIndex) => (
+                  {group.candidates.length > 0 ? (
+                    group.candidates.map((candidate, candidateIndex) => (
                     <tr key={candidate.id} className="candidate-row">
                       <td>{candidateIndex + 1}</td>
                       <td>
@@ -980,8 +1023,20 @@ const Candidates = () => {
                       </td>
                       <td>{candidate.Candidate_Name}</td>
                       <td>{candidate.position?.Position_Title || '-'}</td>
-                      <td>{candidate.department?.Department_Name || '-'}</td>
-                      <td>{candidate.course?.Course_Name || '-'}</td>
+                      <td>
+                        {candidate.department?.id ? (
+                          <span className="badge bg-primary">{candidate.department.id}</span>
+                        ) : (
+                          <span className="text-muted">-</span>
+                        )}
+                      </td>
+                      <td>
+                        {candidate.course?.Course_Code ? (
+                          <span className="badge bg-secondary">{candidate.course.Course_Code}</span>
+                        ) : (
+                          <span className="text-muted">-</span>
+                        )}
+                      </td>
                       <td>
                         <div className="candidate-actions">
                           <button 
@@ -1008,7 +1063,17 @@ const Candidates = () => {
                         </div>
                       </td>
                     </tr>
-                  ))}
+                  ))
+                  ) : (
+                    <tr>
+                      <td colSpan="7" className="text-center text-muted py-4">
+                        <i className="fas fa-users fa-2x mb-2 d-block"></i>
+                        No candidates in this party list yet
+                        <br />
+                        <small>Add candidates to this party list to see them here</small>
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>

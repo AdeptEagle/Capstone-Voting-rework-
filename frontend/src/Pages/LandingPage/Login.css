@@ -148,6 +148,24 @@
   height: 20px;
 }
 
+.password-toggle-btn {
+  background-color: transparent !important;
+  border: none !important;
+  cursor: pointer !important;
+  color: #6c757d !important;
+  transition: color 0.3s ease !important;
+  padding: 0.75rem !important;
+}
+
+.password-toggle-btn:hover {
+  color: #6B73FF !important;
+}
+
+.password-toggle-btn:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
 .form-control {
   border: none;
   padding: 0.75rem;
@@ -277,6 +295,73 @@
   .col-lg-4 {
     flex: 0 0 50%;
     max-width: 50%;
+  }
+}
+
+/* 1080p Monitor Optimizations (1920x1080 and smaller) */
+@media (max-width: 1920px) {
+  .login-container {
+    width: 450px !important;
+    height: auto !important;
+  }
+  
+  .login-card-body {
+    padding: 1.5rem 2rem !important;
+  }
+  
+  .login-title {
+    font-size: 1.25rem !important;
+  }
+  
+  .login-subtitle {
+    font-size: 0.9rem !important;
+  }
+  
+  /* Further optimizations for smaller 1080p monitors */
+  .login-container {
+    width: 400px !important;
+  }
+  
+  .login-card-body {
+    padding: 1.25rem 1.5rem !important;
+  }
+  
+  .login-title {
+    font-size: 1.1rem !important;
+  }
+  
+  .login-subtitle {
+    font-size: 0.85rem !important;
+  }
+  
+  .login-logo {
+    height: 48px !important;
+    width: 48px !important;
+  }
+}
+
+/* Large Monitor Optimizations (larger than 1920px) */
+@media (min-width: 1921px) {
+  .login-container {
+    width: 508.2px;
+    height: 647.6px;
+  }
+  
+  .login-card-body {
+    padding: 2rem 3rem;
+  }
+  
+  .login-title {
+    font-size: 1.5rem;
+  }
+  
+  .login-subtitle {
+    font-size: 1rem;
+  }
+  
+  .login-logo {
+    height: 64px;
+    width: 64px;
   }
 }
 

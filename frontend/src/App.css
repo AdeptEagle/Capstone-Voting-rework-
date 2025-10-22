@@ -81,6 +81,143 @@ main {
   width: 100%;
   background-color: var(--background-off-white);
 }
+
+/* 1080p Monitor Optimizations (1920x1080 and smaller) */
+@media (max-width: 1920px) {
+  #sidebar {
+    width: 180px;
+  }
+  
+  #content {
+    margin-left: 180px;
+    padding: 1.5rem 1.5rem 3rem;
+  }
+  
+  /* Reduce padding for better space utilization */
+  .hero-section {
+    padding: 3rem 1rem !important;
+    margin-top: 1rem !important;
+    margin-bottom: 2rem !important;
+  }
+  
+  .hero-section h1 {
+    font-size: 2rem !important;
+  }
+  
+  .hero-section .lead {
+    font-size: 1.1rem !important;
+  }
+  
+  /* Adjust section titles */
+  .section-title {
+    font-size: 1.5rem !important;
+    margin-bottom: 1.5rem !important;
+  }
+  
+  /* Reduce card padding */
+  .announcement-card {
+    padding: 1rem !important;
+    margin-bottom: 1rem !important;
+  }
+  
+  /* Adjust feature cards */
+  .feature-card {
+    padding: 1rem !important;
+  }
+  
+  /* Reduce button padding */
+  .btn-custom-blue,
+  .btn-custom-orange {
+    padding: 0.6rem 1.2rem !important;
+  }
+  
+  /* Further reduce spacing for smaller 1080p monitors */
+  #sidebar {
+    width: 160px;
+    padding: 1rem 0.75rem;
+  }
+  
+  #content {
+    margin-left: 160px;
+    padding: 1rem 1rem 2rem;
+  }
+  
+  /* Further reduce spacing */
+  .hero-section {
+    padding: 2rem 1rem !important;
+  }
+  
+  .hero-section h1 {
+    font-size: 1.75rem !important;
+  }
+  
+  .section-title {
+    font-size: 1.25rem !important;
+  }
+  
+  /* Adjust table spacing */
+  .table th,
+  .table td {
+    padding: 0.5rem !important;
+  }
+  
+  /* Reduce form control padding */
+  .form-control {
+    padding: 0.6rem !important;
+  }
+  
+  /* Adjust modal padding */
+  .modal-content {
+    padding: 1rem !important;
+  }
+}
+
+/* Large Monitor Optimizations (larger than 1920px) */
+@media (min-width: 1921px) {
+  #sidebar {
+    width: 220px;
+  }
+  
+  #content {
+    margin-left: 220px;
+    padding: 2rem 2rem 4rem;
+  }
+  
+  /* Keep original larger spacing for high-resolution monitors */
+  .hero-section {
+    padding: 4rem 1.5rem;
+    margin-top: 2rem;
+    margin-bottom: 3rem;
+  }
+  
+  .hero-section h1 {
+    font-size: 2.5rem;
+  }
+  
+  .hero-section .lead {
+    font-size: 1.25rem;
+  }
+  
+  .section-title {
+    font-size: 1.75rem;
+    margin-bottom: 2rem;
+  }
+  
+  .announcement-card {
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .feature-card {
+    padding: 1.5rem;
+  }
+  
+  .btn-custom-blue,
+  .btn-custom-orange {
+    padding: 0.75rem 1.5rem;
+  }
+}
+
 @media (max-width: 768px) {
   #sidebar {
     transform: translateX(-100%);

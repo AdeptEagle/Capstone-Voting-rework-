@@ -12,6 +12,7 @@ const Login = () => {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   // WebSocket connection setup - REMOVED to prevent conflicts
@@ -26,6 +27,10 @@ const Login = () => {
       ...formData,
       [name]: value
     });
+  };
+
+  const togglePassword = () => {
+    setShowPassword(!showPassword);
   };
 
   const handleSubmit = async (e) => {
@@ -153,13 +158,21 @@ const Login = () => {
                     <input 
                       id="password" 
                       name="password" 
-                      type="password" 
+                      type={showPassword ? "text" : "password"} 
                       className="form-control" 
                       placeholder="Enter your password"
                       value={formData.password}
                       onChange={handleChange}
                       required 
                     />
+                    <button
+                      type="button"
+                      className="input-group-text password-toggle-btn"
+                      onClick={togglePassword}
+                      tabIndex="-1"
+                    >
+                      <i className={`fas ${showPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i>
+                    </button>
                   </div>
                 </div>
 

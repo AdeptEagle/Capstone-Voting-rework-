@@ -154,9 +154,9 @@ export class AdminController {
   }
 
   @Get('user-login-logs')
-  @ApiOperation({ summary: 'Get user login logs (Super Admin only)' })
+  @ApiOperation({ summary: 'Get user login logs (Admin and Super Admin)' })
   @ApiResponse({ status: 200, description: 'User login logs retrieved' })
-  @ApiResponse({ status: 403, description: 'Access denied - Super Admin required' })
+  @ApiResponse({ status: 403, description: 'Access denied - Admin or Super Admin required' })
   async getUserLoginLogs(
     @Request() req,
     @Query('page') page: string = '1',
@@ -165,9 +165,9 @@ export class AdminController {
     @Query('department') department?: string,
     @Query('course') course?: string
   ) {
-    // Only Super Admin can view user login logs
-    if (req.user.role !== 'SUPERADMIN') {
-      throw new ForbiddenException('Access denied - Super Admin required');
+    // Admin and Super Admin can view user login logs
+    if (req.user.role !== 'SUPERADMIN' && req.user.role !== 'ADMIN') {
+      throw new ForbiddenException('Access denied - Admin or Super Admin required');
     }
     
     return this.adminService.getUserLoginLogs(
@@ -180,26 +180,26 @@ export class AdminController {
   }
 
   @Get('user-login-logs/stats')
-  @ApiOperation({ summary: 'Get user login statistics (Super Admin only)' })
+  @ApiOperation({ summary: 'Get user login statistics (Admin and Super Admin)' })
   @ApiResponse({ status: 200, description: 'User login statistics retrieved' })
-  @ApiResponse({ status: 403, description: 'Access denied - Super Admin required' })
+  @ApiResponse({ status: 403, description: 'Access denied - Admin or Super Admin required' })
   async getUserLoginStats(@Request() req) {
-    // Only Super Admin can view user login statistics
-    if (req.user.role !== 'SUPERADMIN') {
-      throw new ForbiddenException('Access denied - Super Admin required');
+    // Admin and Super Admin can view user login statistics
+    if (req.user.role !== 'SUPERADMIN' && req.user.role !== 'ADMIN') {
+      throw new ForbiddenException('Access denied - Admin or Super Admin required');
     }
     return this.adminService.getUserLoginStats();
   }
 
   @Get('user-login-logs/:id')
-  @ApiOperation({ summary: 'Get specific user login log (Super Admin only)' })
+  @ApiOperation({ summary: 'Get specific user login log (Admin and Super Admin)' })
   @ApiResponse({ status: 200, description: 'User login log retrieved' })
   @ApiResponse({ status: 404, description: 'Login log not found' })
-  @ApiResponse({ status: 403, description: 'Access denied - Super Admin required' })
+  @ApiResponse({ status: 403, description: 'Access denied - Admin or Super Admin required' })
   async getUserLoginLogById(@Param('id') id: string, @Request() req) {
-    // Only Super Admin can view specific user login logs
-    if (req.user.role !== 'SUPERADMIN') {
-      throw new ForbiddenException('Access denied - Super Admin required');
+    // Admin and Super Admin can view specific user login logs
+    if (req.user.role !== 'SUPERADMIN' && req.user.role !== 'ADMIN') {
+      throw new ForbiddenException('Access denied - Admin or Super Admin required');
     }
     return this.adminService.getUserLoginLogById(id);
   }

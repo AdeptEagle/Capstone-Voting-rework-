@@ -83,20 +83,20 @@ let AdminController = class AdminController {
         return this.adminService.getAdminLoginLogById(id);
     }
     async getUserLoginLogs(req, page = '1', limit = '50', search, department, course) {
-        if (req.user.role !== 'SUPERADMIN') {
-            throw new common_1.ForbiddenException('Access denied - Super Admin required');
+        if (req.user.role !== 'SUPERADMIN' && req.user.role !== 'ADMIN') {
+            throw new common_1.ForbiddenException('Access denied - Admin or Super Admin required');
         }
         return this.adminService.getUserLoginLogs(parseInt(page), parseInt(limit), search, department, course);
     }
     async getUserLoginStats(req) {
-        if (req.user.role !== 'SUPERADMIN') {
-            throw new common_1.ForbiddenException('Access denied - Super Admin required');
+        if (req.user.role !== 'SUPERADMIN' && req.user.role !== 'ADMIN') {
+            throw new common_1.ForbiddenException('Access denied - Admin or Super Admin required');
         }
         return this.adminService.getUserLoginStats();
     }
     async getUserLoginLogById(id, req) {
-        if (req.user.role !== 'SUPERADMIN') {
-            throw new common_1.ForbiddenException('Access denied - Super Admin required');
+        if (req.user.role !== 'SUPERADMIN' && req.user.role !== 'ADMIN') {
+            throw new common_1.ForbiddenException('Access denied - Admin or Super Admin required');
         }
         return this.adminService.getUserLoginLogById(id);
     }
@@ -244,9 +244,9 @@ __decorate([
 ], AdminController.prototype, "getAdminLoginLogById", null);
 __decorate([
     (0, common_1.Get)('user-login-logs'),
-    (0, swagger_1.ApiOperation)({ summary: 'Get user login logs (Super Admin only)' }),
+    (0, swagger_1.ApiOperation)({ summary: 'Get user login logs (Admin and Super Admin)' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'User login logs retrieved' }),
-    (0, swagger_1.ApiResponse)({ status: 403, description: 'Access denied - Super Admin required' }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Access denied - Admin or Super Admin required' }),
     __param(0, (0, common_1.Request)()),
     __param(1, (0, common_1.Query)('page')),
     __param(2, (0, common_1.Query)('limit')),
@@ -259,9 +259,9 @@ __decorate([
 ], AdminController.prototype, "getUserLoginLogs", null);
 __decorate([
     (0, common_1.Get)('user-login-logs/stats'),
-    (0, swagger_1.ApiOperation)({ summary: 'Get user login statistics (Super Admin only)' }),
+    (0, swagger_1.ApiOperation)({ summary: 'Get user login statistics (Admin and Super Admin)' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'User login statistics retrieved' }),
-    (0, swagger_1.ApiResponse)({ status: 403, description: 'Access denied - Super Admin required' }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Access denied - Admin or Super Admin required' }),
     __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -269,10 +269,10 @@ __decorate([
 ], AdminController.prototype, "getUserLoginStats", null);
 __decorate([
     (0, common_1.Get)('user-login-logs/:id'),
-    (0, swagger_1.ApiOperation)({ summary: 'Get specific user login log (Super Admin only)' }),
+    (0, swagger_1.ApiOperation)({ summary: 'Get specific user login log (Admin and Super Admin)' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'User login log retrieved' }),
     (0, swagger_1.ApiResponse)({ status: 404, description: 'Login log not found' }),
-    (0, swagger_1.ApiResponse)({ status: 403, description: 'Access denied - Super Admin required' }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Access denied - Admin or Super Admin required' }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),

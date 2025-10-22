@@ -858,7 +858,7 @@ export const getAdminLoginLogById = async (id) => {
 
 export const adminLogout = async () => {
   try {
-    const response = await api.post('/auth/admin/logout');
+    const response = await api.post('/auth/logout');
     return response.data;
   } catch (error) {
     console.error('Error during admin logout:', error);
@@ -916,7 +916,7 @@ export const getUserLoginLogById = async (id) => {
 
 export const userLogout = async () => {
   try {
-    const response = await api.post('/auth/user/logout');
+    const response = await api.post('/auth/logout');
     return response.data;
   } catch (error) {
     console.error('Error during user logout:', error);
@@ -1567,6 +1567,57 @@ export const getSummaryAnalytics = async (ballotId = 'all', timeRange = 'all') =
     return response.data;
   } catch (error) {
     console.error('Error fetching summary analytics:', error);
+    throw error;
+  }
+};
+
+// Maintenance API functions
+export const cleanupLoginLogs = async () => {
+  try {
+    const response = await api.post('/maintenance/cleanup/login-logs');
+    return response.data;
+  } catch (error) {
+    console.error('Error cleaning up login logs:', error);
+    throw error;
+  }
+};
+
+export const cleanupAuditLogs = async () => {
+  try {
+    const response = await api.post('/maintenance/cleanup/audit-logs');
+    return response.data;
+  } catch (error) {
+    console.error('Error cleaning up audit logs:', error);
+    throw error;
+  }
+};
+
+export const cleanupSessions = async () => {
+  try {
+    const response = await api.post('/maintenance/cleanup/sessions');
+    return response.data;
+  } catch (error) {
+    console.error('Error cleaning up sessions:', error);
+    throw error;
+  }
+};
+
+export const cleanupAdminSessions = async () => {
+  try {
+    const response = await api.post('/maintenance/cleanup/admin-sessions');
+    return response.data;
+  } catch (error) {
+    console.error('Error cleaning up admin sessions:', error);
+    throw error;
+  }
+};
+
+export const cleanupAllLogs = async () => {
+  try {
+    const response = await api.post('/maintenance/cleanup/all');
+    return response.data;
+  } catch (error) {
+    console.error('Error cleaning up all logs:', error);
     throw error;
   }
 };

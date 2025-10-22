@@ -7,6 +7,83 @@
   z-index: 1;
 }
 
+/* 1080p Monitor Optimizations (1920x1080 and smaller) */
+@media (max-width: 1920px) {
+  .admin-dashboard {
+    padding: 0 0 1rem 0 !important;
+  }
+  
+  .dashboard-title-pro {
+    font-size: 2rem !important;
+  }
+  
+  .dashboard-subtitle-pro {
+    font-size: 1rem !important;
+  }
+  
+  .dashboard-header-pro {
+    padding: 1.5rem 1.5rem 1.5rem 1.5rem !important;
+  }
+  
+  .stat-card {
+    padding: 1rem !important;
+  }
+  
+  /* Further optimizations for smaller 1080p monitors */
+  .admin-dashboard {
+    padding: 0 !important;
+  }
+  
+  .dashboard-title-pro {
+    font-size: 1.75rem !important;
+  }
+  
+  .dashboard-subtitle-pro {
+    font-size: 0.9rem !important;
+  }
+  
+  .dashboard-header-pro {
+    padding: 1rem 1rem 1rem 1rem !important;
+  }
+  
+  .stat-card {
+    padding: 0.75rem !important;
+  }
+  
+  .stat-icon {
+    width: 50px !important;
+    height: 50px !important;
+  }
+}
+
+/* Large Monitor Optimizations (larger than 1920px) */
+@media (min-width: 1921px) {
+  .admin-dashboard {
+    padding: 0 0 2rem 0;
+  }
+  
+  .dashboard-title-pro {
+    font-size: 2.5rem;
+  }
+  
+  .dashboard-subtitle-pro {
+    font-size: 1.1rem;
+  }
+  
+  .dashboard-header-pro {
+    padding: 2.5rem 2rem 2rem 2rem;
+  }
+  
+  .stat-card {
+    padding: 1.5rem;
+  }
+  
+  .stat-icon {
+    width: 70px;
+    height: 70px;
+  }
+}
+
 /* Force flat background on dashboard header - Maximum specificity */
 .admin-dashboard .dashboard-header-pro,
 .admin-dashboard div.dashboard-header-pro,

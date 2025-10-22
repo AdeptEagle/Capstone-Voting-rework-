@@ -335,6 +335,13 @@ function App() {
                 </AdminLayout>
               </AdminRoute>
             } />
+            <Route path="/admin/user-login-logs" element={
+              <AdminRoute>
+                <AdminLayout>
+                  <UserLoginLogs />
+                </AdminLayout>
+              </AdminRoute>
+            } />
 
             {/* User Routes (User only) */}
             <Route path="/user/dashboard" element={

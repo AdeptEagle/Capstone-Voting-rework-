@@ -152,19 +152,14 @@ const Voters = () => {
         let bValue = b[sortConfig.key];
 
         // Handle nested properties
-        if (sortConfig.key === 'departmentName') {
-          aValue = a.departmentName || '';
-          bValue = b.departmentName || '';
-        } else if (sortConfig.key === 'courseName') {
-          aValue = a.courseName || '';
-          bValue = b.courseName || '';
+        if (sortConfig.key === 'departmentCode') {
+          aValue = a.departmentCode || '';
+          bValue = b.departmentCode || '';
+        } else if (sortConfig.key === 'courseCode') {
+          aValue = a.courseCode || '';
+          bValue = b.courseCode || '';
         }
 
-        // Handle boolean values
-        if (sortConfig.key === 'hasVoted') {
-          aValue = a.hasVoted ? 1 : 0;
-          bValue = b.hasVoted ? 1 : 0;
-        }
 
         if (aValue < bValue) {
           return sortConfig.direction === 'asc' ? -1 : 1;
@@ -229,7 +224,9 @@ const Voters = () => {
         email: voter.Voter_Email,
         studentId: voter.Voter_StudentId,
         departmentName: voter.department?.Department_Name || null,
+        departmentCode: voter.department?.id || null,
         courseName: voter.course?.Course_Name || null,
+        courseCode: voter.course?.Course_Code || null,
         courseId: voter.course?.id || null
       }));
       
@@ -297,6 +294,36 @@ const Voters = () => {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
+    
+    // Special handling for Voter_Name to only allow letters and spaces
+    if (name === 'Voter_Name') {
+      // Remove numbers and special characters, keep only letters and spaces
+      const lettersOnly = value.replace(/[^a-zA-Z\s]/g, '');
+      setFormData(prev => ({
+        ...prev,
+        [name]: lettersOnly
+      }));
+      return;
+    }
+    
+    // Special handling for Voter_StudentId to only allow numbers and auto-format
+    if (name === 'Voter_StudentId') {
+      // Remove all non-numeric characters
+      const numbersOnly = value.replace(/[^0-9]/g, '');
+      
+      // Auto-format: add dash after 4 digits
+      let formattedValue = numbersOnly;
+      if (numbersOnly.length > 4) {
+        formattedValue = numbersOnly.substring(0, 4) + '-' + numbersOnly.substring(4, 9);
+      }
+      
+      setFormData(prev => ({
+        ...prev,
+        [name]: formattedValue
+      }));
+      return;
+    }
+    
     setFormData(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value
@@ -323,6 +350,11 @@ const Voters = () => {
     setError('');
     
     // Validate required fields
+    if (!formData.Voter_Name.trim()) {
+      setError('Please enter a valid name (letters only)');
+      return;
+    }
+    
     if (!formData.departmentId) {
       setError('Please select a department');
       return;
@@ -543,24 +575,17 @@ const Voters = () => {
                   </th>
                   <th 
                     style={{ cursor: 'pointer' }}
-                    onClick={() => handleSort('departmentName')}
+                    onClick={() => handleSort('departmentCode')}
                     className="sortable-header"
                   >
-                    Department {getSortIcon('departmentName')}
+                    Dept Code {getSortIcon('departmentCode')}
                   </th>
                   <th 
                     style={{ cursor: 'pointer' }}
-                    onClick={() => handleSort('courseName')}
+                    onClick={() => handleSort('courseCode')}
                     className="sortable-header"
                   >
-                    Course {getSortIcon('courseName')}
-                  </th>
-                  <th 
-                    style={{ cursor: 'pointer' }}
-                    onClick={() => handleSort('hasVoted')}
-                    className="sortable-header"
-                  >
-                    Voting Status {getSortIcon('hasVoted')}
+                    Course Code {getSortIcon('courseCode')}
                   </th>
                   <th>Actions</th>
                 </tr>
@@ -574,28 +599,17 @@ const Voters = () => {
                       <td>{voter.email}</td>
                       <td>{voter.studentId}</td>
                       <td>
-                        {voter.departmentName ? (
-                          <span className="badge bg-primary">
-                            {voter.departmentName}
-                          </span>
+                        {voter.departmentCode ? (
+                          <span className="badge bg-primary">{voter.departmentCode}</span>
                         ) : (
-                          <span className="text-muted">No department</span>
+                          <span className="text-muted">No dept</span>
                         )}
                       </td>
                       <td>
-                        {voter.courseName ? (
-                          <span className="badge bg-info">
-                            <strong>{voter.courseId}</strong> - {voter.courseName}
-                          </span>
+                        {voter.courseCode ? (
+                          <span className="badge bg-secondary">{voter.courseCode}</span>
                         ) : (
                           <span className="text-muted">No course</span>
-                        )}
-                      </td>
-                      <td>
-                        {voter.hasVoted ? (
-                          <span className="badge bg-success">Voted</span>
-                        ) : (
-                          <span className="badge bg-warning text-dark">Not Voted</span>
                         )}
                       </td>
                       <td>
@@ -670,6 +684,7 @@ const Voters = () => {
                       value={formData.Voter_Name}
                       onChange={handleChange}
                       required
+                      placeholder="Enter full name"
                     />
                   </div>
                   
@@ -693,6 +708,7 @@ const Voters = () => {
                       name="Voter_StudentId"
                       value={formData.Voter_StudentId}
                       onChange={handleChange}
+                      maxLength="10"
                       required
                     />
                   </div>

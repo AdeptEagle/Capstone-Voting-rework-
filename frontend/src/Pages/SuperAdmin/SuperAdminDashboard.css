@@ -5,6 +5,71 @@
   min-height: 100vh;
 }
 
+/* 1080p Monitor Optimizations (1920x1080 and smaller) */
+@media (max-width: 1920px) {
+  .dashboard-title-pro {
+    font-size: 2rem !important;
+  }
+  
+  .dashboard-subtitle-pro {
+    font-size: 1rem !important;
+  }
+  
+  .dashboard-header-pro {
+    padding: 1.5rem 1.5rem 1.5rem 1.5rem !important;
+  }
+  
+  .stat-card {
+    padding: 1rem !important;
+  }
+  
+  /* Further optimizations for smaller 1080p monitors */
+  .dashboard-title-pro {
+    font-size: 1.75rem !important;
+  }
+  
+  .dashboard-subtitle-pro {
+    font-size: 0.9rem !important;
+  }
+  
+  .dashboard-header-pro {
+    padding: 1rem 1rem 1rem 1rem !important;
+  }
+  
+  .stat-card {
+    padding: 0.75rem !important;
+  }
+  
+  .stat-icon {
+    width: 50px !important;
+    height: 50px !important;
+  }
+}
+
+/* Large Monitor Optimizations (larger than 1920px) */
+@media (min-width: 1921px) {
+  .dashboard-title-pro {
+    font-size: 2.5rem;
+  }
+  
+  .dashboard-subtitle-pro {
+    font-size: 1.1rem;
+  }
+  
+  .dashboard-header-pro {
+    padding: 2rem 2rem 2rem 2rem;
+  }
+  
+  .stat-card {
+    padding: 1.5rem;
+  }
+  
+  .stat-icon {
+    width: 70px;
+    height: 70px;
+  }
+}
+
 /* Force flat background on dashboard header - Maximum specificity */
 .superadmin-dashboard .dashboard-header-pro,
 .superadmin-dashboard div.dashboard-header-pro,

@@ -52,6 +52,36 @@ const Register = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    
+    // Special handling for Voter_Name to only allow letters and spaces
+    if (name === 'Voter_Name') {
+      // Remove numbers and special characters, keep only letters and spaces
+      const lettersOnly = value.replace(/[^a-zA-Z\s]/g, '');
+      setFormData(prev => ({
+        ...prev,
+        [name]: lettersOnly
+      }));
+      return;
+    }
+    
+    // Special handling for Voter_StudentId to only allow numbers and auto-format
+    if (name === 'Voter_StudentId') {
+      // Remove all non-numeric characters
+      const numbersOnly = value.replace(/[^0-9]/g, '');
+      
+      // Auto-format: add dash after 4 digits
+      let formattedValue = numbersOnly;
+      if (numbersOnly.length > 4) {
+        formattedValue = numbersOnly.substring(0, 4) + '-' + numbersOnly.substring(4, 9);
+      }
+      
+      setFormData(prev => ({
+        ...prev,
+        [name]: formattedValue
+      }));
+      return;
+    }
+    
     setFormData({
       ...formData,
       [name]: value
@@ -101,6 +131,12 @@ const Register = () => {
     setSuccess('');
 
     // Validation
+    if (!formData.Voter_Name.trim()) {
+      setError('Please enter a valid name (letters only)');
+      setLoading(false);
+      return;
+    }
+    
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
       setLoading(false);
@@ -260,6 +296,7 @@ const Register = () => {
                       placeholder="YYYY-NNNNN (e.g., 2022-00222)"
                       value={formData.Voter_StudentId}
                       onChange={handleChange}
+                      maxLength="10"
                       required 
                     />
                   </div>

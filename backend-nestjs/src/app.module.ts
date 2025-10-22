@@ -22,7 +22,9 @@ import { TimezoneService } from './services/timezone.service';
 import { TemplateInitializationService } from './services/template-initialization.service';
 import { PositionInitializationService } from './services/position-initialization.service';
 import { DepartmentCourseInitializationService } from './services/department-course-initialization.service';
+import { LogCleanupConfigService } from './services/log-cleanup-config.service';
 import { TimezoneController } from './controllers/timezone.controller';
+import { MaintenanceController } from './controllers/maintenance.controller';
 import { WebsocketModule } from './websocket/websocket.module';
 import { HealthModule } from './health/health.module';
 
@@ -51,7 +53,7 @@ import { HealthModule } from './health/health.module';
     WebsocketModule,
     HealthModule,
   ],
-  controllers: [TimezoneController],
-  providers: [SchedulerService, TimezoneService, TemplateInitializationService, PositionInitializationService, DepartmentCourseInitializationService],
+  controllers: [TimezoneController, MaintenanceController],
+  providers: [SchedulerService, TimezoneService, TemplateInitializationService, PositionInitializationService, DepartmentCourseInitializationService, LogCleanupConfigService],
 })
 export class AppModule {} 

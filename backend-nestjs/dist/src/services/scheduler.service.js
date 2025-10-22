@@ -15,10 +15,12 @@ const common_1 = require("@nestjs/common");
 const schedule_1 = require("@nestjs/schedule");
 const ballot_service_1 = require("../ballot/ballot.service");
 const prisma_service_1 = require("../prisma/prisma.service");
+const log_cleanup_config_service_1 = require("./log-cleanup-config.service");
 let SchedulerService = SchedulerService_1 = class SchedulerService {
-    constructor(ballotService, prisma) {
+    constructor(ballotService, prisma, logCleanupConfig) {
         this.ballotService = ballotService;
         this.prisma = prisma;
+        this.logCleanupConfig = logCleanupConfig;
         this.logger = new common_1.Logger(SchedulerService_1.name);
     }
     async handleAutoStartBallots() {
@@ -79,13 +81,13 @@ let SchedulerService = SchedulerService_1 = class SchedulerService {
     async cleanupInactiveSessions() {
         try {
             this.logger.log('🧹 Cleaning up inactive user sessions...');
-            const thirtyMinutesAgo = new Date();
-            thirtyMinutesAgo.setMinutes(thirtyMinutesAgo.getMinutes() - 30);
+            const timeoutMinutes = this.logCleanupConfig.getInactiveSessionTimeoutMinutes();
+            const timeoutDate = this.logCleanupConfig.getDateMinutesAgo(timeoutMinutes);
             const inactiveSessions = await this.prisma.userLoginLog.findMany({
                 where: {
                     isActive: true,
                     loginTime: {
-                        lt: thirtyMinutesAgo
+                        lt: timeoutDate
                     }
                 },
                 include: {
@@ -93,7 +95,7 @@ let SchedulerService = SchedulerService_1 = class SchedulerService {
                 }
             });
             if (inactiveSessions.length > 0) {
-                this.logger.log(`📊 Found ${inactiveSessions.length} inactive sessions to clean up`);
+                this.logger.log(`📊 Found ${inactiveSessions.length} inactive user sessions to clean up`);
                 const now = new Date();
                 let cleanedCount = 0;
                 for (const session of inactiveSessions) {
@@ -109,14 +111,146 @@ let SchedulerService = SchedulerService_1 = class SchedulerService {
                     this.logger.log(`✅ Auto-logged out: ${session.user.Voter_Name} (${Math.floor(duration / 60)}m ${duration % 60}s)`);
                     cleanedCount++;
                 }
-                this.logger.log(`✅ Cleaned up ${cleanedCount} inactive sessions`);
+                this.logger.log(`✅ Cleaned up ${cleanedCount} inactive user sessions`);
             }
             else {
-                this.logger.log('✅ No inactive sessions found');
+                this.logger.log('✅ No inactive user sessions found');
             }
         }
         catch (error) {
-            this.logger.error('❌ Error cleaning up inactive sessions:', error);
+            this.logger.error('❌ Error cleaning up inactive user sessions:', error);
+        }
+    }
+    async cleanupInactiveAdminSessions() {
+        try {
+            this.logger.log('🧹 Cleaning up inactive admin sessions...');
+            const timeoutMinutes = this.logCleanupConfig.getInactiveSessionTimeoutMinutes();
+            const timeoutDate = this.logCleanupConfig.getDateMinutesAgo(timeoutMinutes);
+            const inactiveAdminSessions = await this.prisma.adminLoginLog.findMany({
+                where: {
+                    isActive: true,
+                    loginTime: {
+                        lt: timeoutDate
+                    }
+                },
+                include: {
+                    admin: true
+                }
+            });
+            if (inactiveAdminSessions.length > 0) {
+                this.logger.log(`📊 Found ${inactiveAdminSessions.length} inactive admin sessions to clean up`);
+                const now = new Date();
+                let cleanedCount = 0;
+                for (const session of inactiveAdminSessions) {
+                    const duration = Math.floor((now.getTime() - session.loginTime.getTime()) / 1000);
+                    await this.prisma.adminLoginLog.update({
+                        where: { id: session.id },
+                        data: {
+                            logoutTime: now,
+                            duration: duration,
+                            isActive: false,
+                        },
+                    });
+                    this.logger.log(`✅ Auto-logged out admin: ${session.admin.Admin_Username} (${Math.floor(duration / 60)}m ${duration % 60}s)`);
+                    cleanedCount++;
+                }
+                this.logger.log(`✅ Cleaned up ${cleanedCount} inactive admin sessions`);
+            }
+            else {
+                this.logger.log('✅ No inactive admin sessions found');
+            }
+        }
+        catch (error) {
+            this.logger.error('❌ Error cleaning up inactive admin sessions:', error);
+        }
+    }
+    async cleanupOldLoginLogs() {
+        try {
+            this.logger.log('🧹 Starting daily cleanup of old login logs...');
+            const userLogRetentionDays = this.logCleanupConfig.getUserLoginLogRetentionDays();
+            const adminLogRetentionDays = this.logCleanupConfig.getAdminLoginLogRetentionDays();
+            const auditLogRetentionDays = this.logCleanupConfig.getAuditLogRetentionDays();
+            const userLogCutoffDate = this.logCleanupConfig.getDateDaysAgo(userLogRetentionDays);
+            const adminLogCutoffDate = this.logCleanupConfig.getDateDaysAgo(adminLogRetentionDays);
+            const auditLogCutoffDate = this.logCleanupConfig.getDateDaysAgo(auditLogRetentionDays);
+            const deletedUserLogs = await this.prisma.userLoginLog.deleteMany({
+                where: {
+                    createdAt: {
+                        lt: userLogCutoffDate
+                    }
+                }
+            });
+            const deletedAdminLogs = await this.prisma.adminLoginLog.deleteMany({
+                where: {
+                    createdAt: {
+                        lt: adminLogCutoffDate
+                    }
+                }
+            });
+            const deletedAuditLogs = await this.prisma.auditLog.deleteMany({
+                where: {
+                    createdAt: {
+                        lt: auditLogCutoffDate
+                    },
+                    eventType: {
+                        in: ['LOGIN_ATTEMPT', 'SECURITY_ALERT']
+                    }
+                }
+            });
+            const totalDeleted = deletedUserLogs.count + deletedAdminLogs.count + deletedAuditLogs.count;
+            if (totalDeleted > 0) {
+                this.logger.log(`✅ Cleaned up old login logs:`);
+                this.logger.log(`   👤 User login logs: ${deletedUserLogs.count} deleted`);
+                this.logger.log(`   👨‍💼 Admin login logs: ${deletedAdminLogs.count} deleted`);
+                this.logger.log(`   🔍 Audit logs (login-related): ${deletedAuditLogs.count} deleted`);
+                this.logger.log(`   📊 Total logs cleaned: ${totalDeleted}`);
+            }
+            else {
+                this.logger.log('✅ No old login logs found to clean up');
+            }
+        }
+        catch (error) {
+            this.logger.error('❌ Error cleaning up old login logs:', error);
+        }
+    }
+    async cleanupOldAuditLogs() {
+        try {
+            this.logger.log('🧹 Starting weekly cleanup of old audit logs...');
+            const auditLogRetentionDays = this.logCleanupConfig.getAuditLogRetentionDays();
+            const criticalAuditLogRetentionDays = this.logCleanupConfig.getCriticalAuditLogRetentionDays();
+            const auditLogCutoffDate = this.logCleanupConfig.getDateDaysAgo(auditLogRetentionDays);
+            const criticalAuditLogCutoffDate = this.logCleanupConfig.getDateDaysAgo(criticalAuditLogRetentionDays);
+            const deletedAuditLogs = await this.prisma.auditLog.deleteMany({
+                where: {
+                    createdAt: {
+                        lt: auditLogCutoffDate
+                    },
+                    severity: {
+                        not: 'CRITICAL'
+                    }
+                }
+            });
+            const deletedCriticalAuditLogs = await this.prisma.auditLog.deleteMany({
+                where: {
+                    createdAt: {
+                        lt: criticalAuditLogCutoffDate
+                    },
+                    severity: 'CRITICAL'
+                }
+            });
+            const totalDeleted = deletedAuditLogs.count + deletedCriticalAuditLogs.count;
+            if (totalDeleted > 0) {
+                this.logger.log(`✅ Cleaned up old audit logs:`);
+                this.logger.log(`   🔍 Non-critical audit logs: ${deletedAuditLogs.count} deleted`);
+                this.logger.log(`   🚨 Critical audit logs: ${deletedCriticalAuditLogs.count} deleted`);
+                this.logger.log(`   📊 Total audit logs cleaned: ${totalDeleted}`);
+            }
+            else {
+                this.logger.log('✅ No old audit logs found to clean up');
+            }
+        }
+        catch (error) {
+            this.logger.error('❌ Error cleaning up old audit logs:', error);
         }
     }
 };
@@ -145,9 +279,28 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
 ], SchedulerService.prototype, "cleanupInactiveSessions", null);
+__decorate([
+    (0, schedule_1.Cron)('0 */5 * * * *'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], SchedulerService.prototype, "cleanupInactiveAdminSessions", null);
+__decorate([
+    (0, schedule_1.Cron)('0 2 * * *'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], SchedulerService.prototype, "cleanupOldLoginLogs", null);
+__decorate([
+    (0, schedule_1.Cron)('0 3 * * 0'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], SchedulerService.prototype, "cleanupOldAuditLogs", null);
 exports.SchedulerService = SchedulerService = SchedulerService_1 = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [ballot_service_1.BallotService,
-        prisma_service_1.PrismaService])
+        prisma_service_1.PrismaService,
+        log_cleanup_config_service_1.LogCleanupConfigService])
 ], SchedulerService);
 //# sourceMappingURL=scheduler.service.js.map

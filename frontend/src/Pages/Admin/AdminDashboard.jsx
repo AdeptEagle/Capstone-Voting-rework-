@@ -309,6 +309,17 @@ const AdminDashboard = () => {
                 </div>
                 <div className="col-md-3 mb-3">
                   <button 
+                    className="btn btn-warning w-100 action-btn"
+                    onClick={() => navigate('/admin/user-login-logs')}
+                  >
+                    <i className="fas fa-history me-2"></i>
+                    User Login Logs
+                  </button>
+                </div>
+              </div>
+              <div className="row">
+                <div className="col-md-3 mb-3">
+                  <button 
                     className="btn btn-secondary w-100 action-btn"
                     onClick={() => setShowSettingsModal(true)}
                   >
@@ -422,77 +433,6 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        <div className="col-md-6 mb-4">
-          <div className="card">
-            <div className="card-header">
-              <h5 className="mb-0">Results & Analytics</h5>
-            </div>
-            <div className="card-body">
-              <p className="text-muted mb-3">
-                View real-time election results, voting statistics, and analytics for each position.
-              </p>
-              <div className="results-preview">
-                <h6>Voting Progress:</h6>
-                <div className="progress mb-2">
-                  <div 
-                    className="progress-bar" 
-                    style={{ width: `${stats.totalVoters > 0 ? (stats.activeVoters / stats.totalVoters) * 100 : 0}%` }}
-                  >
-                    {stats.totalVoters > 0 ? Math.round((stats.activeVoters / stats.totalVoters) * 100) : 0}%
-                  </div>
-                </div>
-                <small className="text-muted">
-                  {stats.activeVoters} of {stats.totalVoters} voters have cast their votes
-                </small>
-              </div>
-              <div className="d-flex gap-2 mt-2">
-                <button 
-                  className="btn btn-outline-primary btn-sm"
-                  onClick={() => navigate('/admin/results')}
-                >
-                  View Results
-                </button>
-                <button 
-                  className="btn btn-outline-info btn-sm"
-                  onClick={() => navigate('/admin/vote-traceability')}
-                >
-                  Vote Traceability
-                </button>
-                <button 
-                  className="btn btn-outline-success btn-sm"
-                  onClick={() => navigate('/admin/analytics')}
-                >
-                  <i className="fas fa-chart-line"></i> Analytics
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* System Status */}
-      <div className="row">
-        <div className="col-md-6 mb-4">
-          <div className="card">
-            <div className="card-header">
-              <h5 className="mb-0">System Status</h5>
-            </div>
-            <div className="card-body">
-              <div className="status-item">
-                <span className="status-label">Database:</span>
-                <span className="status-value text-success">Online</span>
-              </div>
-              <div className="status-item">
-                <span className="status-label">API Server:</span>
-                <span className="status-value text-success">Running</span>
-              </div>
-              <div className="status-item">
-                <span className="status-label">Voting Status:</span>
-                <span className="status-value text-warning">Active</span>
-              </div>
-            </div>
-          </div>
-        </div>
         <div className="col-md-6 mb-4">
           <div className="card">
             <div className="card-header">

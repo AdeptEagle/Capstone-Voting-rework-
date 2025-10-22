@@ -24,6 +24,7 @@ const DepartmentManagement = () => {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [modalError, setModalError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   
   // Modal states
@@ -41,15 +42,12 @@ const DepartmentManagement = () => {
   // Form data
   const [departmentFormData, setDepartmentFormData] = useState({
     Department_Name: '',
-    Department_Description: '',
     customId: ''
   });
   
   const [courseFormData, setCourseFormData] = useState({
     Course_Name: '',
     Course_Code: '',
-    Course_Description: '',
-    customId: '',
     departmentId: ''
   });
 
@@ -89,7 +87,8 @@ const DepartmentManagement = () => {
 
   // Modal handlers
   const openModal = () => {
-    setDepartmentFormData({ Department_Name: '', Department_Description: '', customId: '' });
+    setDepartmentFormData({ Department_Name: '', customId: '' });
+    setModalError('');
     setShowModal(true);
   };
 
@@ -97,26 +96,25 @@ const DepartmentManagement = () => {
     setSelectedDepartment(department);
     setDepartmentFormData({
       Department_Name: department.Department_Name,
-      Department_Description: department.Department_Description || '',
       customId: department.customId || '' // Use customId field, not department.id
     });
+    setModalError('');
     setShowEditModal(true);
   };
 
   const openCourseModal = (department, course = null) => {
     setSelectedDepartment(department);
+    setModalError('');
     if (course) {
       setEditingCourse(course);
       setCourseFormData({
         Course_Name: course.Course_Name,
         Course_Code: course.Course_Code || '',
-        Course_Description: course.Course_Description || '',
-        customId: course.id || '',
         departmentId: course.departmentId || department.id
       });
     } else {
       setEditingCourse(null);
-      setCourseFormData({ Course_Name: '', Course_Code: '', Course_Description: '', customId: '', departmentId: department.id });
+      setCourseFormData({ Course_Name: '', Course_Code: '', departmentId: department.id });
     }
     setShowCourseModal(true);
   };
@@ -124,11 +122,18 @@ const DepartmentManagement = () => {
   // Form handlers
   const handleCreateDepartment = async (e) => {
     e.preventDefault();
+    setModalError('');
+    
+    // Validate required fields
+    if (!departmentFormData.Department_Name.trim()) {
+      setModalError('Please enter a valid department name');
+      return;
+    }
+    
     try {
       // Only send fields that the backend DTO expects
       const dataToSend = {
         Department_Name: departmentFormData.Department_Name,
-        Department_Description: departmentFormData.Department_Description || undefined,
         customId: departmentFormData.customId || undefined
       };
       await createDepartment(dataToSend);
@@ -136,17 +141,25 @@ const DepartmentManagement = () => {
       setShowModal(false);
       fetchData();
     } catch (error) {
-      setMessage('Error creating department: ' + error.message);
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to create department';
+      setModalError(errorMessage);
     }
   };
 
   const handleUpdateDepartment = async (e) => {
     e.preventDefault();
+    setModalError('');
+    
+    // Validate required fields
+    if (!departmentFormData.Department_Name.trim()) {
+      setModalError('Please enter a valid department name');
+      return;
+    }
+    
     try {
       // Only send fields that the backend DTO expects
       const dataToSend = {
         Department_Name: departmentFormData.Department_Name,
-        Department_Description: departmentFormData.Department_Description || undefined,
         customId: departmentFormData.customId || undefined
       };
       await updateDepartment(selectedDepartment.id, dataToSend);
@@ -154,41 +167,68 @@ const DepartmentManagement = () => {
       setShowEditModal(false);
       fetchData();
     } catch (error) {
-      setMessage('Error updating department: ' + error.message);
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to update department';
+      setModalError(errorMessage);
     }
   };
 
   const handleCreateCourse = async (e) => {
     e.preventDefault();
+    
+    // Validate required fields
+    if (!courseFormData.Course_Name.trim()) {
+      setMessage('Please enter a valid course name');
+      return;
+    }
+    
+    if (!courseFormData.Course_Code.trim()) {
+      setMessage('Please enter a valid course code');
+      return;
+    }
+    
     try {
       // Only send fields that the backend DTO expects
       const dataToSend = {
         Course_Name: courseFormData.Course_Name,
         Course_Code: courseFormData.Course_Code,
-        Course_Description: courseFormData.Course_Description || undefined,
-        customId: courseFormData.customId || undefined,
+        customId: courseFormData.Course_Code, // Use Course_Code as customId since they're the same
         departmentId: courseFormData.departmentId
       };
+      console.log('Creating course with data:', dataToSend);
       await createCourse(dataToSend);
       setMessage('Course created successfully!');
       setShowCourseModal(false);
       fetchData();
     } catch (error) {
-      setMessage('Error creating course: ' + error.message);
+      console.error('Error creating course:', error);
+      const errorMessage = error.response?.data?.message || error.message || 'Unknown error occurred';
+      setMessage(`Error creating course: ${errorMessage}`);
     }
   };
 
   const handleUpdateCourse = async (e) => {
     e.preventDefault();
+    
+    // Validate required fields
+    if (!courseFormData.Course_Name.trim()) {
+      setMessage('Please enter a valid course name');
+      return;
+    }
+    
+    if (!courseFormData.Course_Code.trim()) {
+      setMessage('Please enter a valid course code');
+      return;
+    }
+    
     try {
       // Only send fields that the backend DTO expects
       const dataToSend = {
         Course_Name: courseFormData.Course_Name,
         Course_Code: courseFormData.Course_Code,
-        Course_Description: courseFormData.Course_Description || undefined,
-        customId: courseFormData.customId || undefined,
+        customId: courseFormData.Course_Code, // Use Course_Code as customId since they're the same
         departmentId: courseFormData.departmentId
       };
+      console.log('Updating course with data:', dataToSend);
       await updateCourse(editingCourse.id, dataToSend);
       setMessage('Course updated successfully!');
       setShowCourseModal(false);
@@ -497,25 +537,25 @@ const DepartmentManagement = () => {
             </div>
             <form onSubmit={handleCreateDepartment}>
               <div className="department-modal-body">
+                {modalError && (
+                  <div className="alert alert-danger" role="alert">
+                    <i className="fas fa-exclamation-triangle me-2"></i>
+                    {modalError}
+                  </div>
+                )}
                 <div className="department-form-group">
                   <label className="department-form-label">Department Name</label>
                   <input
                     type="text"
                     className="department-form-input"
                     value={departmentFormData.Department_Name}
-                    onChange={(e) => setDepartmentFormData({...departmentFormData, Department_Name: e.target.value})}
+                    onChange={(e) => {
+                      // Remove numbers and special characters, keep only letters and spaces
+                      const lettersOnly = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                      setDepartmentFormData({...departmentFormData, Department_Name: lettersOnly});
+                    }}
                     placeholder="e.g., College of Computer Studies"
                     required
-                  />
-                </div>
-                <div className="department-form-group">
-                  <label className="department-form-label">Description</label>
-                  <textarea
-                    className="department-form-input"
-                    value={departmentFormData.description}
-                    onChange={(e) => setDepartmentFormData({...departmentFormData, description: e.target.value})}
-                    placeholder="Optional description for the department"
-                    rows={3}
                   />
                 </div>
                 <div className="department-form-group">
@@ -571,25 +611,29 @@ const DepartmentManagement = () => {
             </div>
             <form onSubmit={handleUpdateDepartment}>
               <div className="department-modal-body">
+                {modalError && (
+                  <div className="alert alert-danger" role="alert">
+                    <i className="fas fa-exclamation-triangle me-2"></i>
+                    {modalError}
+                  </div>
+                )}
                 <div className="department-form-group">
                   <label className="department-form-label">Department Name</label>
                   <input
                     type="text"
                     className="department-form-input"
                     value={departmentFormData.Department_Name}
-                    onChange={(e) => setDepartmentFormData({...departmentFormData, Department_Name: e.target.value})}
+                    onChange={(e) => {
+                      // Remove numbers and special characters, keep only letters and spaces
+                      const lettersOnly = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                      setDepartmentFormData({...departmentFormData, Department_Name: lettersOnly});
+                    }}
                     required
                   />
-                </div>
-                <div className="department-form-group">
-                  <label className="department-form-label">Description</label>
-                  <textarea
-                    className="department-form-input"
-                    value={departmentFormData.Department_Description}
-                    onChange={(e) => setDepartmentFormData({...departmentFormData, Department_Description: e.target.value})}
-                    placeholder="Optional description for the department"
-                    rows={3}
-                  />
+                  <small className="department-form-help">
+                    <i className="fas fa-info-circle me-1"></i>
+                    Only letters and spaces are allowed. Numbers and special characters will be automatically removed.
+                  </small>
                 </div>
                 <div className="department-form-group">
                   <label className="department-form-label">Department ID</label>
@@ -641,6 +685,12 @@ const DepartmentManagement = () => {
             </div>
             <form onSubmit={editingCourse ? handleUpdateCourse : handleCreateCourse}>
               <div className="department-modal-body">
+                {modalError && (
+                  <div className="alert alert-danger" role="alert">
+                    <i className="fas fa-exclamation-triangle me-2"></i>
+                    {modalError}
+                  </div>
+                )}
                 <input
                   type="hidden"
                   name="departmentId"
@@ -663,46 +713,23 @@ const DepartmentManagement = () => {
                   </small>
                 </div>
                 <div className="department-form-group">
-                  <label className="department-form-label">
-                    {editingCourse ? 'Course ID (Cannot be changed)' : 'Custom ID (Optional)'}
-                  </label>
-                  <input
-                    type="text"
-                    className="department-form-input"
-                    value={courseFormData.customId}
-                    onChange={editingCourse ? undefined : (e) => setCourseFormData({...courseFormData, customId: e.target.value.toUpperCase()})}
-                    placeholder="e.g., CS101"
-                    maxLength="10"
-                    pattern="[A-Za-z0-9]+"
-                    disabled={editingCourse}
-                  />
-                  <small className="department-form-help">
-                    {editingCourse 
-                      ? 'Course ID cannot be changed once created'
-                      : 'Custom identifier for the course (optional, will auto-generate if not provided)'
-                    }
-                  </small>
-                </div>
-                <div className="department-form-group">
                   <label className="department-form-label">Course Name</label>
                   <input
                     type="text"
                     className="department-form-input"
                     value={courseFormData.Course_Name}
-                    onChange={(e) => setCourseFormData({...courseFormData, Course_Name: e.target.value})}
+                    onChange={(e) => {
+                      // Remove numbers and special characters, keep only letters and spaces
+                      const lettersOnly = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                      setCourseFormData({...courseFormData, Course_Name: lettersOnly});
+                    }}
                     placeholder="e.g., Introduction to Computer Science"
                     required
                   />
-                </div>
-                <div className="department-form-group">
-                  <label className="department-form-label">Description (Optional)</label>
-                  <textarea
-                    className="department-form-input"
-                    value={courseFormData.Course_Description}
-                    onChange={(e) => setCourseFormData({...courseFormData, Course_Description: e.target.value})}
-                    placeholder="Optional description for this course"
-                    rows={3}
-                  />
+                  <small className="department-form-help">
+                    <i className="fas fa-info-circle me-1"></i>
+                    Only letters and spaces are allowed. Numbers and special characters will be automatically removed.
+                  </small>
                 </div>
               </div>
               <div className="department-modal-footer">

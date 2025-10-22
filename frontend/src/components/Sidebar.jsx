@@ -142,6 +142,7 @@ const Sidebar = ({ isOpen, onToggle }) => {
             { path: '/admin/department-management', label: 'Department Management', icon: 'fas fa-university' }
           ],
           advanced: [
+            { path: '/admin/user-login-logs', label: 'User Login Logs', icon: 'fas fa-history' },
             { path: '/trash-bin', label: 'Trash Bin', icon: 'fas fa-trash' }
           ]
         };
