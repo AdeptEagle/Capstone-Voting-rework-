@@ -109,7 +109,17 @@ const TrashBin = () => {
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (error) {
       console.error('Error permanently deleting item:', error);
-      setError('Failed to permanently delete item');
+      
+      // Handle specific error cases
+      if (error.response?.status === 409) {
+        setError(error.response.data.message || 'Cannot permanently delete this item due to existing dependencies');
+      } else if (error.response?.status === 404) {
+        setError('Item not found');
+      } else if (error.response?.status === 403) {
+        setError('Item is not deleted and cannot be permanently removed');
+      } else {
+        setError('Failed to permanently delete item');
+      }
     } finally {
       setActionLoading(false);
     }
@@ -221,6 +231,33 @@ const TrashBin = () => {
       );
     }
 
+    // Show tip for ballots section
+    if (activeTab === 'ballots') {
+      const columns = {
+        ballots: [
+          { key: 'Ballot_Title', label: 'Title' },
+          { key: 'Ballot_Description', label: 'Description' },
+          { key: 'Ballot_Status', label: 'Status' },
+          { key: 'Ballot_StartDate', label: 'Start Date' },
+          { key: 'Ballot_EndDate', label: 'End Date' },
+          { key: 'admin', label: 'Created By' },
+          { key: 'deletedAt', label: 'Deleted Date' }
+        ]
+      };
+      const currentColumns = columns[activeTab];
+      
+      return (
+        <div>
+          <Alert variant="warning" className="mb-3">
+            <FaInfoCircle className="me-2" />
+            <strong>Important:</strong> Ballots with voting history cannot be permanently deleted for audit purposes. 
+            Only ballots that have never received votes can be permanently removed from the system.
+          </Alert>
+          {renderTableContent(currentColumns)}
+        </div>
+      );
+    }
+
     const columns = {
       candidates: [
         { key: 'Candidate_Name', label: 'Name' },
@@ -256,6 +293,15 @@ const TrashBin = () => {
         { key: 'Voter_Email', label: 'Email' },
         { key: 'department', label: 'Department' },
         { key: 'course', label: 'Course' },
+        { key: 'deletedAt', label: 'Deleted Date' }
+      ],
+      ballots: [
+        { key: 'Ballot_Title', label: 'Title' },
+        { key: 'Ballot_Description', label: 'Description' },
+        { key: 'Ballot_Status', label: 'Status' },
+        { key: 'Ballot_StartDate', label: 'Start Date' },
+        { key: 'Ballot_EndDate', label: 'End Date' },
+        { key: 'admin', label: 'Created By' },
         { key: 'deletedAt', label: 'Deleted Date' }
       ],
       elections: [
@@ -303,6 +349,8 @@ const TrashBin = () => {
                 } else if (column.key === 'deletedAt') {
                   value = new Date(item.deletedAt).toLocaleDateString();
                 } else if (column.key === 'startDate' || column.key === 'endDate') {
+                  value = new Date(item[column.key]).toLocaleDateString();
+                } else if (column.key === 'Ballot_StartDate' || column.key === 'Ballot_EndDate') {
                   value = new Date(item[column.key]).toLocaleDateString();
                 }
                 
@@ -442,6 +490,7 @@ const TrashBin = () => {
              activeTab === 'departments' ? selectedItem?.Department_Name :
              activeTab === 'courses' ? selectedItem?.Course_Name :
              activeTab === 'voters' ? selectedItem?.Voter_Name :
+             activeTab === 'ballots' ? selectedItem?.Ballot_Title :
              activeTab === 'elections' ? selectedItem?.Election_Title : 'Unknown Item'}
           </strong>
         </Modal.Body>
@@ -479,6 +528,7 @@ const TrashBin = () => {
              activeTab === 'departments' ? selectedItem?.Department_Name :
              activeTab === 'courses' ? selectedItem?.Course_Name :
              activeTab === 'voters' ? selectedItem?.Voter_Name :
+             activeTab === 'ballots' ? selectedItem?.Ballot_Title :
              activeTab === 'elections' ? selectedItem?.Election_Title : 'Unknown Item'}
           </strong>
         </Modal.Body>

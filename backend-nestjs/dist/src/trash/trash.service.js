@@ -362,7 +362,7 @@ let TrashService = class TrashService {
             throw new common_1.ForbiddenException('Ballot is not deleted');
         }
         if (ballot._count.votes > 0) {
-            throw new Error('Cannot permanently delete ballot with voting history. Votes must be preserved for audit purposes.');
+            throw new common_1.ConflictException('Cannot permanently delete ballot with voting history. Votes must be preserved for audit purposes.');
         }
         return await this.prisma.ballot.delete({
             where: { id: ballotId }

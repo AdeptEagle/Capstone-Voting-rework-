@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -441,7 +441,7 @@ export class TrashService {
 
     // Check if ballot has votes (prevent deletion if votes exist)
     if (ballot._count.votes > 0) {
-      throw new Error('Cannot permanently delete ballot with voting history. Votes must be preserved for audit purposes.');
+      throw new ConflictException('Cannot permanently delete ballot with voting history. Votes must be preserved for audit purposes.');
     }
 
     return await this.prisma.ballot.delete({
