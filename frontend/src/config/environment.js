@@ -28,20 +28,28 @@ export const getWsUrl = () => {
 
 // Helper function to get image URL
 export const getImageUrl = (photoUrl) => {
-  if (!photoUrl) return '';
+  if (!photoUrl) {
+    console.log('No photo URL provided');
+    return '';
+  }
   
   // If it's already a full URL, return as is
   if (photoUrl.startsWith('http://') || photoUrl.startsWith('https://')) {
+    console.log('Using full URL:', photoUrl);
     return photoUrl;
   }
   
   // If it starts with /uploads, prepend API base URL
   if (photoUrl.startsWith('/uploads')) {
-    return `${config.API_BASE_URL}${photoUrl}`;
+    const fullUrl = `${config.API_BASE_URL}${photoUrl}`;
+    console.log('Using uploads URL:', fullUrl);
+    return fullUrl;
   }
   
   // Default to uploads/images path
-  return `${config.API_BASE_URL}/uploads/images/${photoUrl}`;
+  const defaultUrl = `${config.API_BASE_URL}/uploads/images/${photoUrl}`;
+  console.log('Using default URL:', defaultUrl);
+  return defaultUrl;
 };
 
 export default config;

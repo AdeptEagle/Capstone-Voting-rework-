@@ -1574,6 +1574,13 @@ body {
 }
 
 @media (max-width: 480px) {
+  .vote-container {
+    padding: 10px;
+    margin: 0;
+    width: 100%;
+    max-width: 100%;
+  }
+  
   .vote-position-title {
     font-size: 1.5rem;
   }
@@ -1609,6 +1616,47 @@ body {
   
   .vote-candidate-description {
     font-size: 0.85rem;
+  }
+  
+  /* Additional mobile improvements */
+  .vote-candidates-grid {
+    grid-template-columns: 1fr;
+    gap: 15px;
+    padding: 0;
+  }
+  
+  .vote-candidate-card-modern {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+  }
+  
+  .vote-navigation {
+    flex-direction: column;
+    gap: 10px;
+    padding: 15px;
+  }
+  
+  .vote-navigation .btn {
+    width: 100%;
+    padding: 12px;
+  }
+  
+  .vote-progress {
+    margin-bottom: 20px;
+  }
+  
+  .vote-progress-text {
+    font-size: 0.9rem;
+  }
+  
+  .vote-summary-collapsible {
+    margin-top: 15px;
+  }
+  
+  .vote-summary-list {
+    max-height: 200px;
+    padding: 10px;
   }
 } 
 

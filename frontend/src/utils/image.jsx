@@ -3,8 +3,14 @@ import { getImageUrl as getEnvImageUrl } from '../config/environment';
 
 // Utility to get the correct candidate photo URL
 export function getCandidatePhotoUrl(photoUrl) {
-  if (!photoUrl || photoUrl === 'undefined' || photoUrl === 'null') return null;
-  return getEnvImageUrl(photoUrl);
+  if (!photoUrl || photoUrl === 'undefined' || photoUrl === 'null' || photoUrl === '') {
+    console.log('Invalid photo URL provided:', photoUrl);
+    return null;
+  }
+  
+  const processedUrl = getEnvImageUrl(photoUrl);
+  console.log('Processed photo URL:', processedUrl, 'from original:', photoUrl);
+  return processedUrl;
 }
 
 // Placeholder component for candidate photo

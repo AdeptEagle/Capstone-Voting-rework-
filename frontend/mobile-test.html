@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Test - Voting System</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f1f5f9;
+        }
+        
+        .mobile-test-container {
+            max-width: 100vw;
+            overflow-x: hidden;
+            padding: 20px;
+        }
+        
+        .test-section {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .test-title {
+            color: #1e40af;
+            margin-bottom: 15px;
+        }
+        
+        .test-content {
+            color: #374151;
+            line-height: 1.6;
+        }
+        
+        .mobile-indicator {
+            background: #10b981;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .mobile-test-container {
+                padding: 15px;
+            }
+            
+            .test-section {
+                padding: 15px;
+                margin-bottom: 15px;
+            }
+            
+            .test-title {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="mobile-test-container">
+        <div class="mobile-indicator">📱 Mobile View Test</div>
+        
+        <div class="test-section">
+            <h2 class="test-title">Mobile Responsiveness Test</h2>
+            <div class="test-content">
+                <p><strong>✅ Fixed Issues:</strong></p>
+                <ul>
+                    <li>Sidebar now properly hides on mobile devices</li>
+                    <li>Main content takes full width on mobile</li>
+                    <li>No horizontal scrolling issues</li>
+                    <li>Proper touch-friendly navigation</li>
+                    <li>Responsive candidate cards</li>
+                    <li>Mobile-optimized voting interface</li>
+                </ul>
+                
+                <p><strong>🔧 Technical Improvements:</strong></p>
+                <ul>
+                    <li>Added mobile-first CSS media queries</li>
+                    <li>Fixed sidebar z-index and positioning</li>
+                    <li>Improved touch targets for mobile</li>
+                    <li>Optimized grid layouts for small screens</li>
+                    <li>Enhanced button sizing for touch interaction</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2 class="test-title">Voting Interface Mobile Test</h2>
+            <div class="test-content">
+                <p>The voting interface should now display properly on mobile devices with:</p>
+                <ul>
+                    <li>Full-width candidate cards</li>
+                    <li>Properly sized touch targets</li>
+                    <li>Responsive navigation buttons</li>
+                    <li>Mobile-friendly progress indicators</li>
+                    <li>Optimized text sizing for readability</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

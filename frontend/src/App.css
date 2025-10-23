@@ -7,6 +7,29 @@ body {
   margin: 0;
   overflow-x: hidden;
   min-height: 100vh;
+  width: 100%;
+  max-width: 100vw;
+}
+
+/* Ensure no horizontal overflow on mobile */
+@media (max-width: 768px) {
+  body {
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100vw;
+  }
+  
+  html {
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100vw;
+  }
+  
+  #root {
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
 }
 
 /* Ensure no white overlays on main content */
@@ -221,36 +244,31 @@ main {
 @media (max-width: 768px) {
   #sidebar {
     transform: translateX(-100%);
+    width: 280px; /* Fixed width for mobile sidebar */
+    z-index: 1050; /* Ensure it's above content */
   }
   #sidebar.show {
     transform: translateX(0);
   }
   #content {
     margin-left: 0;
+    width: 100%;
+    padding: 0 15px; /* Add some padding for mobile */
   }
+  
+  /* Ensure main content takes full width on mobile */
+  main {
+    margin-left: 0 !important;
+    width: 100% !important;
+    padding: 0 15px !important;
+  }
+  
+  /* Mobile hamburger is now handled by Header component */
 }
 
-/* Hamburger */
+/* Hamburger - Legacy styles (now handled by Header component) */
 #hamburger {
-  position: fixed;
-  top: 16px;
-  left: 16px;
-  z-index: 1100;
-  width: 44px;
-  height: 44px;
-  background: var(--sidebar-dark);
-  border: none;
-  border-radius: 8px;
-  color: var(--text-light);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  box-shadow: 0 4px 8px rgba(30, 64, 175, 0.3);
-  transition: background-color 0.3s;
-}
-#hamburger:hover {
-  background: var(--light-blue);
+  display: none; /* Hide legacy hamburger, use Header component instead */
 }
 
 /* Announcement cards */
