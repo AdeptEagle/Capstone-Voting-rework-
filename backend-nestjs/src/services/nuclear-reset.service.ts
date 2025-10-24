@@ -8,7 +8,7 @@ export class NuclearResetService {
 
   /**
    * Nuclear Reset - Drops all user-generated data while preserving system essentials
-   * Preserves: SuperAdmins, Built-in positions, Templates, Departments, Courses, System configurations
+   * Preserves: All Admins (ADMIN & SUPERADMIN), Built-in positions, Ballot Templates, Departments, Courses, System configurations
    * Deletes: All other data (voters, candidates, ballots, votes, party lists, etc.)
    */
   async nuclearReset(currentPassword: string, adminId: string) {
@@ -30,14 +30,17 @@ export class NuclearResetService {
       
       // Start transaction to ensure atomicity
       const result = await this.prisma.$transaction(async (prisma) => {
+        console.log('🔄 Starting transaction...');
+        
         // 1. Delete all votes first (foreign key constraints)
+        console.log('🗑️ Step 1: Deleting votes...');
         const deletedVotes = await prisma.vote.deleteMany();
         console.log(`🗑️ Deleted ${deletedVotes.count} votes`);
 
-        // 2. Delete ballot-related data
-        const deletedBallotResults = await prisma.ballotResults.deleteMany();
-        console.log(`🗑️ Deleted ${deletedBallotResults.count} ballot results`);
-
+        // 2. Delete ballot-related data (child records first)
+        console.log('🗑️ Step 2: Deleting ballot-related data...');
+        
+        // Delete child records first to avoid foreign key constraints
         const deletedBallotResultDetails = await prisma.ballotResultDetails.deleteMany();
         console.log(`🗑️ Deleted ${deletedBallotResultDetails.count} ballot result details`);
 
@@ -50,23 +53,30 @@ export class NuclearResetService {
         const deletedUserBallotHistory = await prisma.userBallotHistory.deleteMany();
         console.log(`🗑️ Deleted ${deletedUserBallotHistory.count} user ballot history`);
 
+        // Now delete parent records
+        const deletedBallotResults = await prisma.ballotResults.deleteMany();
+        console.log(`🗑️ Deleted ${deletedBallotResults.count} ballot results`);
+
         // 3. Delete ballots
+        console.log('🗑️ Step 3: Deleting ballots...');
         const deletedBallots = await prisma.ballot.deleteMany();
         console.log(`🗑️ Deleted ${deletedBallots.count} ballots`);
 
-        // 4. Delete ballot templates (user-created ones)
-        const deletedBallotTemplates = await prisma.ballotTemplate.deleteMany();
-        console.log(`🗑️ Deleted ${deletedBallotTemplates.count} ballot templates`);
+        // 4. Skip ballot templates - they are preserved as system essentials
+        console.log(`✅ Preserving ballot templates (system essentials)`);
 
         // 5. Delete candidates
+        console.log('🗑️ Step 5: Deleting candidates...');
         const deletedCandidates = await prisma.candidate.deleteMany();
         console.log(`🗑️ Deleted ${deletedCandidates.count} candidates`);
 
         // 6. Delete party lists
+        console.log('🗑️ Step 6: Deleting party lists...');
         const deletedPartyLists = await prisma.partyList.deleteMany();
         console.log(`🗑️ Deleted ${deletedPartyLists.count} party lists`);
 
         // 7. Delete login logs (must be done before voters due to foreign key constraints)
+        console.log('🗑️ Step 7: Deleting login logs...');
         const deletedAdminLoginLogs = await prisma.adminLoginLog.deleteMany();
         console.log(`🗑️ Deleted ${deletedAdminLoginLogs.count} admin login logs`);
 
@@ -74,10 +84,12 @@ export class NuclearResetService {
         console.log(`🗑️ Deleted ${deletedUserLoginLogs.count} user login logs`);
 
         // 8. Delete password reset tokens (must be done before voters due to foreign key constraints)
+        console.log('🗑️ Step 8: Deleting password reset tokens...');
         const deletedPasswordResetTokens = await prisma.passwordResetToken.deleteMany();
         console.log(`🗑️ Deleted ${deletedPasswordResetTokens.count} password reset tokens`);
 
         // 9. Delete voters (after login logs and password reset tokens)
+        console.log('🗑️ Step 9: Deleting voters...');
         const deletedVoters = await prisma.voter.deleteMany();
         console.log(`🗑️ Deleted ${deletedVoters.count} voters`);
 
@@ -85,50 +97,52 @@ export class NuclearResetService {
         // Note: Positions are preserved as they are built-in system data
 
         // 10. Delete audit logs
+        console.log('🗑️ Step 10: Deleting audit logs...');
         const deletedAuditLogs = await prisma.auditLog.deleteMany();
         console.log(`🗑️ Deleted ${deletedAuditLogs.count} audit logs`);
 
-        // 11. Delete regular admins (keep only SUPERADMIN role)
-        const deletedAdmins = await prisma.admin.deleteMany({
-          where: {
-            role: 'ADMIN' // Only delete ADMIN role, preserve SUPERADMIN
-          }
-        });
-        console.log(`🗑️ Deleted ${deletedAdmins.count} regular admins`);
+        // 11. Skip admins - preserve all admins (both ADMIN and SUPERADMIN roles)
+        console.log(`✅ Preserving all admins (system essentials)`);
 
         // Note: Positions are preserved as they are built-in system data
-        // Note: SuperAdmins are preserved for system access
+        // Note: All admins are preserved for system access
+
+        console.log('✅ Transaction completed successfully');
 
         return {
           votes: deletedVotes.count,
-          ballotResults: deletedBallotResults.count,
           ballotResultDetails: deletedBallotResultDetails.count,
           ballotCandidates: deletedBallotCandidates.count,
           ballotPositions: deletedBallotPositions.count,
           userBallotHistory: deletedUserBallotHistory.count,
+          ballotResults: deletedBallotResults.count,
           ballots: deletedBallots.count,
-          ballotTemplates: deletedBallotTemplates.count,
           candidates: deletedCandidates.count,
           partyLists: deletedPartyLists.count,
           voters: deletedVoters.count,
           auditLogs: deletedAuditLogs.count,
           adminLoginLogs: deletedAdminLoginLogs.count,
           userLoginLogs: deletedUserLoginLogs.count,
-          passwordResetTokens: deletedPasswordResetTokens.count,
-          admins: deletedAdmins.count
+          passwordResetTokens: deletedPasswordResetTokens.count
         };
       });
 
       console.log('✅ Nuclear Reset completed successfully');
       return {
         success: true,
-        message: 'Nuclear reset completed successfully. All user data has been removed while preserving system essentials.',
+        message: 'Nuclear reset completed successfully. All user data has been removed while preserving system essentials including admins and ballot templates.',
         deletedCounts: result
       };
 
     } catch (error) {
       console.error('❌ Nuclear Reset failed:', error);
-      throw new Error('Nuclear reset failed. Please check the logs for details.');
+      console.error('❌ Error details:', {
+        message: error.message,
+        code: error.code,
+        meta: error.meta,
+        stack: error.stack
+      });
+      throw new Error(`Nuclear reset failed: ${error.message}. Please check the logs for details.`);
     }
   }
 

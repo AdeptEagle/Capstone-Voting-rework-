@@ -27,7 +27,7 @@ export class NuclearResetController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ 
     summary: 'Execute nuclear reset - Drops all user data while preserving system essentials (SuperAdmin only)',
-    description: '⚠️ WARNING: This action is irreversible and will delete ALL user-generated data including voters, candidates, ballots, votes, party lists, and regular admins. Only SuperAdmins, built-in positions, templates, departments, courses, and system configurations will be preserved.'
+    description: '⚠️ WARNING: This action is irreversible and will delete ALL user-generated data including voters, candidates, ballots, votes, party lists, and login logs. Only admins, built-in positions, ballot templates, departments, courses, and system configurations will be preserved.'
   })
   @ApiResponse({ status: 200, description: 'Nuclear reset executed successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized - Invalid password' })

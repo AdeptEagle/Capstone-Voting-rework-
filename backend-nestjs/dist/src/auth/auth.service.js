@@ -24,6 +24,25 @@ let AuthService = class AuthService {
         this.idGenerator = idGenerator;
         this.emailService = emailService;
     }
+    encryptToken(token) {
+        const algorithm = 'aes-256-cbc';
+        const key = require('crypto').scryptSync(process.env.JWT_SECRET || 'fallback', 'salt', 32);
+        const iv = (0, crypto_1.randomBytes)(16);
+        const cipher = require('crypto').createCipheriv(algorithm, key, iv);
+        let encrypted = cipher.update(token, 'utf8', 'hex');
+        encrypted += cipher.final('hex');
+        return `VS.${iv.toString('hex')}.${encrypted}`;
+    }
+    decryptToken(encryptedToken) {
+        const algorithm = 'aes-256-cbc';
+        const key = require('crypto').scryptSync(process.env.JWT_SECRET || 'fallback', 'salt', 32);
+        const [, ivHex, encrypted] = encryptedToken.split('.');
+        const iv = Buffer.from(ivHex, 'hex');
+        const decipher = require('crypto').createDecipheriv(algorithm, key, iv);
+        let decrypted = decipher.update(encrypted, 'hex', 'utf8');
+        decrypted += decipher.final('utf8');
+        return decrypted;
+    }
     async validateToken(token) {
         try {
             const decoded = this.jwtService.verify(token);
@@ -53,8 +72,20 @@ let AuthService = class AuthService {
     }
     async checkAuthStatus(req) {
         try {
-            const token = req.cookies?.access_token;
-            if (!token) {
+            const encryptedToken = req.cookies?.access_token;
+            if (!encryptedToken) {
+                return {
+                    isAuthenticated: false,
+                    role: null,
+                    user: null
+                };
+            }
+            let token;
+            try {
+                token = this.decryptToken(encryptedToken);
+            }
+            catch (error) {
+                console.error('Token decryption failed:', error);
                 return {
                     isAuthenticated: false,
                     role: null,
@@ -151,7 +182,8 @@ let AuthService = class AuthService {
             type: 'admin'
         };
         const token = this.jwtService.sign(payload);
-        res.cookie('access_token', token, {
+        const encryptedToken = this.encryptToken(token);
+        res.cookie('access_token', encryptedToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',
@@ -258,7 +290,8 @@ let AuthService = class AuthService {
             type: 'voter'
         };
         const token = this.jwtService.sign(payload);
-        res.cookie('access_token', token, {
+        const encryptedToken = this.encryptToken(token);
+        res.cookie('access_token', encryptedToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',
@@ -422,7 +455,8 @@ let AuthService = class AuthService {
                 type: 'voter'
             };
             const token = this.jwtService.sign(payload);
-            res.cookie('access_token', token, {
+            const encryptedToken = this.encryptToken(token);
+            res.cookie('access_token', encryptedToken, {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === 'production',
                 sameSite: 'lax',

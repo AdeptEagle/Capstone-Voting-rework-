@@ -39,8 +39,8 @@ export declare class AuditService {
         id: string;
         createdAt: Date;
         userId: string | null;
-        timestamp: Date;
         eventType: string;
+        timestamp: Date;
         action: string;
         details: import("@prisma/client/runtime/library").JsonValue | null;
         metadata: import("@prisma/client/runtime/library").JsonValue | null;

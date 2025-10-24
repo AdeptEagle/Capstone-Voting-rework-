@@ -9,6 +9,8 @@ export declare class AuthService {
     private idGenerator;
     private emailService;
     constructor(prisma: PrismaService, jwtService: JwtService, idGenerator: IdGeneratorService, emailService: EmailService);
+    private encryptToken;
+    private decryptToken;
     validateToken(token: string): Promise<boolean>;
     isTokenExpired(token: string): boolean;
     private logSecurityEvent;

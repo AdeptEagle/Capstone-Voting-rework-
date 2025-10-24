@@ -5,7 +5,7 @@ import { IdGeneratorService } from '../utils/id-generator.service';
 import { EmailService } from '../services/email.service';
 import * as bcrypt from 'bcryptjs';
 import { Response } from 'express';
-import { randomBytes } from 'crypto';
+import { randomBytes, createCipher, createDecipher } from 'crypto';
 
 @Injectable()
 export class AuthService {
@@ -15,6 +15,35 @@ export class AuthService {
     private idGenerator: IdGeneratorService,
     private emailService: EmailService,
   ) {}
+
+  // 🔐 Token Encryption Methods
+  private encryptToken(token: string): string {
+    const algorithm = 'aes-256-cbc';
+    const key = require('crypto').scryptSync(process.env.JWT_SECRET || 'fallback', 'salt', 32);
+    const iv = randomBytes(16);
+    
+    const cipher = require('crypto').createCipheriv(algorithm, key, iv);
+    
+    let encrypted = cipher.update(token, 'utf8', 'hex');
+    encrypted += cipher.final('hex');
+    
+    return `VS.${iv.toString('hex')}.${encrypted}`;
+  }
+
+  private decryptToken(encryptedToken: string): string {
+    const algorithm = 'aes-256-cbc';
+    const key = require('crypto').scryptSync(process.env.JWT_SECRET || 'fallback', 'salt', 32);
+    
+    const [, ivHex, encrypted] = encryptedToken.split('.');
+    const iv = Buffer.from(ivHex, 'hex');
+    
+    const decipher = require('crypto').createDecipheriv(algorithm, key, iv);
+    
+    let decrypted = decipher.update(encrypted, 'hex', 'utf8');
+    decrypted += decipher.final('utf8');
+    
+    return decrypted;
+  }
 
   // Token validation method
   async validateToken(token: string): Promise<boolean> {
@@ -49,10 +78,10 @@ export class AuthService {
 
   async checkAuthStatus(req: any) {
     try {
-      // Extract token from HTTP-only cookie
-      const token = req.cookies?.access_token;
+      // Extract encrypted token from HTTP-only cookie
+      const encryptedToken = req.cookies?.access_token;
       
-      if (!token) {
+      if (!encryptedToken) {
         return {
           isAuthenticated: false,
           role: null,
@@ -60,7 +89,20 @@ export class AuthService {
         };
       }
 
-      // Verify token
+      // 🔐 DECRYPT THE TOKEN FIRST
+      let token;
+      try {
+        token = this.decryptToken(encryptedToken);
+      } catch (error) {
+        console.error('Token decryption failed:', error);
+        return {
+          isAuthenticated: false,
+          role: null,
+          user: null
+        };
+      }
+
+      // Verify decrypted token
       const decoded = this.jwtService.verify(token);
       
       if (decoded.role === 'SUPERADMIN' || decoded.role === 'ADMIN') {
@@ -163,8 +205,11 @@ export class AuthService {
 
     const token = this.jwtService.sign(payload);
 
-    // Set HTTP-only cookie instead of returning token in body
-    res.cookie('access_token', token, {
+    // 🔐 ENCRYPT THE TOKEN
+    const encryptedToken = this.encryptToken(token);
+
+    // Set HTTP-only cookie with encrypted token
+    res.cookie('access_token', encryptedToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production', // HTTPS only in production
       sameSite: 'lax', // Changed from 'strict' to 'lax' to allow cross-origin requests
@@ -290,8 +335,11 @@ export class AuthService {
 
     const token = this.jwtService.sign(payload);
 
-    // Set HTTP-only cookie instead of returning token in body
-    res.cookie('access_token', token, {
+    // 🔐 ENCRYPT THE TOKEN
+    const encryptedToken = this.encryptToken(token);
+
+    // Set HTTP-only cookie with encrypted token
+    res.cookie('access_token', encryptedToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production', // HTTPS only in production
       sameSite: 'lax', // Changed from 'strict' to 'lax' to allow cross-origin requests
@@ -504,8 +552,11 @@ export class AuthService {
 
     const token = this.jwtService.sign(payload);
 
-    // Set HTTP-only cookie instead of returning token in body
-    res.cookie('access_token', token, {
+    // 🔐 ENCRYPT THE TOKEN
+    const encryptedToken = this.encryptToken(token);
+
+    // Set HTTP-only cookie with encrypted token
+    res.cookie('access_token', encryptedToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production', // HTTPS only in production
       sameSite: 'lax', // Changed from 'strict' to 'lax' to allow cross-origin requests

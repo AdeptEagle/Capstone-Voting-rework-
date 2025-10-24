@@ -256,7 +256,7 @@ const SuperAdminDashboard = () => {
       
       setNotification({
         type: 'success',
-        message: `Nuclear reset completed successfully! Deleted: ${result.deletedCounts.voters} voters, ${result.deletedCounts.candidates} candidates, ${result.deletedCounts.ballots} ballots, and more.`
+        message: `Nuclear reset completed successfully! Deleted: ${result.deletedCounts.voters} voters, ${result.deletedCounts.candidates} candidates, ${result.deletedCounts.ballots} ballots, and more. Admins and ballot templates have been preserved.`
       });
       
       // Refresh stats after reset
