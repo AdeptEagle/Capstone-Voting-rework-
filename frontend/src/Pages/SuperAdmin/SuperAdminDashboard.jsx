@@ -396,15 +396,6 @@ const SuperAdminDashboard = () => {
                 </div>
                 <div className="col-md-3 mb-3">
                   <button 
-                    className="btn btn-success w-100 action-btn"
-                    onClick={() => navigate('/admin/results')}
-                  >
-                    <i className="fas fa-chart-bar me-2"></i>
-                    View Results
-                  </button>
-                </div>
-                <div className="col-md-3 mb-3">
-                  <button 
                     className="btn btn-info w-100 action-btn"
                     onClick={() => navigate('/admin/positions')}
                   >

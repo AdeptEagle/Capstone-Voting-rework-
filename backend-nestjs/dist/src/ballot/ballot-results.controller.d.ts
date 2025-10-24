@@ -140,10 +140,10 @@ export declare class BallotResultsController {
             };
         } & {
             id: string;
-            BallotCandidate_IsActive: boolean;
             BallotCandidate_BallotId: string;
             BallotCandidate_CandidateId: string;
             BallotCandidate_PositionId: string;
+            BallotCandidate_IsActive: boolean;
         })[];
         results: {
             resultDetails: ({
@@ -293,10 +293,10 @@ export declare class BallotResultsController {
             };
         } & {
             id: string;
-            BallotCandidate_IsActive: boolean;
             BallotCandidate_BallotId: string;
             BallotCandidate_CandidateId: string;
             BallotCandidate_PositionId: string;
+            BallotCandidate_IsActive: boolean;
         })[];
         results: {
             resultDetails: ({

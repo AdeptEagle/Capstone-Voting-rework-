@@ -214,9 +214,9 @@ export declare class VoterController {
             };
         } & {
             id: string;
-            UserBallotHistory_VotedAt: Date | null;
             UserBallotHistory_UserId: string;
             UserBallotHistory_BallotId: string;
+            UserBallotHistory_VotedAt: Date | null;
             UserBallotHistory_VoteCount: number;
             UserBallotHistory_IsCompleted: boolean;
             UserBallotHistory_LastAccessed: Date;

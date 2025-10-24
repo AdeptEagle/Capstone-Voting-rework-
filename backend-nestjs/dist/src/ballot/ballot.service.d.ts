@@ -125,10 +125,10 @@ export declare class BallotService {
             };
         } & {
             id: string;
-            BallotCandidate_IsActive: boolean;
             BallotCandidate_BallotId: string;
             BallotCandidate_CandidateId: string;
             BallotCandidate_PositionId: string;
+            BallotCandidate_IsActive: boolean;
         })[];
         results: {
             id: string;
@@ -254,10 +254,10 @@ export declare class BallotService {
             };
         } & {
             id: string;
-            BallotCandidate_IsActive: boolean;
             BallotCandidate_BallotId: string;
             BallotCandidate_CandidateId: string;
             BallotCandidate_PositionId: string;
+            BallotCandidate_IsActive: boolean;
         })[];
         results: {
             resultDetails: ({
@@ -423,10 +423,10 @@ export declare class BallotService {
             };
         } & {
             id: string;
-            BallotCandidate_IsActive: boolean;
             BallotCandidate_BallotId: string;
             BallotCandidate_CandidateId: string;
             BallotCandidate_PositionId: string;
+            BallotCandidate_IsActive: boolean;
         })[];
         results: {
             id: string;
@@ -652,16 +652,16 @@ export declare class BallotService {
             };
         } & {
             id: string;
-            BallotCandidate_IsActive: boolean;
             BallotCandidate_BallotId: string;
             BallotCandidate_CandidateId: string;
             BallotCandidate_PositionId: string;
+            BallotCandidate_IsActive: boolean;
         })[];
         userHistory: {
             id: string;
-            UserBallotHistory_VotedAt: Date | null;
             UserBallotHistory_UserId: string;
             UserBallotHistory_BallotId: string;
+            UserBallotHistory_VotedAt: Date | null;
             UserBallotHistory_VoteCount: number;
             UserBallotHistory_IsCompleted: boolean;
             UserBallotHistory_LastAccessed: Date;
@@ -776,16 +776,16 @@ export declare class BallotService {
             };
         } & {
             id: string;
-            BallotCandidate_IsActive: boolean;
             BallotCandidate_BallotId: string;
             BallotCandidate_CandidateId: string;
             BallotCandidate_PositionId: string;
+            BallotCandidate_IsActive: boolean;
         })[];
         userHistory: {
             id: string;
-            UserBallotHistory_VotedAt: Date | null;
             UserBallotHistory_UserId: string;
             UserBallotHistory_BallotId: string;
+            UserBallotHistory_VotedAt: Date | null;
             UserBallotHistory_VoteCount: number;
             UserBallotHistory_IsCompleted: boolean;
             UserBallotHistory_LastAccessed: Date;
@@ -864,9 +864,9 @@ export declare class BallotService {
         };
     } & {
         id: string;
-        UserBallotHistory_VotedAt: Date | null;
         UserBallotHistory_UserId: string;
         UserBallotHistory_BallotId: string;
+        UserBallotHistory_VotedAt: Date | null;
         UserBallotHistory_VoteCount: number;
         UserBallotHistory_IsCompleted: boolean;
         UserBallotHistory_LastAccessed: Date;

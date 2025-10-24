@@ -45,6 +45,9 @@ export class PositionService {
   async createPosition(createPositionDto: CreatePositionDto) {
     const { id, Position_Title, Position_Description, voteLimit, displayOrder } = createPositionDto;
 
+    // Trim the ID if provided
+    const trimmedId = id?.trim();
+
     // Check if position with this title already exists
     const existingPosition = await this.prisma.position.findFirst({
       where: { Position_Title: Position_Title },
@@ -55,18 +58,18 @@ export class PositionService {
     }
 
     // If custom ID is provided, check if it already exists
-    if (id) {
+    if (trimmedId) {
       const existingPositionWithId = await this.prisma.position.findUnique({
-        where: { id: id },
+        where: { id: trimmedId },
       });
 
       if (existingPositionWithId) {
-        throw new ConflictException(`Position with ID "${id}" already exists`);
+        throw new ConflictException(`Position with ID "${trimmedId}" already exists`);
       }
     }
 
     // Use provided ID if available, otherwise generate one
-    const positionId = id || await this.idGenerator.generatePositionId();
+    const positionId = trimmedId || await this.idGenerator.generatePositionId();
 
     const position = await this.prisma.position.create({
       data: {
@@ -120,10 +123,21 @@ export class PositionService {
   async updatePosition(id: string, updatePositionDto: UpdatePositionDto) {
     const { Position_Title, Position_Description, voteLimit, displayOrder } = updatePositionDto;
 
-    // Check if position exists
-    const existingPosition = await this.prisma.position.findUnique({
-      where: { id },
+    // Trim the ID
+    const trimmedId = id?.trim();
+
+    // Try to find position with trimmed ID first
+    let existingPosition = await this.prisma.position.findUnique({
+      where: { id: trimmedId },
     });
+
+    // If not found with trimmed ID, try with original ID (in case it has trailing spaces)
+    if (!existingPosition && id !== trimmedId) {
+      console.log(`[PositionService] Position not found with trimmed ID, trying original ID: "${id}"`);
+      existingPosition = await this.prisma.position.findUnique({
+        where: { id: id },
+      });
+    }
 
     if (!existingPosition) {
       throw new NotFoundException('Position not found');
@@ -134,7 +148,7 @@ export class PositionService {
       const conflictingPosition = await this.prisma.position.findFirst({
         where: {
           Position_Title: Position_Title,
-          NOT: { id },
+          NOT: { id: existingPosition.id },
         },
       });
 
@@ -144,7 +158,7 @@ export class PositionService {
     }
 
     const position = await this.prisma.position.update({
-      where: { id },
+      where: { id: existingPosition.id },
       data: {
         Position_Title: Position_Title,
         Position_Description: Position_Description,
@@ -177,7 +191,8 @@ export class PositionService {
     const trimmedId = id?.trim();
     console.log(`[PositionService] Using trimmed ID: "${trimmedId}"`);
     
-    const position = await this.prisma.position.findUnique({
+    // Try to find position with trimmed ID first
+    let position = await this.prisma.position.findUnique({
       where: { id: trimmedId },
       include: {
         _count: {
@@ -189,8 +204,24 @@ export class PositionService {
       },
     });
 
+    // If not found with trimmed ID, try with original ID (in case it has trailing spaces)
+    if (!position && id !== trimmedId) {
+      console.log(`[PositionService] Position not found with trimmed ID, trying original ID: "${id}"`);
+      position = await this.prisma.position.findUnique({
+        where: { id: id },
+        include: {
+          _count: {
+            select: {
+              candidates: true,
+              votes: true,
+            },
+          },
+        },
+      });
+    }
+
     if (!position) {
-      console.log(`[PositionService] Position not found with ID: "${trimmedId}"`);
+      console.log(`[PositionService] Position not found with ID: "${trimmedId}" or "${id}"`);
       throw new NotFoundException('Position not found');
     }
 
@@ -206,12 +237,12 @@ export class PositionService {
       throw new NotFoundException('Position has already been deleted');
     }
 
-    console.log(`[PositionService] Performing soft delete for position: "${trimmedId}"`);
+    console.log(`[PositionService] Performing soft delete for position: "${position.id}"`);
 
     // SOFT DELETE: Mark as deleted but preserve data
     // We allow deletion even with related data since soft delete preserves everything
     await this.prisma.position.update({
-      where: { id: trimmedId },
+      where: { id: position.id },
       data: {
         isDeleted: true,
         deletedAt: new Date()

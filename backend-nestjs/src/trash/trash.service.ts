@@ -418,68 +418,104 @@ export class TrashService {
 
   // Permanently delete ballot
   async permanentlyDeleteBallot(ballotId: string, forceDelete: boolean = false) {
-    const ballot = await this.prisma.ballot.findUnique({
-      where: { id: ballotId },
-      include: {
-        _count: {
-          select: {
-            votes: true,
-            ballotPositions: true,
-            ballotCandidates: true
+    try {
+      const ballot = await this.prisma.ballot.findUnique({
+        where: { id: ballotId },
+        include: {
+          _count: {
+            select: {
+              votes: true,
+              ballotPositions: true,
+              ballotCandidates: true
+            }
           }
         }
+      });
+
+      if (!ballot) {
+        throw new NotFoundException('Ballot not found');
       }
-    });
 
-    if (!ballot) {
-      throw new NotFoundException('Ballot not found');
+      if (!ballot.Ballot_IsDeleted) {
+        throw new ForbiddenException('Ballot is not deleted');
+      }
+
+      // Count votes specifically for this ballot (since ballotId is nullable)
+      const voteCount = await this.prisma.vote.count({
+        where: { 
+          ballotId: ballotId
+        }
+      });
+
+      // Check if ballot has votes (prevent deletion if votes exist unless forceDelete is true)
+      if (voteCount > 0 && !forceDelete) {
+        throw new ConflictException('Cannot permanently delete ballot with voting history. Votes must be preserved for audit purposes.');
+      }
+
+      // Always delete related data first, regardless of whether there are votes
+      console.log(`Deleting ballot ${ballotId} and all related data`);
+      
+      // Use a transaction to ensure all deletions happen atomically
+      const result = await this.prisma.$transaction(async (tx) => {
+        // Delete all related votes first (only those with matching ballotId)
+        const deletedVotes = await tx.vote.deleteMany({
+          where: { 
+            ballotId: ballotId
+          }
+        });
+        console.log(`Deleted ${deletedVotes.count} votes`);
+        
+        // Delete ballot candidates
+        const deletedCandidates = await tx.ballotCandidate.deleteMany({
+          where: { BallotCandidate_BallotId: ballotId }
+        });
+        console.log(`Deleted ${deletedCandidates.count} ballot candidates`);
+        
+        // Delete ballot positions - this is critical for the foreign key constraint
+        const deletedPositions = await tx.ballotPosition.deleteMany({
+          where: { BallotPosition_BallotId: ballotId }
+        });
+        console.log(`Deleted ${deletedPositions.count} ballot positions`);
+        
+        // Delete ballot result details first (they reference ballot results)
+        const deletedResultDetails = await tx.ballotResultDetails.deleteMany({
+          where: { BallotResultDetails_BallotId: ballotId }
+        });
+        console.log(`Deleted ${deletedResultDetails.count} ballot result details`);
+        
+        // Delete ballot results if they exist
+        const deletedResults = await tx.ballotResults.deleteMany({
+          where: { BallotResults_BallotId: ballotId }
+        });
+        console.log(`Deleted ${deletedResults.count} ballot results`);
+        
+        // Delete user ballot history
+        const deletedHistory = await tx.userBallotHistory.deleteMany({
+          where: { UserBallotHistory_BallotId: ballotId }
+        });
+        console.log(`Deleted ${deletedHistory.count} user ballot history records`);
+        
+        // Verify that all ballot positions are deleted before proceeding
+        const remainingPositions = await tx.ballotPosition.count({
+          where: { BallotPosition_BallotId: ballotId }
+        });
+        
+        if (remainingPositions > 0) {
+          console.error(`Warning: ${remainingPositions} ballot positions still exist for ballot ${ballotId}`);
+          throw new Error(`Failed to delete all ballot positions for ballot ${ballotId}`);
+        }
+
+        // Finally delete the ballot itself
+        return await tx.ballot.delete({
+          where: { id: ballotId }
+        });
+      });
+
+      return result;
+    } catch (error) {
+      console.error('Error in permanentlyDeleteBallot:', error);
+      throw error;
     }
-
-    if (!ballot.Ballot_IsDeleted) {
-      throw new ForbiddenException('Ballot is not deleted');
-    }
-
-    // Check if ballot has votes (prevent deletion if votes exist unless forceDelete is true)
-    if (ballot._count.votes > 0 && !forceDelete) {
-      throw new ConflictException('Cannot permanently delete ballot with voting history. Votes must be preserved for audit purposes.');
-    }
-
-    // If forceDelete is true and there are votes, we need to delete related data first
-    if (ballot._count.votes > 0 && forceDelete) {
-      // Delete all related votes first
-      await this.prisma.vote.deleteMany({
-        where: { ballotId: ballotId }
-      });
-      
-      // Delete ballot candidates
-      await this.prisma.ballotCandidate.deleteMany({
-        where: { BallotCandidate_BallotId: ballotId }
-      });
-      
-      // Delete ballot positions
-      await this.prisma.ballotPosition.deleteMany({
-        where: { BallotPosition_BallotId: ballotId }
-      });
-      
-      // Delete ballot results if they exist
-      await this.prisma.ballotResults.deleteMany({
-        where: { BallotResults_BallotId: ballotId }
-      });
-      
-      // Delete ballot result details
-      await this.prisma.ballotResultDetails.deleteMany({
-        where: { BallotResultDetails_BallotId: ballotId }
-      });
-      
-      // Delete user ballot history
-      await this.prisma.userBallotHistory.deleteMany({
-        where: { UserBallotHistory_BallotId: ballotId }
-      });
-    }
-
-    return await this.prisma.ballot.delete({
-      where: { id: ballotId }
-    });
   }
 
   // Empty all trash

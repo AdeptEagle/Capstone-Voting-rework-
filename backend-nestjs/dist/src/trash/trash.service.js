@@ -343,50 +343,78 @@ let TrashService = class TrashService {
         });
     }
     async permanentlyDeleteBallot(ballotId, forceDelete = false) {
-        const ballot = await this.prisma.ballot.findUnique({
-            where: { id: ballotId },
-            include: {
-                _count: {
-                    select: {
-                        votes: true,
-                        ballotPositions: true,
-                        ballotCandidates: true
+        try {
+            const ballot = await this.prisma.ballot.findUnique({
+                where: { id: ballotId },
+                include: {
+                    _count: {
+                        select: {
+                            votes: true,
+                            ballotPositions: true,
+                            ballotCandidates: true
+                        }
                     }
                 }
+            });
+            if (!ballot) {
+                throw new common_1.NotFoundException('Ballot not found');
             }
-        });
-        if (!ballot) {
-            throw new common_1.NotFoundException('Ballot not found');
+            if (!ballot.Ballot_IsDeleted) {
+                throw new common_1.ForbiddenException('Ballot is not deleted');
+            }
+            const voteCount = await this.prisma.vote.count({
+                where: {
+                    ballotId: ballotId
+                }
+            });
+            if (voteCount > 0 && !forceDelete) {
+                throw new common_1.ConflictException('Cannot permanently delete ballot with voting history. Votes must be preserved for audit purposes.');
+            }
+            console.log(`Deleting ballot ${ballotId} and all related data`);
+            const result = await this.prisma.$transaction(async (tx) => {
+                const deletedVotes = await tx.vote.deleteMany({
+                    where: {
+                        ballotId: ballotId
+                    }
+                });
+                console.log(`Deleted ${deletedVotes.count} votes`);
+                const deletedCandidates = await tx.ballotCandidate.deleteMany({
+                    where: { BallotCandidate_BallotId: ballotId }
+                });
+                console.log(`Deleted ${deletedCandidates.count} ballot candidates`);
+                const deletedPositions = await tx.ballotPosition.deleteMany({
+                    where: { BallotPosition_BallotId: ballotId }
+                });
+                console.log(`Deleted ${deletedPositions.count} ballot positions`);
+                const deletedResultDetails = await tx.ballotResultDetails.deleteMany({
+                    where: { BallotResultDetails_BallotId: ballotId }
+                });
+                console.log(`Deleted ${deletedResultDetails.count} ballot result details`);
+                const deletedResults = await tx.ballotResults.deleteMany({
+                    where: { BallotResults_BallotId: ballotId }
+                });
+                console.log(`Deleted ${deletedResults.count} ballot results`);
+                const deletedHistory = await tx.userBallotHistory.deleteMany({
+                    where: { UserBallotHistory_BallotId: ballotId }
+                });
+                console.log(`Deleted ${deletedHistory.count} user ballot history records`);
+                const remainingPositions = await tx.ballotPosition.count({
+                    where: { BallotPosition_BallotId: ballotId }
+                });
+                if (remainingPositions > 0) {
+                    console.error(`Warning: ${remainingPositions} ballot positions still exist for ballot ${ballotId}`);
+                    throw new Error(`Failed to delete all ballot positions for ballot ${ballotId}`);
+                }
+                return await tx.ballot.delete({
+                    where: { id: ballotId }
+                });
+            });
+            return result;
         }
-        if (!ballot.Ballot_IsDeleted) {
-            throw new common_1.ForbiddenException('Ballot is not deleted');
+        catch (error) {
+            console.error('Error in permanentlyDeleteBallot:', error);
+            throw error;
         }
-        if (ballot._count.votes > 0 && !forceDelete) {
-            throw new common_1.ConflictException('Cannot permanently delete ballot with voting history. Votes must be preserved for audit purposes.');
-        }
-        if (ballot._count.votes > 0 && forceDelete) {
-            await this.prisma.vote.deleteMany({
-                where: { ballotId: ballotId }
-            });
-            await this.prisma.ballotCandidate.deleteMany({
-                where: { BallotCandidate_BallotId: ballotId }
-            });
-            await this.prisma.ballotPosition.deleteMany({
-                where: { BallotPosition_BallotId: ballotId }
-            });
-            await this.prisma.ballotResults.deleteMany({
-                where: { BallotResults_BallotId: ballotId }
-            });
-            await this.prisma.ballotResultDetails.deleteMany({
-                where: { BallotResultDetails_BallotId: ballotId }
-            });
-            await this.prisma.userBallotHistory.deleteMany({
-                where: { UserBallotHistory_BallotId: ballotId }
-            });
-        }
-        return await this.prisma.ballot.delete({
-            where: { id: ballotId }
-        });
     }
     async emptyTrash() {
         const results = {
