@@ -536,63 +536,73 @@ async function main() {
     console.log(`✅ Created ${votes.length} votes for ended ballot`);
     console.log(`✅ Created ${activeVotes.length} votes for active ballot`);
 
-    // 8. Create ballot results for ended ballot
-    console.log('📊 Creating ballot results...');
+    // 8. Calculate ballot results properly using the system's calculation method
+    console.log('📊 Calculating ballot results...');
     
-    // Check if ballot results already exist
-    const existingBallotResults = await prisma.ballotResults.findFirst({
-      where: { BallotResults_BallotId: endedBallot.id }
-    });
-
-    let ballotResults;
-    if (!existingBallotResults) {
-      ballotResults = await prisma.ballotResults.create({
-        data: {
+    // Import the BallotResultsService to use its calculation method
+    const { BallotResultsService } = await import('../src/ballot/ballot-results.service');
+    const { PrismaService } = await import('../src/prisma/prisma.service');
+    
+    const prismaService = new PrismaService();
+    const ballotResultsService = new BallotResultsService(prismaService);
+    
+    try {
+      // Calculate results for the ended ballot
+      console.log('🔄 Calculating results for ended ballot...');
+      await ballotResultsService.calculateBallotResults(endedBallot.id);
+      
+      // Calculate results for the active ballot
+      console.log('🔄 Calculating results for active ballot...');
+      await ballotResultsService.calculateBallotResults(activeBallot.id);
+      
+      console.log('✅ Ballot results calculated successfully');
+    } catch (error) {
+      console.error('❌ Error calculating ballot results:', error);
+      // Fallback: create basic results
+      console.log('🔄 Creating fallback ballot results...');
+      
+      const endedBallotResults = await prisma.ballotResults.upsert({
+        where: { BallotResults_BallotId: endedBallot.id },
+        update: {
+          BallotResults_TotalVotes: votes.length,
+          BallotResults_TotalVoters: votersWhoDidNotAbstain.length,
+          BallotResults_VoterTurnout: voters.length > 0 ? (votersWhoDidNotAbstain.length / voters.length) * 100 : 0,
+          BallotResults_IsFinal: true,
+          BallotResults_LastUpdated: new Date(),
+        },
+        create: {
           id: generateId(),
           BallotResults_BallotId: endedBallot.id,
           BallotResults_TotalVotes: votes.length,
           BallotResults_TotalVoters: votersWhoDidNotAbstain.length,
-          BallotResults_VoterTurnout: (votersWhoDidNotAbstain.length / voters.length) * 100,
+          BallotResults_VoterTurnout: voters.length > 0 ? (votersWhoDidNotAbstain.length / voters.length) * 100 : 0,
           BallotResults_IsFinal: true,
         },
       });
-    } else {
-      ballotResults = existingBallotResults;
-    }
-
-    // Create result details for each candidate in ended ballot
-    const resultDetails = [];
-    for (const ballotCandidate of endedBallotCandidates) {
-      // Check if result detail already exists
-      const existingResultDetail = await prisma.ballotResultDetails.findFirst({
-        where: {
-          BallotResultDetails_BallotId: endedBallot.id,
-          BallotResultDetails_PositionId: ballotCandidate.BallotCandidate_PositionId,
-          BallotResultDetails_CandidateId: ballotCandidate.BallotCandidate_CandidateId,
+      
+      const activeBallotResults = await prisma.ballotResults.upsert({
+        where: { BallotResults_BallotId: activeBallot.id },
+        update: {
+          BallotResults_TotalVotes: activeVotes.length,
+          BallotResults_TotalVoters: new Set(activeVotes.map(v => v.voterId)).size,
+          BallotResults_VoterTurnout: voters.length > 0 ? (new Set(activeVotes.map(v => v.voterId)).size / voters.length) * 100 : 0,
+          BallotResults_IsFinal: false,
+          BallotResults_LastUpdated: new Date(),
+        },
+        create: {
+          id: generateId(),
+          BallotResults_BallotId: activeBallot.id,
+          BallotResults_TotalVotes: activeVotes.length,
+          BallotResults_TotalVoters: new Set(activeVotes.map(v => v.voterId)).size,
+          BallotResults_VoterTurnout: voters.length > 0 ? (new Set(activeVotes.map(v => v.voterId)).size / voters.length) * 100 : 0,
+          BallotResults_IsFinal: false,
         },
       });
-
-      if (!existingResultDetail) {
-        const voteCount = Math.floor(Math.random() * 30) + 5; // Random vote count between 5-35
-        
-        const resultDetail = await prisma.ballotResultDetails.create({
-          data: {
-            id: generateId(),
-            BallotResultDetails_BallotId: endedBallot.id,
-            BallotResultDetails_PositionId: ballotCandidate.BallotCandidate_PositionId,
-            BallotResultDetails_CandidateId: ballotCandidate.BallotCandidate_CandidateId,
-            BallotResultDetails_VoteCount: voteCount,
-            BallotResultDetails_Percentage: 0, // Will be calculated
-            BallotResultDetails_Rank: 0, // Will be calculated
-          },
-        });
-        resultDetails.push(resultDetail);
-      } else {
-        resultDetails.push(existingResultDetail);
-      }
+      
+      console.log('✅ Fallback ballot results created');
+    } finally {
+      await prismaService.$disconnect();
     }
-
-    console.log(`✅ Created ballot results and ${resultDetails.length} result details`);
 
     // 9. Create user ballot history
     console.log('📚 Creating user ballot history...');
@@ -640,8 +650,7 @@ async function main() {
     console.log(`   - Ballot Positions: ${ballotPositions.length}`);
     console.log(`   - Ballot Candidates: ${ballotCandidates.length}`);
     console.log(`   - Votes: ${votes.length + activeVotes.length}`);
-    console.log(`   - Ballot Results: 1`);
-    console.log(`   - Result Details: ${resultDetails.length}`);
+    console.log(`   - Ballot Results: 2 (calculated properly)`);
     console.log(`   - User Ballot History: ${userBallotHistory.length}`);
     console.log('');
     console.log('🎭 Party Lists:');

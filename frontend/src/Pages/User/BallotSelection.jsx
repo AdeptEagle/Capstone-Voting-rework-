@@ -137,11 +137,11 @@ const BallotSelection = () => {
         </div>
       )}
 
-      {availableBallots.length === 0 && availableElections.length === 0 ? (
+      {availableBallots.length === 0 ? (
         <div className="no-ballots">
           <i className="fas fa-inbox"></i>
-          <h3>No Available Elections</h3>
-          <p>There are currently no active elections available for voting.</p>
+          <h3>No Available Ballots</h3>
+          <p>There are currently no active ballots available for voting.</p>
         </div>
       ) : (
         <div className="ballots-grid">

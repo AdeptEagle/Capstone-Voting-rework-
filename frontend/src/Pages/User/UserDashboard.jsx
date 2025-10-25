@@ -543,15 +543,6 @@ const UserDashboard = () => {
           
           <button
             className="quick-action-btn"
-            onClick={() => navigate('/user/candidates')}
-          >
-            <i className="fas fa-users"></i>
-            <span>Candidates</span>
-            <small>Meet the candidates</small>
-          </button>
-          
-          <button
-            className="quick-action-btn"
             onClick={() => setShowSettingsModal(true)}
           >
             <i className="fas fa-cog"></i>
